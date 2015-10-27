@@ -1,5 +1,5 @@
 (ert-deftest dk-html-tag-test ()
-  (set-buffer "firstOrgNote.html")
+  (set-buffer "example.html")
   (goto-char (point-min))
   (should (equal (dk-search-html-tag) '("<h2>" 1 . 5)))
   (should (equal (dk-search-html-tag) '("</h2>" 23 . 28)))
@@ -18,8 +18,19 @@
   (should (dk-check-end-html-tag "</p>"))
   (should (equal (dk-get-html-end-tag "<div>") "</div>")))
 
-
-
+(ert-deftest dk-add-tag-to-begin-tag-list ()
+  (let ((html-tag '("<h2>" 1 . 5)))
+    (dk-process-html-begin-tag html-tag)
+  (should (equal (car (nth 0 begin-tag-list))
+		 html-tag))
+  (should (eq (cdr (nth 0 begin-tag-list))
+	      (get-buffer "<h2>"))))
+  (kill-buffer "<h2>")) 
+    
+(ert-deftest dk-iterate-html-tag ()
+  (set-buffer "example.html")
+  (goto-char (point-min))
+  (dk-iterate-html-tag))
 
 
 

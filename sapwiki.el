@@ -38,7 +38,7 @@
     "<ul>" "<li>" "<ol>" "<a>"))
 
 (defvar begin-tag-list ())
-(defvar result-org-buffer (generate-new-buffer "result-org-buffer"))
+(defvar result-org-buffer (get-buffer-create "result-org-buffer"))
 
 (defun dk-search-html-tag ()
   "Search for html tags <xxx> in current buffer.
@@ -68,7 +68,7 @@
   (concat "<" (store-substring begin-tag 0 ?/)))
 
 (defun dk-add-tag-to-begin-tag-list (begin-tag) 
-  (push ((cons begin-tag (generate-new-buffer (car begin-tag)))
+  (push (cons begin-tag (generate-new-buffer (car begin-tag)))
 	 begin-tag-list))    
 
 (defun dk-process-html-begin-tag (begin-tag)
@@ -76,7 +76,7 @@
     (user-error "html tag: %s is not valid!" (car begin-tag)))
   (dk-add-tag-to-begin-tag-list begin-tag))
 
-(defun dk-process-html-end-tag (end-tag)
+(defsubst dk-process-html-end-tag (end-tag)
   (let ((nearest-tag (pop begin-tag-list)))
     ;; Get the nearest tag and remove it from the global list.
     (unless (equal (dk-get-end-tag-from-begin-tab
@@ -97,7 +97,6 @@
 	  (setq parent-node-buffer result-org-buffer))
 	(append-to-buffer parent-node-buffer 0 (max-point))))))
     
-(defun dk
 (defun dk-iterate-html-tag ( )
   (catch 'exit
     (while t
