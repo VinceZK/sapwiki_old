@@ -1,0 +1,71 @@
+;;; sapwiki.el --- Write SAP wiki using orgmode.
+
+;; Copyright (C) 2015 Vincent Zhang
+
+;; Author: Vincent.Zhang <vincent.zhang@sap.com>
+
+;;; How it works:
+;; 1. Download a wiki from SAP internal wiki site. When downloading, the wiki should be locked to prevent other downlodings.
+;; 2. Convert the wiki html to orgmode format.
+;; 3. Compare the difference to the local copy if exist.Do the merge.
+;; 4. Write/Modify the wiki using orgmode.
+;; 5. When finish the editing:
+;; 5.1. Save a orgmode local copy;
+;; 5.2. Download the latest version (lock the wiki), and convert to orgmode format;
+;; 5.3. Compare the difference and do the merge;
+;; 5.4. Convert the merged orgmode version to the wiki html;
+;; 5.5. Upload the wiki html to the sap wiki site (unlock the wiki).
+
+;; ----------Begin of Licence----------
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; ---------- End of License ----------
+
+;;; Code:
+
+(defun convert-wiki-to-org (wiki-html-file)
+  "Convert SAP wiki html to orgmode"
+  (interactive)
+  (find-file wiki-html-file)
+  (goto-char point-min)
+
+  (let ((current-line ))
+  (goto-line )
+  (while (search-forward "<p class=\"q\">" nil t)
+    (search-forward "<p class=\"a\">")
+    (replace-match "<div class=\"a\">\n<p class=\"a\">")
+    (if (search-forward "<p class=\"q\">" nil t)
+        (progn 
+          (search-backward "</p>")
+          (forward-char 4)
+          (insert "\n</div>")
+          )
+      )
+    )
+
+;; add the last closing tag for answer section
+  (end-of-buffer)
+  (search-backward "<p class=\"a\">")
+  (search-forward "</p>")
+  (insert "\n</div>")
+
+;; take out the “Q: ” and “A: ”
+  (beginning-of-buffer)
+  (while (search-forward "<p class=\"q\">Q: " nil t)
+    (replace-match "<p class=\"q\">"))
+
+;; replace “<p class="a">” by “<p>”.
+  (beginning-of-buffer)
+  (while (search-forward "<p class=\"a\">A: " nil t)
+    (replace-match "<p>"))
+)
