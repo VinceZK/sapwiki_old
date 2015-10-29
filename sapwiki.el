@@ -46,14 +46,13 @@
     <tag> is the html tag found.
     beg-pos is the position before the first '<' in the buffer.
     end-pos is the position after the last '>' in the buffer."
-  (if (search-forward "<")
-      (let ((start (- (point) 1)))
-	(if (search-forward ">")
-	    (let ((end (point)))
-	      (cons (buffer-substring-no-properties start end)
-		    (cons start end)))
-	  nil))
-    nil))
+  (let* ((start (search-forward "<" nil t))
+	 (end (search-forward ">" nil t)))
+	 (if (and start end)
+	     (cons (buffer-substring-no-properties
+		    (- start 1) end)
+		   (cons (- start 1) end))
+	   nil)))
 
 (defun dk-check-valid-html-tag (tag)
   (-contains-p dk-wiki-html5-tags tag))
@@ -71,7 +70,7 @@
   (push (cons begin-tag (generate-new-buffer (car begin-tag)))
 	 begin-tag-list))    
 
-(defun dk-process-html-begin-tag (begin-tag)
+(defsubst dk-process-html-begin-tag (begin-tag)
   (unless (dk-check-valid-html-tag (car begin-tag))
     (user-error "html tag: %s is not valid!" (car begin-tag)))
   (dk-add-tag-to-begin-tag-list begin-tag))
@@ -79,28 +78,43 @@
 (defsubst dk-process-html-end-tag (end-tag)
   (let ((nearest-tag (pop begin-tag-list)))
     ;; Get the nearest tag and remove it from the global list.
-    (unless (equal (dk-get-end-tag-from-begin-tab
-		    (car nearest-tag)) (car end-tag))
+    (unless (equal (dk-get-html-end-tag (car (car nearest-tag)))
+		   (car end-tag))
       (user-error "Parsing order error!"))
-    (append-to-buffer (nth 3 nearest-tag)
-		      (nth 2 nearest-tag)
-		      (nth 1 end-tag))
-    (case (end-tag)
-      ("</p>" (with-current-buffer (nth 3 nearest-tag)
-	       ;;Do something with <p>
-		)))
-    (with-current-buffer (nth3 nearest-tag)
+    (append-to-buffer (cdr nearest-tag)
+		      (cdr (cdr (car nearest-tag)))
+		      (car (cdr end-tag)))
+
+    (cond ((equal "</h2>" (car end-tag))
+	   (with-current-buffer (cdr nearest-tag)
+	     (goto-char  (point-min))
+	     (insert "** ")
+	     (goto-char (point-max))
+	     (insert ?\n)))
+	  ((equal "</h3>" (car end-tag))
+	   (with-current-buffer (cdr nearest-tag)
+	     (goto-char (point-min))
+	     (insert "*** ")
+	     (goto-char (point-max))
+	     (insert ?\n)))
+	  ((equal "</p>" (car end-tag))
+	   (with-current-buffer (cdr nearest-tag))))
+    
+    (with-current-buffer (cdr nearest-tag)
       (let* ((parent-node (car begin-tag-list))
 	     (parent-node-buffer))
 	(if parent-node
-	    (setq parent-node-buffer (nth 3 parent-node))
+	    (setq parent-node-buffer (cdr parent-node))
 	  (setq parent-node-buffer result-org-buffer))
-	(append-to-buffer parent-node-buffer 0 (max-point))))))
+	(append-to-buffer parent-node-buffer 1 (point-max))
+	(kill-buffer)))))
     
 (defun dk-iterate-html-tag ( )
-  (catch 'exit
-    (while t
-      (let ((this-tag (dk-search-html-tag)))
+  (setq begin-tag-list ())
+  (let ((this-tag))
+    (catch 'exit
+      (while t
+	(setq this-tag (dk-search-html-tag))
 	(unless this-tag
 	  (throw 'exit ))
 	(cond ((dk-check-begin-html-tag (car this-tag))
@@ -108,6 +122,11 @@
 	      ((dk-check-end-html-tag (car this-tag))
 	       (dk-process-html-end-tag this-tag))
 	      (t (user-error "html parse error!")))))))
+
+(defun dk-kill-dummy-buffers ()
+  (kill-buffer "<h2>")
+  (kill-buffer "<h2><2>")
+  )
     
 (defun dk-convert-wiki-to-org (wiki-html-buffer)
   "Convert SAP wiki html to orgmode"

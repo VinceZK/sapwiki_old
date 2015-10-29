@@ -26,7 +26,17 @@
   (should (eq (cdr (nth 0 begin-tag-list))
 	      (get-buffer "<h2>"))))
   (kill-buffer "<h2>")) 
-    
+
+(ert-deftest dk-process-html-begin-tag ()
+  (dk-kill-dummy-buffers)
+  (let ((html-tag '("<h2>" 1 . 5)))
+    (dk-process-html-begin-tag html-tag)
+    (should (equal (car (nth 0 begin-tag-list))
+		   html-tag))
+    (should (eq (cdr (nth 0 begin-tag-list))
+		(get-buffer "<h2>"))))
+  (kill-buffer "<h2>"))
+  
 (ert-deftest dk-iterate-html-tag ()
   (set-buffer "example.html")
   (goto-char (point-min))
