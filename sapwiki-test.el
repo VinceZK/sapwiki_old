@@ -16,6 +16,7 @@
 
 (ert-deftest dk-html-end-tag-test ()
   (should (dk-check-end-html-tag "</p>"))
+  (should (equal (dk-get-html-end-tag "<p>") "</p>"))
   (should (equal (dk-get-html-end-tag "<div>") "</div>")))
 
 (ert-deftest dk-add-tag-to-begin-tag-list ()

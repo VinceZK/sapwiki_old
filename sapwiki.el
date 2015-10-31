@@ -55,7 +55,7 @@
 	   nil)))
 
 (defun dk-check-valid-html-tag (tag)
-  (-contains-p dk-wiki-html5-tags tag))
+  (member tag dk-wiki-html5-tags))
 
 (defun dk-check-begin-html-tag (tag)
   (not (equal (substring tag 1 2 ) "/")))
@@ -80,27 +80,28 @@
     ;; Get the nearest tag and remove it from the global list.
     (unless (equal (dk-get-html-end-tag (car (car nearest-tag)))
 		   (car end-tag))
-      (user-error "Parsing order error!"))
+      (user-error "Parsing order error! end-tag: %s" (car end-tag)))
+    
     (append-to-buffer (cdr nearest-tag)
 		      (cdr (cdr (car nearest-tag)))
 		      (car (cdr end-tag)))
-
-    (cond ((equal "</h2>" (car end-tag))
-	   (with-current-buffer (cdr nearest-tag)
-	     (goto-char  (point-min))
-	     (insert "** ")
-	     (goto-char (point-max))
-	     (insert ?\n)))
-	  ((equal "</h3>" (car end-tag))
-	   (with-current-buffer (cdr nearest-tag)
-	     (goto-char (point-min))
-	     (insert "*** ")
-	     (goto-char (point-max))
-	     (insert ?\n)))
-	  ((equal "</p>" (car end-tag))
-	   (with-current-buffer (cdr nearest-tag))))
     
     (with-current-buffer (cdr nearest-tag)
+      (pcase (car end-tag)
+	("</h2>" (progn
+		   (goto-char  (point-min))
+		   (insert "** ")
+		   (goto-char (point-max))
+		   (insert ?\n)
+		   (insert ?\n)))
+	("</h3>" (progn
+		   (goto-char (point-min))
+		   (insert "*** ")
+		   (goto-char (point-max))
+		   (insert ?\n)
+		   (insert ?\n)))
+	("</p>" (progn
+		  )))
       (let* ((parent-node (car begin-tag-list))
 	     (parent-node-buffer))
 	(if parent-node
@@ -109,14 +110,13 @@
 	(append-to-buffer parent-node-buffer 1 (point-max))
 	(kill-buffer)))))
     
-(defun dk-iterate-html-tag ( )
+(defun dk-iterate-html-tag ()
   (setq begin-tag-list ())
   (let ((this-tag))
     (catch 'exit
       (while t
 	(setq this-tag (dk-search-html-tag))
-	(unless this-tag
-	  (throw 'exit ))
+	(unless this-tag (throw 'exit ))
 	(cond ((dk-check-begin-html-tag (car this-tag))
 	       (dk-process-html-begin-tag this-tag))
 	      ((dk-check-end-html-tag (car this-tag))
@@ -136,8 +136,6 @@
 
   (search-html-tag-bracket)
 )
-
-;; Hello, It is good demo.
 
 
 
