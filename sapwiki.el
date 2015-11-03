@@ -33,9 +33,9 @@
 (defconst dk-wiki-html5-tags
   '("<div>" "<h1>" "<h2>" "<h3>" "<h4>" "<h5>" "<p>"
     "<figure>" "<img>" "<figcaption>" "<span>" "<em>"
-    "<i>" "<b>" "<code>" "<u>" "<table>" "<colgroup>"
-    "<col>" "<thead>" "<tr>" "<th>" "<tbody>" "<td>"
-    "<ul>" "<li>" "<ol>" "<a>"))
+    "<i>" "<b>" "<code>" "<u>" "<s>" "<strong>" "<table>"
+    "<colgroup>" "<col>" "<thead>" "<tr>" "<th>"
+    "<tbody>" "<td>" "<ul>" "<li>" "<ol>" "<a>"))
 
 (defvar begin-tag-list ())
 (defvar result-org-buffer (get-buffer-create "result-org-buffer"))
@@ -49,9 +49,10 @@
   (let* ((start (search-forward "<" nil t))
 	 (end (search-forward ">" nil t)))
 	 (if (and start end)
-	     (cons (buffer-substring-no-properties
-		    (- start 1) end)
-		   (cons (- start 1) end))
+	     (cons
+	      (downcase 
+	       (replace-regexp-in-string "[\s-][^>]+" "" (buffer-substring-no-properties (- start 1) end)))
+	 (cons (- start 1) end))
 	   nil)))
 
 (defun dk-check-valid-html-tag (tag)
@@ -70,6 +71,142 @@
   (push (cons begin-tag (generate-new-buffer (car begin-tag)))
 	 begin-tag-list))    
 
+(defsubst dk-replace-html-placeholder ()
+  (goto-char 1)
+  (while (re-search-forward "&[^;]+;" nil t)
+    (pcase (buffer-substring
+	    (match-beginning 0)
+	    (match-end 0))
+      ("&gt;" (replace-match ">"))
+      ("&lt;" (replace-match "<"))
+      ("&nbsp;" (replace-match ?\s))
+      ("&amp;" (replace-match "&")))))
+      
+(defun dk-process-in-line-ele ()
+  (goto-char (point-min))
+  (let ((line-num 0))
+    ;; First, search and replace emphasis in the paragraph
+    (while (re-search-forward "<[^>]*>[^>]*</[^>]*>" nil t 1)
+      (save-excursion
+	(goto-char 1)
+	(forward-line line-num)     
+	(replace-match (buffer-substring
+			(line-beginning-position)
+			(line-end-position)))
+	(setq line-num (+ 1 line-num))))
+    ;; Then, remove the template emphasis above the paragraph
+    (when (> line-num 0)
+      (goto-char 1)
+      (forward-line (- line-num 1))
+      (delete-region 1 (line-end-position))))
+  ;; replace placeholders
+  (dk-replace-html-placeholder)
+  ;; remove whitesapces
+  (goto-char (point-min))
+  (while (re-search-forward "[\t\r\n]+" nil t)
+    (replace-match "" nil nil)
+    ))
+
+(defun dk-process-head-line (stars)
+  (dk-process-in-line-ele)
+  (goto-char 1)
+  (insert stars)
+  (goto-char (point-max))
+  (insert ?\n)
+  (insert ?\n))
+
+(defsubst dk-process-h1 ()
+  (dk-process-head-line "* "))
+
+(defsubst dk-process-h2 ()
+  (dk-process-head-line "** "))
+
+(defsubst dk-process-h3 ()
+  (dk-process-head-line "*** "))
+
+(defsubst dk-process-h4 ()
+  (dk-process-head-line "**** "))
+
+(defun dk-process-emphasis (decorate)
+  (goto-char  (point-min))
+  (insert decorate)
+  (goto-char (point-max))
+  (insert decorate)
+  (insert ?\n))
+
+(defsubst dk-process-em ()
+ (dk-process-emphasis "="))
+
+(defsubst dk-process-code ()
+ (dk-process-emphasis "~"))
+
+(defsubst dk-process-italic ()
+  (dk-process-emphasis "/"))
+
+(defsubst dk-process-bold ()
+  (dk-process-emphasis "*"))
+
+(defsubst dk-process-underline ()
+  (dk-process-emphasis "_"))
+
+(defsubst dk-process-strike-through ()
+  (dk-process-emphasis "-"))
+
+(defsubst dk-process-span ()
+  (insert ?\n))
+
+(defsubst dk-process-p ()
+  (dk-process-in-line-ele)
+  (insert ?\n)
+  (insert ?\n))
+
+(defsubst dk-process-table ()
+  (goto-char (point-max))
+  (insert ?\n))
+
+(defsubst dk-process-tbody ()
+  )
+
+(defsubst dk-process-tr ()
+  (goto-char (point-max))
+  (insert " |")
+  (insert ?\n))
+
+(defsubst dk-process-td ()
+  (goto-char 1)
+  (insert "| ")
+  (while (re-search-forward "[\n]+" nil t)
+    (replace-match "" nil nil))
+  (goto-char (point-max))
+  (insert " "))
+
+(defsubst dk-process-ul ()
+  (goto-char 0)
+  (let ((total-lines (count-lines 1 (point-max)))
+   	(current-line 0))     
+    (while (< current-line total-lines)
+      (insert "- ")
+      (forward-line)
+      (setq current-line (+ 1 current-line))))
+  (goto-char (point-max))
+  (insert ?\n))
+
+(defsubst dk-process-ol ()
+   (goto-char 0)
+   (let ((total-lines (count-lines 1 (point-max)))
+   	(current-line 0))     
+     (while (< current-line total-lines)
+       (setq current-line (+ 1 current-line))
+       (insert (concat
+		(number-to-string current-line)
+		". "))
+       (forward-line))))
+
+(defsubst dk-process-li ()
+  (dk-process-in-line-ele)
+  (goto-char (point-max))
+  (insert ?\n))
+
 (defsubst dk-process-html-begin-tag (begin-tag)
   (unless (dk-check-valid-html-tag (car begin-tag))
     (user-error "html tag: %s is not valid!" (car begin-tag)))
@@ -77,31 +214,44 @@
 
 (defsubst dk-process-html-end-tag (end-tag)
   (let ((nearest-tag (pop begin-tag-list)))
-    ;; Get the nearest tag and remove it from the global list.
+    ;Get the nearest tag and remove it from the global list.
     (unless (equal (dk-get-html-end-tag (car (car nearest-tag)))
 		   (car end-tag))
       (user-error "Parsing order error! end-tag: %s" (car end-tag)))
-    
-    (append-to-buffer (cdr nearest-tag)
-		      (cdr (cdr (car nearest-tag)))
-		      (car (cdr end-tag)))
-    
+
+    (unless (or (equal "</table>" (car end-tag))
+		(equal "</tbody>" (car end-tag))
+		(equal "</tr>" (car end-tag))
+		(equal "</td>" (car end-tag))
+		(equal "</ul>" (car end-tag))
+		(equal "</ol>" (car end-tag)))
+      (append-to-buffer (cdr nearest-tag)
+			(cdr (cdr (car nearest-tag)))
+			(car (cdr end-tag))))
+      
     (with-current-buffer (cdr nearest-tag)
       (pcase (car end-tag)
-	("</h2>" (progn
-		   (goto-char  (point-min))
-		   (insert "** ")
-		   (goto-char (point-max))
-		   (insert ?\n)
-		   (insert ?\n)))
-	("</h3>" (progn
-		   (goto-char (point-min))
-		   (insert "*** ")
-		   (goto-char (point-max))
-		   (insert ?\n)
-		   (insert ?\n)))
-	("</p>" (progn
-		  )))
+	("</h1>" (dk-process-h1))
+	("</h2>" (dk-process-h2))
+	("</h3>" (dk-process-h3))
+	("</h4>" (dk-process-h4))
+	("</em>" (dk-process-em))
+	("</i>" (dk-process-italic))
+	("</code>" (dk-process-code))
+	("</b>" (dk-process-bold))
+	("</strong>" (dk-process-bold))
+	("</u>" (dk-process-underline))
+	("</s>" (dk-process-strike-through))
+	("</span>" (dk-process-span))
+	("</p>" (dk-process-p))
+	("</table>" (dk-process-table))
+	("</tbody>" (dk-process-tbody))
+	("</tr>" (dk-process-tr))
+	("</td>" (dk-process-td))
+	("</ul>" (dk-process-ul))
+	("</ol>" (dk-process-ol))
+	("</li>" (dk-process-li))
+	)
       (let* ((parent-node (car begin-tag-list))
 	     (parent-node-buffer))
 	(if parent-node
@@ -116,31 +266,9 @@
     (catch 'exit
       (while t
 	(setq this-tag (dk-search-html-tag))
-	(unless this-tag (throw 'exit ))
+	(unless this-tag (throw 'exit t))
 	(cond ((dk-check-begin-html-tag (car this-tag))
 	       (dk-process-html-begin-tag this-tag))
 	      ((dk-check-end-html-tag (car this-tag))
 	       (dk-process-html-end-tag this-tag))
 	      (t (user-error "html parse error!")))))))
-
-(defun dk-kill-dummy-buffers ()
-  (kill-buffer "<h2>")
-  (kill-buffer "<h2><2>")
-  )
-    
-(defun dk-convert-wiki-to-org (wiki-html-buffer)
-  "Convert SAP wiki html to orgmode"
-  (interactive)
-  (set-buffer wiki-html-buffer)
-  (goto-char point-min)
-
-  (search-html-tag-bracket)
-)
-
-
-
-
-
-
-
-
