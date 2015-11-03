@@ -8,7 +8,9 @@
     (should (equal (buffer-substring-no-properties
 		    (cdr (cdr beg-tag))
 		    (car (cdr end-tag)))
-		   "Second level"))))
+		   "Second level")))
+  (dk-search-html-tag)
+  (should (equal (dk-search-html-tag) '("<span>" 57 . 184))))
 
 (ert-deftest dk-html-begin-tag-test ()
   (should (dk-check-valid-html-tag "<h2>"))
@@ -29,7 +31,6 @@
   (kill-buffer "<h2>")) 
 
 (ert-deftest dk-process-html-begin-tag ()
-  (dk-kill-dummy-buffers)
   (let ((html-tag '("<h2>" 1 . 5)))
     (dk-process-html-begin-tag html-tag)
     (should (equal (car (nth 0 begin-tag-list))
@@ -42,9 +43,3 @@
   (set-buffer "example.html")
   (goto-char (point-min))
   (dk-iterate-html-tag))
-
-
-
-
-
-
