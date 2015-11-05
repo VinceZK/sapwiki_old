@@ -35,7 +35,11 @@
     "<figure>" "<img>" "<figcaption>" "<span>" "<em>"
     "<i>" "<b>" "<code>" "<u>" "<s>" "<strong>" "<table>"
     "<colgroup>" "<col>" "<thead>" "<tr>" "<th>"
-    "<tbody>" "<td>" "<ul>" "<li>" "<ol>" "<a>"))
+    "<tbody>" "<td>" "<ul>" "<li>" "<ol>" "<a>"
+    "<ac:image>" "<ri:attachment>" "<br>"))
+
+(defconst dk-wiki-html5-uni-tags
+  `("<ri:attachment>" "<br>"))
 
 (defvar begin-tag-list ())
 (defvar result-org-buffer (get-buffer-create "result-org-buffer"))
@@ -46,23 +50,24 @@
     <tag> is the html tag found.
     beg-pos is the position before the first '<' in the buffer.
     end-pos is the position after the last '>' in the buffer."
-  (let* ((start (search-forward "<" nil t))
-	 (end (search-forward ">" nil t)))
-	 (if (and start end)
-	     (cons
-	      (downcase 
-	       (replace-regexp-in-string "[\s-][^>]+" "" (buffer-substring-no-properties (- start 1) end)))
-	 (cons (- start 1) end))
-	   nil)))
+  (when (re-search-forward "<[^>]+>" nil t)
+    (cons
+     (downcase
+      (replace-regexp-in-string "[\s-][^>]+" "" (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+     (cons (match-beginning 0) (match-end 0)))))
 
 (defun dk-check-valid-html-tag (tag)
   (member tag dk-wiki-html5-tags))
 
 (defun dk-check-begin-html-tag (tag)
-  (not (equal (substring tag 1 2 ) "/")))
+  (and (not (equal (substring tag 1 2 ) "/"))
+       (not (member tag dk-wiki-html5-uni-tags))))
 
 (defun dk-check-end-html-tag (tag)
   (equal (substring tag 1 2 ) "/"))
+
+(defun dk-check-uni-html-tag (tag)
+  (member tag dk-wiki-html5-uni-tags))
 
 (defun dk-get-html-end-tag (begin-tag)
   (concat "<" (store-substring begin-tag 0 ?/)))
@@ -164,6 +169,10 @@
   (goto-char (point-max))
   (insert ?\n))
 
+(defsubst dk-process-thead ()
+  (insert "|-")
+  (insert ?\n))
+
 (defsubst dk-process-tbody ()
   )
 
@@ -207,10 +216,57 @@
   (goto-char (point-max))
   (insert ?\n))
 
+(defsubst dk-process-begin-a (tag-string)
+  (insert "[[")
+  (string-match "\\( href=\"\\)\\([^\"]+\\)"
+		tag-string)
+  (insert (match-string 2 tag-string))
+  (insert "]["))
+
+(defsubst dk-process-end-a ()
+  (insert "]]")
+  (insert ?\n)
+  (insert ?\n))
+
+(defsubst dk-process-br ()
+  (insert "------")
+  (insert ?\n))
+
+(defsubst dk-process-begin-acimage (tag-string)
+  (insert "#+CAPTION: ")
+  (string-match "\\( ac:title=\"\\)\\([^\"]+\\)"
+		tag-string)
+  (insert (match-string 2 tag-string))
+  (insert ?\n))
+
+(defsubst dk-process-riattachment (tag-string)
+  (insert "[[")
+  (string-match "\\( ri:filename=\"\\)\\([^\"]+\\)"
+		tag-string)
+  (insert (match-string 2 tag-string)))
+
+(defsubst dk-process-end-acimage ()
+  (insert "]]")
+  (insert ?\n)
+  (insert ?\n))
+
+(defun dk-get-parent-buffer ()
+  (let* ((parent-node (car begin-tag-list)))
+    (if parent-node
+        (cdr parent-node)
+      result-org-buffer)))
+     
 (defsubst dk-process-html-begin-tag (begin-tag)
   (unless (dk-check-valid-html-tag (car begin-tag))
-    (user-error "html tag: %s is not valid!" (car begin-tag)))
-  (dk-add-tag-to-begin-tag-list begin-tag))
+    (user-error "html tag: %s is not supported!" (car begin-tag)))
+  (dk-add-tag-to-begin-tag-list begin-tag)
+  (let ((tag-string  (buffer-substring-no-properties
+		      (car (cdr begin-tag))
+		      (cdr (cdr begin-tag)))))
+    (with-current-buffer (cdr (car begin-tag-list))
+      (pcase (car begin-tag)
+	("<a>" (dk-process-begin-a tag-string))
+	("<ac:image>" (dk-process-begin-acimage tag-string))))))
 
 (defsubst dk-process-html-end-tag (end-tag)
   (let ((nearest-tag (pop begin-tag-list)))
@@ -220,11 +276,13 @@
       (user-error "Parsing order error! end-tag: %s" (car end-tag)))
 
     (unless (or (equal "</table>" (car end-tag))
+		(equal "</thead>" (car end-tag))
 		(equal "</tbody>" (car end-tag))
 		(equal "</tr>" (car end-tag))
 		(equal "</td>" (car end-tag))
-		(equal "</ul>" (car end-tag))
-		(equal "</ol>" (car end-tag)))
+		(equal "</ul>" (car end-tag))	      
+		(equal "</ol>" (car end-tag))
+		(equal "</ac:image>" (car end-tag)))
       (append-to-buffer (cdr nearest-tag)
 			(cdr (cdr (car nearest-tag)))
 			(car (cdr end-tag))))
@@ -245,21 +303,35 @@
 	("</span>" (dk-process-span))
 	("</p>" (dk-process-p))
 	("</table>" (dk-process-table))
+	("</thead>" (dk-process-thead))
 	("</tbody>" (dk-process-tbody))
 	("</tr>" (dk-process-tr))
+	("</th>" (dk-process-td))
 	("</td>" (dk-process-td))
 	("</ul>" (dk-process-ul))
 	("</ol>" (dk-process-ol))
 	("</li>" (dk-process-li))
+	("</a>" (dk-process-end-a))
+	("</ac:image>" (dk-process-end-acimage))
 	)
-      (let* ((parent-node (car begin-tag-list))
-	     (parent-node-buffer))
-	(if parent-node
-	    (setq parent-node-buffer (cdr parent-node))
-	  (setq parent-node-buffer result-org-buffer))
-	(append-to-buffer parent-node-buffer 1 (point-max))
-	(kill-buffer)))))
-    
+
+      (append-to-buffer (dk-get-parent-buffer)
+			1 (point-max))
+      (kill-buffer))))
+
+(defsubst dk-process-html-uni-tag (uni-tag)
+  (let ((tag-string  (buffer-substring-no-properties
+		      (car (cdr uni-tag))
+		      (cdr (cdr uni-tag)))))
+    (with-current-buffer (generate-new-buffer
+			  (car uni-tag))
+      (pcase (car uni-tag)
+	("<br>" (dk-process-br))
+	("<ri:attachment>"
+	 (dk-process-riattachment tag-string)))
+      (append-to-buffer (dk-get-parent-buffer)
+			1 (point-max)))))
+	
 (defun dk-iterate-html-tag ()
   (setq begin-tag-list ())
   (let ((this-tag))
@@ -271,4 +343,6 @@
 	       (dk-process-html-begin-tag this-tag))
 	      ((dk-check-end-html-tag (car this-tag))
 	       (dk-process-html-end-tag this-tag))
+	      ((dk-check-uni-html-tag (car this-tag))
+	       (dk-process-html-uni-tag this-tag))
 	      (t (user-error "html parse error!")))))))
