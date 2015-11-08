@@ -30,6 +30,9 @@
 ;; 5.5. Upload the wiki html to the sap wiki site (unlock the wiki).
 
 ;;; Code:
+;;------------------------------------------------------
+;;2. Convert the wiki html to orgmode format
+;;------------------------------------------------------
 (defconst dk-wiki-html5-tags
   '("<div>" "<h1>" "<h2>" "<h3>" "<h4>" "<h5>" "<p>"
     "<figure>" "<img>" "<figcaption>" "<span>" "<em>"
@@ -84,7 +87,7 @@
 	    (match-end 0))
       ("&gt;" (replace-match ">"))
       ("&lt;" (replace-match "<"))
-      ("&nbsp;" (replace-match ?\s))
+      ("&nbsp;" (replace-match " "))
       ("&amp;" (replace-match "&")))))
       
 (defun dk-process-in-line-ele ()
@@ -114,6 +117,11 @@
 
 (defun dk-process-head-line (stars)
   (dk-process-in-line-ele)
+  (goto-char 1)
+  ;; Remove headline numberring, org-mode doesn't need it
+  (when
+      (re-search-forward "\\([0-9]+[.]+?\\)+\s" nil t)
+    (replace-match "" nil nil))
   (goto-char 1)
   (insert stars)
   (goto-char (point-max))
@@ -155,18 +163,20 @@
   (dk-process-emphasis "_"))
 
 (defsubst dk-process-strike-through ()
-  (dk-process-emphasis "-"))
+  (dk-process-emphasis "+"))
 
 (defsubst dk-process-span ()
   (insert ?\n))
 
 (defsubst dk-process-p ()
   (dk-process-in-line-ele)
+  (goto-char (point-max))
   (insert ?\n)
   (insert ?\n))
 
 (defsubst dk-process-table ()
-  (goto-char (point-max))
+  (org-table-align)
+  (goto-char (point-max)) 
   (insert ?\n))
 
 (defsubst dk-process-thead ()
@@ -198,6 +208,7 @@
       (forward-line)
       (setq current-line (+ 1 current-line))))
   (goto-char (point-max))
+  (insert ?\n)
   (insert ?\n))
 
 (defsubst dk-process-ol ()
@@ -209,7 +220,10 @@
        (insert (concat
 		(number-to-string current-line)
 		". "))
-       (forward-line))))
+       (forward-line)))
+   (goto-char (point-max))
+   (insert ?\n)
+   (insert ?\n))
 
 (defsubst dk-process-li ()
   (dk-process-in-line-ele)
@@ -330,7 +344,8 @@
 	("<ri:attachment>"
 	 (dk-process-riattachment tag-string)))
       (append-to-buffer (dk-get-parent-buffer)
-			1 (point-max)))))
+			1 (point-max))
+      (kill-buffer))))
 	
 (defun dk-iterate-html-tag ()
   (setq begin-tag-list ())
@@ -345,4 +360,165 @@
 	       (dk-process-html-end-tag this-tag))
 	      ((dk-check-uni-html-tag (car this-tag))
 	       (dk-process-html-uni-tag this-tag))
-	      (t (user-error "html parse error!")))))))
+	      (t (user-error "html parse error!"))))))
+  (with-current-buffer result-org-buffer
+    (org-mode)))
+;;------------------------------------------------------
+;;End of 2. Convert the wiki html to orgmode format
+;;------------------------------------------------------
+
+;;------------------------------------------------------
+;;5.4. Convert the orgmode to wiki html
+;;------------------------------------------------------
+(require 'ox-html)
+(eval-when-compile (require 'cl))
+
+(org-export-define-derived-backend 'sapwiki 'html
+  :translate-alist '((template . dk-sapwiki-template)
+		     (headline . dk-sapwiki-headline)
+		     (section . dk-sapwiki-section)
+		     (paragraph . dk-sapwiki-paragraph)
+		     (subscript . dk-sapwiki-subscript)
+		     ))
+
+(defun dk-sapwiki-template (contents info)
+  "Return complete document string after HTML conversion.
+CONTENTS is the transcoded contents string.  INFO is a plist holding export options."
+  contents)
+
+(defun dk-sapwiki-headline (headline contents info)
+  "Derive function org-html-headline"
+  (unless (org-element-property :footnote-section-p headline)
+    (let* ((numberedp (org-export-numbered-headline-p headline info))
+           (numbers (org-export-get-headline-number headline info))
+           (section-number (and numbers
+				(mapconcat #'number-to-string numbers "-")))
+           (level (+ (org-export-get-relative-level headline info)
+                     (1- (plist-get info :html-toplevel-hlevel))))
+           (todo (and (plist-get info :with-todo-keywords)
+                      (let ((todo (org-element-property :todo-keyword headline)))
+                        (and todo (org-export-data todo info)))))
+           (todo-type (and todo (org-element-property :todo-type headline)))
+           (priority (and (plist-get info :with-priority)
+                          (org-element-property :priority headline)))
+           (text (org-export-data (org-element-property :title headline) info))
+           (tags (and (plist-get info :with-tags)
+                      (org-export-get-tags headline info)))
+           (full-text (funcall (plist-get info :html-format-headline-function)
+                               todo todo-type priority text tags info))
+           (contents (or contents ""))
+	   (ids (delq nil
+                      (list (org-element-property :CUSTOM_ID headline)
+                            (org-export-get-reference headline info)
+                            (org-element-property :ID headline))))
+           (preferred-id (car ids))
+           (extra-ids
+	    (mapconcat
+	     (lambda (id)
+	       (org-html--anchor
+		(if (org-uuidgen-p id) (concat "ID-" id) id)
+		nil nil info))
+	     (cdr ids) "")))
+      (if (org-export-low-level-p headline info)
+          ;; This is a deep sub-tree: export it as a list item.
+          (let* ((type (if numberedp 'ordered 'unordered))
+                 (itemized-body
+                  (org-html-format-list-item
+                   contents type nil info nil
+                   (concat (org-html--anchor preferred-id nil nil info)
+                           extra-ids
+                           full-text))))
+            (concat (and (org-export-first-sibling-p headline info)
+                         (org-html-begin-plain-list type))
+                    itemized-body
+                    (and (org-export-last-sibling-p headline info)
+                         (org-html-end-plain-list type))))
+        (let ((extra-class (org-element-property :HTML_CONTAINER_CLASS headline))
+              (first-content (car (org-element-contents headline))))
+          ;; Standard headline.  Export it as a section.
+          (format "%s%s\n"
+                  (format "\n<h%d>%s%s</h%d>\n"
+                          level
+                          extra-ids
+                          (concat
+                           (and numberedp
+                                (format
+                                 "<span class=\"section-number-%d\">%s</span> "
+                                 level
+                                 (mapconcat #'number-to-string numbers ".")))
+                           full-text)
+                          level)
+
+                  (if (eq (org-element-type first-content) 'section) contents
+                    (concat (dk-html-section first-content "" info) contents))
+                  ))))))
+
+(defun dk-sapwiki-section (section contents info)
+  ( or contents "" ))
+
+(defun dk-sapwiki-subscript (subscript contents info)
+  (format "_%s" contents))
+
+(defun org-html-begin-plain-list (type &optional arg1)
+  "Insert the beginning of the HTML list depending on TYPE. When ARG1 is a string, use it as the start parameter for ordered lists.The function is overwriten only because it is convient to do so. It should be changed in a more tender way!"
+  (case type
+    (ordered  "<ol>")
+    (unordered "<ul>")
+    (descriptive "<dl>")))
+
+(defun org-html--wrap-image (contents info &optional caption label)
+  "Wrap CONTENTS string within an appropriate environment for images.INFO is a plist used as a communication channel.  When optional arguments CAPTION and LABEL are given, use them for caption and \"id\" attribute."
+  (let ((html5-fancy (org-html--html5-fancy-p info)))
+    (format (if html5-fancy "\n<figure>\n%s%s\n</figure>"
+	      "\n<div%s class=\"figure\">%s%s\n</div>")
+	    ;; Contents.
+	     contents
+	    ;; Caption.
+	    (if (not (org-string-nw-p caption)) ""
+	      (format (if html5-fancy "\n<figcaption>%s</figcaption>"
+			"\n<p>%s</p>")
+		      caption)))))
+
+(defun dk-sapwiki-paragraph (paragraph contents info)
+  "Transcode a PARAGRAPH element from Org to HTML.
+CONTENTS is the contents of the paragraph, as a string.  INFO is
+the plist used as a communication channel."
+  (let* ((parent (org-export-get-parent paragraph))
+	 (parent-type (org-element-type parent))
+	 (style '((footnote-definition " class=\"footpara\"")
+		  (org-data " class=\"footpara\"")))
+	 (attributes (org-html--make-attribute-string
+		      (org-export-read-attribute :attr_html paragraph)))
+	 (extra (or (cadr (assq parent-type style)) "")))
+    (cond
+     ((and (eq parent-type 'item)
+	   (not (org-export-get-previous-element paragraph info))
+	   (let ((followers (org-export-get-next-element paragraph info 2)))
+	     (and (not (cdr followers))
+		  (memq (org-element-type (car followers)) '(nil plain-list)))))
+      ;; First paragraph in an item has no tag if it is alone or
+      ;; followed, at most, by a sub-list.
+      contents)
+     ((org-html-standalone-image-p paragraph info)
+      ;; Standalone image.
+      (let ((caption (org-export-data
+		      (org-export-get-caption paragraph) info))		 
+	    (label (and (org-element-property :name paragraph)
+			(org-export-get-reference paragraph info))))
+	(org-html--wrap-image contents info caption label)))
+     ;; Regular paragraph.
+     (t (format "<p%s%s>\n%s</p>"
+		(if (org-string-nw-p attributes)
+		    (concat " " attributes) "")
+		extra contents)))))
+
+(defun dk-html-publish-to-sapwiki (plist filename pub-dir)
+  "Publish an org file to pd custom HTML.FILENAME is the filename of the Org file to be published.  PLIST is the property list for the given project.  PUB-DIR is the publishing directory. Return output file name."
+  (org-publish-org-to 'sapwiki filename ".html" plist pub-dir))
+
+;;------------------------------------------------------
+;;End of 5.4. Convert the orgmode to wiki html
+;;------------------------------------------------------
+
+(provide 'sapwiki)
+;; sapwiki.el ends here

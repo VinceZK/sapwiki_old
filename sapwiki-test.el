@@ -43,3 +43,4 @@
   (set-buffer "example.html")
   (goto-char (point-min))
   (dk-iterate-html-tag))
+

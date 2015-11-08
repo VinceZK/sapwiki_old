@@ -1,0 +1,46 @@
+** Top level headline
+
+This Learning Map is for Searching Learning Material , it is designed for you to find useful materials based on your career or level of skills,  [[http://www.google.com][google]]  you can also search for materials which you are interested in.
+
+*** Second level
+
+| header1 | header2 |
+|---------+---------|
+| field1  | field2  |
+|         |         |
+
+------
+#+CAPTION: Content to Backend aaaa
+[[~/Downloads/images.jpeg]]
+
+------
+** Top *level* headline
+
+*** Second /level/
+
+this is a simple paragraph
+
+This is a paragrah begin  =verbatim-em= some words in the middle ~code~ still some middle words  /italic/  *bold*  _underlined_  +strike-through+  in span This is a paragrah end
+
+| *Role*                       | *Name*        |
+| Author(s)                    | Vincent.Zhang |
+| Architect                    | Vincent.Zhang |
+| Product Owner                | Carol.Pan     |
+| Information Developer        |               |
+| Quality Responsible (QE/QPE) |               |
+| Developers                   |               |
+
+- Projection from ACDOCA to form a Basic Interface View, #FACT =>P_ConsACDOCA
+- Dimension view of SKA1(Group Account) & SKAT(Account Text) =>P_ConsAcct_T
+- Dimension view of Account Type =>P_ConsAcctType_T
+- Dimension view of T001(Company Text) =>P_ConsCompany_T
+- Dimension view of T004(Chart of Account Text) =>P_ConsCoa_T
+- Associate P_ConsACDOCA with P_ConsAcct_T, P_ConsCompany_T, P_ConsCoa_T to form a public cube =>I_ConsPrep_C    
+- Create a query on P_ConsPrep_C for test purpose => P_ConsTest_Q
+- Create a cube for BPC with Balance Carry Forward, Balance in Period, Balance in Current, and Cumulative Balance        => I_ConsBPC_C    
+- Create a query with parameters (Company Code, Period, and so on ) based on P_ConsBPC_C => C_ConsBPC_Q
+
+
+1. Projection from *ACDOCA* to form a Basic Interface View, #FACT =>P_ConsACDOCA
+2. Dimension view of SKA1(Group Account) & SKAT(Account Text) =>P_ConsAcct_T
+3. Dimension view of /Account Type/ =>P_ConsAcctType_T
