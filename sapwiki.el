@@ -39,7 +39,8 @@
     "<i>" "<b>" "<code>" "<u>" "<s>" "<strong>" "<table>"
     "<colgroup>" "<col>" "<thead>" "<tr>" "<th>"
     "<tbody>" "<td>" "<ul>" "<li>" "<ol>" "<a>"
-    "<ac:image>" "<ri:attachment>" "<br>"))
+    "<ac:image>" "<ri:attachment>" "<sub>" "<sup>"
+    "<br>"))
 
 (defconst dk-wiki-html5-uni-tags
   `("<ri:attachment>" "<br>"))
@@ -56,7 +57,7 @@
   (when (re-search-forward "<[^>]+>" nil t)
     (cons
      (downcase
-      (replace-regexp-in-string "[\s-][^>]+" "" (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+      (replace-regexp-in-string "[\n\s\t\r][^>]*" "" (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
      (cons (match-beginning 0) (match-end 0)))))
 
 (defun dk-check-valid-html-tag (tag)
@@ -166,6 +167,20 @@
   (dk-process-emphasis "+"))
 
 (defsubst dk-process-span ()
+  (insert ?\n))
+
+(defsubst dk-process-sub ()
+  (goto-char 1)
+  (insert "_{")
+  (goto-char (point-max))
+  (insert "}")
+  (insert ?\n))
+
+(defsubst dk-process-sup ()
+  (goto-char 1)
+  (insert "^{")
+  (goto-char (point-max))
+  (insert "}")
   (insert ?\n))
 
 (defsubst dk-process-p ()
@@ -292,8 +307,10 @@
     (unless (or (equal "</table>" (car end-tag))
 		(equal "</thead>" (car end-tag))
 		(equal "</tbody>" (car end-tag))
+		(equal "</div>" (car end-tag))
 		(equal "</tr>" (car end-tag))
 		(equal "</td>" (car end-tag))
+		(equal "</th>" (car end-tag))
 		(equal "</ul>" (car end-tag))	      
 		(equal "</ol>" (car end-tag))
 		(equal "</ac:image>" (car end-tag)))
@@ -315,6 +332,8 @@
 	("</u>" (dk-process-underline))
 	("</s>" (dk-process-strike-through))
 	("</span>" (dk-process-span))
+	("</sub>" (dk-process-sub))
+	("</sup>" (dk-process-sup))
 	("</p>" (dk-process-p))
 	("</table>" (dk-process-table))
 	("</thead>" (dk-process-thead))
@@ -348,6 +367,14 @@
       (kill-buffer))))
 	
 (defun dk-iterate-html-tag ()
+  (goto-char 1)
+  (when (re-search-forward
+	 "\\(<ac:macros[^>]+\\)\\(ac:name=\"toc\"[^>]*\\)\\(/>[^<]*</\\)"
+	 nil t)
+    (with-current-buffer result-org-buffer
+      (insert "#+OPTIONS: toc")
+      (insert ?\n)))
+  
   (setq begin-tag-list ())
   (let ((this-tag))
     (catch 'exit
@@ -378,7 +405,7 @@
 		     (headline . dk-sapwiki-headline)
 		     (section . dk-sapwiki-section)
 		     (paragraph . dk-sapwiki-paragraph)
-		     (subscript . dk-sapwiki-subscript)
+		    ; (subscript . dk-sapwiki-subscript)
 		     ))
 
 (defun dk-sapwiki-template (contents info)

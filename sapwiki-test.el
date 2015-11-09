@@ -40,7 +40,7 @@
   (kill-buffer "<h2>"))
   
 (ert-deftest dk-iterate-html-tag ()
-  (set-buffer "example.html")
+  (set-buffer "example3.html")
   (goto-char (point-min))
   (dk-iterate-html-tag))
 
