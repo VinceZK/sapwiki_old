@@ -11,7 +11,8 @@
  ;; If there is more than one, they won't work right.
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
- '(custom-enabled-themes (quote ( misterioso)))
+ '(custom-enabled-themes (quote (misterioso)))
+ '(org-export-with-sub-superscripts (quote {}))
  '(org-html-text-markup-alist
    (quote
     ((bold . "<b>%s</b>")
@@ -21,6 +22,7 @@
      (underline . "<span class=\"underline\">%s</span>")
      (verbatim . "<em>%s</em>"))))
  '(org-startup-indented t)
+ '(org-use-sub-superscripts (quote {}))
  '(package-enable-at-startup nil)
  '(send-mail-function (quote mailclient-send-it))
  '(show-paren-mode t)
@@ -112,7 +114,7 @@ my:el-get-packages
 ;; (cua-mode)
 
 ;; Use the clipboard, pretty please, so that copy/paste "works"
-(setq x-select-enable-clipboard t)
+(setq select-enable-clipboard t)
 
 ;; Navigate windows with M-<arrows>
 (windmove-default-keybindings 'meta)
@@ -145,8 +147,10 @@ my:el-get-packages
 (global-set-key (kbd "C->") 'uncomment-region)
 (global-set-key "\C-cc" 'emacs-lisp-byte-compile-and-load)
 
-;; dk html backend
+;; dk&sapwiki html backend
+(add-to-list 'load-path "~/.emacs.d/sapwiki/")
 (require 'ox-dk-html)
+(require 'sapwiki)
 (setq org-publish-project-alist
        '(("blog"
           :base-directory "~/workspace/javascript/darkhouse/app/orgNote/"
@@ -169,22 +173,27 @@ my:el-get-packages
  	  :with-date nil
  	  :with-title nil
  	  :with-footnotes nil
- 	  :with-toc nil
-;         :author "VinceZK"
-;         :email "zklee@hotmail.com"
-;         :style    "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/worg.css\"/>"
-         )
-        ;; ("blog-static"
-        ;;  :base-directory "~/org/blog/"
-        ;;  :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf"
-        ;;  :publishing-directory "~/org/dayigu.github.com/"
-        ;;  :recursive t
-        ;;  :publishing-function org-publish-attachment
-        ;;  )
-        ;; ("blog" :components ("blog-notes" "blog-static"))
-        ;; ;;
-        ;; )
-      ))
+ 	  :with-toc nil)
+	 ("sapwiki"
+	  :base-directory "~/.emacs.d/sapwiki/work/"
+	  :base-extension "org"
+	  :publishing-directory "~/.emacs.d/sapwiki/pub/"
+	  :recursive t
+	  :publishing-function dk-html-publish-to-sapwiki
+	  :headline-levels 4
+	  :section-number t
+	  :auto-preamble nil
+	  :auto-sitemap nil
+	  :html-doctype "html5"
+	  :html-html5-fancy t
+ 	  :html-indent t
+ 	  :html-preamble nil
+ 	  :html-postamble nil
+ 	  :with-author nil
+ 	  :with-date nil
+ 	  :with-title nil
+ 	  :with-footnotes nil	  
+	  :with-toc nil)))
 
 ;; etags to get *.gz files
 (require 'jka-compr) 

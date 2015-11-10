@@ -40,10 +40,10 @@
     "<colgroup>" "<col>" "<thead>" "<tr>" "<th>"
     "<tbody>" "<td>" "<ul>" "<li>" "<ol>" "<a>"
     "<ac:image>" "<ri:attachment>" "<sub>" "<sup>"
-    "<br>"))
+    "<br>" "<hr>"))
 
 (defconst dk-wiki-html5-uni-tags
-  `("<ri:attachment>" "<br>"))
+  `("<ri:attachment>" "<br>" "<hr>" "<col>"))
 
 (defvar begin-tag-list ())
 (defvar result-org-buffer (get-buffer-create "result-org-buffer"))
@@ -194,6 +194,11 @@
   (goto-char (point-max)) 
   (insert ?\n))
 
+(defsubst dk-process-colgroup ()
+  ;(goto-char (point-max))
+  (insert " |")
+  (insert ?\n))
+
 (defsubst dk-process-thead ()
   (insert "|-")
   (insert ?\n))
@@ -202,7 +207,7 @@
   )
 
 (defsubst dk-process-tr ()
-  (goto-char (point-max))
+  ;(goto-char (point-max))
   (insert " |")
   (insert ?\n))
 
@@ -253,13 +258,34 @@
   (insert "]["))
 
 (defsubst dk-process-end-a ()
+  (goto-char 1)
+  (while (re-search-forward "[\t\r\n]+" nil t)
+    (replace-match "" nil nil)
+    )
+  (goto-char (point-max))
   (insert "]]")
   (insert ?\n)
   (insert ?\n))
 
 (defsubst dk-process-br ()
+  (insert ?\n))
+
+(defsubst dk-process-hr ()
   (insert "------")
   (insert ?\n))
+
+(defsubst dk-process-col (tag-string)
+  (insert "| <")
+  (string-match "\\( org_width=\"\\)\\([^\"]+\\)"
+		tag-string)
+  (insert (match-string 2 tag-string))
+  (insert "> "))
+
+(defsubst dk-process-riattachment (tag-string)
+  (insert "[[")
+  (string-match "\\( ri:filename=\"\\)\\([^\"]+\\)"
+		tag-string)
+  (insert (match-string 2 tag-string)))
 
 (defsubst dk-process-begin-acimage (tag-string)
   (insert "#+CAPTION: ")
@@ -268,13 +294,7 @@
   (insert (match-string 2 tag-string))
   (insert ?\n))
 
-(defsubst dk-process-riattachment (tag-string)
-  (insert "[[")
-  (string-match "\\( ri:filename=\"\\)\\([^\"]+\\)"
-		tag-string)
-  (insert (match-string 2 tag-string)))
-
-(defsubst dk-process-end-acimage ()
+(defsubst dk-process-end-acimage ()  
   (insert "]]")
   (insert ?\n)
   (insert ?\n))
@@ -305,6 +325,7 @@
       (user-error "Parsing order error! end-tag: %s" (car end-tag)))
 
     (unless (or (equal "</table>" (car end-tag))
+		(equal "</colgroup>" (car end-tag))
 		(equal "</thead>" (car end-tag))
 		(equal "</tbody>" (car end-tag))
 		(equal "</div>" (car end-tag))
@@ -336,6 +357,7 @@
 	("</sup>" (dk-process-sup))
 	("</p>" (dk-process-p))
 	("</table>" (dk-process-table))
+	("</colgroup>" (dk-process-colgroup))
 	("</thead>" (dk-process-thead))
 	("</tbody>" (dk-process-tbody))
 	("</tr>" (dk-process-tr))
@@ -360,16 +382,24 @@
 			  (car uni-tag))
       (pcase (car uni-tag)
 	("<br>" (dk-process-br))
+	("<hr>" (dk-process-hr))
+	("<col>" (dk-process-col tag-string))
 	("<ri:attachment>"
 	 (dk-process-riattachment tag-string)))
       (append-to-buffer (dk-get-parent-buffer)
 			1 (point-max))
       (kill-buffer))))
-	
+
+(defsubst dk-add-org-head-properties ()
+  (with-current-buffer result-org-buffer
+    (insert "#+STARTUP: align")
+    (insert ?\n)))
+
 (defun dk-iterate-html-tag ()
+  (dk-add-org-head-properties)
   (goto-char 1)
   (when (re-search-forward
-	 "\\(<ac:macros[^>]+\\)\\(ac:name=\"toc\"[^>]*\\)\\(/>[^<]*</\\)"
+	 "\\(<ac:macro[^>]+\\)\\(ac:name=\"toc\"[^>]*\\)\\(/>[^<]*</\\)"
 	 nil t)
     (with-current-buffer result-org-buffer
       (insert "#+OPTIONS: toc")
