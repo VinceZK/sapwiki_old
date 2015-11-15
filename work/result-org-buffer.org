@@ -1,27 +1,38 @@
+#+STARTUP: align
+#+OPTIONS: toc:1
+** TODO Call people [1/2]                                          :Vincent:
+:PROPERTIES:
+:GENRES:   Classic
+:END:
+*** TODO Peter develop component one                              :Peter:
+DEADLINE: <2015-11-17 Tue>
+*** DONE Sarah test component one                                   :Sarah:
+DEADLINE: <2015-11-18 Wed>
+
 ** Top level headline
 
-This Learning Map is for Searching Learning Material , it is designed for you to find useful materials based on your career or level of skills,  [[http://www.google.com][google]]  you can also search for materials which you are interested in.
+This Learning Map is for Searching Learning Material , it is designed for you to find useful materials based on your career or level of skills,  [[http://www.google.com/][google]]  you can also search for materials which you are interested in.
 
 *** Second level
 
-| <20>                 | <25>                      |
-| header1              | header2                   |
+| <l20>                |                     <r25> |
+| header1              |                   header2 |
 |----------------------+---------------------------|
-| field1               | field2                    |
+| field1               |                    field2 |
 |                      |                           |
 
 ------
 #+CAPTION: Connect to Backend
-[[~\Downloads\image.jpeg][Boole]]
+[[../image/Bool.jpeg]]
 
-
-** Top *level* headline 3_{rd} 
+** Top *level* headline 3_{rd}
 
 *** Second /level/
 
-this is a simple paragraph
+this is a simple paragraph\\
+line breakaaa
 
-This is a paragraph begin  =verbatim-em= some words in the middle  ~code~ still some middle words  /italic/  *bold*  _underlined_  +strike-through+  in span This is a paragraph end
+This is a paragraph begin  =verbatim-em= some words in the middle  ~code~ still some middle words  /italic/ *bold*  _underlined_  +strike-through+  in span This is a paragraph end
 
 | *Role*                       | *Name*        |
 | Author(s)                    | Vincent.Zhang |
@@ -36,9 +47,9 @@ This is a paragraph begin  =verbatim-em= some words in the middle  ~code~ still 
 - Dimension view of Account Type =>P_ConsAcctType_T
 - Dimension view of T001(Company Text) =>P_ConsCompany_T
 - Dimension view of T004(Chart of Account Text) =>P_ConsCoa_T
-- Associate P_ConsACDOCA with P_ConsAcct_T, P_ConsCompany_T, P_ConsCoa_T to form a public cube =>I_ConsPrep_C    
+- Associate P_ConsACDOCA with P_ConsAcct_T, P_ConsCompany_T, P_ConsCoa_T to form a public cube =>I_ConsPrep_C
 - Create a query on P_ConsPrep_C for test purpose => P_ConsTest_Q
-- Create a cube for BPC with Balance Carry Forward, Balance in Period, Balance in Current, and Cumulative Balance        => I_ConsBPC_C    
+- Create a cube for BPC with Balance Carry Forward, Balance in Period, Balance in Current, and Cumulative Balance        => I_ConsBPC_C
 - Create a query with parameters (Company Code, Period, and so on ) based on P_ConsBPC_C => C_ConsBPC_Q
 
 

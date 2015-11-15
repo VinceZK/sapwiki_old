@@ -12,14 +12,16 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(custom-enabled-themes (quote (misterioso)))
+ '(org-export-show-temporary-export-buffer nil)
  '(org-export-with-sub-superscripts (quote {}))
+ '(org-html-table-align-individual-fields nil)
  '(org-html-text-markup-alist
    (quote
     ((bold . "<b>%s</b>")
      (code . "<code>%s</code>")
      (italic . "<i>%s</i>")
-     (strike-through . "<del>%s</del>")
-     (underline . "<span class=\"underline\">%s</span>")
+     (strike-through . "<s>%s</s>")
+     (underline . "<u>%s</u>")
      (verbatim . "<em>%s</em>"))))
  '(org-startup-indented t)
  '(org-use-sub-superscripts (quote {}))
@@ -59,6 +61,7 @@
 ; set the font
 (set-face-attribute 'default nil :font "Monaco")
 (set-face-attribute 'default nil :height 160)
+(set-fontset-font "fontset-default" 'han '("STHeiti"))
 
 ;; el-get setup
 (add-to-list 'load-path "~/.emacs.d/el-get/el-get")
@@ -184,16 +187,18 @@ my:el-get-packages
 	  :section-number t
 	  :auto-preamble nil
 	  :auto-sitemap nil
-	  :html-doctype "html5"
+	  :html-doctype "xhtml5"
 	  :html-html5-fancy t
  	  :html-indent t
  	  :html-preamble nil
  	  :html-postamble nil
+	  :html-table-header-tags ("<th><p>" . "</p></th>")
+	  :html-table-data-tags ("<td><p>" . "</p></td>")
  	  :with-author nil
  	  :with-date nil
  	  :with-title nil
  	  :with-footnotes nil	  
 	  :with-toc nil)))
 
-;; etags to get *.gz files
+;; Etags to get *.gz files
 (require 'jka-compr) 
