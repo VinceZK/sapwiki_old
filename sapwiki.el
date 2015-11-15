@@ -95,7 +95,7 @@
   (goto-char (point-min))
   (let ((line-num 0))
     ;; First, search and replace emphasis in the paragraph
-    (while (re-search-forward "<[^>]*>[^>]*</[^>]*>" nil t 1)
+    (while (re-search-forward "<[^/]+/>\\|<[^>]*>[^>]*</[^>]+>" nil t 1)
       (save-excursion
 	(goto-char 1)
 	(forward-line line-num)     
@@ -113,15 +113,18 @@
   ;; remove whitesapces
   (goto-char (point-min))
   (while (re-search-forward "[\t\r\n]+" nil t)
-    (replace-match "" nil nil)
-    ))
+    (replace-match "" nil nil))
+  ;; re-add line break for //
+  (goto-char (point-min))
+  (while (re-search-forward "\\\\\\{2\\}" nil t)
+    (insert ?\n)))
 
 (defun dk-process-head-line (stars)
   (dk-process-in-line-ele)
   (goto-char 1)
   ;; Remove headline numberring, org-mode doesn't need it
   (when
-      (re-search-forward "\\([0-9]+[.]+?\\)+\s" nil t)
+      (re-search-forward "\\([0-9]+[.]*\\)+\s" nil t)
     (replace-match "" nil nil))
   (goto-char 1)
   (insert stars)
@@ -190,14 +193,20 @@
   (insert ?\n))
 
 (defsubst dk-process-table ()
-  (org-table-align)
+  ;(org-table-align)
   (goto-char (point-max)) 
   (insert ?\n))
 
 (defsubst dk-process-colgroup ()
-  ;(goto-char (point-max))
-  (insert " |")
-  (insert ?\n))
+  (goto-char 1)
+  (re-search-forward "\\(| <l> \\)+" nil t)
+  (if (and (equal (match-beginning 0) 1)
+	   (equal (match-end 0) (point-max)))
+      (replace-match "" nil nil)
+    (progn
+      (goto-char (point-max))
+      (insert "|")
+      (insert ?\n))))
 
 (defsubst dk-process-thead ()
   (insert "|-")
@@ -268,6 +277,10 @@
   (insert ?\n))
 
 (defsubst dk-process-br ()
+  (insert ?\\)
+  (insert ?\\)
+  (insert ?\\)
+  (insert ?\\)
   (insert ?\n))
 
 (defsubst dk-process-hr ()
@@ -276,16 +289,22 @@
 
 (defsubst dk-process-col (tag-string)
   (insert "| <")
-  (string-match "\\( org_width=\"\\)\\([^\"]+\\)"
+  (string-match "\\( align=\"\\)\\([^\"]+\\)"
 		tag-string)
-  (insert (match-string 2 tag-string))
+  (pcase (downcase (match-string 2 tag-string))
+    ("left" (insert "l"))
+    ("right" (insert "r"))
+    ("center" (insert "c")))
+  (if (string-match "\\( org_width=\"\\)\\([^\"]+\\)"
+		    tag-string)
+      (insert (match-string 2 tag-string)))
   (insert "> "))
 
 (defsubst dk-process-riattachment (tag-string)
   (insert "[[")
   (string-match "\\( ri:filename=\"\\)\\([^\"]+\\)"
 		tag-string)
-  (insert (match-string 2 tag-string)))
+  (insert (concat "../image/" (match-string 2 tag-string))))
 
 (defsubst dk-process-begin-acimage (tag-string)
   (insert "#+CAPTION: ")
@@ -367,8 +386,7 @@
 	("</ol>" (dk-process-ol))
 	("</li>" (dk-process-li))
 	("</a>" (dk-process-end-a))
-	("</ac:image>" (dk-process-end-acimage))
-	)
+	("</ac:image>" (dk-process-end-acimage)))
 
       (append-to-buffer (dk-get-parent-buffer)
 			1 (point-max))
@@ -397,13 +415,17 @@
 
 (defun dk-iterate-html-tag ()
   (dk-add-org-head-properties)
+  ;; If Table of Content is needed?
   (goto-char 1)
-  (when (re-search-forward
+  (if (re-search-forward
 	 "\\(<ac:macro[^>]+\\)\\(ac:name=\"toc\"[^>]*\\)\\(/>[^<]*</\\)"
 	 nil t)
+      (with-current-buffer result-org-buffer
+	(insert "#+OPTIONS: toc:1")
+	(insert ?\n))
     (with-current-buffer result-org-buffer
-      (insert "#+OPTIONS: toc")
-      (insert ?\n)))
+	(insert "#+OPTIONS: toc:nil")
+	(insert ?\n)))
   
   (setq begin-tag-list ())
   (let ((this-tag))
@@ -432,16 +454,66 @@
 
 (org-export-define-derived-backend 'sapwiki 'html
   :translate-alist '((template . dk-sapwiki-template)
+		     (inner-template . dk-sapwiki-inner-template)
+		     (keyword . dk-sapwiki-keyword)
 		     (headline . dk-sapwiki-headline)
 		     (section . dk-sapwiki-section)
 		     (paragraph . dk-sapwiki-paragraph)
-		    ; (subscript . dk-sapwiki-subscript)
+		     (link . dk-sapwiki-link)
+		     (plain-list . dk-sapwiki-plain-list)
+		     (table . dk-sapwiki-table)
+		     (table-cell . dk-sapwiki-table-cell)
 		     ))
 
 (defun dk-sapwiki-template (contents info)
   "Return complete document string after HTML conversion.
 CONTENTS is the transcoded contents string.  INFO is a plist holding export options."
   contents)
+
+(defun dk-sapwiki-inner-template (contents info)
+  "Return body of document string after HTML conversion.
+CONTENTS is the transcoded contents string.  INFO is a plist
+holding export options."
+  (concat   
+   ;; Table of contents.
+   (let ((depth (plist-get info :with-toc)))
+     (when depth (dk-sapwiki-toc depth info)))
+   ;; Document contents.
+   contents
+   ;; Footnotes section.
+   (org-html-footnote-section info)))
+
+(defun dk-sapwiki-keyword (keyword contents info)
+  "Transcode a KEYWORD element from Org to HTML.
+CONTENTS is nil.  INFO is a plist holding contextual information."
+  (let ((key (org-element-property :key keyword))
+	(value (org-element-property :value keyword)))
+    (cond
+     ((string= key "HTML") value)
+     ((string= key "TOC")
+      (let ((case-fold-search t))
+	(cond
+	 ((string-match "\\<headlines\\>" value)
+	  (let ((depth (and (string-match "\\<[0-9]+\\>" value)
+			    (string-to-number (match-string 0 value))))
+		(localp (org-string-match-p "\\<local\\>" value)))
+	    (dk-sapwiki-toc depth info (and localp keyword))))
+	 ((string= "listings" value) (org-html-list-of-listings info))
+	 ((string= "tables" value) (org-html-list-of-tables info))))))))
+
+(defun dk-sapwiki-toc (depth info &optional scope)
+  "Build a table of contents.
+DEPTH is an integer specifying the depth of the table.  INFO is
+a plist used as a communication channel.  Optional argument SCOPE
+is an element defining the scope of the table.  Return the table
+of contents as a string, or nil if it is empty."
+  (let ((toc-entries
+	 (mapcar (lambda (headline)
+		   (cons (org-html--format-toc-headline headline info)
+			 (org-export-get-relative-level headline info)))
+		 (org-export-collect-headlines info depth scope))))
+    (when toc-entries
+       "<h1><ac:macro ac:name=\"toc\" /></h1>")))
 
 (defun dk-sapwiki-headline (headline contents info)
   "Derive function org-html-headline"
@@ -500,8 +572,7 @@ CONTENTS is the transcoded contents string.  INFO is a plist holding export opti
                           (concat
                            (and numberedp
                                 (format
-                                 "<span class=\"section-number-%d\">%s</span> "
-                                 level
+                                 "<span>%s</span> "
                                  (mapconcat #'number-to-string numbers ".")))
                            full-text)
                           level)
@@ -513,28 +584,203 @@ CONTENTS is the transcoded contents string.  INFO is a plist holding export opti
 (defun dk-sapwiki-section (section contents info)
   ( or contents "" ))
 
-(defun dk-sapwiki-subscript (subscript contents info)
-  (format "_%s" contents))
-
-(defun org-html-begin-plain-list (type &optional arg1)
-  "Insert the beginning of the HTML list depending on TYPE. When ARG1 is a string, use it as the start parameter for ordered lists.The function is overwriten only because it is convient to do so. It should be changed in a more tender way!"
+(defun dk-html-begin-plain-list (type &optional arg1)
   (case type
     (ordered  "<ol>")
     (unordered "<ul>")
     (descriptive "<dl>")))
 
-(defun org-html--wrap-image (contents info &optional caption label)
+(defun dk-sapwiki-plain-list (plain-list contents info)
+  "Transcode a PLAIN-LIST element from Org to HTML.
+CONTENTS is the contents of the list.  INFO is a plist holding
+contextual information."
+  (let* (arg1 ;; (assoc :counter (org-element-map plain-list 'item
+	 (type (org-element-property :type plain-list)))
+    (format "%s\n%s%s"
+	    (dk-html-begin-plain-list type)
+	    contents (org-html-end-plain-list type))))
+
+(defun dk-html--wrap-image (contents info &optional caption label)
   "Wrap CONTENTS string within an appropriate environment for images.INFO is a plist used as a communication channel.  When optional arguments CAPTION and LABEL are given, use them for caption and \"id\" attribute."
-  (let ((html5-fancy (org-html--html5-fancy-p info)))
-    (format (if html5-fancy "\n<figure>\n%s%s\n</figure>"
-	      "\n<div%s class=\"figure\">%s%s\n</div>")
-	    ;; Contents.
-	     contents
-	    ;; Caption.
-	    (if (not (org-string-nw-p caption)) ""
-	      (format (if html5-fancy "\n<figcaption>%s</figcaption>"
-			"\n<p>%s</p>")
-		      caption)))))
+  (format "\n<ac:image ac:title=\"%s\" ac:alt=\"%s\">\n%s</ac:image>"
+	  caption caption contents))
+
+(defun dk-html--format-image (source attributes info)
+    (org-html-close-tag
+     "ri:attachment"
+     (org-html--make-attribute-string
+      (org-combine-plists
+       (list :ri:filename (file-name-nondirectory source))
+       attributes))
+     info))
+
+(defun dk-sapwiki-link (link desc info)
+  "Transcode a LINK object from Org to HTML.
+DESC is the description part of the link, or the empty string.
+INFO is a plist holding contextual information.  See
+`org-export-data'."
+  (let* ((home (when (plist-get info :html-link-home)
+		 (org-trim (plist-get info :html-link-home))))
+	 (use-abs-url (plist-get info :html-link-use-abs-url))
+	 (link-org-files-as-html-maybe
+	  (lambda (raw-path info)
+	    ;; Treat links to `file.org' as links to `file.html', if
+	    ;; needed.  See `org-html-link-org-files-as-html'.
+	    (cond
+	     ((and (plist-get info :html-link-org-files-as-html)
+		   (string= ".org"
+			    (downcase (file-name-extension raw-path "."))))
+	      (concat (file-name-sans-extension raw-path) "."
+		      (plist-get info :html-extension)))
+	     (t raw-path))))
+	 (type (org-element-property :type link))
+	 (raw-path (org-element-property :path link))
+	 ;; Ensure DESC really exists, or set it to nil.
+	 (desc (org-string-nw-p desc))
+	 (path
+	  (cond
+	   ((member type '("http" "https" "ftp" "mailto"))
+	    (org-link-escape-browser
+	     (org-link-unescape (concat type ":" raw-path))))
+	   ((string= type "file")
+	    ;; Treat links to ".org" files as ".html", if needed.
+	    (setq raw-path
+		  (funcall link-org-files-as-html-maybe raw-path info))
+	    ;; If file path is absolute, prepend it with protocol
+	    ;; component - "file://".
+	    (cond
+	     ((file-name-absolute-p raw-path)
+	      (setq raw-path (org-export-file-uri raw-path)))
+	     ((and home use-abs-url)
+	      (setq raw-path (concat (file-name-as-directory home) raw-path))))
+	    ;; Add search option, if any.  A search option can be
+	    ;; relative to a custom-id, a headline title a name,
+	    ;; a target or a radio-target.
+	    (let ((option (org-element-property :search-option link)))
+	      (if (not option) raw-path
+		(concat raw-path
+			"#"
+			(org-publish-resolve-external-link
+			 option
+			 (org-element-property :path link))))))
+	   (t raw-path)))
+	 ;; Extract attributes from parent's paragraph.  HACK: Only do
+	 ;; this for the first link in parent (inner image link for
+	 ;; inline images).  This is needed as long as attributes
+	 ;; cannot be set on a per link basis.
+	 (attributes-plist
+	  (let* ((parent (org-export-get-parent-element link))
+		 (link (let ((container (org-export-get-parent link)))
+			 (if (and (eq (org-element-type container) 'link)
+				  (org-html-inline-image-p link info))
+			     container
+			   link))))
+	    (and (eq (org-element-map parent 'link 'identity info t) link)
+		 (org-export-read-attribute :attr_html parent))))
+	 (attributes
+	  (let ((attr (org-html--make-attribute-string attributes-plist)))
+	    (if (org-string-nw-p attr) (concat " " attr) ""))))
+    (cond
+     ;; Link type is handled by a special function.
+     ((org-export-custom-protocol-maybe link desc 'html))
+     ;; Image file.
+     ((and (plist-get info :html-inline-images)
+	   (org-export-inline-image-p
+	    link (plist-get info :html-inline-image-rules)))
+      (dk-html--format-image path attributes-plist info))
+     ;; Radio target: Transcode target's contents and use them as
+     ;; link's description.
+     ((string= type "radio")
+      (let ((destination (org-export-resolve-radio-link link info)))
+	(if (not destination) desc
+	  (format "<a href=\"#%s\"%s>%s</a>"
+		  (org-export-get-reference destination info)
+		  attributes
+		  desc))))
+     ;; Links pointing to a headline: Find destination and build
+     ;; appropriate referencing command.
+     ((member type '("custom-id" "fuzzy" "id"))
+      (let ((destination (if (string= type "fuzzy")
+			     (org-export-resolve-fuzzy-link link info)
+			   (org-export-resolve-id-link link info))))
+	(case (org-element-type destination)
+	  ;; ID link points to an external file.
+	  (plain-text
+	   (let ((fragment (concat "ID-" path))
+		 ;; Treat links to ".org" files as ".html", if needed.
+		 (path (funcall link-org-files-as-html-maybe
+				destination info)))
+	     (format "<a href=\"%s#%s\"%s>%s</a>"
+		     path fragment attributes (or desc destination))))
+	  ;; Fuzzy link points nowhere.
+	  ((nil)
+	   (format "<i>%s</i>"
+		   (or desc
+		       (org-export-data
+			(org-element-property :raw-link link) info))))
+	  ;; Link points to a headline.
+	  (headline
+	   (let ((href (or (org-element-property :CUSTOM_ID destination)
+			   (org-export-get-reference destination info)))
+		 ;; What description to use?
+		 (desc
+		  ;; Case 1: Headline is numbered and LINK has no
+		  ;; description.  Display section number.
+		  (if (and (org-export-numbered-headline-p destination info)
+			   (not desc))
+		      (mapconcat #'number-to-string
+				 (org-export-get-headline-number
+				  destination info) ".")
+		    ;; Case 2: Either the headline is un-numbered or
+		    ;; LINK has a custom description.  Display LINK's
+		    ;; description or headline's title.
+		    (or desc
+			(org-export-data
+			 (org-element-property :title destination) info)))))
+	     (format "<a href=\"#%s\"%s>%s</a>" href attributes desc)))
+	  ;; Fuzzy link points to a target or an element.
+	  (t
+	   (let* ((ref (org-export-get-reference destination info))
+		  (org-html-standalone-image-predicate
+		   #'org-html--has-caption-p)
+		  (number (cond
+			   (desc nil)
+			   ((org-html-standalone-image-p destination info)
+			    (org-export-get-ordinal
+			     (org-element-map destination 'link
+			       #'identity info t)
+			     info 'link 'org-html-standalone-image-p))
+			   (t (org-export-get-ordinal
+			       destination info nil 'org-html--has-caption-p))))
+		  (desc (cond (desc)
+			      ((not number) "No description for this link")
+			      ((numberp number) (number-to-string number))
+			      (t (mapconcat #'number-to-string number ".")))))
+	     (format "<a href=\"#%s\"%s>%s</a>" ref attributes desc))))))
+     ;; Coderef: replace link with the reference name or the
+     ;; equivalent line number.
+     ((string= type "coderef")
+      (let ((fragment (concat "coderef-" (org-html-encode-plain-text path))))
+	(format "<a href=\"#%s\"%s%s>%s</a>"
+		fragment
+		(format "class=\"coderef\" onmouseover=\"CodeHighlightOn(this, \
+'%s');\" onmouseout=\"CodeHighlightOff(this, '%s');\""
+			fragment fragment)
+		attributes
+		(format (org-export-get-coderef-format path desc)
+			(org-export-resolve-coderef path info)))))
+     ;; External link with a description part.
+     ((and path desc) (format "<a href=\"%s\"%s>%s</a>"
+			      (org-html-encode-plain-text path)
+			      attributes
+			      desc))
+     ;; External link without a description part.
+     (path (format "<a href=\"%s\"%s>%s</a>"
+		   (org-html-encode-plain-text path)
+		   attributes
+		   path))
+     ;; No path, only description.  Try to do something useful.
+     (t (format "<i>%s</i>" desc)))))
 
 (defun dk-sapwiki-paragraph (paragraph contents info)
   "Transcode a PARAGRAPH element from Org to HTML.
@@ -562,13 +808,114 @@ the plist used as a communication channel."
 		      (org-export-get-caption paragraph) info))		 
 	    (label (and (org-element-property :name paragraph)
 			(org-export-get-reference paragraph info))))
-	(org-html--wrap-image contents info caption label)))
+	(dk-html--wrap-image contents info caption label)))
      ;; Regular paragraph.
      (t (format "<p%s%s>\n%s</p>"
 		(if (org-string-nw-p attributes)
 		    (concat " " attributes) "")
 		extra contents)))))
 
+(defun dk-sapwiki-table-cell (table-cell contents info)
+  "Transcode a TABLE-CELL element from Org to HTML.
+CONTENTS is nil.  INFO is a plist used as a communication
+channel."
+  (let* ((table-row (org-export-get-parent table-cell))
+	 (table (org-export-get-parent-table table-cell))
+	 (cell-attrs
+	  (if (not (plist-get info :html-table-align-individual-fields))
+	      ""
+	    (format " align=\"%s\""
+		    (org-export-table-cell-alignment table-cell info)))))
+    ;; (when (or (not contents) (string= "" (org-trim contents)))
+    ;;   (setq contents "&#xa0;"))
+    (cond
+     ((and (org-export-table-has-header-p table info)
+	   (= 1 (org-export-table-row-group table-row info)))
+      (let ((header-tags (plist-get info :html-table-header-tags)))
+	(concat "\n" (format (car header-tags) "col" cell-attrs)
+		contents
+		(cdr header-tags))))
+     ((and (plist-get info :html-table-use-header-tags-for-first-column)
+	   (zerop (cdr (org-export-table-cell-address table-cell info))))
+      (let ((header-tags (plist-get info :html-table-header-tags)))
+	(concat "\n" (format (car header-tags) "row" cell-attrs)
+		contents
+		(cdr header-tags))))
+     (t (let ((data-tags (plist-get info :html-table-data-tags)))
+	  (concat "\n" (format (car data-tags) cell-attrs)
+		  contents
+		  (cdr data-tags)))))))
+
+(defun dk-sapwiki-table (table contents info)
+  "Transcode a TABLE element from Org to HTML.
+CONTENTS is the contents of the table.  INFO is a plist holding
+contextual information."
+  (case (org-element-property :type table)
+    ;; Case 1: table.el table.  Convert it using appropriate tools.
+    (table.el (org-html-table--table.el-table table info))
+    ;; Case 2: Standard table.
+    (t
+     (let* ((caption (org-export-get-caption table))
+	    (number (org-export-get-ordinal
+		     table info nil #'org-html--has-caption-p))
+	    (attributes
+	     (org-html--make-attribute-string
+	      (org-combine-plists
+	       (and (org-element-property :name table)
+		    (list :id (org-export-get-reference table info)))
+	       (and (not (org-html-html5-p info))
+		    (plist-get info :html-table-attributes))
+	       (org-export-read-attribute :attr_html table))))
+	    (table-column-specs
+	     (function
+	      (lambda (table info)
+		(mapconcat
+		 (lambda (table-cell)
+		   (let* ((alignment (org-export-table-cell-alignment
+				      table-cell info))
+			  (cellwidth (org-export-table-cell-width
+				      table-cell info)))
+		     (concat
+		      ;; Begin a colgroup?
+		      (when (org-export-table-cell-starts-colgroup-p
+			     table-cell info)
+			"\n<colgroup>")
+		      ;; Add a column.  Also specify it's alignment.
+		      (format "\n%s"
+			      (org-html-close-tag
+			       "col" (concat " "
+					     (if cellwidth
+						 (format "align=\"%s\" org_width=\"%d\"" alignment cellwidth)
+					       (format "align=\"%s\"" alignment))) info))
+		      ;; End a colgroup?
+		      (when (org-export-table-cell-ends-colgroup-p
+			     table-cell info)
+			"\n</colgroup>"))))
+		 (org-html-table-first-row-data-cells table info) "\n")))))
+       (format "<table%s>\n%s\n%s\n%s</table>"
+	       (if (equal attributes "") "" (concat " " attributes))
+	       (if (not caption) ""
+		 (format (if (plist-get info :html-table-caption-above)
+			     "<caption class=\"t-above\">%s</caption>"
+			   "<caption class=\"t-bottom\">%s</caption>")
+			 (concat
+			  "<span class=\"table-number\">"
+                          (format (org-html--translate "Table %d:" info) number)
+			  "</span> " (org-export-data caption info))))
+	       (funcall table-column-specs table info)
+	       contents)))))
+
+;;;###autoload
+(defun dk-sapwiki-export-as-html
+  (&optional async subtreep visible-only body-only exp-plist)
+  "Export current buffer to an HTML buffer."
+  (interactive)
+  (org-export-to-buffer 'sapwiki "*sapwiki export*"
+    async subtreep visible-only body-only
+    (cdr (assoc "sapwiki" org-publish-project-alist))
+    (lambda () (set-auto-mode t))))
+
+;;;###autoload
 (defun dk-html-publish-to-sapwiki (plist filename pub-dir)
   "Publish an org file to pd custom HTML.FILENAME is the filename of the Org file to be published.  PLIST is the property list for the given project.  PUB-DIR is the publishing directory. Return output file name."
   (org-publish-org-to 'sapwiki filename ".html" plist pub-dir))

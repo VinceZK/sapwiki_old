@@ -1,104 +1,116 @@
-<h2>Top level headline</h2>
+<h1><ac:macro ac:name="toc" /></h1>
+<h2><span>1</span> Top level headline</h2>
+<p>
+This Learning Map is for Searching Learning Material , it is designed for you to find useful materials based on your career or level of skills,  <a href="http://www.google.com/">google</a>  you can also search for materials which you are interested in.
+</p>
 
-<p>This Learning Map is for Searching&nbsp;Learning Material , it is designed for you to find useful materials based on your career or level of skills,
-  <a href="http://www.google.com">google</a>
-  you can also search for materials which you are interested in.</p>
 
-<h3>Second level</h3>
-
+<h3><span>1.1</span> Second level</h3>
 <table>
-  <colgroup>
-    <col org_width="20" />
-    <col org_width="25" />
- </colgroup>
+
+
+<colgroup>
+<col  align="left" org_width="20" />
+
+<col  align="right" org_width="25" />
+</colgroup>
 <thead>
 <tr>
 <th><p>header1</p></th>
-<th><p>header2</p></th></tr>
+<th><p>header2</p></th>
+</tr>
 </thead>
 <tbody>
 <tr>
 <td><p>field1</p></td>
-<td><p>field2</p></td></tr>
+<td><p>field2</p></td>
+</tr>
+
 <tr>
-<td>&nbsp;</td>
-<td>&nbsp;</td></tr></tbody></table>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
 
-<hr />
-<ac:image ac:alt="Connet to Backend" ac:title="Connet to Backend"><ri:attachment ri:filename="2.png" />
+<hr  />
+
+<ac:image ac:title="Connect to Backend" ac:alt="Connect to Backend">
+<ri:attachment ri:filename="Bool.jpeg" />
 </ac:image>
-<br />
-		
-<H2><span class="nh-number"
-                             style="line-height: 1.5;font-size: 20.0px;background-color: transparent;">1. </span>Top <b>level</b> headline</H2>
 
-<h3><span>1.1. </span>Second <i>level</i></h3>
 
-<p>this is a simple&nbsp;paragraph</p>
+<h2><span>2</span> Top <b>level</b> headline 3<sub>rd</sub></h2>
 
+<h3><span>2.1</span> Second <i>level</i></h3>
 <p>
-This is a paragraph begin
-  <em>verbatim-em</em> some words in the middle
-  <code>code</code>
- still some middle words
-  <i>italic</i>
-  <B>bold</B>
-  <u>underlined</u>
-  <s>strike-through</s>
-  <span>in span</span>
- This is a paragraph end
+this is a simple paragraph<br />
+line break
 </p>
 
-<table class="confluenceTable">
-    <TBODY>
-    <tr>
-        <td class="confluenceTd"><p><strong>Role</strong></p></td>
-        <td class="confluenceTd"><p><strong>Name</strong></p></td>
-    </tr>
-    <tr>
-        <td class="confluenceTd"><p>Author(s)</p></td>
-        <td class="confluenceTd"><p class="Explanation">Vincent.Zhang</p></td>
-    </tr>
-    <tr>
-        <td class="confluenceTd"><p>Architect</p></td>
-        <td class="confluenceTd"><p class="Explanation">Vincent.Zhang</p></td>
-    </tr>
-    <tr>
-        <td class="confluenceTd"><p>Product Owner</p></td>
-        <td class="confluenceTd"><p class="Explanation">Carol.Pan</p></td>
-    </tr>
-    <tr>
-        <td class="confluenceTd"><p>Information Developer</p></td>
-        <td class="confluenceTd"><p class="Explanation"></p></td>
-    </tr>
-    <tr>
-        <td class="confluenceTd"><p>Quality Responsible (QE/QPE)</p></td>
-        <td class="confluenceTd"><p class="Explanation"></p></td>
-    </tr>
-    <tr>
-        <td class="confluenceTd"><p>Developers</p></td>
-        <td class="confluenceTd"><p class="Explanation"></p></td>
-    </tr>
-    </tbody>
+<p>
+This is a paragraph begin  <em>verbatim-em</em> some words in the middle  <code>code</code> still some middle words  <i>italic</i> <b>bold</b>  <u>underlined</u>  <s>strike-through</s>  in span This is a paragraph end
+</p>
+
+<table>
+<colgroup>
+<col  align="left" />
+    
+<col  align="left" />
+</colgroup>  
+<tbody>
+<tr>
+<td><p><b>Role</b></p></td>
+<td><p><b>Name</b></p></td>
+</tr>
+
+<tr>
+<td><p>Author(s)</p></td>
+<td><p>Vincent.Zhang</p></td>
+</tr>
+
+<tr>
+<td><p>Architect</p></td>
+<td><p>Vincent.Zhang</p></td>
+</tr>
+
+<tr>
+<td><p>Product Owner</p></td>
+<td><p>Carol.Pan</p></td>
+</tr>
+
+<tr>
+<td><p>Information Developer</p></td>
+<td><p></p></td>
+</tr>
+
+<tr>
+<td><p>Quality Responsible (QE/QPE)</p></td>
+<td><p></p></td>
+</tr>
+
+<tr>
+<td><p>Developers</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
 </table>
 
 <ul>
-    <li>Projection from ACDOCA to form a Basic Interface View, #FACT =&gt;P_ConsACDOCA</li>
-    <li>Dimension view of SKA1(Group Account) &amp; SKAT(Account Text) =&gt;P_ConsAcct_T</li>
-    <li>Dimension view of Account Type =&gt;P_ConsAcctType_T</li>
-    <li>Dimension view of T001(Company Text) =&gt;P_ConsCompany_T</li>
-    <li>Dimension view of T004(Chart of Account Text) =&gt;P_ConsCoa_T</li>
-    <li>Associate P_ConsACDOCA with P_ConsAcct_T, P_ConsCompany_T, P_ConsCoa_T to form a public cube =&gt;I_ConsPrep_C
-    </li>
-    <li>Create a query on P_ConsPrep_C for test purpose =&gt; P_ConsTest_Q</li>
-    <li>Create a cube for BPC with Balance Carry Forward, Balance in Period, Balance in Current, and Cumulative Balance
-        =&gt; I_ConsBPC_C
-    </li>
-    <li>Create a query with parameters (Company Code, Period, and so on ) based on P_ConsBPC_C =&gt; C_ConsBPC_Q</li>
+<li>Projection from ACDOCA to form a Basic Interface View, #FACT =&gt;P_ConsACDOCA</li>
+<li>Dimension view of SKA1(Group Account) &amp; SKAT(Account Text) =&gt;P_ConsAcct_T</li>
+<li>Dimension view of Account Type =&gt;P_ConsAcctType_T</li>
+<li>Dimension view of T001(Company Text) =&gt;P_ConsCompany_T</li>
+<li>Dimension view of T004(Chart of Account Text) =&gt;P_ConsCoa_T</li>
+<li>Associate P_ConsACDOCA with P_ConsAcct_T, P_ConsCompany_T, P_ConsCoa_T to form a public cube =&gt;I_ConsPrep_C</li>
+<li>Create a query on P_ConsPrep_C for test purpose =&gt; P_ConsTest_Q</li>
+<li>Create a cube for BPC with Balance Carry Forward, Balance in Period, Balance in Current, and Cumulative Balance        =&gt; I_ConsBPC_C</li>
+<li>Create a query with parameters (Company Code, Period, and so on ) based on P_ConsBPC_C =&gt; C_ConsBPC_Q</li>
 </ul>
 
+
 <ol>
-    <li>Projection from <strong>ACDOCA</strong> to form a Basic Interface View, #FACT =&gt;P_ConsACDOCA</li>
-    <li>Dimension view of SKA1(Group Account) &amp; SKAT(Account Text) =&gt;P_ConsAcct_T</li>
-    <li>Dimension view of <i>Account Type</i> =&gt;P_ConsAcctType_T</li>
+<li>Projection from <b>ACDOCA</b> to form a Basic Interface View, #FACT =&gt;P_ConsACDOCA</li>
+<li>Dimension view of SKA1(Group Account) &amp; SKAT(Account Text) =&gt;P_ConsAcct_T</li>
+<li>Dimension view of <i>Account Type</i> =&gt;P_ConsAcctType_T</li>
 </ol>
