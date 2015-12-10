@@ -1,337 +1,375 @@
+HTTP/1.1 200 OK
+Date: Wed, 09 Dec 2015 05:35:23 GMT
+Server: Apache
+X-ASEN: SEN-166315
+Cache-Control: no-cache, must-revalidate
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+X-Confluence-Request-Time: 1449639323649
+X-Seraph-LoginReason: OK
+X-AUSERNAME: I046147
+Content-Encoding: gzip
+Vary: User-Agent
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+Content-Type: text/plain;charset=UTF-8
+X-UA-Compatible: IE=edge,chrome=1
+X-JSL: D=33027 t=1449639323634743
+Keep-Alive: timeout=15, max=100
+Connection: Keep-Alive
+Transfer-Encoding: chunked
+Set-Cookie: BIGipServer~partition-sap_it_communities-enwiki_prod~lb-ef5c8ddb-4639=rd5o00000000000000000000ffff0a61075co1081; expires=Wed, 09-Dec-2015 06:05:23 GMT; path=/
 
-<h1><ac:macro ac:name="toc" /></h1>
-<h1>1 Abstract</h1>
-<p>Real-time Consolidation(RTC in short) provides corporation the ability of generating consolidated financial statements and reports on-the-fly. RTC is built on Central Finance(CF in short),<span style="line-height: 1.42857;background-color: transparent;">&nbsp;which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls.</span></p>
-<h2>1.1 Administrative Data</h2>
-<table>
-    <colgroup>
-        <col align="left" org_width="20" />
-        <col align="right" org_width="25" />
-    </colgroup>
-<tbody>
-<tr>
-<th>
-<div class="tablesorter-header-inner">
-<p>Attribute</p></div></th>
-<th>
-<div class="tablesorter-header-inner">
-<p>Value</p></div></th></tr>
-<tr>
-<td>
-<p>ACD</p></td>
-<td>
-<p>Real-time Consolidation</p></td></tr>
-<tr>
-<td>
-<p>Related Use Case</p></td>
-<td>
-<p>Ideally link to Jira, e.g.&nbsp;<a class="external-link" href="https://sapjira.wdf.sap.corp/browse/TIPIOAVATAR-1110" rel="nofollow">TIPIOAVATAR-1110</a></p></td></tr>
-<tr>
-<td>
-<p>Responsible</p></td>
-<td>
-<p>Vincent, Zhang</p></td></tr>
-<tr>
-<td colspan="1">Target Readiness</td>
-<td colspan="1">Incubation</td></tr>
-<tr>
-<td>
-<p>Status</p></td>
-<td>
-<p>in progress</p></td></tr>
-<tr>
-<td>
-<p>Version</p></td>
-<td>
-<p>0.1(Draft Version)</p></td></tr>
-<tr>
-<td>
-<p>Version History</p></td>
-<td>
-<p>List of previously reviewed versions with PDF link or as initial version link to previous ACD, e.g.:&nbsp;<a class="external-link" href="https://portal.wdf.sap.corp/irj/go/km/docs/corporate_portal/WS%20PTG/Standards%20%26%20Tools/Mandatory%20Templates/T411%20Architecture%20Concept%20Document" rel="nofollow">T411 ACD Template</a></p></td></tr></tbody></table>
-<h1>2 Background and Context</h1>
-<p class="Explanation"><span>Provide in this chapter information why this architecture concept was created (for which business needs, for which use cases, for which formal requirements, etc.) and provide some key information about the context of the concept.&nbsp;</span></p>
-<table>
-<tbody>
-<tr>
-<td class="highlight-grey" colspan="2" data-highlight-colour="grey">
-<p><strong>Number of Customers&nbsp;<span>expected with release now in development</span></strong></p></td>
-<td>25+ customers have explicitly stated high interest on Real-time Consolidation based on Central Finance</td></tr>
-<tr>
-<td class="highlight-grey" colspan="2" data-highlight-colour="grey"><strong>Underlying Platform/Application Server</strong></td>
-<td>S/4 HANA on Premise/Cloud</td></tr>
-<tr>
-<td class="highlight-grey" colspan="2" data-highlight-colour="grey"><strong>Product Type</strong></td>
-<td>Analytical Application</td></tr>
-<tr>
-<td class="highlight-grey" colspan="2" data-highlight-colour="grey"><strong>Delivery</strong></td>
-<td>One Premise &amp; On Demand</td></tr>
-<tr>
-<td class="highlight-grey" colspan="3" data-highlight-colour="grey"><strong>Business Case</strong></td></tr>
-<tr>
-<td colspan="3">
-<p class="BulletedList"><span style="line-height: 1.42857;">Consolidation is discussed in 80 % of the cases of which we have customer discussions on Central Finance. </span><span style="line-height: 1.42857;">Central Finance carries all Financial Data from the entire system landscape. </span><span style="line-height: 1.42857;">It is not understood by the customers why they need to load the data from somewhere else for the consolidation. </span><span style="line-height: 1.42857;">Group Reporting on Central Finance has limited informative value without consolidation. </span><span style="line-height: 1.42857;background-color: transparent;">Central Finance is supplied in real-time. Necessary corrections in local close are updated real-time. There is no need for the waiting time of ETL.</span></p></td></tr>
-<tr>
-<td class="highlight-grey" colspan="3" data-highlight-colour="grey"><strong>Main Use Cases / Functional Scope</strong></td></tr>
-<tr>
-<td colspan="3">
-<p class="BulletedList"><strong>Explain what the software shall do. What are the main use cases?</strong></p>
-<p class="BulletedList"><strong style="line-height: 1.42857;background-color: transparent;">Year-End close (pre)consolidation</strong></p>
-<p class="BulletedList">Traditional consolidation takes days. It needs to extract data from group's sub financial systems, which needs the sub systems finish the closing first. Then transform the data, and load it to the consolidation system. The overall closing and ETL process are very time-consuming. No bother to mention if corrections are needed, the entire process could be re-processed. Corporation stakeholders suffers waiting too long a period for consolidated statements. While Real-time Consolidation can perfectly solve the problem. RTC is based on Central Finance which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls.</p>
-<p class="BulletedList"><strong>Acquisition &amp; Re-organization </strong></p>
-<p class="BulletedList"><span style="color: rgb(255,0,0);">//To-do</span></p>
-<p class="BulletedList">&nbsp;</p>
-<p class="BulletedList">&nbsp;</p></td></tr>
-<tr>
-<td class="highlight-grey" colspan="3" data-highlight-colour="grey"><strong>List all Required SAP Products/Product Versions to Support the Main Use Cases</strong></td></tr>
-<tr>
-<td colspan="3">SFIN2.0, Central Finance 1.0, BPC <span style="color: rgb(255,0,0);">//To-do: versions should be checked</span></td></tr>
-<tr>
-<td class="highlight-grey" colspan="3" data-highlight-colour="grey"><strong>Relevant Product Line Architecture Guideline</strong></td></tr>
-<tr>
-<td colspan="2">
-<p>S4H Architecture Guideline</p>
-<p>CDS Guideline: <a href="https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline">https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline</a></p>
-<p>Fiori Overall Guideline: <a href="https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal">https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal</a></p>
-<p>sFIN UX Fiori Guideline: <a href="https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines">https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines</a></p></td>
-<td>Version/Date</td></tr>
-<tr>
-<td class="highlight-grey" colspan="3" data-highlight-colour="grey"><strong>Deviations from Product Line Architecture and Product Experience Requirements</strong></td></tr>
-<tr>
-<td colspan="1">Rule ID, e.g. BS-LM-3</td>
-<td>Deviation, for example &ldquo;due to the specific use case of handling mass data, framework xwz cannot be used</td>
-<td>Approval Status, for example: Approved by lead architect n.n. on March 22, 2012</td></tr></tbody></table>
-<h1>3 Boundary Conditions</h1>
+
+<h1><ac:structured-macro ac:macro-id="d3fd2cf9-db86-4ae0-95b0-bc542e8a1cfe" ac:name="toc" ac:schema-version="1" /></h1>
+<h2><span>1</span> Abstact</h2>
+<p>Real-time Consolidation(RTC in short) provides corporation the ability of generating consolidated financial statements and reports on-the-fly. RTC is built on Central Finance(CF in short), which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls. test test</p>
+<h3><span>1.1</span> Administrative Data 2</h3>
+<table><colgroup> <col align="left" /> <col align="left" /> </colgroup>
+    <thead>
+    <tr>
+        <th>
+            <p>Attribute</p></th>
+        <th>
+            <p>Value</p></th></tr></thead>
+    <tbody>
+    <tr>
+        <td>
+            <p>ACD</p></td>
+        <td>
+            <p>Real-time Consolidation</p></td></tr>
+    <tr>
+        <td>
+            <p>Related Use Case</p></td>
+        <td>
+            <p>link to Jira</p></td></tr>
+    <tr>
+        <td>
+            <p>Responsible</p></td>
+        <td>
+            <p>Vincent Zhang</p></td></tr>
+    <tr>
+        <td>
+            <p>Target Readiness</p></td>
+        <td>
+            <p>Incubation</p></td></tr>
+    <tr>
+        <td>
+            <p>Status</p></td>
+        <td>
+            <p>in progress</p></td></tr>
+    <tr>
+        <td>
+            <p>Version</p></td>
+        <td>
+            <p>0.1(Draft Version</p></td></tr>
+    <tr>
+        <td>
+            <p>Version History</p></td>
+        <td>&nbsp;</td></tr></tbody></table>
+<h2><span>2</span> Background and Context</h2>
+<p>Provide in this chapter information why this architecture concept was created (for which business needs, for which use cases, for which formal requirements, etc.) and provide some key information about the context of the concept.</p>
+<h3><span>2.1</span> Number of Customers expected with release now in development</h3>
+<p>25+ customers have explicitly stated high interest on Real-time Consolidation based on Central Finance</p>
+<h3><span>2.2</span> Underlying Platform/Application Server</h3>
+<p>S/4 HANA on Premise/Cloud</p>
+<h3><span>2.3</span> Product Type</h3>
+<p>Analytical Application</p>
+<h3><span>2.4</span> Delivery</h3>
+<p>Analytical Application a</p>
+<h3><span>2.5</span> Business Case</h3>
+<p>Consolidation is discussed in 80 % of the cases of which we have customer discussions on Central Finance. Central Finance carries all Financial Data from the entire system landscape. It is not understood by the customers why they need to load the data from somewhere else for the consolidation. Group Reporting on Central Finance has limited informative value without consolidation. Central Finance is supplied in real-time. Necessary corrections in local close are updated real-time. There is no need for the waiting time of ETL.</p>
+<h3><span>2.6</span> Main Use Cases / Functional Scope</h3>
+<h4><span>2.6.1</span> Year-End close (pre)consolidation</h4>
+<p>Traditional consolidation takes days. It needs to extract data from group's sub financial systems, which needs the sub systems finish the closing first. Then transform the data, and load it to the consolidation system. The overall closing and ETL process are very time-consuming. No bother to mention if corrections are needed, the entire process could be re-processed. Corporation stakeholders suffers waiting too long a period for consolidated statements. While Real-time Consolidation can perfectly solve the problem. RTC is based on Central Finance which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls.</p>
+<h4><span>2.6.2</span> Acquisition &amp; Re-organization</h4>
+<h3><span>2.7</span> List all Required SAP Products/Product Versions to Support the Main Use Cases</h3>
+<p>SFIN2.0, Central Finance 1.0, BPC //To-do: versions should be checked</p>
+<h3><span>2.8</span> Relevant Product Line Architecture Guideline</h3>
+<ul>
+    <li><a href="https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture">S4H Architecture Guideline</a></li>
+    <li><a href="https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline">CDS Guideline</a></li>
+    <li><a href="https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal">Fiori Overall Guideline</a></li>
+    <li><a href="https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines">sFIN UX Fiori Guideline</a></li></ul>
+<h3><span>2.9</span> Deviations from Product Line Architecture and Product Experience Requirements</h3>
+<table><colgroup> <col align="left" width="200" /> <col align="left" width="1000" /> <col align="left" width="400" /> </colgroup>
+    <thead>
+    <tr>
+        <th>
+            <p>Rule ID</p></th>
+        <th>
+            <p>Deviation</p></th>
+        <th>
+            <p>Approval Status</p></th></tr></thead>
+    <tbody>
+    <tr>
+        <td>
+            <p>e.t. OC-01</p></td>
+        <td>
+            <p>for example: due to BPC's architecture we have to use CDS</p></td>
+        <td>
+            <p>Approved by Christian</p></td></tr></tbody></table>
+<h2><span>3</span> Boundary Conditions</h2>
 <p>Real-time Consolidation is run on Central Finance. It is under the assumption that CF is correctly implemented, that data in all the sub financial systems is synchronized real-timely. Based on the central journal repository, RTC generates consolidation models and interfaces for the consumption by existing consolidation tools, like: BPC, BCS, and so on. In the initial releases, RTC will consider the BPC as the main consolidation front-end tools, or the inter-actor.</p>
-<table>
-<tbody>
-<tr>
-<th colspan="2">Quality Attribute Scenario &ldquo;Consolidation&rdquo;</th></tr>
-<tr>
-<td><strong>Who initiates activity (interactor)?</strong></td>
-<td>BPC consolidation tools&nbsp;</td></tr>
-<tr>
-<td><strong>Addressed part of the system which executes initiated activity (executor)?</strong></td>
-<td>BPC runtime environment</td></tr>
-<tr>
-<td><strong>How does the interaction between initiator and executor take place?</strong></td>
-<td>BPC consolidation tools will send analysis request to RTC models. RTC will return the data BPC needed.</td></tr>
-<tr>
-<td><strong>Under which conditions / environment does the interaction take place?</strong></td>
-<td>
-<p>Mostly, the year-end closing period the usage cloud be high</p>
-<p>BPC and RTC could be in different machine, the network cost should be considered.</p></td></tr>
-<tr>
-<td><strong>Result of activity</strong></td>
-<td>
-<p>Data is correct</p>
-<p>Performance is good <span style="color: rgb(255,0,0);">//To-do: 'good' means what?</span></p></td></tr>
-<tr>
-<td colspan="1"><strong>KPI</strong></td>
-<td colspan="1">n line items in xx ms</td></tr></tbody></table>
-<h2>3.1 Product Standards</h2>
-<p>Ensure compliance with product standards. To do so, go through the product standard requirements of category &ldquo;architecture &amp; technology&rdquo; in the Product Standard Compliance tool (PSC) before you start defining your architecture and describe in this section how product standard requirements influence the architecture to be defined.</p>
+<ol>
+    <li>*Quality Attribute Scenario: &quot;Consolidation&quot;*</li></ol>
+<table><colgroup> <col align="left" width="600" /> <col align="left" width="600" /> </colgroup>
+    <tbody>
+    <tr>
+        <td>
+            <p><strong>Who initiates activity (interactor)?</strong></p></td>
+        <td>
+            <p>BPC consolidation tools</p></td></tr>
+    <tr>
+        <td>
+            <p><strong>Addressed part of the system which executes initiated activity (executor)?</strong></p></td>
+        <td>
+            <p>BPC runtime environment</p></td></tr>
+    <tr>
+        <td>
+            <p><strong>How does the interaction between initiator and executor take place?</strong></p></td>
+        <td>
+            <p>BPC consolidation tools will send analysis request to RTC models. RTC will return the data BPC needed.</p></td></tr>
+    <tr>
+        <td>
+            <p><strong>Under which conditions / environment does the interaction take place?</strong></p></td>
+        <td>
+            <p>Mostly, the year-end closing period the usage cloud be high BPC and RTC could be in different machine, the network cost should be considered.</p></td></tr>
+    <tr>
+        <td>
+            <p><strong>Result of activity</strong></p></td>
+        <td>
+            <p>Data is correct,Performance is good</p></td></tr>
+    <tr>
+        <td>
+            <p><strong>KPI</strong></p></td>
+        <td>
+            <p>n line items in xx ms</p></td></tr></tbody></table>
+<h3><span>3.1</span> Product Standards</h3>
+<p>Ensure compliance with product standards. To do so, go through the product standard requirements of categor &quot;architecture &amp; technology&quot; in the Product Standard Compliance tool (PSC) before you start defining your architecture and describe in this section how product standard requirements influence the architecture to be defined.</p>
 <p>Add a link to the PS planning in PSC or describe deviations within this chapter.</p>
-<p>For further information on product standards, see&nbsp;<a class="external-link" href="https://portal.wdf.sap.corp/go/productstandards" rel="nofollow">go/productstandards</a></p>
-<h2>3.2 Technology Decisions</h2>
+<p>For further information on product standards, see <a href="https://portal.wdf.sap.corp/wcm/ROLES://portal_content/cp/roles/cto/DevelopmentResources/Idea-To-Market/Infocenters/WS%20Office%20of%20the%20CTO/Development%20Resources/I2M/I2M%20Product%20Standards">go/productstandards</a></p>
+<h3><span>3.2</span> Technology Descisions</h3>
 <p>Define which technologies / frameworks are used in which architecture area and for specific topics:</p>
-<table>
-<tbody>
-<tr>
-<th>
-<div class="tablesorter-header-inner"><strong>Architecture Area</strong></div></th>
-<th>
-<div class="tablesorter-header-inner"><strong>Technologies to be Used</strong></div></th></tr>
-<tr>
-<td><strong>Clients</strong></td>
-<td>BPC, BCS, and other consolidation tools</td></tr>
-<tr>
-<td><strong>Presentation Layer /&nbsp; User Interface</strong></td>
-<td>Office EPM Add-in, Fiori</td></tr>
-<tr>
-<td><strong>Business Logic Layer</strong></td>
-<td>CDS/embedded-BW/Rules Engines</td></tr>
-<tr>
-<td><strong>Analytics / Reporting</strong></td>
-<td><span>Office EPM Add-in, Fiori graphic</span></td></tr>
-<tr>
-<td><strong>Integration Middleware&nbsp;</strong></td>
-<td>Depends on Central Finance middle-ware</td></tr>
-<tr>
-<td><strong>Business Process Management / Workflow</strong></td>
-<td>BRF+</td></tr>
-<tr>
-<td><strong>Data Persistency</strong></td>
-<td>HANA</td></tr>
-<tr>
-<td><strong>Development Environment</strong></td>
-<td>Eclipse Fiori, ABAP, HANA Stuido</td></tr>
-<tr>
-<td><strong>Lifecycle Management</strong></td>
-<td>CTS&nbsp;</td></tr>
-<tr>
-<td><strong>tbd</strong></td>
-<td>&nbsp;</td></tr></tbody></table>
-<h2>3.3 Reuse</h2>
-<p>List the reuse components (engines, objects, intrinsic/common services, 3<sup>rd</sup>&nbsp;party components) which have to be used for this development program/project/topic/integration scenario. Mention reuse components which explicitly must not be used within this development program.</p>
+<table><colgroup> <col align="left" /> <col align="left" /> </colgroup>
+    <thead>
+    <tr>
+        <th>
+            <p>Architecture</p></th>
+        <th>
+            <p>Technologies to be Used</p></th></tr></thead>
+    <tbody>
+    <tr>
+        <td>
+            <p>Clients</p></td>
+        <td>
+            <p>BPC, BCS, and other consolidation tools</p></td></tr>
+    <tr>
+        <td>
+            <p>Presentation Layer / User Interface</p></td>
+        <td>
+            <p>Office EPM Add-in, Fiori</p></td></tr>
+    <tr>
+        <td>
+            <p>Business Logic Layer</p></td>
+        <td>
+            <p>CDS/embedded-BW/Rules Engines</p></td></tr>
+    <tr>
+        <td>
+            <p>Analytics / Reporting</p></td>
+        <td>
+            <p>Office EPM Add-in, Fiori graphic</p></td></tr>
+    <tr>
+        <td>
+            <p>Integration Middleware</p></td>
+        <td>
+            <p>Depends on Central Finance middle-ware</p></td></tr>
+    <tr>
+        <td>
+            <p>Business Process Management / Workflow</p></td>
+        <td>
+            <p>BRF+</p></td></tr>
+    <tr>
+        <td>
+            <p>Data Persistency</p></td>
+        <td>
+            <p>HANA</p></td></tr>
+    <tr>
+        <td>
+            <p>Development Environment</p></td>
+        <td>
+            <p>Eclipse Fiori, ABAP, HANA Stuido</p></td></tr>
+    <tr>
+        <td>
+            <p>Lifecycle Management</p></td>
+        <td>
+            <p>CTS</p></td></tr>
+    <tr>
+        <td>
+            <p>tbd</p></td>
+        <td>&nbsp;</td></tr></tbody></table>
+<h3><span>3.3</span> Reuse</h3>
+<p>List the reuse components (engines, objects, intrinsic/common services, 3rd party components) which have to be used for this development program/project/topic/integration scenario. Mention reuse components which explicitly must not be used within this development program.</p>
 <p>General Principles for Reuse</p>
 <ul>
-<li>Take reuse into account in every architecture definition. Well planned reuse has a big positive influence on stability, quality, common look and feel, TCO and TCD of the complete application.</li>
-<li>But consider the costs in relationship to the benefits when reusing a function or feature from others. In especially check if the prerequisites (system, hardware, licenses, implementation and customizing efforts, etc) which are required to use the reuse functions are acceptable for customers. If you answer one of the following questions with yes please consult with your local reuse expert</li>
-<li>Does the used service or functionality force the customer to install an additional system?</li>
-<li>Does the usage of a service or functionality force the customer to implement and customize a new application or technology hub?</li>
-<li>Does the new framework or functionality which is planned exist in a similar version in other areas (Examples are rules engines, business object frameworks, master data, &hellip; )?</li></ul>
+    <li>Take reuse into account in every architecture definition. Well planned reuse has a big positive influence on stability, quality, common look and feel, TCO and TCD of the complete application.</li>
+    <li>But consider the costs in relationship to the benefits when reusing a function or feature from others. In especially check if the prerequisites (system, hardware, licenses, implementation and customizing efforts, etc) which are required to use the reuse functions are acceptable for customers. If you answer one of the following questions with yes please consult with your local reuse expert</li>
+    <li>Does the used service or functionality force the customer to install an additional system?</li>
+    <li>Does the usage of a service or functionality force the customer to implement and customize a new application or technology hub?</li>
+    <li>Does the new framework or functionality which is planned exist in a similar version in other areas (Examples are rules engines, business object frameworks, master data, ? )?</li></ul>
 <p>Recommendations</p>
 <p>If you want to develop a new framework or functionality which could be of interest for other groups too, please check whether synergies would be possible.</p>
 <p>The following reuse components must / should / must not be used within this development:</p>
-<table>
-<tbody>
-<tr>
-<th>
-<div class="tablesorter-header-inner"><strong>Reuse Component to be Used</strong></div></th>
-<th>
-<div class="tablesorter-header-inner"><strong>Owned by&nbsp;</strong></div></th>
-<th>
-<div class="tablesorter-header-inner"><strong>Maintenance Guaranteed?</strong></div></th>
-<th>
-<div class="tablesorter-header-inner"><strong>Usage</strong></div></th>
-<th>
-<div class="tablesorter-header-inner"><strong>Remark / explanation</strong></div></th></tr>
-<tr>
-<td>
-<p>Enter name and version, example:</p>Business partner</td>
-<td>Enter owner of reuse component, for example ECC, AP Foundation</td>
-<td>
-<p>Is maintenance of reuse component as long as maintenance of this development?</p>Yes/No</td>
-<td>must/should /must not</td>
-<td>
-<p>Example:</p>Business partner has to be used for the entire application. Existing own implementations have to be replaced.</td></tr>
-<tr>
-<td>BPC Consolidation Tools</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td></tr>
-<tr>
-<td colspan="1">Central Finance</td>
-<td colspan="1">&nbsp;</td>
-<td colspan="1">&nbsp;</td>
-<td colspan="1">&nbsp;</td>
-<td colspan="1">&nbsp;</td></tr>
-<tr>
-<td colspan="1">BRF+</td>
-<td colspan="1">&nbsp;</td>
-<td colspan="1">&nbsp;</td>
-<td colspan="1">&nbsp;</td>
-<td colspan="1">&nbsp;</td></tr></tbody></table>
-<h2>3.4 Cross-Release Compatibility</h2>
+<table><colgroup> <col align="left" width="400" /> <col align="left" width="200" /> <col align="left" width="400" /> <col align="left" width="200" /> <col align="left" width="500" /> </colgroup>
+    <thead>
+    <tr>
+        <th>
+            <p>Reuse Component to be Used</p></th>
+        <th>
+            <p>Owned by</p></th>
+        <th>
+            <p>Maintenance Guaranteed?</p></th>
+        <th>
+            <p>Usage</p></th>
+        <th>
+            <p>Remark / explanation</p></th></tr></thead>
+    <tbody>
+    <tr>
+        <td>
+            <p>Enter name and version, example:Business partner</p></td>
+        <td>
+            <p>Enter owner of reuse component, for example ECC, AP Foundation</p></td>
+        <td>
+            <p>Is maintenance of reuse component as long as maintenance of this developmentYes/No</p></td>
+        <td>
+            <p>must</p></td>
+        <td>
+            <p>Business partner has to be used for the entire application. Existing own implementations have to be replaced.</p></td></tr>
+    <tr>
+        <td>
+            <p>BPC Consolidation Tools</p></td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td></tr>
+    <tr>
+        <td>
+            <p>Central Finance</p></td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td></tr>
+    <tr>
+        <td>
+            <p>BRF+</p></td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td></tr></tbody></table>
+<h3><span>3.4</span> Cross-Release Compatibilty</h3>
 <p>Describe boundary conditions to ensure smooth upgrade / migration.</p>
 <p>General Principles for Cross-Release Compatibility</p>
 <p>A new release of an SAP application can always be integrated with any release of any other SAP application that is still in mainstream and extended maintenance. After an upgrade of an SAP application, all previously used scenarios are still available.</p>
-<p>Release Synchronization schema to be followed (Details see&nbsp;<a class="external-link" href="https://portal.wdf.sap.corp/go/releasemanagement" rel="nofollow">/go/releasemanagement</a>)]</p>
-<h2>3.5 Other External Forces / Constraints and Assumptions</h2>
+<p>Release Synchronization schema to be followed (Details see<a href="https://portal.wdf.sap.corp/wcm/ROLES://portal_content/cp/roles/cto/DevelopmentResources/ReleaseStrategyTransparency/Infocenters/WS%20PTG/PTG/Operations%20%26%20Program%20Office/Release%20Management">/go/releasemanagement</a>)</p>
+<h3><span>3.5</span> Other External Forces / Constraints and Assumptions</h3>
 <p>Describe other external forces, constraints and assumptions, which influence or restrict your architecture. This could also be resource, skillset and timeline constraints, etc.</p>
 <p>Real-time Consolidation highly depends on Central Finance. CF provides the data bases for the RTC to consume. The successfully implementation of CF puts directly impacts on RTC.</p>
-<p>BPC is the only legal consolidation and planning product in SAP. RTC may be bundled with BPC for sales and marketing.&nbsp;</p>
-<h1>4 Architecture Definition</h1>
-<p>The architecture chapter shall describe the main building blocks of the architecture and their relationships. Depict also how the building blocks are integrated with building blocks outside the program/topic. This section can be structured into sub-chapters.]</p>
-<p>For conceptual and technical architecture diagrams use Technical Architecture Modeling (TAM):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="external-link" href="http://ency.wdf.sap.corp:1080/Modeling/Standard/" rel="nofollow">http://ency.wdf.sap.corp:1080/Modeling/Standard/</a>. Provide at least one overview picture of the topic (TAM block/component diagram) and an according description. You are welcome to provide more diagrams according to TAM.&nbsp;</p>
-<h2>4.1 Architecture Context and Overview</h2>
-<p>Describe how the software developed within this project relates to existing SAP software,</p>
-<p>Provide an architecture overview diagram which depicts all major component and their relationships. Describe the overall architecture concept and explain the role of each component.</p>
-<p>We recommend to describe the architecture according to the following sequence</p>
-<p>First, explain the concepts, on which the architecture is based. This may be business concepts, technical concepts or patterns. ARIS diagrams block diagrams, or entity-relationship diagrams may be useful for visualization.</p>
+<p>BPC is the only legal consolidation and planning product in SAP. RTC may be bundled with BPC for sales and marketing.</p>
+<h2><span>4</span> Architecture Definition</h2>
+<p>The architecture chapter shall describe the main building blocks of the architecture and their relationships. Depict also how the building blocks are integrated with building blocks outside the program/topic. This section can be structured into sub-chapters.</p>
+<p>For conceptual and technical architecture diagrams use Technical Architecture Modeling (TAM): <a href="http://ency.wdf.sap.corp:1080/Modeling/Standard/">http://ency.wdf.sap.corp:1080/Modeling/Standard/</a>. Provide at least one overview picture of the topic (TAM block/component diagram) and an according description. You are welcome to provide more diagrams according to TAM.</p>
+<h3><span>4.1</span> Architecture Context and Overview</h3>
+<p>Describe how the software developed within this project relates to existing SAP software, Provide an architecture overview diagram which depicts all major component and their relationships. Describe the overall architecture concept and explain the role of each component.</p>
+<p>We recommend to describe the architecture according to the following sequence First, explain the concepts, on which the architecture is based. This may be business concepts, technical concepts or patterns. ARIS diagrams block diagrams, or entity-relationship diagrams may be useful for visualization.</p>
 <p>Second, give the component view of your architecture. What are the building blocks and how do they relate to each other. Include a block diagram.</p>
 <p>Third, describe behavior of the system/components (dynamic view). You may use an activity diagram to visualize it.</p>
-<h2>4.2 Main Architecture Challenges and Decisions</h2>
-<table>
-<tbody>
-<tr>
-<th colspan="3"><strong>Architecture Challenge: &lt;title&gt;</strong></th></tr>
-<tr>
-<td colspan="3">
-<p>Explain the architecture challenge which can be a quality to be ensured by the architecture or restrictive boundary conditions</p></td></tr>
-<tr>
-<td><strong>Decision</strong></td>
-<td><strong>By:&nbsp;</strong>&lt;name responsible&gt;</td>
-<td><strong>Date:&nbsp;</strong>&lt;date of decision&gt;</td></tr>
-<tr>
-<td colspan="3">
-<p>Specify the decision and the reasoning for it</p></td></tr></tbody></table>
-<h2>4.3 Integration with other Systems</h2>
+<h3><span>4.2</span> Main Architecture Challenges and Decisions</h3>
+<h4><span>4.2.1</span> Architecture Challenges: title</h4>
+<p>Explain the architecture challenge which can be a quality to be ensured by the architecture or restrictive boundary conditions</p>
+<p><strong>Decison</strong>: We have to use HANA caclulation Viewa.</p>
+<p><strong>By</strong>: Christian</p>
+<p><strong>Date</strong>: <span class="timestamp-wrapper"> <span class="timestamp">&lt;2015-11-18 Wed&gt;</span> </span></p>
+<p><strong>Description</strong>: blabla</p>
+<h3><span>4.3</span> Integration with other Systems</h3>
 <p>Depict how the software to be developed communicates with other applications and systems. Include a block diagram illustrating the integration.</p>
-<h3>4.3 1 Public APIs and Contracts</h3>
+<h4><span>4.3.1</span> Public APIs and Contracts</h4>
 <p>List all public APIs/enterprise services which are offered, be it newly created API or changes on existing APIs</p>
-<table>
-<tbody>
-<tr>
-<th>
-<div class="tablesorter-header-inner"><strong>Name of API/Contract</strong></div></th>
-<th>
-<div class="tablesorter-header-inner"><strong>Type (synchr./asynchr. Web service, RFC, BAPI,&hellip;)</strong></div></th>
-<th>
-<div class="tablesorter-header-inner"><strong>Changed/New</strong></div></th>
-<th>
-<div class="tablesorter-header-inner"><strong>Description / Comment</strong></div></th></tr>
-<tr>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td></tr>
-<tr>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td></tr></tbody></table>
-<h2>4.4 Security</h2>
+<table><colgroup> <col align="left" /> <col align="left" /> <col align="left" /> <col align="left" /> </colgroup>
+    <thead>
+    <tr>
+        <th>
+            <p>Name of API/Contract</p></th>
+        <th>
+            <p>Type</p></th>
+        <th>
+            <p>Changed/New</p></th>
+        <th>
+            <p>Description</p></th></tr></thead>
+    <tbody>
+    <tr>
+        <td>&nbsp;</td>
+        <td>
+            <p>sync/async web services, RFC,</p></td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td></tr></tbody></table>
+<h3><span>4.4</span> Security</h3>
 <p>Describe how the architecture protects the software against attacks or misuse.</p>
-<p>To do so, define how communication channels (protocol, data, ...) are protected. Describe how authentication, authorization and logging are performed. Consider architecture requirements pertaining to confidentiality, integrity and availability.&nbsp;</p>
-<h2>4.5 Deployment and Operations</h2>
-<p>It is recommended to work with the local Technical Component and Delivery Architecture (TCDA) team on defining deployment and operations architecture. Contact is the &ldquo;Delivery Architecture Engineer&rdquo; maintained in&nbsp;<a class="external-link" href="https://ifp.wdf.sap.corp/sap/bc/bsp/sap/zpr/default.htm" rel="nofollow">program repository</a><u>&nbsp;</u>entry of your program.</p>
-<h3>4.5.1 Deployed Component Structure and Deployment Options</h3>
-<p>Show all interdependencies of (groups of) software components using a package diagram (TAM). Assign the components to software layers, for example see:&nbsp;<a class="external-link" href="https://wiki.wdf.sap.corp/display/archGov/Software+Layers" rel="nofollow">https://wiki.wdf.sap.corp/display/archGov/Software+Layers</a></p>
+<p>To do so, define how communication channels (protocol, data, &hellip;) are protected. Describe how authentication, authorization and logging are performed. Consider architecture requirements pertaining to confidentiality, integrity and availability.</p>
+<h3><span>4.5</span> Deployment and Operations</h3>
+<p>It is recommended to work with the local Technical Component and Delivery Architecture (TCDA) team on defining deployment and operations architecture. Contact is the ?Delivery Architecture Engineer? maintained in <a href="https://ifp.wdf.sap.corp/sap(bD1lbiZjPTAwMSZpPTEmcz1TSUQlM2FBTk9OJTNhcHdkZjU3ODJfSUZQXzAxJTNhWEhRWUJUMFlnaXNneEZlWWZTemIwR1FhWnZxaXotY2lkX1Z3TUF0Zy1BVFQ=)/bc/bsp/sap/zpr/default.htm">program repository</a> entry of your program.</p>
+<h4><span>4.5.1</span> Deployed Component Structure and Deployment Options</h4>
+<p>Show all interdependencies of (groups of) software components using a package diagram (TAM). Assign the components to software layers, for example see: <a href="https://wiki.wdf.sap.corp/display/archGov/Software+Layers">https://wiki.wdf.sap.corp/display/archGov/Software+Layers</a></p>
 <p>Describe software component structure, package structure and their deployment options. Deployment options describe the different possibilities how the software components can be distributed across different systems. Indicate cross-component communication. Mention explicitly, if there are new dependencies between software components.</p>
 <p>Describe deployment unit and process component structure if relevant.</p>
-<h3>4.5.2 System Landscape</h3>
-<p>Describe typical system landscape required to run the software developed within this program&nbsp;<u>productive</u>&nbsp;at a customer site. Show how the main deployable building blocks are distributed within that landscape. Determine which landscape components are mandatory and which are optional to run the software</p>
-<h3>4.5.3 Operation Concept</h3>
+<h4><span>4.5.2</span> System Landscape</h4>
+<p>Describe typical system landscape required to run the software developed within this program productive at a customer site. Show how the main deployable building blocks are distributed within that landscape. Determine which landscape components are mandatory and which are optional to run the software</p>
+<h4><span>4.5.3</span> Operation Concept</h4>
 <p>Describe how the planned software is operated and estimate the impact on TCO. This includes a rough description of complexity of installation, configuration, update, monitoring, and troubleshooting. Explain also how easy product and landscape optimization can be done during product lifecycle (such as scalability and high availability).</p>
 <p>In case TCO is high, explain a roadmap how simplification in next versions can be done (for example from complexity hiding to complexity reduction).</p>
-<h2>4.6 Testing</h2>
+<h3><span>4.6</span> Testing</h3>
 <p>Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.</p>
-<h2>4.7 Architecture Details (Further Refinement)</h2>
+<h3><span>4.7</span> Architecture Details (Further Refinement)</h3>
 <p>Use further chapters to refine the architecture and describe specific topics.</p>
-<h2>4.8 Architecture Risks</h2>
+<h3><span>4.8</span> Architecture Risks</h3>
 <p>Explain your view on architecture-related risks and give hints about potential upcoming problems. Risks can arise for example from changes in the scope, from work-arounds necessary, from dependencies on other components, or from immature technologies/concepts. Fill in the table for each risk.</p>
-<table>
-<tbody>
-<tr>
-<th colspan="2">Risk: &lt;title&gt;</th></tr>
-<tr>
-<td>Description</td>
-<td>Example: To improve performance a cache will be implemented. However the cache only shows effect for objects with more than 1000 attributes.</td></tr>
-<tr>
-<td>Impact&nbsp;<br />(for SAP/Customer)&nbsp;</td>
-<td>Example: customers see no effect when using cache with objects with less than 1000 attributes</td></tr>
-<tr>
-<td>Impact Rating</td>
-<td>Low/High/Very High</td></tr>
-<tr>
-<td>Risk Probability</td>
-<td>Low/High/Very High</td></tr>
-<tr>
-<td class="highlight-grey" colspan="2" data-highlight-colour="grey"><strong>Risk Mitigation&nbsp;</strong></td></tr>
-<tr>
-<td>Mitigation Activity</td>
-<td>Example: cache can be activated/de-activated. In addition describe in documentation when cache is useful and when not.</td></tr>
-<tr>
-<td>Responsible Person</td>
-<td>Name of person responsible for risk mitigation activity&nbsp;</td></tr>
-<tr>
-<td>Due Date&nbsp;</td>
-<td>Due date for mitigation</td></tr></tbody></table>
-<p>&nbsp;</p>
-<h2>4.9 Planned Design Documents</h2>
-<p>Here the sprint teams can list the software design documents (SDD), which will &nbsp;be created in order to implement the architecture. The list can also be created over time.</p>
-<h1>5 Glossary</h1>
-<p>Add definitions of terms which are relevant for understanding the document to the glossary. As alternative add the terms to the&nbsp;<a href="https://wiki.wdf.sap.corp/wiki/display/ArGlossary/Contribute+to+SAP%27s+Architecturepedia" rel="nofollow">architecture glossary in the Wiki</a>.&nbsp;</p>
+<h4><span>4.8.1</span> Risk: title</h4>
+<table><colgroup> <col align="left" width="300" /> <col align="left" width="1200" /> </colgroup>
+    <tbody>
+    <tr>
+        <td>
+            <p>Description</p></td>
+        <td>
+            <p>Example: To improve performance a cache will be implemented. However the cache only shows effect for objects with more than 1000 attributes.</p></td></tr>
+    <tr>
+        <td>
+            <p>Impact(for customer)</p></td>
+        <td>
+            <p>Example: customers see no effect when using cache with objects with less than 1000 attributes</p></td></tr>
+    <tr>
+        <td>
+            <p>Impact Rating</p></td>
+        <td>
+            <p>Impact Rating</p></td></tr>
+    <tr>
+        <td>
+            <p>Risk Probability</p></td>
+        <td>
+            <p>Low/High/Very High</p></td></tr>
+    <tr>
+        <td>
+            <p>Mitigation Activity</p></td>
+        <td>
+            <p>Example: cache can be activated/de-activated. In addition describe in documentation when cache is useful and when not.</p></td></tr>
+    <tr>
+        <td>
+            <p>Responsible Person</p></td>
+        <td>
+            <p>Name of person responsible for risk mitigation activity</p></td></tr>
+    <tr>
+        <td>
+            <p>Due Date</p></td>
+        <td>
+            <p>Due date for mitigation</p></td></tr></tbody></table>
+<h3><span>4.9</span> Planned Design Documents</h3>
+<p>Here the sprint teams can list the software design documents (SDD), which will be created in order to implement the architecture. The list can also be created over time.</p>
+<h2><span>5</span> Glossary</h2>
+<p>Add definitions of terms which are relevant for understanding the document to the glossary. As alternative add the terms to the architecture <a href="https://wiki.wdf.sap.corp/wiki/display/ArGlossary/Contribute+to+SAP%27s+Architecturepedia">architecture glossary in the Wiki</a>.</p>

@@ -31,6 +31,130 @@
 
 ;;; Code:
 ;;------------------------------------------------------
+;;Begin of 1. Connect to SAP wiki, uploading/downloading
+;;------------------------------------------------------
+(defvar dk-sapwiki-pageID nil)
+(defvar dk-sapwiki-title nil)
+(defun dk-sapwiki-login ()
+  (interactive)
+  (dk-url-http-post "https://wiki.wdf.sap.corp/wiki/dologin.action"
+		    '(("os_username" . "i046147") ("os_password" . "Zkle@2015"))
+		    'dk-sapwiki-process-login))
+
+(defun dk-sapwiki-fetch ()
+  (interactive)
+  (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
+  (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
+  (dk-url-http-get "https://wiki.wdf.sap.corp/wiki/plugins/viewstorage/viewpagestorage.action"
+		   (list (cons "pageId" dk-sapwiki-pageID))
+		   'dk-sapwiki-to-org (list (current-buffer))))
+		   ;'dk-switch-to-url-buffer))
+
+(defun dk-sapwiki-push ()
+  (interactive)
+  (dk-url-http-get "https://wiki.wdf.sap.corp/wiki/pages/editpage.action"
+		   (list (cons "pageId"  "1774869651"))
+		   'dk-extract-hidden-token))
+
+(defun dk-url-http-get (url args callback &optional cbargs)
+  (let ((url-request-method "GET")
+	(query-string
+	 (mapconcat (lambda (arg)
+		      (concat (url-hexify-string (car arg))
+			      "="
+			      (url-hexify-string (cdr arg))))
+		    args
+		    "&")))
+    (url-retrieve (concat url "?" query-string)
+		  callback cbargs)))
+
+(defun dk-url-http-post (url args callback &optional cbargs)
+      "Send ARGS to URL as a POST request."
+      (let ((url-request-method "POST")
+            (url-request-extra-headers
+             '(("Content-Type" . "application/x-www-form-urlencoded")))
+            (url-request-data
+             (mapconcat (lambda (arg)
+                          (concat (url-hexify-string (car arg))
+                                  "="
+                                  (url-hexify-string (cdr arg))))
+                        args
+                        "&")))
+        (url-retrieve url callback cbargs)))
+
+(defun dk-sapwiki-process-login (status)
+  (let ((jesssionid
+	 (aref (nth 1 (cdr (assoc "wiki.wdf.sap.corp" url-cookie-secure-storage))) 2)))
+    (if jesssionid
+	(message "Login successfully")
+      (user-error "Login failed"))))
+
+(defun dk-sapwiki-get-attribute-value (attribute-name)
+  (with-current-buffer (current-buffer)
+    (goto-char 1)
+    (let ((search-string
+	   (concat "\\(+" attribute-name ": \\)\\([^\n\r]+\\)"))) 
+      (if (re-search-forward search-string nil t)
+	  (buffer-substring (match-beginning 2) (match-end 2))
+	nil))))
+ 
+(defun dk-process-tr-kill-url-buffer (status)
+  "Kill the buffer returned by `url-retrieve'."
+  (kill-buffer (current-buffer)))
+
+(defun dk-switch-to-url-buffer (status)
+  "Switch to the buffer returned by `url-retreive'.
+    The buffer contains the raw HTTP response sent by the server."
+  (switch-to-buffer (current-buffer)))
+
+(defun dk-sapwiki-to-org (status work-buffer-list)
+  (set-buffer (current-buffer))
+  (goto-char 1)
+  ;(switch-to-buffer (current-buffer)))
+  (dk-iterate-html-tag)
+  (set-buffer result-org-buffer) 
+  (copy-to-buffer (car work-buffer-list) 1 (point-max))
+  (switch-to-buffer work-buffer))
+
+(defun dk-get-buffer-as-string (buffer)
+  (with-current-buffer buffer
+    (buffer-string)))
+
+(defun dk-extract-hidden-token (status)
+  (set-buffer (current-buffer))
+  (goto-char 1)
+  (let* ((atl-token (progn 
+		      (re-search-forward "\\(<input type=\"hidden\" name=\"atl_token\" value=\"\\)\\([^\"]+\\)" nil t)
+		      (buffer-substring (match-beginning 2) (match-end 2))))
+    	  (originalVersion (progn		     
+    	  		     (re-search-forward "\\(<input[\n\r\s]+type=\"hidden\"[\n\r\s]+name=\"originalVersion\"[\n\r\s]+value=\"\\)\\([^\"]+\\)" nil t)
+    	  		     (buffer-substring (match-beginning 2) (match-end 2)))))
+    (set-buffer "ACD_RTC.org")
+    (dk-sapwiki-export-as-html)
+    (dk-url-http-post "https://wiki.wdf.sap.corp/wiki/pages/doeditpage.action"
+    		      (list (cons "pageId"  "1774869651")
+    			    (cons "atl_token" atl-token)
+    			    (cons "originalVersion" originalVersion)
+    			    (cons "title" "ACD for Real-time Consolidation" )
+    			    (cons "wysiwygContent" (dk-get-buffer-as-string "*sapwiki export*"))
+    			    (cons "watchPageAfterComment" "true")
+    			    (cons "versionComment" "changed by org-mode")
+    			    (cons "notifyWatchers" "on")
+    			    (cons "confirm" "Save")
+    			    (cons "parentPageString" "Consolidation")
+    			    (cons "moveHierarchy" "true")
+    			    (cons "draftId" "0")
+    			    (cons "entityId" "1774869651")
+    			    (cons "newSpaceKey" "ERPFINDEV"))
+    		      'dk-switch-to-url-buffer)))
+
+
+
+;;------------------------------------------------------
+;;End of 1. Connect to SAP wiki, uploading/downloading
+;;------------------------------------------------------
+
+;;------------------------------------------------------
 ;;2. Convert the wiki html to orgmode format
 ;;------------------------------------------------------
 (defconst dk-wiki-html5-tags
@@ -43,7 +167,7 @@
     "<br>" "<hr>"))
 
 (defconst dk-wiki-html5-uni-tags
-  `("<ri:attachment>" "<br>" "<hr>" "<col>"))
+  '("<ri:attachment>" "<br>" "<hr>" "<col>"))
 
 (defvar begin-tag-list ())
 (defvar result-org-buffer (get-buffer-create "result-org-buffer"))
@@ -295,9 +419,8 @@
     ("left" (insert "l"))
     ("right" (insert "r"))
     ("center" (insert "c")))
-  (if (string-match "\\( org_width=\"\\)\\([^\"]+\\)"
-		    tag-string)
-      (insert (match-string 2 tag-string)))
+  (if (string-match "\\( width=\"\\)\\([^\"]+\\)" tag-string)
+      (insert (number-to-string (/ (string-to-number (match-string 2 tag-string)) 20))))
   (insert "> "))
 
 (defsubst dk-process-riattachment (tag-string)
@@ -410,6 +533,8 @@
 
 (defsubst dk-add-org-head-properties ()
   (with-current-buffer result-org-buffer
+    (insert "#+PAGEID: " dk-sapwiki-pageID)
+    (insert ?\n)
     (insert "#+STARTUP: align")
     (insert ?\n)))
 
@@ -418,7 +543,7 @@
   ;; If Table of Content is needed?
   (goto-char 1)
   (if (re-search-forward
-	 "\\(<ac:macro[^>]+\\)\\(ac:name=\"toc\"[^>]*\\)\\(/>[^<]*</\\)"
+	 "\\(ac:name=\"toc\"[^>]*\\)\\(/>[^<]*</\\)"
 	 nil t)
       (with-current-buffer result-org-buffer
 	(insert "#+OPTIONS: toc:1")
@@ -513,7 +638,7 @@ of contents as a string, or nil if it is empty."
 			 (org-export-get-relative-level headline info)))
 		 (org-export-collect-headlines info depth scope))))
     (when toc-entries
-       "<h1><ac:macro ac:name=\"toc\" /></h1>")))
+      "<h1><ac:structured-macro ac:macro-id=\"d3fd2cf9-db86-4ae0-95b0-bc542e8a1cfe\" ac:name=\"toc\" ac:schema-version=\"1\"/></h1>")))
 
 (defun dk-sapwiki-headline (headline contents info)
   "Derive function org-html-headline"
@@ -578,7 +703,7 @@ of contents as a string, or nil if it is empty."
                           level)
 
                   (if (eq (org-element-type first-content) 'section) contents
-                    (concat (dk-html-section first-content "" info) contents))
+                    (concat (dk-sapwiki-section first-content "" info) contents))
                   ))))))
 
 (defun dk-sapwiki-section (section contents info)
@@ -885,7 +1010,9 @@ contextual information."
 			      (org-html-close-tag
 			       "col" (concat " "
 					     (if cellwidth
-						 (format "align=\"%s\" org_width=\"%d\"" alignment cellwidth)
+						 (format "align=\"%s\" width=\"%d\""
+							 alignment
+							 (* 20 cellwidth))
 					       (format "align=\"%s\"" alignment))) info))
 		      ;; End a colgroup?
 		      (when (org-export-table-cell-ends-colgroup-p

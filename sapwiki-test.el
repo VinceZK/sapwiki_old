@@ -40,6 +40,20 @@
   (kill-buffer "<h2>"))
   
 (ert-deftest dk-iterate-html-tag ()
-  (set-buffer "example.html")
+  (find-file "c:/SAP/sapwiki/example3.html")
   (goto-char (point-min))
   (dk-iterate-html-tag))
+
+(ert-deftest dk-http-get ()
+  (dk-url-http-get "https://wiki.wdf.sap.corp/wiki/pages/editpage.action"
+		    '(("pageId" . "1774869651"))
+		    'dk-switch-to-url-buffer))
+  
+(ert-deftest dk-sapwiki-login ()
+ (dk-sapwiki-login))
+
+(ert-deftest dk-sapwiki-fetch ()
+  (find-file "c:/SAP/sapwiki/work/test01.org")
+  (should (equal (dk-sapwiki-get-attribute-value "PAGEID")
+		 "1774869651"))
+  (dk-sapwiki-fetch))
