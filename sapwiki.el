@@ -35,6 +35,7 @@
 ;;------------------------------------------------------
 (defvar dk-sapwiki-pageID nil)
 (defvar dk-sapwiki-title nil)
+(defvar dk-sapwiki-version-comment nil)
 (defun dk-sapwiki-login ()
   (interactive)
   (dk-url-http-post "https://wiki.wdf.sap.corp/wiki/dologin.action"
@@ -50,11 +51,16 @@
 		   'dk-sapwiki-to-org (list (current-buffer))))
 		   ;'dk-switch-to-url-buffer))
 
-(defun dk-sapwiki-push ()
-  (interactive)
+(defun dk-sapwiki-push (arg versionComment)
+  (interactive "P\nsVersion Comment: ")
+  (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
+  (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
+  (setq dk-sapwiki-version-comment versionComment)
+  (message "Lock the wiki for editting.")  
   (dk-url-http-get "https://wiki.wdf.sap.corp/wiki/pages/editpage.action"
-		   (list (cons "pageId"  "1774869651"))
-		   'dk-extract-hidden-token))
+		   (list (cons "pageId"  dk-sapwiki-pageID))
+		   'dk-extract-hidden-token (list (current-buffer))))
+		   ;'dk-switch-to-url-buffer))
 
 (defun dk-url-http-get (url args callback &optional cbargs)
   (let ((url-request-method "GET")
@@ -107,49 +113,61 @@
     The buffer contains the raw HTTP response sent by the server."
   (switch-to-buffer (current-buffer)))
 
-(defun dk-sapwiki-to-org (status work-buffer-list)
+(defun dk-sapwiki-to-org (status work-buffer)
+  (message "Fetch Successfully, and converting to org-mode...")
   (set-buffer (current-buffer))
   (goto-char 1)
-  ;(switch-to-buffer (current-buffer)))
   (dk-iterate-html-tag)
-  (set-buffer result-org-buffer) 
-  (copy-to-buffer (car work-buffer-list) 1 (point-max))
+  (set-buffer result-org-buffer)
+  (copy-to-buffer work-buffer 1 (point-max))
+  (erase-buffer)
   (switch-to-buffer work-buffer))
 
 (defun dk-get-buffer-as-string (buffer)
   (with-current-buffer buffer
     (buffer-string)))
 
-(defun dk-extract-hidden-token (status)
+(defun dk-extract-hidden-token (status work-buffer)
+  (message "Push the wiki...")
   (set-buffer (current-buffer))
   (goto-char 1)
-  (let* ((atl-token (progn 
-		      (re-search-forward "\\(<input type=\"hidden\" name=\"atl_token\" value=\"\\)\\([^\"]+\\)" nil t)
+  (let* ((parentPageString (progn
+			     (re-search-forward "\\(<meta name=\"ajs-parent-page-title\" content=\"\\)\\([^\"]+\\)" nil t)
+			     (buffer-substring (match-beginning 2) (match-end 2))))
+	 (newSpaceKey (progn
+			(re-search-forward "\\(<meta name=\"ajs-space-key\" content=\"\\)\\([^\"]+\\)" nil t)
+			(buffer-substring (match-beginning 2) (match-end 2))))
+	 (atl-token (progn 
+		      (re-search-forward "\\(<meta name=\"ajs-atl-token\" content=\"\\)\\([^\"]+\\)" nil t)
 		      (buffer-substring (match-beginning 2) (match-end 2))))
-    	  (originalVersion (progn		     
-    	  		     (re-search-forward "\\(<input[\n\r\s]+type=\"hidden\"[\n\r\s]+name=\"originalVersion\"[\n\r\s]+value=\"\\)\\([^\"]+\\)" nil t)
-    	  		     (buffer-substring (match-beginning 2) (match-end 2)))))
-    (set-buffer "ACD_RTC.org")
+	 (originalVersion (progn		     
+			    (re-search-forward "\\(<meta name=\"page-version\" content=\"\\)\\([^\"]+\\)" nil t)
+			    (buffer-substring (match-beginning 2) (match-end 2)))))
+    (set-buffer work-buffer)
     (dk-sapwiki-export-as-html)
-    (dk-url-http-post "https://wiki.wdf.sap.corp/wiki/pages/doeditpage.action"
-    		      (list (cons "pageId"  "1774869651")
-    			    (cons "atl_token" atl-token)
-    			    (cons "originalVersion" originalVersion)
-    			    (cons "title" "ACD for Real-time Consolidation" )
-    			    (cons "wysiwygContent" (dk-get-buffer-as-string "*sapwiki export*"))
-    			    (cons "watchPageAfterComment" "true")
-    			    (cons "versionComment" "changed by org-mode")
-    			    (cons "notifyWatchers" "on")
-    			    (cons "confirm" "Save")
-    			    (cons "parentPageString" "Consolidation")
-    			    (cons "moveHierarchy" "true")
-    			    (cons "draftId" "0")
-    			    (cons "entityId" "1774869651")
-    			    (cons "newSpaceKey" "ERPFINDEV"))
-    		      'dk-switch-to-url-buffer)))
+    (dk-url-http-post
+     "https://wiki.wdf.sap.corp/wiki/pages/doeditpage.action"
+     (list (cons "pageId"  dk-sapwiki-pageID)
+	   (cons "atl_token" atl-token)
+	   (cons "originalVersion" originalVersion)
+	   (cons "title" dk-sapwiki-title)
+	   (cons "wysiwygContent" (dk-get-buffer-as-string "*sapwiki export*"))
+	   (cons "watchPageAfterComment" "true")
+	   (cons "versionComment" dk-sapwiki-version-comment)
+	   (cons "notifyWatchers" "on")
+	   (cons "confirm" "Save")
+	   (cons "parentPageString" parentPageString)
+	   (cons "moveHierarchy" "true")
+	   (cons "draftId" "0")
+	   (cons "entityId"  dk-sapwiki-pageID)
+	   (cons "newSpaceKey" newSpaceKey))
+     'dk-sapwiki-process-push (list work-buffer))
+    (message "Pushed!")))
 
-
-
+(defun dk-sapwiki-process-push (work-buffer)
+  "The function is called only if post is not successfully"
+  (set-buffer (current-buffer))
+  (message "Push Failed!"))
 ;;------------------------------------------------------
 ;;End of 1. Connect to SAP wiki, uploading/downloading
 ;;------------------------------------------------------
@@ -535,10 +553,12 @@
   (with-current-buffer result-org-buffer
     (insert "#+PAGEID: " dk-sapwiki-pageID)
     (insert ?\n)
+    (insert "#+TITLE: " dk-sapwiki-title)
+    (insert ?\n)
     (insert "#+STARTUP: align")
     (insert ?\n)))
 
-(defun dk-iterate-html-tag ()
+(defun dk-iterate-html-tag ()  
   (dk-add-org-head-properties)
   ;; If Table of Content is needed?
   (goto-char 1)
@@ -638,7 +658,7 @@ of contents as a string, or nil if it is empty."
 			 (org-export-get-relative-level headline info)))
 		 (org-export-collect-headlines info depth scope))))
     (when toc-entries
-      "<h1><ac:structured-macro ac:macro-id=\"d3fd2cf9-db86-4ae0-95b0-bc542e8a1cfe\" ac:name=\"toc\" ac:schema-version=\"1\"/></h1>")))
+      "<h1><img class=\"editor-inline-macro\" src=\"https://wiki.wdf.sap.corp/wiki/plugins/servlet/confluence/placeholder/macro?definition=e3RvY30&amp;locale=en_GB&amp;version=2\" data-macro-name=\"toc\" data-macro-id=\"d3fd2cf9-db86-4ae0-95b0-bc542e8a1cfe\" data-macro-schema-version=\"1\"></h1>")))
 
 (defun dk-sapwiki-headline (headline contents info)
   "Derive function org-html-headline"
