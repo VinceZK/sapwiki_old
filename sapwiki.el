@@ -33,31 +33,94 @@
 ;;------------------------------------------------------
 ;;Begin of 1. Connect to SAP wiki, uploading/downloading
 ;;------------------------------------------------------
+(defcustom dk-sapwiki-main-url
+  "https://wiki.wdf.sap.corp/wiki/"
+  "The main URL of SAPWIKI"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
+(defcustom dk-sapwiki-login-url
+  (concat dk-sapwiki-main-url "dologin.action" )
+  "The url used to enter username and password"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
+(defcustom dk-sapwiki-fetch-url
+  (concat dk-sapwiki-main-url "plugins/viewstorage/viewpagestorage.action")
+  "The url used to fetch content from sapwiki"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
+(defcustom dk-sapwiki-lock-url
+  (concat dk-sapwiki-main-url "pages/editpage.action")
+  "The url used to lock the wikipage"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
+(defcustom dk-sapwiki-push-url
+  (concat dk-sapwiki-main-url "pages/doeditpage.action")
+  "The url used to updated the wikipage"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
+(defcustom dk-sapwiki-user
+  "i046147" "SAP i<number>"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
+(defcustom dk-sapwiki-pwd nil
+  "SAP main password"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
 (defvar dk-sapwiki-pageID nil)
 (defvar dk-sapwiki-title nil)
 (defvar dk-sapwiki-version-comment nil)
+
 (defun dk-sapwiki-login ()
   (interactive)
-  (dk-url-http-post "https://wiki.wdf.sap.corp/wiki/dologin.action"
-		    '(("os_username" . "i046147") ("os_password" . "Zkle@2015"))
+  (unless dk-sapwiki-pwd
+    (setq dk-sapwiki-pwd (read-passwd "Enter your password: ")))
+  (message "username=%s, password=%s" dk-sapwiki-user dk-sapwiki-pwd)
+  (dk-url-http-post dk-sapwiki-login-url
+		    (list (cons "os_username" dk-sapwiki-user)
+			  (cons "os_password" dk-sapwiki-pwd))
 		    'dk-sapwiki-process-login))
 
 (defun dk-sapwiki-fetch ()
   (interactive)
+  (unless (dk-sapwiki-check-login-successfully)
+    (dk-sapwiki-login))
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
-  (dk-url-http-get "https://wiki.wdf.sap.corp/wiki/plugins/viewstorage/viewpagestorage.action"
+  (dk-url-http-get dk-sapwiki-fetch-url 
 		   (list (cons "pageId" dk-sapwiki-pageID))
 		   'dk-sapwiki-to-org (list (current-buffer))))
 		   ;'dk-switch-to-url-buffer))
 
 (defun dk-sapwiki-push (arg versionComment)
   (interactive "P\nsVersion Comment: ")
+  (unless (dk-sapwiki-check-login-successfully)
+    (dk-sapwiki-login))
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
   (setq dk-sapwiki-version-comment versionComment)
   (message "Lock the wiki for editting.")  
-  (dk-url-http-get "https://wiki.wdf.sap.corp/wiki/pages/editpage.action"
+  (dk-url-http-get dk-sapwiki-lock-url 
 		   (list (cons "pageId"  dk-sapwiki-pageID))
 		   'dk-extract-hidden-token (list (current-buffer))))
 		   ;'dk-switch-to-url-buffer))
@@ -88,12 +151,15 @@
                         "&")))
         (url-retrieve url callback cbargs)))
 
+(defun dk-sapwiki-check-login-successfully ( )
+  (and (boundp 'url-cookie-secure-storage)
+       (assoc "wiki.wdf.sap.corp" url-cookie-secure-storage)
+       (aref (nth 1 (cdr (assoc "wiki.wdf.sap.corp" url-cookie-secure-storage))) 2)))
+
 (defun dk-sapwiki-process-login (status)
-  (let ((jesssionid
-	 (aref (nth 1 (cdr (assoc "wiki.wdf.sap.corp" url-cookie-secure-storage))) 2)))
-    (if jesssionid
-	(message "Login successfully")
-      (user-error "Login failed"))))
+  (if (dk-sapwiki-check-login-successfully)
+      (message "Login successfully")
+    (user-error "Login failed")))
 
 (defun dk-sapwiki-get-attribute-value (attribute-name)
   (with-current-buffer (current-buffer)
@@ -146,7 +212,7 @@
     (set-buffer work-buffer)
     (dk-sapwiki-export-as-html)
     (dk-url-http-post
-     "https://wiki.wdf.sap.corp/wiki/pages/doeditpage.action"
+     dk-sapwiki-push-url
      (list (cons "pageId"  dk-sapwiki-pageID)
 	   (cons "atl_token" atl-token)
 	   (cons "originalVersion" originalVersion)
@@ -181,11 +247,10 @@
     "<i>" "<b>" "<code>" "<u>" "<s>" "<strong>" "<table>"
     "<colgroup>" "<col>" "<thead>" "<tr>" "<th>"
     "<tbody>" "<td>" "<ul>" "<li>" "<ol>" "<a>"
-    "<ac:image>" "<ri:attachment>" "<sub>" "<sup>"
-    "<br>" "<hr>"))
+    "<ac:image>" "<sub>" "<sup>"))
 
-(defconst dk-wiki-html5-uni-tags
-  '("<ri:attachment>" "<br>" "<hr>" "<col>"))
+(defconst dk-wiki-html5-close-tags
+  '("<ri:attachment/>" "<br/>" "<hr/>" "<col/>" "<p/>"))
 
 (defvar begin-tag-list ())
 (defvar result-org-buffer (get-buffer-create "result-org-buffer"))
@@ -196,24 +261,31 @@
     <tag> is the html tag found.
     beg-pos is the position before the first '<' in the buffer.
     end-pos is the position after the last '>' in the buffer."
-  (when (re-search-forward "<[^>]+>" nil t)
+  (when (re-search-forward "<[^>]+[/]*>" nil t)
     (cons
      (downcase
-      (replace-regexp-in-string "[\n\s\t\r][^>]*" "" (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+      (replace-regexp-in-string
+       "[\n\s\t\r][^>/]*" ""
+       (replace-regexp-in-string
+	"\".*\"" ""
+	(buffer-substring-no-properties
+	 (match-beginning 0) (match-end 0)))))
      (cons (match-beginning 0) (match-end 0)))))
 
 (defun dk-check-valid-html-tag (tag)
-  (member tag dk-wiki-html5-tags))
+  (if (member tag dk-wiki-html5-tags)
+      t
+    (member tag dk-wiki-html5-close-tags)))
 
 (defun dk-check-begin-html-tag (tag)
   (and (not (equal (substring tag 1 2 ) "/"))
-       (not (member tag dk-wiki-html5-uni-tags))))
+       (not (member tag dk-wiki-html5-close-tags))))
 
 (defun dk-check-end-html-tag (tag)
   (equal (substring tag 1 2 ) "/"))
 
-(defun dk-check-uni-html-tag (tag)
-  (member tag dk-wiki-html5-uni-tags))
+(defun dk-check-close-html-tag (tag)
+  (member tag dk-wiki-html5-close-tags))
 
 (defun dk-get-html-end-tag (begin-tag)
   (concat "<" (store-substring begin-tag 0 ?/)))
@@ -237,7 +309,7 @@
   (goto-char (point-min))
   (let ((line-num 0))
     ;; First, search and replace emphasis in the paragraph
-    (while (re-search-forward "<[^/]+/>\\|<[^>]*>[^>]*</[^>]+>" nil t 1)
+    (while (re-search-forward "<[^/]+/>\\|<[^>]+>[^>]*</[^>]+>" nil t 1)
       (save-excursion
 	(goto-char 1)
 	(forward-line line-num)     
@@ -363,10 +435,15 @@
   (insert ?\n))
 
 (defsubst dk-process-td ()
+  "remove those block-tag(<ol>,<ul>, including <p>) contents, as org-mode table does not support complex table cells. Org-mode table will also remove all the newlines among paragrahs"
+  (goto-char 1)
+  (while (re-search-forward "<[oup]l?[^>]*>[[:ascii:]]*</[oup]l?>\\|<[^/]+/>" nil t)
+    (replace-match "" nil nil))
+  (dk-process-in-line-ele)
   (goto-char 1)
   (insert "| ")
-  (while (re-search-forward "[\n]+" nil t)
-    (replace-match "" nil nil))
+  ;; (while (re-search-forward "[\n]+" nil t)
+  ;;   (replace-match "" nil nil))
   (goto-char (point-max))
   (insert " "))
 
@@ -490,8 +567,8 @@
 		(equal "</tbody>" (car end-tag))
 		(equal "</div>" (car end-tag))
 		(equal "</tr>" (car end-tag))
-		(equal "</td>" (car end-tag))
-		(equal "</th>" (car end-tag))
+		;(equal "</td>" (car end-tag))
+		;(equal "</th>" (car end-tag))
 		(equal "</ul>" (car end-tag))	      
 		(equal "</ol>" (car end-tag))
 		(equal "</ac:image>" (car end-tag)))
@@ -531,19 +608,20 @@
 
       (append-to-buffer (dk-get-parent-buffer)
 			1 (point-max))
+      ;)))
       (kill-buffer))))
 
-(defsubst dk-process-html-uni-tag (uni-tag)
+(defsubst dk-process-html-close-tag (close-tag)
   (let ((tag-string  (buffer-substring-no-properties
-		      (car (cdr uni-tag))
-		      (cdr (cdr uni-tag)))))
+		      (car (cdr close-tag))
+		      (cdr (cdr close-tag)))))
     (with-current-buffer (generate-new-buffer
-			  (car uni-tag))
-      (pcase (car uni-tag)
-	("<br>" (dk-process-br))
-	("<hr>" (dk-process-hr))
-	("<col>" (dk-process-col tag-string))
-	("<ri:attachment>"
+			  (car close-tag))
+      (pcase (car close-tag)
+	("<br/>" (dk-process-br))
+	("<hr/>" (dk-process-hr))
+	("<col/>" (dk-process-col tag-string))
+	("<ri:attachment/>"
 	 (dk-process-riattachment tag-string)))
       (append-to-buffer (dk-get-parent-buffer)
 			1 (point-max))
@@ -551,10 +629,12 @@
 
 (defsubst dk-add-org-head-properties ()
   (with-current-buffer result-org-buffer
-    (insert "#+PAGEID: " dk-sapwiki-pageID)
-    (insert ?\n)
-    (insert "#+TITLE: " dk-sapwiki-title)
-    (insert ?\n)
+    (when dk-sapwiki-pageID
+      (insert "#+PAGEID: " dk-sapwiki-pageID)
+      (insert ?\n))
+    (when dk-sapwiki-title
+      (insert "#+TITLE: " dk-sapwiki-title)
+      (insert ?\n))
     (insert "#+STARTUP: align")
     (insert ?\n)))
 
@@ -582,8 +662,8 @@
 	       (dk-process-html-begin-tag this-tag))
 	      ((dk-check-end-html-tag (car this-tag))
 	       (dk-process-html-end-tag this-tag))
-	      ((dk-check-uni-html-tag (car this-tag))
-	       (dk-process-html-uni-tag this-tag))
+	      ((dk-check-close-html-tag (car this-tag))
+	       (dk-process-html-close-tag this-tag))
 	      (t (user-error "html parse error!"))))))
   (with-current-buffer result-org-buffer
     (org-mode)))
@@ -608,6 +688,9 @@
 		     (plain-list . dk-sapwiki-plain-list)
 		     (table . dk-sapwiki-table)
 		     (table-cell . dk-sapwiki-table-cell)
+		     (clock . dk-sapwiki-clock)
+		     (timestamp . dk-sapwiki-timestamp)
+		     (planning . dk-sapwiki-planning)
 		     ))
 
 (defun dk-sapwiki-template (contents info)
@@ -1052,7 +1135,50 @@ contextual information."
 	       (funcall table-column-specs table info)
 	       contents)))))
 
-;;;###autoload
+(defun dk-sapwiki-clock (clock contents info)
+  "Transcode a CLOCK element from Org to HTML.
+CONTENTS is nil.  INFO is a plist used as a communication
+channel."
+  (format "%s %s %s"
+	  org-clock-string
+	  (org-timestamp-translate (org-element-property :value clock))
+	  (let ((time (org-element-property :duration clock)))
+	    (and time (format "(%s)" time)))))
+
+(defun dk-sapwiki-planning (planning contents info)
+  "Transcode a PLANNING element from Org to HTML.
+CONTENTS is nil.  INFO is a plist used as a communication
+channel."
+  (let ((span-fmt "<span>%s</span> <span>%s</span>"))
+    (format
+     "<p>%s</p>"
+     (mapconcat
+      'identity
+      (delq nil
+	    (list
+	     (let ((closed (org-element-property :closed planning)))
+	       (when closed
+		 (format span-fmt org-closed-string
+			 (org-timestamp-translate closed))))
+	     (let ((deadline (org-element-property :deadline planning)))
+	       (when deadline
+		 (format span-fmt org-deadline-string
+			 (org-timestamp-translate deadline))))
+	     (let ((scheduled (org-element-property :scheduled planning)))
+	       (when scheduled
+		 (format span-fmt org-scheduled-string
+			 (org-timestamp-translate scheduled))))))
+      " "))))
+
+(defun dk-sapwiki-timestamp (timestamp contents info)
+  "Transcode a TIMESTAMP object from Org to HTML.
+CONTENTS is nil.  INFO is a plist holding contextual
+information."
+  (let ((value (org-html-plain-text (org-timestamp-translate timestamp) info)))
+    (format "<span>%s</span>"
+	    (replace-regexp-in-string "--" "&#x2013;" value))))
+
+;;;###Autoload
 (defun dk-sapwiki-export-as-html
   (&optional async subtreep visible-only body-only exp-plist)
   "Export current buffer to an HTML buffer."

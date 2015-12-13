@@ -12,6 +12,7 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(custom-enabled-themes (quote (misterioso)))
+ '(ispell-program-name "/usr/local/Cellar/ispell/3.3.02/bin/ispell")
  '(org-export-show-temporary-export-buffer nil)
  '(org-export-with-sub-superscripts (quote {}))
  '(org-html-table-align-individual-fields nil)
@@ -26,6 +27,7 @@
  '(org-startup-indented t)
  '(org-use-sub-superscripts (quote {}))
  '(package-enable-at-startup nil)
+ '(selection-coding-system (quote utf-8))
  '(send-mail-function (quote mailclient-send-it))
  '(show-paren-mode t)
  '(tool-bar-mode nil))
@@ -138,9 +140,10 @@ my:el-get-packages
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 
 ;; org mode setup
-;(package-initialize)
 (org-ac/config-default) ;auto-complete
 (add-hook 'org-mode-hook 'toggle-truncate-lines)
+(dolist (hook '(org-mode-hook))
+  (add-hook hook (lambda () (flyspell-mode 1))))
 (global-set-key "\C-cl" 'org-store-link)
 (global-set-key "\C-ca" 'org-agenda)
 (global-set-key "\C-cb" 'org-iswitchb)
@@ -192,8 +195,8 @@ my:el-get-packages
  	  :html-indent t
  	  :html-preamble nil
  	  :html-postamble nil
-	  :html-table-header-tags ("<th><p>" . "</p></th>")
-	  :html-table-data-tags ("<td><p>" . "</p></td>")
+	  :html-table-header-tags ("<th>" . "</th>")
+	  :html-table-data-tags ("<td>" . "</td>")
  	  :with-author nil
  	  :with-date nil
  	  :with-title nil
