@@ -1,38 +1,67 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+PAGEID: 1774869651
-#+TITLE: ACD for Real-time Consolidation
-** Abstact
-Real-time Consolidation(RTC in short) provides corporation the ability of generating consolidated financial statements and reports on-the-fly. RTC is built on Central Finance(CF in short), which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls. test test
+#+TITLE: ACD of Real-time Consolidation
+** Abstract
+Real-time Consolidation(RTC in short) is SAP's next generation financial consolidation system, which is bulit on S4HANA platform and leverages HANA's in-memory technology. 
 
-*** Administrative Data 2
-| Attribute        | Value                   |
-|------------------+-------------------------|
-| ACD              | Real-time Consolidation |
-| Related Use Case | link to Jira            |
-| Responsible      | Vincent Zhang           |
-| Target Readiness | Incubation              |
-| Status           | in progress             |
-| Version          | 0.1(Draft Version       |
-| Version History  |                         |
+Unlike triditional standalone consolidation applications, RTC embeds consolidation logic into a centralized financial system. The centralized system we call it Central Finance(CF in short), which makes financial operation, analysis, and planning happens in a same environment, and unifies financial master data and rules across all the local subsidiaries. 
+
+Based on the Central Finance, RTC makes real-time financial consolidation possible in follwoing ways:
+1. Local journals are synchronized into CF in a real-time fasion, so data mapping and consolidation rules will aslo be applied real-timely at journal level.
+2. No additional data copy and batch job is needed when running consolidation statements and reports. Consolidated results can be made on-the-fly directly based on journal items. 
+3. Consolidate results can be traced back to orginal transactions.
+4. Local financial close, corrections, and updates can be instancely noticed.
+5. Planning and simulation can be made on consolidated results, and vice veras. 
+
+The high level consolidation building blocks (backlogs) includes:
+- Data modelling based on multi-dimension database view.
+- Data collection and validation.
+- Intercompany reconciliation.
+- Currency translation.
+- Consolidation and elimination.
+- Reporting.
+- Collaborations.
+
+*** Administrative Data
+| Attribute        | Value                     |
+|------------------+---------------------------|
+| ACD              | Real-time Consolidation   |
+| Related Use Case | link to Jira              |
+| Responsible      | Vincent Zhang             |
+| Target Readiness | Incubation                |
+| Status           | in progress               |
+| Version          | 0.1(Draft Version)        |
+| Version History  | link to wiki History page |
 
 ** Background and Context
-Provide in this chapter information why this architecture concept was created (for which business needs, for which use cases, for which formal requirements, etc.) and provide some key information about the context of the concept. 
+Financial consolidation systems are the "engine room" of the corporate finance department, enabling companies of all sizes to comply with regulatory reporting requirements, company law and global accounting standards as well satisfy management's need for periodic management reporting.
+
+But all is not well with standalone consolidation applications that were developed since 1990's. Among them, SAP already has three: BPC, BCS, and EC-CS. Those consolidation solutions are still commonplace in some of the world's largest multinationals. According to one recent research, 47 percent of companies have made substantial investments in their financial close, filling, and reporting. Yet, despite the considerable sums of money invested in the process, management teams across the globe remain dissatisfied with the quality and timeliness of management information.
+
+With the emergence of S4HANA and the concept of central finance, we can build an embedded financial consolidation solution based on them. As financial data is already centralized, it is not necessary to replicate it again to a standalone consolidation system. Meanwhile, RTC can also gain more from the future S4HANA Cloud platform, because of the highly distributed nature of the financial close process. It can help to standardlize and harmonize the data collection, imporve collaborations, and significantly reduce reporting delay between local operational systems and the corporate consolidation.
 
 *** Number of Customers expected with release now in development 
-25+ customers have explicitly stated high interest on Real-time Consolidation based on Central Finance
+25+ customers have explicitly stated high interest on Real-time Consolidation.
 
 *** Underlying Platform/Application Server
-S/4 HANA on Premise/Cloud
+RTC is built on S4HANA, both On-Premise and Cloud, with On-Premise version delivering first. 
 
 *** Product Type
-Analytical Application
+Financial analytical application, with data write-back and simulation features.
 
 *** Delivery
-Analytical Application a
+| Delivery Artifacts             | Comments                                               |
+|--------------------------------+--------------------------------------------------------|
+| ABAP & AMDP                    | Main consolidation logic                               |
+| HRF/BRF+ rules                 | Consolidation, elimination, and validation rules       |
+| HANA Calculation View          | Not compliant with S4HANA Guideline, but needed by BPC |
+| BW info-provider & info-object | Not compliant with S4HANA Guideline, but needed by BPC |
+| CDS View                       | Reporting and Analytics models                         |
+| Fiori Apps                     | UI for console, reporting, and analysis                |
 
 *** Business Case
-Consolidation is discussed in 80 % of the cases of which we have customer discussions on Central Finance.  Central Finance carries all Financial Data from the entire system landscape.  It is not understood by the customers why they need to load the data from somewhere else for the consolidation.  Group Reporting on Central Finance has limited informative value without consolidation.  Central Finance is supplied in real-time. Necessary corrections in local close are updated real-time. There is no need for the waiting time of ETL.
+Consolidation is discussed in 80 % of the cases of which we have customer discussions on CF. CF carries all the financial data from the entire system landscape. It is not understood by customers why they need to load the data from somewhere else for the consolidation. Group reporting on CF has limited informative value without consolidation.CF is supplied in real-time. Necessary corrections in local close are updated real-timely. There is no need for the waiting of ETL.
 
 *** Main Use Cases / Functional Scope
 
@@ -57,16 +86,21 @@ SFIN2.0, Central Finance 1.0, BPC //To-do: versions should be checked
 | e.t. OC-01 | for example: due to BPC's architecture we have to use CDS | Approved by Christian |
 
 ** Boundary Conditions
-Real-time Consolidation is run on Central Finance. It is under the assumption that CF is correctly implemented, that data in all the sub financial systems is synchronized real-timely. Based on the central journal repository, RTC generates consolidation models and interfaces for the consumption by existing consolidation tools, like: BPC, BCS, and so on. In the initial releases, RTC will consider the BPC as the main consolidation front-end tools, or the inter-actor.
+Real-time Consolidation(RTC in short) runs mainly based on Central Finance(CF in short), which can synchronize journals from all the subsidiary finance systems in a real-time fashion. CF realizes the so-called "Transactional BW"(through SLT and MDG), which breaks through the world of OLTP and OLAP. Compared to traditional ETL-based BW system, CF can significantly improve the raw data quality and reduce the delay of reporting. 
+  
+In other case, corporations may already have their subsidiaries using a centralized finance system (based on Simple Finance). Thus the data synchronization is not necessary. RTC then can be run directly on Simple Finance without the CF.
+ 
+In both cases, RTC requires a centralized finance system that already have all the local journals consolidated in a central repository. It is under that assumption can RTC do further financial consolidation models and processes. RTC will also leverage(or reuse) SAP existing consolidation tools, like: BPC, BCS, and EC-CS. In it's initial releases, RTC will consider BPC as the main consolidation front-end.
 
-1. *Quality Attribute Scenario: "Consolidation"*
-| <30>                           | <30>                           |
-| *Who initiates activity (interactor)?* | BPC consolidation tools        |
-| *Addressed part of the system which executes initiated activity (executor)?* | BPC runtime environment        |
-| *How does the interaction between initiator and executor take place?* | BPC consolidation tools will send analysis request to RTC models. RTC will return the data BPC needed. |
-| *Under which conditions / environment does the interaction take place?* | Mostly, the year-end closing period the usage cloud be high BPC and RTC could be in different machine, the network cost should be considered. |
-| *Result of activity*           | Data is correct,Performance is good |
-| *KPI*                          | n line items in xx ms          |
+*** Quality Attribute Scenarios
+1. Data Collection
+| <30>                           | <50>                                               |
+| *Who initiates activity (interactor)?* | BPC consolidation front-end tools                  |
+| *Addressed part of the system which executes initiated activity (executor)?* | BPC data collection console                        |
+| *How does the interaction between initiator and executor take place?* | BPC data collection tool will valid if data is ready for consolidation. It will check validation rules, and allow user to do collections. |
+| *Under which conditions / environment does the interaction take place?* | Mostly, during month-end or year-end closing, the group consolidation operator checks whether the data provided by lock subsidiaries is ready for consolidation. |
+| *Result of activity*           | Data is correct,Performance is good                |
+| *KPI*                          | n line items in xx ms                              |
 
 *** Product Standards
 Ensure compliance with product standards. To do so, go through the product standard requirements of categor "architecture & technology" in the Product Standard Compliance tool (PSC) before you start defining your architecture and describe in this section how product standard requirements influence the architecture to be defined.
@@ -78,18 +112,18 @@ For further information on product standards, see [[https://portal.wdf.sap.corp/
 *** Technology Descisions
 Define which technologies / frameworks are used in which architecture area and for specific topics:
 
-| Architecture                           | Technologies to be Used                 |
-|----------------------------------------+-----------------------------------------|
-| Clients                                | BPC, BCS, and other consolidation tools |
-| Presentation Layer /  User Interface   | Office EPM Add-in, Fiori                |
-| Business Logic Layer                   | CDS/embedded-BW/Rules Engines           |
-| Analytics / Reporting                  | Office EPM Add-in, Fiori graphic        |
-| Integration Middleware                 | Depends on Central Finance middle-ware  |
-| Business Process Management / Workflow | BRF+                                    |
-| Data Persistency                       | HANA                                    |
-| Development Environment                | Eclipse Fiori, ABAP, HANA Stuido        |
-| Lifecycle Management                   | CTS                                     |
-| tbd                                    |                                         |
+| Architecture                           | Technologies to be Used                              |
+|----------------------------------------+------------------------------------------------------|
+| Clients                                | BPC, SFIN applications                               |
+| Presentation Layer /  User Interface   | BPC WebUI(UI5), Analytic Office, Fiori, SAPGUI       |
+| Business Logic Layer                   | ABAP, AMDP, CDS, Calculation View                    |
+| Analytics / Reporting                  | BW info-providers, BEx Query, CDS view               |
+| Integration Middle-ware                | Central Finance (based on SLT and MDG)               |
+| Business Process Management / Workflow | HRF/BRF+                                             |
+| Data Persistency                       | HANA Relational Database                             |
+| Development Environment                | ABAP ADT, HANA Studio, BW Modeling tool,Fiori WebIDE |
+| Life-cycle Management                  | ABAP CTS, Fiori CI                                   |
+| tbd                                    |                                                      |
 
 *** Reuse
 List the reuse components (engines, objects, intrinsic/common services, 3rd party components) which have to be used for this development program/project/topic/integration scenario. Mention reuse components which explicitly must not be used within this development program.
@@ -99,23 +133,32 @@ General Principles for Reuse
 - But consider the costs in relationship to the benefits when reusing a function or feature from others. In especially check if the prerequisites (system, hardware, licenses, implementation and customizing efforts, etc) which are required to use the reuse functions are acceptable for customers. If you answer one of the following questions with yes please consult with your local reuse expert
 - Does the used service or functionality force the customer to install an additional system?
 - Does the usage of a service or functionality force the customer to implement and customize a new application or technology hub?
-- Does the new framework or functionality which is planned exist in a similar version in other areas (Examples are rules engines, business object frameworks, master data, … )?
+- Does the new framework or functionality which is planned exist in a similar version in other areas (Examples are rules engines, business object frameworks, master data, ...)?
 
 Recommendations
 
 If you want to develop a new framework or functionality which could be of interest for other groups too, please check whether synergies would be possible.
 
-The following reuse components must / should / must not be used within this development:
+The following reuse components must/should/must not be used within this development:
 
-| <20>                 | <10>       | <20>                 | <10>       | <25>                      |
-| Reuse Component to be Used | Owned by   | Maintenance Guaranteed? | Usage      | Remark / explanation      |
-|----------------------+------------+----------------------+------------+---------------------------|
-| Enter name and version, example:Business partner | Enter owner of reuse component, for example ECC, AP Foundation | Is maintenance of reuse component as long as maintenance of this developmentYes/No | must       | Business partner has to be used for the entire application. Existing own implementations have to be replaced. |
-| BPC Consolidation Tools |            |                      |            |                           |
-| Central Finance      |            |                      |            |                           |
-| BRF+                 |            |                      |            |                           |
+| <15>            | <15>            | <10>       | <10>       | <25>                      |
+| Reuse Component | Owned by        | Maintenance Guaranteed? | Usage      | Remark / explanation      |
+|-----------------+-----------------+------------+------------+---------------------------|
+| HRF 1.0         | HRF team        | Yes        | must       | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level. |
+| BRF+ 2.0        | BRF team        | Yes        | must       | BRF+ must be used for the reason of the compliance with S4HANA guideline. HRF cannot be used directly, and must indirectly through BRF+. Compared to HRF, BRF+ is running on ABAP level which could not permits good performance on mass data processing. RTC should combine the advantages of HRF and BRF+. |
+| CDS 1.0         | CDS team        | Yes        | must       | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
+| Fiori 1.0       | Fiori team      | Yes        | must       | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
+| IBPF info-objects | IBPF team       | Yes        | must       | IBPF developed a lot of finance planning BW info-objects. RTC can re-used them, or do some extension whenever necessary. Beside, RTC and IBPF should combine efforts so that Consolidation and Planning can happen together. |
+| Design Studio   | EPM team        | Yes        | must       | Design Studio is used to create queries. The query can be opened via various analysis tools, like: AO, Fiori Apps, and so on. It is appointed by S4HANA guideline for the only query builder, and will replace BEx in future. |
+| BEx Query       | BW team         | Yes        | should     | BEx query should only be used when Design Studio is not possible, or for some test purpose. |
+| HANA Calculation View | HANA team       | Yes        | should     | HANA Calculation view should be only used for the purpose to integrated with BPC. Other cases should use CDS instead. |
+| BW              | BW team         | Yes        | should     | BW cube should only be used for the purpose to integrated with BPC. RTC should avoid using BW cubes as it violate with S4HANA guideline, and it is not the future. |
+| BPC 10.1        | BPC team        | Yes        | should     | BPC should be used when ever possible. BPC is the only legal financial consolidation and planning system in SAP. RTC should provide the possibility to allow BPC run on CF seamlessly. In some cases if BPC cannot be used, RTC should also provide some core functionalities that can propose values for customers. |
+| CF 1.0          | CF Wdf team     | Yes        | should     | CF should be used when customer what its de-centralized finance systems to be somehow centralized. If a totally centralized finance system is not possible, than establishing a centralized journal repository for group reporting and analysis can be realized by CF. RTC then can use the CF to form it's data basis. |
+| EC-CS           | IMS team        | Yes        | should     | EC-CS is SAP's legacy ERP embedded consolidation application. EC-CS share a lot common features and ideas with RTC, like do consolidation directly on line items. RTC should research, reuse, and adopt EC-CS's functionalities whenever possible. |
+| BCS             | IMS team        | Yes        | should     | BCS is the legacy consolidation application based on BW that some large corporation clients are still in-use. BCS has more functionalities than BPC, but with old-style UIs and too strict, somehow, too proficient, that not all the customers like it. A lot of BCS features and functionalities could be researched, reused, and adopt to RTC. |
 
-*** Cross-Release Compatibilty
+*** Cross-Release Compatibility
 Describe boundary conditions to ensure smooth upgrade / migration.
 
 General Principles for Cross-Release Compatibility
@@ -129,7 +172,7 @@ Describe other external forces, constraints and assumptions, which influence or 
 
 Real-time Consolidation highly depends on Central Finance. CF provides the data bases for the RTC to consume. The successfully implementation of CF puts directly impacts on RTC.
 
-BPC is the only legal consolidation and planning product in SAP. RTC may be bundled with BPC for sales and marketing. 
+BPC is the only legal consolidation and planning product in SAP. RTC may be bundled with BPC for sales and marketing. If BPC
 
 ** Architecture Definition
 The architecture chapter shall describe the main building blocks of the architecture and their relationships. Depict also how the building blocks are integrated with building blocks outside the program/topic. This section can be structured into sub-chapters.
@@ -214,4 +257,4 @@ Explain your view on architecture-related risks and give hints about potential u
 Here the sprint teams can list the software design documents (SDD), which will  be created in order to implement the architecture. The list can also be created over time.
 
 ** Glossary
-Add definitions of terms which are relevant for understanding the document to the glossary. As alternative add the terms to the architecture [[https://wiki.wdf.sap.corp/wiki/display/ArGlossary/Contribute+to+SAP%2527s+Architecturepedia][architecture glossary in the Wiki]]. 
+Add definitions of terms which are relevant for understanding the document to the glossary. As alternative add the terms to the [[https://wiki.wdf.sap.corp/wiki/display/ArGlossary/Contribute+to+SAP%2527s+Architecturepedia][architecture glossary in the Wiki]]. 

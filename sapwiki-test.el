@@ -1,19 +1,21 @@
 (ert-deftest dk-html-tag-test ()
-  (set-buffer "example.html")
+  (find-file "example.html")
   (goto-char (point-min))
-  (should (equal (dk-search-html-tag) '("<h2>" 1 . 5)))
-  (should (equal (dk-search-html-tag) '("</h2>" 23 . 28)))
+  (should (equal (dk-search-html-tag) '("<h1>" 1 . 5)))
+  (should (equal (dk-search-html-tag) '("<ac:macro/>" 5 . 31)))
+  (should (equal (dk-search-html-tag) '("</h1>" 31 . 36)))
+  (should (equal (dk-search-html-tag) '("<h2>" 37 . 41)))
   (let ((beg-tag (dk-search-html-tag))
 	(end-tag (dk-search-html-tag)))
     (should (equal (buffer-substring-no-properties
 		    (cdr (cdr beg-tag))
 		    (car (cdr end-tag)))
-		   "Second level")))
-  (dk-search-html-tag)
-  (should (equal (dk-search-html-tag) '("<span>" 57 . 184))))
+		   "1"))))
 
-(ert-deftest dk-html-begin-tag-test ()
+(ert-deftest dk-check-valid-html-tag ()
   (should (dk-check-valid-html-tag "<h2>"))
+  (should (dk-check-valid-html-tag "<br/>"))
+  (should (dk-check-valid-html-tag "<p/>"))
   (should (dk-check-begin-html-tag "<table>")))
 
 (ert-deftest dk-html-end-tag-test ()
@@ -40,9 +42,11 @@
   (kill-buffer "<h2>"))
   
 (ert-deftest dk-iterate-html-tag ()
-  (find-file "c:/SAP/sapwiki/example3.html")
-  (goto-char (point-min))
-  (dk-iterate-html-tag))
+  (find-file "example.html")
+  (with-current-buffer result-org-buffer
+    (erase-buffer)) 
+  (dk-iterate-html-tag)
+  (switch-to-buffer result-org-buffer))
 
 (ert-deftest dk-http-get ()
   (dk-url-http-get "https://wiki.wdf.sap.corp/wiki/pages/editpage.action"
@@ -53,7 +57,7 @@
  (dk-sapwiki-login))
 
 (ert-deftest dk-sapwiki-fetch ()
-  (find-file "c:/SAP/sapwiki/work/test01.org")
+  (find-file "/work/test01.org")
   (should (equal (dk-sapwiki-get-attribute-value "PAGEID")
 		 "1774869651"))
   (dk-sapwiki-fetch))
