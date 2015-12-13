@@ -5,7 +5,7 @@
 ** Abstract
 Real-time Consolidation(RTC in short) is SAP's next generation financial consolidation system, which is bulit on S4HANA platform and leverages HANA's in-memory technology. 
 
-Unlike triditional standalone consolidation applications, RTC embeds consolidation logic into a centralized financial system. The centralized system we call it Central Finance(CF in short), which makes financial operation, analysis, and planning happens in a same environment, and unifies financial master data and rules across all the local subsidiaries. 
+Unlike traditional standalone consolidation applications, RTC embeds consolidation logic into a centralized financial system. The centralized system we call it Central Finance(CF in short), which makes financial operation, analysis, and planning happens in a same environment, and unifies financial master data and rules across all the local subsidiaries. 
 
 Based on the Central Finance, RTC makes real-time financial consolidation possible in follwoing ways:
 1. Local journals are synchronized into CF in a real-time fasion, so data mapping and consolidation rules will aslo be applied real-timely at journal level.
@@ -17,7 +17,7 @@ Based on the Central Finance, RTC makes real-time financial consolidation possib
 The high level consolidation building blocks (backlogs) includes:
 - Data modelling based on multi-dimension database view.
 - Data collection and validation.
-- Intercompany reconciliation.
+- Inter-company reconciliation.
 - Currency translation.
 - Consolidation and elimination.
 - Reporting.
@@ -178,7 +178,7 @@ BPC is the only legal consolidation and planning product in SAP. RTC may be bund
 ** Architecture Definition
 The architecture chapter shall describe the main building blocks of the architecture and their relationships. Depict also how the building blocks are integrated with building blocks outside the program/topic. This section can be structured into sub-chapters.
 
-For conceptual and technical architecture diagrams use Technical Architecture Modeling (TAM):          http://ency.wdf.sap.corp:1080/Modeling/Standard/. Provide at least one overview picture of the topic (TAM block/component diagram) and an according description. You are welcome to provide more diagrams according to TAM. 
+For conceptual and technical architecture diagrams use Technical Architecture Modeling (TAM): http://ency.wdf.sap.corp:1080/Modeling/Standard/. Provide at least one overview picture of the topic (TAM block/component diagram) and an according description. You are welcome to provide more diagrams according to TAM. 
 
 *** Architecture Context and Overview
 Describe how the software developed within this project relates to existing SAP software,
@@ -195,13 +195,13 @@ Third, describe behavior of the system/components (dynamic view). You may use an
 **** Architecture Challenges: title
 Explain the architecture challenge which can be a quality to be ensured by the architecture or restrictive boundary conditions
 
-*Decison*: We have to use HANA caclulation Viewa.
+*Decision*: We have to use HANA calculation View.
 
 *By*: Christian
 
 *Date*: <2015-11-18 Wed>
 
-*Description*: blabla
+*Description*: balabala
 
 *** Integration with other Systems
 Depict how the software to be developed communicates with other applications and systems. Include a block diagram illustrating the integration.
@@ -218,7 +218,7 @@ Describe how the architecture protects the software against attacks or misuse.
 To do so, define how communication channels (protocol, data, ...) are protected. Describe how authentication, authorization and logging are performed. Consider architecture requirements pertaining to confidentiality, integrity and availability. 
 
 *** Deployment and Operations
-It is recommended to work with the local Technical Component and Delivery Architecture (TCDA) team on defining deployment and operations architecture. Contact is the �Delivery Architecture Engineer� maintained in [[https://ifp.wdf.sap.corp/sap(bD1lbiZjPTAwMSZpPTEmcz1TSUQlM2FBTk9OJTNhcHdkZjU3ODJfSUZQXzAxJTNhWEhRWUJUMFlnaXNneEZlWWZTemIwR1FhWnZxaXotY2lkX1Z3TUF0Zy1BVFQ=)/bc/bsp/sap/zpr/default.htm][program repository]] entry of your program.
+It is recommended to work with the local Technical Component and Delivery Architecture (TCDA) team on defining deployment and operations architecture. Contact is the "Delivery Architecture Engineer" maintained in [[https://ifp.wdf.sap.corp/sap(bD1lbiZjPTAwMSZpPTEmcz1TSUQlM2FBTk9OJTNhcHdkZjU3ODJfSUZQXzAxJTNhWEhRWUJUMFlnaXNneEZlWWZTemIwR1FhWnZxaXotY2lkX1Z3TUF0Zy1BVFQ=)/bc/bsp/sap/zpr/default.htm][program repository]] entry of your program.
 
 **** Deployed Component Structure and Deployment Options
 Show all interdependencies of (groups of) software components using a package diagram (TAM). Assign the components to software layers, for example see: https://wiki.wdf.sap.corp/display/archGov/Software+Layers
