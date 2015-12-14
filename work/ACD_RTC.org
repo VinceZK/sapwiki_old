@@ -84,7 +84,7 @@ SFIN2.0, Central Finance 1.0, BPC //To-do: versions should be checked
 | <10>       | <l50>                                              | <l20>                |
 | Rule ID    | Deviation                                          | Approval Status      |
 |------------+----------------------------------------------------+----------------------|
-| OC-01      | due to BPC's architecture we have to use CDS       | Approved by Chief Arch Christian |
+| OC-01      | due to BPC's architecture we have to use calculation View | Approved by Chief Arch Christian |
 
 ** Boundary Conditions
 Real-time Consolidation(RTC in short) runs mainly based on Central Finance(CF in short), which can synchronize journals from all the subsidiary finance systems in a real-time fashion. CF realizes the so-called "Transactional BW"(through SLT and MDG), which breaks through the world of OLTP and OLAP. Compared to traditional ETL-based BW system, CF can significantly improve the raw data quality and reduce the delay of reporting. 
@@ -142,22 +142,22 @@ If you want to develop a new framework or functionality which could be of intere
 
 The following reuse components must/should/must not be used within this development:
 
-| <15>            | <15>            | <10>       | <10>       | <25>                      |
-| Reuse Component | Owned by        | Maintenance Guaranteed? | Usage      | Remark / explanation      |
-|-----------------+-----------------+------------+------------+---------------------------|
-| HRF 1.0         | HRF team        | Yes        | must       | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level. |
-| BRF+ 2.0        | BRF team        | Yes        | must       | BRF+ must be used for the reason of the compliance with S4HANA guideline. HRF cannot be used directly, and must indirectly through BRF+. Compared to HRF, BRF+ is running on ABAP level which could not permits good performance on mass data processing. RTC should combine the advantages of HRF and BRF+. |
-| CDS 1.0         | CDS team        | Yes        | must       | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
-| Fiori 1.0       | Fiori team      | Yes        | must       | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
-| IBPF info-objects | IBPF team       | Yes        | must       | IBPF developed a lot of finance planning BW info-objects. RTC can re-used them, or do some extension whenever necessary. Beside, RTC and IBPF should combine efforts so that Consolidation and Planning can happen together. |
-| Design Studio   | EPM team        | Yes        | must       | Design Studio is used to create queries. The query can be opened via various analysis tools, like: AO, Fiori Apps, and so on. It is appointed by S4HANA guideline for the only query builder, and will replace BEx in future. |
-| BEx Query       | BW team         | Yes        | should     | BEx query should only be used when Design Studio is not possible, or for some test purpose. |
-| HANA Calculation View | HANA team       | Yes        | should     | HANA Calculation view should be only used for the purpose to integrated with BPC. Other cases should use CDS instead. |
-| BW              | BW team         | Yes        | should     | BW cube should only be used for the purpose to integrated with BPC. RTC should avoid using BW cubes as it violate with S4HANA guideline, and it is not the future. |
-| BPC 10.1        | BPC team        | Yes        | should     | BPC should be used when ever possible. BPC is the only legal financial consolidation and planning system in SAP. RTC should provide the possibility to allow BPC run on CF seamlessly. In some cases if BPC cannot be used, RTC should also provide some core functionalities that can propose values for customers. |
-| CF 1.0          | CF Wdf team     | Yes        | should     | CF should be used when customer what its de-centralized finance systems to be somehow centralized. If a totally centralized finance system is not possible, than establishing a centralized journal repository for group reporting and analysis can be realized by CF. RTC then can use the CF to form it's data basis. |
-| EC-CS           | IMS team        | Yes        | should     | EC-CS is SAP's legacy ERP embedded consolidation application. EC-CS share a lot common features and ideas with RTC, like do consolidation directly on line items. RTC should research, reuse, and adopt EC-CS's functionalities whenever possible. |
-| BCS             | IMS team        | Yes        | should     | BCS is the legacy consolidation application based on BW that some large corporation clients are still in-use. BCS has more functionalities than BPC, but with old-style UIs and too strict, somehow, too proficient, that not all the customers like it. A lot of BCS features and functionalities could be researched, reused, and adopt to RTC. |
+| <15>            | <15>            | <5>   | <5>   | <30>                           |
+| Reuse Component | Owned by        | Maintenance Guaranteed? | Usage | Remark / explanation           |
+|-----------------+-----------------+-------+-------+--------------------------------|
+| HRF 1.0         | HRF team        | Yes   | must  | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level. |
+| BRF+ 2.0        | BRF team        | Yes   | must  | BRF+ must be used for the reason of the compliance with S4HANA guideline. HRF cannot be used directly, and must indirectly through BRF+. Compared to HRF, BRF+ is running on ABAP level which could not permits good performance on mass data processing. RTC should combine the advantages of HRF and BRF+. |
+| CDS 1.0         | CDS team        | Yes   | must  | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
+| Fiori 1.0       | Fiori team      | Yes   | must  | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
+| IBPF info-objects | IBPF team       | Yes   | must  | IBPF developed a lot of finance planning BW info-objects. RTC can re-used them, or do some extension whenever necessary. Beside, RTC and IBPF should combine efforts so that Consolidation and Planning can happen together. |
+| Design Studio   | EPM team        | Yes   | must  | Design Studio is used to create queries. The query can be opened via various analysis tools, like: AO, Fiori Apps, and so on. It is appointed by S4HANA guideline for the only query builder, and will replace BEx in future. |
+| BEx Query       | BW team         | Yes   | should | BEx query should only be used when Design Studio is not possible, or for some test purpose. |
+| HANA Calculation View | HANA team       | Yes   | should | HANA Calculation view should be only used for the purpose to integrated with BPC. Other cases should use CDS instead. |
+| BW              | BW team         | Yes   | should | BW cube should only be used for the purpose to integrated with BPC. RTC should avoid using BW cubes as it violate with S4HANA guideline, and it is not the future. |
+| BPC 10.1        | BPC team        | Yes   | should | BPC should be used when ever possible. BPC is the only legal financial consolidation and planning system in SAP. RTC should provide the possibility to allow BPC run on CF seamlessly. In some cases if BPC cannot be used, RTC should also provide some core functionalities that can propose values for customers. |
+| CF 1.0          | CF Wdf team     | Yes   | should | CF should be used when customer what its de-centralized finance systems to be somehow centralized. If a totally centralized finance system is not possible, than establishing a centralized journal repository for group reporting and analysis can be realized by CF. RTC then can use the CF to form it's data basis. |
+| EC-CS           | IMS team        | Yes   | should | EC-CS is SAP's legacy ERP embedded consolidation application. EC-CS share a lot common features and ideas with RTC, like do consolidation directly on line items. RTC should research, reuse, and adopt EC-CS's functionalities whenever possible. |
+| BCS             | IMS team        | Yes   | should | BCS is the legacy consolidation application based on BW that some large corporation clients are still in-use. BCS has more functionalities than BPC, but with old-style UIs and too strict, somehow, too proficient, that not all the customers like it. A lot of BCS features and functionalities could be researched, reused, and adopt to RTC. |
 
 *** Cross-Release Compatibility
 Describe boundary conditions to ensure smooth upgrade / migration.
@@ -190,6 +190,18 @@ First, explain the concepts, on which the architecture is based. This may be bus
 Second, give the component view of your architecture. What are the building blocks and how do they relate to each other. Include a block diagram.
 
 Third, describe behavior of the system/components (dynamic view). You may use an activity diagram to visualize it.
+
+RTC mainly interacts with 3 SAP applications: CF, BPC, and IBPF. The 4 applications take roles as following:
+1. *CF* provides a data fundation(ACDOCA) for RTC to create models on it.
+2. *RTC* enable the user to do typical consolidation preparation, like: data validation, currency translation, Inter-company reconciliation, and so on.
+3. *BPC* is the main consolidation tools that can be seamlessly integrated with RTC to do higher level consolidations and eliminations.
+4. *IBPF* is highly integrated with RTC. Which can do planning and simulation on the consolidation results, and vice veras. 
+
+Detail relationship and interactions can be found in the following diagram.
+
+#+CAPTION: Overall Architecture Diagram
+[[../image/Overall%20Architecture%20Diagram.png]]
+
 
 *** Main Architecture Challenges and Decisions
 **** Architecture Challenges: title
