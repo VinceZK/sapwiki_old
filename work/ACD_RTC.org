@@ -7,12 +7,12 @@ Real-time Consolidation(RTC in short) is SAP's next generation financial consoli
 
 Unlike traditional standalone consolidation applications, RTC embeds consolidation logic into a centralized financial system. The centralized system we call it Central Finance(CF in short), which makes financial operation, analysis, and planning happens in a same environment, and unifies financial master data and rules across all the local subsidiaries. 
 
-Based on the Central Finance, RTC makes real-time financial consolidation possible in follwoing ways:
+Based on the Central Finance, RTC makes real-time financial consolidation possible in the following ways:
 1. Local journals are synchronized into CF in a real-time fasion, so data mapping and consolidation rules will aslo be applied real-timely at journal level.
-2. No additional data copy and batch job is needed when running consolidation statements and reports. Consolidated results can be made on-the-fly directly based on journal items. 
-3. Consolidate results can be traced back to orginal transactions.
+2. No additional data copy and batch job is needed when running consolidation. Consolidated results can be made on-the-fly directly based on journal items. 
+3. Consolidate results can be traced back to the  original transactions.
 4. Local financial close, corrections, and updates can be instancely noticed.
-5. Planning and simulation can be made on consolidated results, and vice veras. 
+5. Planning and simulation can be made on consolidated results, and vice versa. 
 
 The high level consolidation building blocks (backlogs) includes:
 - Data modelling based on multi-dimension database view.
@@ -63,6 +63,14 @@ Financial analytical application, with data write-back and simulation features.
 *** Business Case
 Consolidation is discussed in 80 % of the cases of which we have customer discussions on CF. CF carries all the financial data from the entire system landscape. It is not understood by customers why they need to load the data from somewhere else for the consolidation. Group reporting on CF has limited informative value without consolidation.CF is supplied in real-time. Necessary corrections in local close are updated real-timely. There is no need for the waiting of ETL.
 
+Here are 2 large corporations that both have financial consolidation running on a centralized finance data repository. The requirements are always there,  
+
+**** Sinopec
+Sinopec already has a centralized finance system with all its subsidiaries financial data consolidated. AGS team implemented a solution that allow BCS consume this consolidated data directly through BW virtual info-providers and HANA calculation views. Thus reduce the ETL process, and Sinopec already gets benefits from that solution. 
+
+**** Siemens
+Siemens has established a so called global template. That means that the group defines the master data centrally, but there is ample possibility for the subsidiaries to extend the master data, for example to create additional accounts in the account hierarchy below a central given account. This is actually a quite frequent approach. Siemens does this with a naming convention: the first 6 digits are reserved for the group, digit 7 and 8 are reserved for the division, the last two digits are reserved for the subsidiary. Exception are all account numbers containing the digit 9, they are reserved for the subsidiary.
+
 *** Main Use Cases / Functional Scope
 
 **** Year-End close (pre)consolidation
@@ -71,15 +79,16 @@ Traditional consolidation takes days. It needs to extract data from group's sub 
 **** Acquisition & Re-organization 
 When a new business entity is added/removed from the organization, management teams want see the simulated consolidated results immediately to support decision.RTC can well cope this kind of requirements. 
  
+
 *** List all Required SAP Products/Product Versions to Support the Main Use Cases
-SFIN2.0, Central Finance 1.0, BPC //To-do: versions should be checked
+S4HANA Finance, Central Finance 1.0, BPC //To-do: versions should be checked
 
 *** Relevant Product Line Architecture Guideline
 - [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
 - [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline][CDS Guideline]]
 - [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
 - [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
-
+  
 *** Deviations from Product Line Architecture and Product Experience Requirements
 | <10>       | <l50>                                              | <l20>                |
 | Rule ID    | Deviation                                          | Approval Status      |
@@ -89,9 +98,9 @@ SFIN2.0, Central Finance 1.0, BPC //To-do: versions should be checked
 ** Boundary Conditions
 Real-time Consolidation(RTC in short) runs mainly based on Central Finance(CF in short), which can synchronize journals from all the subsidiary finance systems in a real-time fashion. CF realizes the so-called "Transactional BW"(through SLT and MDG), which breaks through the world of OLTP and OLAP. Compared to traditional ETL-based BW system, CF can significantly improve the raw data quality and reduce the delay of reporting. 
   
-In other case, corporations may already have their subsidiaries using a centralized finance system (based on Simple Finance). Thus the data synchronization is not necessary. RTC then can be run directly on Simple Finance without the CF.
+In other case, corporations may already have their subsidiaries using a centralized finance system (based on S4HANA finance). Thus the data synchronization is not necessary. RTC then can be run directly on S4HANA finance without the CF.
  
-In both cases, RTC requires a centralized finance system that already have all the local journals consolidated in a central repository. It is under that assumption can RTC do further financial consolidation models and processes. RTC will also leverage(or reuse) SAP existing consolidation tools, like: BPC, BCS, and EC-CS. In it's initial releases, RTC will consider BPC as the main consolidation front-end.
+In both cases, RTC requires a centralized finance system that already have all the local journals consolidated in a central repository. It is under that assumption can RTC do further financial consolidation models and processes. RTC will also leverage(or reuse) SAP existing consolidation applications, like: BPC, BCS, and EC-CS. In it's initial releases, RTC will consider BPC as the main consolidation front-end.
 
 *** Quality Attribute Scenarios
 1. Data Collection
@@ -110,12 +119,12 @@ Add a link to the PS planning in PSC or describe deviations within this chapter.
 
 For further information on product standards, see [[https://portal.wdf.sap.corp/wcm/ROLES://portal_content/cp/roles/cto/DevelopmentResources/Idea-To-Market/Infocenters/WS%2520Office%2520of%2520the%2520CTO/Development%2520Resources/I2M/I2M%2520Product%2520Standards][go/productstandards]]
 
-*** Technology Descisions
+*** Technology Decisions
 Define which technologies / frameworks are used in which architecture area and for specific topics:
 
 | Architecture                           | Technologies to be Used                              |
 |----------------------------------------+------------------------------------------------------|
-| Clients                                | BPC, SFIN applications                               |
+| Clients                                | BPC, S4HANA applications                             |
 | Presentation Layer /  User Interface   | BPC WebUI(UI5), Analytic Office, Fiori, SAPGUI       |
 | Business Logic Layer                   | ABAP, AMDP, CDS, Calculation View                    |
 | Analytics / Reporting                  | BW info-providers, BEx Query, CDS view               |
@@ -176,9 +185,9 @@ Real-time Consolidation highly depends on Central Finance. CF provides the data 
 BPC is the only legal consolidation and planning product in SAP. RTC may be bundled with BPC for sales and marketing. If BPC
 
 ** Architecture Definition
-The architecture chapter shall describe the main building blocks of the architecture and their relationships. Depict also how the building blocks are integrated with building blocks outside the program/topic. This section can be structured into sub-chapters.
+The architecture chapter describes the main building blocks of the architecture and their relationships. Depict also how the building blocks are integrated with building blocks outside the program/topic.
 
-For conceptual and technical architecture diagrams use Technical Architecture Modeling (TAM): http://ency.wdf.sap.corp:1080/Modeling/Standard/. Provide at least one overview picture of the topic (TAM block/component diagram) and an according description. You are welcome to provide more diagrams according to TAM. 
+~For conceptual and technical architecture diagrams use [[ http://ency.wdf.sap.corp:1080/Modeling/Standard/][Technical Architecture Modeling (TAM)]].~ 
 
 *** Architecture Context and Overview
 Describe how the software developed within this project relates to existing SAP software,
@@ -191,17 +200,50 @@ Second, give the component view of your architecture. What are the building bloc
 
 Third, describe behavior of the system/components (dynamic view). You may use an activity diagram to visualize it.
 
-RTC mainly interacts with 3 SAP applications: CF, BPC, and IBPF. The 4 applications take roles as following:
+RTC mainly interacts with 3 SAP applications: CF, BPC, and IBPF. Each takes a role as following:
+
 1. *CF* provides a data fundation(ACDOCA) for RTC to create models on it.
 2. *RTC* enable the user to do typical consolidation preparation, like: data validation, currency translation, Inter-company reconciliation, and so on.
 3. *BPC* is the main consolidation tools that can be seamlessly integrated with RTC to do higher level consolidations and eliminations.
-4. *IBPF* is highly integrated with RTC. Which can do planning and simulation on the consolidation results, and vice veras. 
+4. *IBPF* is highly integrated with RTC. Which can do planning and simulation on the consolidation results, and vice versa. 
 
-Detail relationship and interactions can be found in the following diagram.
+Details on each building blocks and their relationships are explained below.
 
 #+CAPTION: Overall Architecture Diagram
 [[../image/Overall%20Architecture%20Diagram.png]]
 
+**** Line Item Level Data Integration
+Local financial systems synchronize their line items into CF's central journal repository(ACDOCA). The synchronization is realized through SLT. It is a middle-ware which can listen changes at database level and synchronize the updates to CF real-timely. 
+
+Data mapping happens when the newly created items are entering into CF through a master data mapping application called MDG(Master Data Governance). Mater data is mapped from local to group, these could includes: Accounts, Chart of Accounts, company code, cost center, and so on. 
+
+There is also an error handling component(AIF) which centrally process all the processing logs. If error happens, the context is saved for future re-process. 
+
+This building block is developed and maintained by CF's Walldolf team. RTC is highly depends on this component which permits data quality and timeliness. Meanwhile, RTC provides validation and currency translation services to CF. Additional consolidation rules and currency translations are applied before line items posted to ACDOCA.   
+
+**** Manual adjustment posting
+Adjustments can be maded by posting additional financial documents. These adjustment documents can be either posted in orignal local financial systems and then synchronized to CF, or posted direclty in CF. In both cases, the consolidastion validation rules and currency translation should be applied. The latter case should also reuse the existing document posting UI.
+
+**** Data Modeling
+Data modeling is creating multi-dimension views based on foundation tables. These foundation tables includes: ACDOCA, ACDOCC, and ACDOCP. ACDOCA is the central jouranl repository, which should contain all the jouranls the corporation has. ACDOCC is somehow aggregated journal repository only stores the consolidated results. ACDOCC is dotted, because it is still under consideration whether needed or not comparing direclty saving consolidation results into ACDOCA. This will be further disscussed in the latter chapter. ACDOCP is for planning data, it is also aggregated journal repository that created and maintained by IBPF team. 
+
+Besides those three foundation tables, there are also quite a lot of master data tables. The master data tables should be associalated to the a foundation table to form a multi-dimension view. Master data could be freely extended, both horizantal and vertical,  according to various consolidation requirements.
+
+This building block is dotted because it can be replaced by BPC's modeling tool. In case BPC is not possible due to release strategy or other reasons, RTC should provide a flexible modeling tool. In both cases, RTC should provide a modeling API that can generate BW/CDS multi-dimension views, and allow other consolidation tools to integrate with. 
+
+**** Data Explosure via BW/CDS
+Multi-dimension views can be created either using BW info-providers or using CDS analytic views. They are both underlying modeling technologies that Data modeling tool depends on. The BW info-provider is only used to integrate with BPC and BCS. As both of them are build on BW components. 
+
+CDS analytic views are preferred as it is SAP's future modeling scripts, and the only modeling technology allowed by S4HANA guideline. The expectation is that BW can support CDS well, so that there is no need to support 2 different modeling technologies. 
+
+**** Data Collection
+Data is collected from all the subsidiaries, or the de-centralized systems through various ways. In the best situation, CF already helps to collect all the data correclty and timely. Then this building block only provides validation reports to make sure the local financail data is correct and ready for the consolidation. 
+
+But in more realistic cases, data is not that ready enough for consolidation. Some subsidiaries data may not be able to automatically synchronize into CF, or even CF is not the right approach for some instances. In that way, RTC should provide a flexible data upload mechanism which may  support spreadsheets upload, manually entering, and web services APIs. Through these flexible interfaces, the raw data will be validated upon consolidation rules, and posted into ACDOCA.
+
+The data collection process accesses foundation tables through CDS views, which are annoted with write-back classes. There are 2 reasons why not use ABAP coding:
+1. CDS can make data validation pushed down to HANA.
+2. CDS is easy to explosure to multiple front-end tools.
 
 *** Main Architecture Challenges and Decisions
 **** Architecture Challenges: title
