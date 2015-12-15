@@ -230,9 +230,9 @@
      'dk-sapwiki-process-push (list work-buffer))
     (message "Pushed!")))
 
-(defun dk-sapwiki-process-push (work-buffer)
+(defun dk-sapwiki-process-push (status work-buffer)
   "The function is called only if post is not successfully"
-  (set-buffer (current-buffer))
+  (switch-to-buffer (current-buffer))
   (message "Push Failed!"))
 ;;------------------------------------------------------
 ;;End of 1. Connect to SAP wiki, uploading/downloading
@@ -830,15 +830,19 @@ contextual information."
 
 (defun dk-html--wrap-image (contents info &optional caption label)
   "Wrap CONTENTS string within an appropriate environment for images.INFO is a plist used as a communication channel.  When optional arguments CAPTION and LABEL are given, use them for caption and \"id\" attribute."
-  (format "\n<ac:image ac:title=\"%s\" ac:alt=\"%s\">\n%s</ac:image>"
-	  caption caption contents))
+  (format "<p>%s</p>\n<p align=\"center\">%s</p>"
+	  contents caption))
 
 (defun dk-html--format-image (source attributes info)
     (org-html-close-tag
-     "ri:attachment"
+     "img"
      (org-html--make-attribute-string
       (org-combine-plists
-       (list :ri:filename (file-name-nondirectory source))
+       (list :class "confluence-embedded-image"
+	     :src (concat "/wiki/download/attachments/"
+			   dk-sapwiki-pageID "/"
+			   (file-name-nondirectory source))
+	     :alt (file-name-nondirectory source))
        attributes))
      info))
 
@@ -1132,8 +1136,9 @@ contextual information."
 			  "<span class=\"table-number\">"
                           (format (org-html--translate "Table %d:" info) number)
 			  "</span> " (org-export-data caption info))))
-	       (funcall table-column-specs table info)
-	       contents)))))
+	       contents
+	       (funcall table-column-specs table info))))))
+	      ; contents)))))
 
 (defun dk-sapwiki-clock (clock contents info)
   "Transcode a CLOCK element from Org to HTML.
