@@ -154,7 +154,7 @@ The following reuse components must/should/must not be used within this developm
 | <15>            | <15>            | <5>   | <5>   | <30>                           |
 | Reuse Component | Owned by        | Maintenance Guaranteed? | Usage | Remark / explanation           |
 |-----------------+-----------------+-------+-------+--------------------------------|
-| HRF 1.0         | HRF team        | Yes   | must  | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level. |
+| HRF 1.0 SP06    | HRF team        | Yes   | must  | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level. |
 | BRF+ 2.0        | BRF team        | Yes   | must  | BRF+ must be used for the reason of the compliance with S4HANA guideline. HRF cannot be used directly, and must indirectly through BRF+. Compared to HRF, BRF+ is running on ABAP level which could not permits good performance on mass data processing. RTC should combine the advantages of HRF and BRF+. |
 | CDS 1.0         | CDS team        | Yes   | must  | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
 | Fiori 1.0       | Fiori team      | Yes   | must  | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
@@ -252,7 +252,7 @@ Inter-company Reconciliation (ICR in short) provides you with periodic control o
 
 ICR operates on the level of companies and its trading partners. To avoid currency conversion differences, the documents are reconciled in the *transaction currency*. Both individual companies and their parent companies benefit from ICR. Individual companies benefit from paired documents because they need to ensure that their own documents from accounting transactions correspond to the documents of internal trading partners. This helps avoid delays and disputes when payments are processed. Their parent companies can then make a global check on the reconciliation results for all the companies.
 
-You can regard ICR as a special prcoess that belongs to data collection. It is such a common usage that SAP already has this feature as a seprate component called [[https://help.sap.com/saphelp_erp_fao_addon20/helpdata/en/d7/5a7c525ae17154e10000000a44176d/frameset.htm][SAP ICR]]. ICR supports the following three reconciliation process:
+You can regard ICR as a special prcoess that belongs to data collection. It is such a common usage that SAP already has this feature as a seperate component called [[https://help.sap.com/saphelp_erp_fao_addon20/helpdata/en/d7/5a7c525ae17154e10000000a44176d/frameset.htm][SAP ICR]]. ICR supports the following three reconciliation processes:
 
 1. *G/L open items reconciliation.* This process is for reconciliation of open items if most of your intercompany receivables and payables are posted to G/L accounts.
 2. *G/L account reconciliation.* You use this process for reconciliation of documents that are posted to accounts which do not have open item management. This process is mostly used for reconciliation of profit and loss accounts.
@@ -271,10 +271,27 @@ The process runs hours in traditional Consolidation applications. But within Rea
 
 This building block could include APIs and UIs that are used to initiate, monitor, and get results from the consolidation process.  
  
-**** Consolidastion Group/Scope Definition
+**** Consolidation Group/Scope Definition
 Under research
 
 **** Reporting
+Reports or queries are based on multi-dimension views that explosed either by BW or CDS. Tools like Query Designer or BEx Query Builder could be used to create queries based on multi-dimension views. Those queries can be then consumed by AO and Fiori.
+
+Reports could be organized by consolidation hierarchies.
+
+There are report-to-report navigation. AO has existing solution that supports worksheet to worksheet, worksheet to webdynpro, and worksheet to SAPGUI. Fiori APPs should develop corresponding navigation features to existing list reports and detail transactions. The consolidastion trace back requirements are actully realized through these report-to-report navigations. 
+
+**** Validation Engine
+Validation Engine is a core component for storing and running consolidation rules. Rules could be applied in data collection, Inter-company reconciliation, consolidation and elimination, line item level data integration, and manual adjustment posting. 
+
+Validation Engine will be built on existing rule frameworks HRF and BRF+. HRF stands for Hana Rule Framework. Rules maintained in HRF can be applied on HANA level, which permits good performance. BRF+ stands for Business Rule Framework plus. BRF+ is an ABAP framework that can be easily integrated into ABAP codes. BRF+ can be used to integrate HRF in the form of DB vocabulary. 
+ 
+**** Validation Rules Customization
+
+**** Currency Translation Engine
+
+**** Currency Translation Rules Customization
+
 
 *** Main Architecture Challenges and Decisions
 **** Architecture Challenges: title
