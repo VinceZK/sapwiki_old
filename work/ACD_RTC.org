@@ -42,7 +42,7 @@ But all is not well with standalone consolidation applications that were develop
 With the emergence of S4HANA and the concept of central finance, we can build an embedded financial consolidation solution based on them. As financial data is already centralized, it is not necessary to replicate it again to a standalone consolidation system. Meanwhile, RTC can also gain more from the future S4HANA Cloud platform, because of the highly distributed nature of the financial close process. It can help to standardlize and harmonize the data collection, imporve collaborations, and significantly reduce reporting delay between local operational systems and the corporate consolidation.
 
 *** Number of Customers expected with release now in development 
-25+ customers have explicitly stated high interest on Real-time Consolidation.
+25+ customers have explicitly stated high interest on Real-time Consolidation. For details, please refer the wikipage: [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Customer+Engagement+for+Real+Time+Consolidation][Customer Engagement for Real Time Consolidation]].
 
 *** Underlying Platform/Application Server
 RTC is built on S4HANA, both On-Premise and Cloud, with On-Premise version delivering first. 
@@ -87,6 +87,7 @@ S4HANA Finance, Central Finance 1.0, BPC //To-do: versions should be checked
 - [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
 - [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline][CDS Guideline]]
 - [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
+- [[https://ux.wdf.sap.corp/fiori-design/foundation/get-started/][Firoi Design Guideline]]
 - [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
   
 *** Deviations from Product Line Architecture and Product Experience Requirements
@@ -275,16 +276,18 @@ This building block could include APIs and UIs that are used to initiate, monito
 Under research
 
 **** Reporting
-Reports or queries are based on multi-dimension views that explosed either by BW or CDS. Tools like Query Designer or BEx Query Builder could be used to create queries based on multi-dimension views. Those queries can be then consumed by AO and Fiori.
+Reports or queries are based on multi-dimension views that explosed either by BW or CDS. Tools like BEx Query Designer and Design Stuido could be used to create queries based on multi-dimension views. Those queries can be then consumed by AO and Fiori.
 
 Reports could be organized by consolidation hierarchies.
 
-There are report-to-report navigation. AO has existing solution that supports worksheet to worksheet, worksheet to webdynpro, and worksheet to SAPGUI. Fiori APPs should develop corresponding navigation features to existing list reports and detail transactions. The consolidastion trace back requirements are actully realized through these report-to-report navigations. 
+There are report to report navigation called [[http://help.sap.com/saphelp_scm700_ehp02/helpdata/en/4a/5b96c6517f2e24e10000000a42189b/content.htm?frameset=/en/4a/5b96c6517f2e24e10000000a42189b/frameset.htm&current_toc=/en/b2/259b06d406454fa8429240ecaed4f6/plain.htm&node_id=123&show_children=false][Report-Report Interface]](RRI in short). RRI allows you the flexibility to call a jump target (receiver) online from a BEx query (sender) within or outside of the BW system. Jump targets that have been assigned to a BEx query can be selected in BEx Web applications and in the BEx Analyzer. You can access them from the context menu under the Goto function.
+
+Analytics Office also support RRI just like BEx Analyzre. Fiori APPs should develop corresponding navigation features to existing list view reports or detail transactions. The consolidation trace back requirements are actully realized through these report-to-report navigations. 
 
 **** Validation Engine
 Validation Engine is a core component for storing and running consolidation rules. Rules could be applied in data collection, Inter-company reconciliation, consolidation and elimination, line item level data integration, and manual adjustment posting. 
 
-Validation Engine will be built on existing rule frameworks HRF and BRF+. HRF stands for Hana Rule Framework. Rules maintained in HRF can be applied on HANA level, which permits good performance. BRF+ stands for Business Rule Framework plus. BRF+ is an ABAP framework that can be easily integrated into ABAP codes. BRF+ can be used to integrate HRF in the form of DB vocabulary. 
+Validation Engine is built on existing rule frameworks HRF and BRF+. HRF stands for Hana Rule Framework. Rules maintained in HRF can be applied on HANA level, which permits good performance. BRF+ stands for Business Rule Framework plus. BRF+ is an ABAP rule framework that can be easily integrated into ABAP codes. HRF can be integrated into BRF+ in some degree. And recently, a project has been kicked off to further enhance it and make this the standard for S4HANA. 
  
 **** Validation Rules Customization
 
