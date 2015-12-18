@@ -155,7 +155,7 @@ The following reuse components must/should/must not be used within this developm
 | <15>            | <15>            | <5>   | <5>   | <30>                           |
 | Reuse Component | Owned by        | Maintenance Guaranteed? | Usage | Remark / explanation           |
 |-----------------+-----------------+-------+-------+--------------------------------|
-| HRF 1.0 SP06    | HRF team        | Yes   | must  | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level. |
+| HRF 1.6.2       | HRF team        | Yes   | must  | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level. |
 | BRF+ 2.0        | BRF team        | Yes   | must  | BRF+ must be used for the reason of the compliance with S4HANA guideline. HRF cannot be used directly, and must indirectly through BRF+. Compared to HRF, BRF+ is running on ABAP level which could not permits good performance on mass data processing. RTC should combine the advantages of HRF and BRF+. |
 | CDS 1.0         | CDS team        | Yes   | must  | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
 | Fiori 1.0       | Fiori team      | Yes   | must  | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
@@ -324,10 +324,18 @@ HANA and BW content is not allowed in S4HANA guideline. This is because they are
 | *Description*   | balabala                                           |
 
 **** Where to store the consolidated results
-Helmut has decribed 3 kinds of data that RTC could take care of:
+Helmut has decribed 4 options to save the consolidated results:
+1. ACDOCA extend ledger.
+2. ACDOCA independent ledger
+3. ACDOCC
+4. BW Cube
 
-*Reported financial data on line item level*
-/This is the data which CF takes care of already: the FI line items. This is the basis of the consolidation, and normally comes from an FI system. However, we have to take care of special situations and the transformations that typically take place when the data is copied from the local accounting to the group accounting/
+~Here should have some simple explanation on what is extend ledger, and what is the difference between standard ledger?~
+
+~Extend Ledger is now changed to the name Special Purpose Ledger, which is of the application component FI-SL. You can define ledgers for reporting purposes. You can keep these user-defined ledgers as general ledgers or susidiary ledgers with various account assignment objects. Account assignment objects can either be SAP dimensions from various applications or customer-defined dimensions. You can refer [[http://help.sap.com/erp2005_ehp_04/helpdata/en/da/6ada3889432f48e10000000a114084/frameset.htm][SAP online help]] for more details on Special Purpose Ledger.~
+
+*ACDOCA Extend Ledger* 
+/The data from the subsidiaries will reside completely in one ACDOCA ledger, all eliminations and adjustments are posted in an extend ledger/
 
 *Reported financial data on aggregated level*
 /There will be most likely cases where the data is not provided on line item level. Examples are very small subsidiaries, that just do not do accounting on such a detailed level (they might just use a PC program). Or I remember one case where a joint venture was managed not so jointly, so one of the two parents did not get the detailed information, but only the high level aggregated data./ 
