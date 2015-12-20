@@ -34,6 +34,7 @@ The high level consolidation building blocks (backlogs) includes:
 | Version          | 0.1(Draft Version)        |
 | Version History  | link to wiki History page |
 
+
 ** Background and Context
 Financial consolidation systems are the "engine room" of the corporate finance department, enabling companies of all sizes to comply with regulatory reporting requirements, company law and global accounting standards as well satisfy management's need for periodic management reporting.
 
@@ -96,6 +97,7 @@ S4HANA Finance, Central Finance 1.0, BPC //To-do: versions should be checked
 |----------+--------------------------------+------------|
 | OC-01    | due to BPC's architecture we have to use calculation View | Approved by Chief Arch Christian |
 
+
 ** Boundary Conditions
 Real-time Consolidation(RTC in short) runs mainly based on Central Finance(CF in short), which can synchronize journals from all the subsidiary finance systems in a real-time fashion. CF realizes the so-called "Transactional BW"(through SLT and MDG), which breaks through the world of OLTP and OLAP. Compared to traditional ETL-based BW system, CF can significantly improve the raw data quality and reduce the delay of reporting. 
   
@@ -134,7 +136,6 @@ Define which technologies / frameworks are used in which architecture area and f
 | Data Persistency                       | HANA Relational Database                             |
 | Development Environment                | ABAP ADT, HANA Studio, BW Modeling tool,Fiori WebIDE |
 | Life-cycle Management                  | ABAP CTS, Fiori CI                                   |
-| tbd                                    |                                                      |
 
 *** Reuse
 List the reuse components (engines, objects, intrinsic/common services, 3rd party components) which have to be used for this development program/project/topic/integration scenario. Mention reuse components which explicitly must not be used within this development program.
@@ -155,7 +156,7 @@ The following reuse components must/should/must not be used within this developm
 | <15>            | <15>            | <5>   | <5>   | <30>                           |
 | Reuse Component | Owned by        | Maintenance Guaranteed? | Usage | Remark / explanation           |
 |-----------------+-----------------+-------+-------+--------------------------------|
-| HRF 1.6.2       | HRF team        | Yes   | must  | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level. |
+| HRF 1.6.2       | HRF team        | Yes   | must  | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level.HRF license should be considered. |
 | BRF+ 2.0        | BRF team        | Yes   | must  | BRF+ must be used for the reason of the compliance with S4HANA guideline. HRF cannot be used directly, and must indirectly through BRF+. Compared to HRF, BRF+ is running on ABAP level which could not permits good performance on mass data processing. RTC should combine the advantages of HRF and BRF+. |
 | CDS 1.0         | CDS team        | Yes   | must  | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
 | Fiori 1.0       | Fiori team      | Yes   | must  | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
@@ -185,22 +186,13 @@ Real-time Consolidation highly depends on Central Finance. CF provides the data 
 
 BPC is the only legal consolidation and planning product in SAP. RTC may be bundled with BPC for sales and marketing. If BPC
 
+
 ** Architecture Definition
 The architecture chapter describes the main building blocks of the architecture and their relationships. Depict also how the building blocks are integrated with building blocks outside the program/topic.
 
 ~For conceptual and technical architecture diagrams use~ [[http://ency.wdf.sap.corp:1080/Modeling/Standard][Technical Architecture Modeling (TAM)]]. 
 
 *** Architecture Context and Overview
-Describe how the software developed within this project relates to existing SAP software,
-Provide an architecture overview diagram which depicts all major component and their relationships. Describe the overall architecture concept and explain the role of each component.
-
-We recommend to describe the architecture according to the following sequence
-First, explain the concepts, on which the architecture is based. This may be business concepts, technical concepts or patterns. ARIS diagrams block diagrams, or entity-relationship diagrams may be useful for visualization.
-
-Second, give the component view of your architecture. What are the building blocks and how do they relate to each other. Include a block diagram.
-
-Third, describe behavior of the system/components (dynamic view). You may use an activity diagram to visualize it.
-
 RTC mainly interacts with 3 SAP applications: CF, BPC, and IBPF. Each takes a role as following:
 
 1. *CF* provides a data fundation(ACDOCA) for RTC to create models on it.
@@ -272,7 +264,7 @@ The process runs hours in traditional Consolidation applications. But within Rea
 
 This building block could include APIs and UIs that are used to initiate, monitor, and get results from the consolidation process.  
  
-**** Consolidation Group/Scope Definition
+**** TODO Consolidation Group/Scope Definition
 Under research
 
 **** Reporting
@@ -284,21 +276,31 @@ There are report to report navigation called [[http://help.sap.com/saphelp_scm70
 
 Analytics Office also support RRI just like BEx Analyzre. Fiori APPs should develop corresponding navigation features to existing list view reports or detail transactions. The consolidation trace back requirements are actully realized through these report-to-report navigations. 
 
-**** TODO Validation Engine
-Validation Engine is a core component for storing and running consolidation rules. Rules could be applied in data collection, Inter-company reconciliation, consolidation and elimination, line item level data integration, and manual adjustment posting. 
+**** Validation Engine
+Validation Engine is the core of financial consolidation. It is used for storing and running consolidation rules, and rules could be applied in all other building blocks. Easy customization and high performance of applying rules are the key targets that this building block should achieve.  
 
-Validation Engine is built on existing rule frameworks HRF and BRF+. HRF stands for Hana Rule Framework. Rules maintained in HRF can be applied on HANA level, which permits good performance. BRF+ stands for Business Rule Framework plus. BRF+ is an ABAP rule framework that can be easily integrated into ABAP codes. HRF can be integrated into BRF+ in some degree. And recently, a project has been kicked off to further enhance it and make this the standard for S4HANA. 
+Validation Engine is built on existing rule frameworks HRF and BRF+. HRF stands for Hana Rule Framework. Rules maintained in HRF can be applied directly in HANA, which permits good performance. BRF+ stands for Business Rule Framework plus. BRF+ is an ABAP-based rule framework. There is a roadmap that HRF and BRF+ will be merged into one. But currently HRF can be integrated into BRF+ in some degree.
+
+How we use HRF combined with BRF+ is still under research.
  
-**** TODO Validation Rules Customization
-HRF has 2 kinds of rule editors, one is text rules, and the other is decison table. HRF team has made it a UI5 component that can allow other applications to easily reuse. 
+**** Validation Rules Customization
+HRF has 2 kinds of rule editors, one is Text-Based Rules, and the other is Decison Table. HRF team has made them  UI5 components, so that it can be easily integrated and reused by other applications. 
 
-Text rules:
+*Text-Based Rules:*
+Simple, natural, and intuitive business condition language (Rule Expression Language)
 
-Decsion table: 
+#+CAPTION: Text-Based Rules
+[[../image/Text-based_rules.png]]
 
-How to convert external rules into HRF?
+*Decsion Table:* 
+Simple and intuitive UI control that supports text rules and decision tables
+
+#+CAPTION: Decison Table
+[[../image/Decison_Table.png]]
+
+While RTC can leverage HRF's high performance and intuitive rules editor, how to map existing rules of BPC and BCS, or even 3^{rd} party consolidation applications into HRF is still a big challenge.  
   
-**** TODO Currency Translation Engine
+**** Currency Translation Engine
 Currency translation is based on the HANA function: *CURRENCY_TRANSLATION*. The function use the exchange rates in table: TCURR. TCURR and other related tables forms SAP ERP's exchange rate repositroy. Real-time consolidatio should be connected to the exchange rate repoistory. 
 
 There are 3 kinds of exchange rates that consolidation needs:
@@ -306,15 +308,36 @@ There are 3 kinds of exchange rates that consolidation needs:
 2. Transaction rate
 3. Reporting rate
 
-The choice of different type of rates is based on type of accounts. The currency translation engine should choose the right rate with high performance. HRF Decsion table could be used to maintain the currency translation rules. 
+The choice of different type of rates is based on type of accounts. The currency translation engine should choose the right rate with high performance and high customization. HRF's decsion table could be used in such case. 
    
-**** TODO Currency Translation Rules Customization
+**** Currency Translation Rules Customization
 As describe above, HRF Decsion table could be used to maintain the currency exchange rules. It should be easy to mapping exchange rate rules to decsion table. 
 
 API should also be provided to allow external rate repository to be imported into HRF. 
 
+**** Data Foundation
+Data foundations are the tables that actual source financial lines are stored. They could be mainly 3 foundation tables:
+1. ACDOCA: actual financial journal items.
+2. ACDOCC: aggregated journal generated during consolidation.
+3. ACDOCP: aggregated journal generated during planning. 
+
+There are 3 types of data would be stored in RTC:
+
+*Reported financial data on line item level*
+This is the data which central finance takes care of already: the FI line items. This is the basis of the consolidation, and normally comes from an FI system. However, we have to take care of special situations and the transformations that typically take place when the data is copied from the local accounting to the group accounting.
+
+*Reported financial data on aggregated level*
+There will be most likely cases where the data is not provided on line item level. Examples are very small subsidiaries, that just do not do accounting on such a detailed level (they might just use a PC program). Or I remember one case where a joint venture was managed not so jointly, so one of the two parents did not get the detailed information, but only the high level aggregated data.
+
+Saving such kind of aggregated data to ACDOCA is not that easy, and a seperate aggregated table, like ACDOCC, would be more achievable.  
+
+*Additional data*
+Not all data is in ACDOCA, and not all data in the full detail needed by consolidation. For example we do not have the investment information in ACDOCA. Or Financial Services store the details about the customer accounts in their own table, and only have an aggregated view in ACODCA. Another example is subledgers which are not (yet) integrated into ACDOCA.
+
+How to save this additonal data? Extending fields on ACDOCA and ACDOCC, or join additional tables? Either need model to be adjusted on DB level. Ensuring the flexiblity and performance at same time on the enrichment of data foundation is a big challenge(see next chaper).
+  
 *** Main Architecture Challenges and Decisions
-**** Have to use calculation views and BW content 
+**** TODO Have to use calculation views and BW content 
 HANA and BW content is not allowed in S4HANA guideline. This is because they are not targets to Cloud. But Real-time consolidation has to use them because it has to integrate with BPC. While BPC is SAP's only legal consolidation product, it is a sub-component of BW, and fully build on BW info-providers. Ask BPC to support CDS in short term is impossible. 
 
 | <15>            | <50>                                               |
@@ -323,43 +346,109 @@ HANA and BW content is not allowed in S4HANA guideline. This is because they are
 | *Date*          | <2015-11-18 Wed>                                   |
 | *Description*   | balabala                                           |
 
+**** TODO BPC should be integrated as the main consolidation front-end tool
+**** TODO Consolidation and Planning should be considered together
+AC120
 **** Where to store the consolidated results
-Helmut has decribed 4 options to save the consolidated results:
-1. ACDOCA extend ledger.
-2. ACDOCA independent ledger
-3. ACDOCC
-4. BW Cube
-
-~Here should have some simple explanation on what is extend ledger, and what is the difference between standard ledger?~
-
-~Extend Ledger is now changed to the name Special Purpose Ledger, which is of the application component FI-SL. You can define ledgers for reporting purposes. You can keep these user-defined ledgers as general ledgers or susidiary ledgers with various account assignment objects. Account assignment objects can either be SAP dimensions from various applications or customer-defined dimensions. You can refer [[http://help.sap.com/erp2005_ehp_04/helpdata/en/da/6ada3889432f48e10000000a114084/frameset.htm][SAP online help]] for more details on Special Purpose Ledger.~
+Helmut has decribed 4 options to store consolidated results:
+1. Consolidation results will be saved to an ACDOCA extend ledger.
+2. Consolidation results will be saved to an ACDOCA independent ledger.
+3. Consolidation results will be saved to ACDOCC, a new table for consoldiation.
+4. Consolidation results will be saved to a BW Cube.
 
 *ACDOCA Extend Ledger* 
-/The data from the subsidiaries will reside completely in one ACDOCA ledger, all eliminations and adjustments are posted in an extend ledger/
+/The data from the subsidiaries will reside completely in one ACDOCA Ledger, all eliminations and adjustments are posted in an extend ledger. The Pros is that SFIN functionalities can be resued; While the Cons are the requirements of strikly alignment of master data, and save to ACDOCA via posting interfaces(see next section)./
 
-*Reported financial data on aggregated level*
-/There will be most likely cases where the data is not provided on line item level. Examples are very small subsidiaries, that just do not do accounting on such a detailed level (they might just use a PC program). Or I remember one case where a joint venture was managed not so jointly, so one of the two parents did not get the detailed information, but only the high level aggregated data./ 
+~Here should have some simple explanation on what is extend ledger, and what is the difference between standard ledger. Extend Ledger is now changed to the name Special Purpose Ledger, which is of the application component FI-SL. You can define ledgers for reporting purposes. You can keep these user-defined ledgers as general ledgers or susidiary ledgers with various account assignment objects. Account assignment objects can either be SAP dimensions from various applications or customer-defined dimensions. You can refer [[http://help.sap.com/erp2005_ehp_04/helpdata/en/da/6ada3889432f48e10000000a114084/frameset.htm][SAP online help]] for more details on Special Purpose Ledger.~
 
-*Additional data*
-/Not all data is in ACDOCA, and not all data in the full detail is  needed by consolidation. For example we do not have the investment information in ACDOCA. Or Financial Services store the details about the customer accounts in their own table, and only have an aggregated view in ACODCA (similar I guess for FI-CA). Another example are subledgers which are not (yet) integrated into ACDOCA./
+*ACDOCA Independent Ledger*
+/The data from the subsidiaries will reside in ACDOCA. But we will use a different ledger and different master data for consolidation. We need to extend ACDOCA access so that when reading data from ACDOCA for that ledger the data from the subsidiaries in the different ledger can be added via a view (kind of a virtualized ledger). This is already been in discussion to handle the challenge of integrating ledgers like Financial Services that want to stay in their own tables, but also want to eliminate the replicated or aggregated footprint in ACDOCA. This is however not available yet./ 
 
+/The Pros compared to ACDOCA Extend Ledger is the decoupling of master data, but the Cons is that the technology is not yet available./
 
+*ACDOCC*
+/The data from subsidiaries will reside in ACDOCA. We will use a (more or less complex, but definitely flexible) view on top of ACDOCA. All data created by consolidation is stored in a new table ACDOCC./ 
 
-*** Integration with other Systems
-Depict how the software to be developed communicates with other applications and systems. Include a block diagram illustrating the integration.
+/The Pros compared the former 2 options are that fields in ACDOCC can be defined (and extended) independently from ACDOCA, and records created by consolidation functions can just be stored, no FI posting logic to be considered. The Cons are that separated data set causes it hard to find relationship between group and local data, and cannot resue SFIN existing reports and Firoi APPs.
 
+*BW Cube*
+/Similar to Planning we could store the data created by consolidation in a BW cube, while we read the subsidiary data from ACDOCA via a HANA View./
+
+/The Pros compared the former 3 options is that it is most flexible in modeling. But the Cons is that it is not the with S4HANA targets Cloud./ 
+
+| <15>            | <50>                                               |
+| *Decision*      | The optimal solution would be probably to enable an extend ledger for ACDOCA for those customers which are already advanced enough to use this, and to provide ACDOCC for all others. If we can do only one, the reasonable approach in terms of customer base is probably ACDOCC. |
+| *By*            | Helmut Hoffman                                     |
+| *Date*          | <2015-12-11 Fri>                                   |
+| *Description*   | Using an Extend Ledger on ACDOCA is the most visionary approach. But as such it contains also huge risks. Customers might not be able to harmonize the master data and transactional data in such a degree as is needed, it might even go to a decision between enabling the central finance for consolidation or for centralized operational processing. ACDOCA also contains technological challenges, in particular the question of how to do updates via the posting interface. We should avoid investing into a BW cube, this is a dead horse in light of S4HANA and B4HANA. |
+
+**** Posting to ACDOCA via standard interfaces
+When storing data in ACDOCA we should use the FI posting interface to ensure that only correct data is stored in ACDOCA. If for example data is stored in ACDOCA that violates referential integrity assumptions that are included in views, that might break HANA Views, generic programs running over the entire ACDOCA like migrations and other tools. In particular BPC is a fairly generic toolset, where the customer can define also rules that would violate these integrity assumptions. Thus going via the standard FI posting interfaces seems necessary to protect the application.
+
+But going through the FI posting interfaces has some implications:
+
+- Write back must be done via application ABAP coding (write back class in virtual provider or write back class in current planning enabled CDS View), not via a HANA view, not via a standard implementation for a BW infoprovider
+
+- The posting logic might change the lines created by the consolidation engine. For example additional fields might be derived. Or tax lines might be created. We can define a reduced posting logic for consolidation mainly focusing on the referential integrity; it is not clear how far this can go. Certainly the consolidation application expects that the data is stored exactly the way it is created by the consolidation application, without any further modifications or enrichments
+
+- Posting via ABAP and FI posting interface will have a performance impact. It also means that the consolidation can not be pushed fully to the HANA, only the calculation, but not the posting. If the data would be stored directly on a standard database table like a BW cube or ACDOCC, also the update could be done on HANA, having the entire processing in HANA.
+
+| <15>            | <50>                                               |
+| *Decision*      | Avoid automatic generated document posting to ACDOCA, using an additional Table ACDOCC instead. The ACDOCC approach can reduce the impact from the posting logic, and can improve consolidation performance by allowing both calculation and posting into HANA. |
+| *By*            | Helmut Hoffman                                     |
+| *Date*          | <2015-12-11 Fri>                                   |
+| *Description*   | In case ACDOCC is not allowed, or customer want to use a extended ledger to save all the consolidation results. Then we might still need post through standard interfaces. The performance impact should be further investigate. For example, we can reduce the possibility that consolidation process generates adjustment documents. The adjustment documents could be posted to ACDOCA in phases before consolidation process happen. |
+
+**** The data collection depends on Central Finance 
+There are lots of experiences how data is collected from local financial systems to form a consolidation data base. 
+
+*EC-CS and FI-LC*
+EC-CS and FI-LC have the possibility to define a real-time update. Then every FI posting will also update the totals in consolidation, or even create a line item in consolidation.  There are several mappings of masterdata possible, for example, operation account to group account, encoding of various accounting objects into the field sub-item, and filling of custom consolidation fields via user-exits. 
+
+The real-time update does have some enthusiastic customers using it. However, the usage is small for two reasons:
+
+1 You have to run everything in one system.
+2 The master data must be fairly aligned, the mapping capabilities are limited.
+
+*Load from Data Stream in SEM-BCS*
+SEM-BCS allowed the customer to use a BW extractor, define the mappings in some customizing and then load the data into BCS at periodic intervals. This was not used very often. It is too difficult to define the rules and to understand, where the data is coming from
+
+*Delta Load in SEM-BCS*
+BCS also offers the possibility to load the data from FI via an extractor into an operational ODS and then to transfer it from there into BCS. Delta load is supported, so a continuous data transfer is possible.
+
+A direct load into BCS instead of the intermediate step with the operational ODS was rejected by the customers with the reason that they need the intermediate ODS in order to understand how the data in BCS and the operational data relate to each other, the intermediate result in the ODS makes the transformation traceable.
+
+| <15>            | <50>                                               |
+| *Decision*      | Central Finance makes sense to unify the master data when data collection is made real-time. But it will make tracing back to original transaction difficult. It is also not realistic to force all the company codes into a same corporate master data. There should be auxiliary data collection methods and master data extension solutions provided by RTC. |
+| *By*            | Helmut Hoffman                                     |
+| *Date*          | <2015-12-11 Fri>                                   |
+| *Description*   | The data in the group close and in the local close typically do use quite different master data. To some extent companies are trying to avoid this, by using central master data, but resistance is large. The need for specialized master data can be channeled by using defined extension mechanisms, but there are also cases where unification just is not possible, for example if the regulatory bodies define certain master data. With the central finance approach, it does make sense to unify the master data when replicating into the central finance system. Theoretically, you could just do a 1:1 replication, each company code replicating into its central finance with its own master data, but that would defeat some of the purposes of a central finance system like an early overview over the data. However, it is not realistic to force all company codes into the same corporate master data in central finance, as this on the one hand would make it difficult to trace back the data to the original posting. At the same time it would make it difficult to move operational processes like payment to the central hub, as the local extensions / changes to the masterdata are likely to affect these operational processes. The central finance approach makes it clearly more probable to have data in ACDOCA which can be used right away for consolidation, but considering the situation today, where massive data mapping, data recoding and data enrichment is done for consolidation, it seems unlikely that this will be the case for all, or even the majority of the customers. |
+
+**** TODO Master data extension
+**** TODO Data foundation enrichment
+**** TODO Rule framework
+Describe why HRF/BRF+ is choosen as the reuse rule framework. 
+
+**** TODO CDS and AMDP as the main push-down-to-HANA methods
+**** TODO Fiori as the main UI tech
+*** TODO Integration with other Systems
+**** Integration with BPC
+**** Integration with CF
+**** Integration with IBPF
 **** Public APIs and Contracts
-List all public APIs/enterprise services which are offered, be it newly created API or changes on existing APIs
-| Name of API/Contract | Type                          | Changed/New | Description |
-|----------------------+-------------------------------+-------------+-------------|
-|                      | sync/async web services, RFC, |             |             |
+The following talbe lists all public APIs which are offered, be it newly created API or changes on existing APIs
+| <20>                 | <15>            | <10>       | <45>                                          |
+| Name of API          | Type            | Changed/New | Description                                   |
+|----------------------+-----------------+------------+-----------------------------------------------|
+| Consolidation Fact Table View | BW info-provider | New        | Provide a BW composite provider to let BPC consume real-time data in ACDOCA |
+| Consolidation Master Data View | BW info-object  | Changed    | Consolidation master data is provided to BPC through virtual info-objects. Virtual info-objects is based on HANA views, and can access ERP master data directly. It is expected that Planning and Consolidation should share a same set of virtual info-objects. The existing info-objects developed by IBPF could be extended to fulfill both requirements. |
 
-*** Security 
+*** TODO Security 
 Describe how the architecture protects the software against attacks or misuse.
 
 To do so, define how communication channels (protocol, data, ...) are protected. Describe how authentication, authorization and logging are performed. Consider architecture requirements pertaining to confidentiality, integrity and availability. 
 
-*** Deployment and Operations
+*** TODO Deployment and Operations
 It is recommended to work with the local Technical Component and Delivery Architecture (TCDA) team on defining deployment and operations architecture. Contact is the "Delivery Architecture Engineer" maintained in [[https://ifp.wdf.sap.corp/sap(bD1lbiZjPTAwMSZpPTEmcz1TSUQlM2FBTk9OJTNhcHdkZjU3ODJfSUZQXzAxJTNhWEhRWUJUMFlnaXNneEZlWWZTemIwR1FhWnZxaXotY2lkX1Z3TUF0Zy1BVFQ=)/bc/bsp/sap/zpr/default.htm][program repository]] entry of your program.
 
 **** Deployed Component Structure and Deployment Options
@@ -377,27 +466,46 @@ Describe how the planned software is operated and estimate the impact on TCO. Th
 
 In case TCO is high, explain a roadmap how simplification in next versions can be done (for example from complexity hiding to complexity reduction).
 
-*** Testing
+*** TODO Testing
 Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.
 
-*** Architecture Details (Further Refinement)
-Use further chapters to refine the architecture and describe specific topics.
-
-*** Architecture Risks
+*** TODO Architecture Risks
 Explain your view on architecture-related risks and give hints about potential upcoming problems. Risks can arise for example from changes in the scope, from work-arounds necessary, from dependencies on other components, or from immature technologies/concepts. Fill in the table for each risk.
 
-**** Risk: title
-| <15>            | <60>                                                         |
-| Description     | Example: To improve performance a cache will be implemented. However the cache only shows effect for objects with more than 1000 attributes. |
-| Impact(for customer) | Example: customers see no effect when using cache with objects with less than 1000 attributes |
-| Impact Rating   | Impact Rating                                                |
-| Risk Probability | Low/High/Very High                                           |
-| Mitigation Activity | Example: cache can be activated/de-activated. In addition describe in documentation when cache is useful and when not. |
-| Responsible Person | Name of person responsible for risk mitigation activity      |
-| Due Date        | Due date for mitigation                                      |
+**** Highly depands on BPC
+| <20>                 | <50>                                               |
+| Description          | RTC highly depends on BPC, and need BPC as the main front-end tool. The situation is that BPC is not within S4HANA, and it in turns highly depends on BW cubes. BW cubes would be prohibited in S4HANA future cloud releases. There is also found mental design difference between RTC and BPC, as RTC is a embedded consolidation solution, which BPC is designed for a stand alone solution. Besides, synchronize the release strategy and timeline is quite a big challenge with 2 different teams under 2 different programs. |
+| Impact(for customer) | Customer who wants S4HANA Cloud version could not fully utilize the RTC, as there is no plan for BPC running on cloud. For the S4HANA On-Premise version, sophisticated methods are introduced to make a standalone consolidation application looks like embedded in S4HANA could produce some awkward and uncomfortable feelings. |
+| Impact Rating        | Very High                                          |
+| Risk Probability     | Very High                                          |
+| Mitigation Activity  | Considering even without BPC, RTC can still provide some preparation for consolidation. Differentiate consolidation into Low and High level. The low level could be done by RTC self, which already provide values to customers. The high level could be done by BPC or BCS. And some building blocks should be pluggable and replaceable, thus introduce the flexibility during implementation, which would also do help in mitigating risks. |
+| Responsible Person   | PO, Arch, and Program level management team        |
+| Due Date             | null                                               |
+*** Validation Engine and Currency Translation Architecture Details
+Consolidation rules validation and currency tranlsation could be both built on HRF. 
 
 *** Planned Design Documents
-Here the sprint teams can list the software design documents (SDD), which will  be created in order to implement the architecture. The list can also be created over time.
+Here the sprint teams can list the software design documents (SDD), which will be created in order to implement the architecture. The list can also be created over 
+
+**** TODO Validation Engine 
+The validation engine is built on HRF. 
+
+**** TODO Flexible Uploading
+Some company codes can using a upload UI to submit it's consolidated financial data.
+
+**** TODO Data Modeling using BW info-objects and info-providers. 
+The data model is for BPC's consume.
+
+**** TODO Currency Translation Engine
+Exchange rate maintanence, assign accounts to rate methods, run translation in HANA.
+
+**** TODO Consolidation documents posting interfaces 
+The auto-generated documents during consolidation should be posted to either ACDOCA or ACDOCC.
+
 
 ** Glossary
 Add definitions of terms which are relevant for understanding the document to the glossary. As alternative add the terms to the [[https://wiki.wdf.sap.corp/wiki/display/ArGlossary/Contribute+to+SAP%2527s+Architecturepedia][architecture glossary in the Wiki]]. 
+
+*** Business Rules with HANA Rules Framework
+
+**** [[http://scn.sap.com/docs/DOC-63047][Getting started with HANA Rules Framework]]
