@@ -1,0 +1,69 @@
+#+PAGEID: 1815488354
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Validation Engine
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Carol.Pan     |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+*** References
+| Document Title | Date | Link | Comments |
+|----------------+------+------+----------|
+|                |      |      |          | 
+  
+*** IP Compliance and Patents
+You must always store architecture and design documents 'IP safe' (currently cPro) so that (if needed) SAP can prove that a certain idea or concept was invented or designed at a certain point in time.
+
+In addition, consider patents: Does your design extend the current state-of-the-art in any way? If you think so, or even if you think it might, please go to the [[https://wiki.wdf.sap.corp/wiki/display/patents/Home][Patents@SAP]] Wiki and follow the process described there. Not only is it required of all employees to notify SAP if they make an invention, but participation in the SAP patent program is rewarded in several ways (including money), so by taking part in the SAP patent program, you can help SAP protect its innovation and receive recognition along the way.
+
+** Design
+*** Key Requirements and Design Goals
+*** Context
+*** Major Building Blocks
+*** Interfaces / Communication Handling
+*** Design Challenges resulting from Non-Functional Requirements
+*** User Interface
+*** Used Components and Frameworks
+| Name | Description | Software Component | Implications |
+|------+-------------+--------------------+--------------|
+|      |             |                    |              |
+*** Package / Development Component Concept
+*** New Coupling of Software Components
+| SWC | Depends on SWC | Description of coupling and effects |
+|-----+----------------+-------------------------------------|
+|     |                |                                     |
+*** Upgrade / Migration / Compatibility
+*** TCO Considerations
+*** Analytics / BI Content
+*** Compliance to Standards and Guidelines
+**** Applied Architecture / Design Guidelines
+| Name                      | Version/Date | Link |
+|---------------------------+--------------+------|
+| Architecture Guideline of |              |      |
+| BOPF Development Guide    |              |      |
+**** Approved deviations
+** Design Details Documentation
+*** Database Design
+*** Testability and Test Environment
+*** Complex Algorithms and Applied Patterns
+*** Design Alternatives and Trade-Offs
+*** Guide to the Implementation
+** Appendix
+*** Glossary
+| Term | Abbreviation | Definition |
+|------+--------------+------------|
+|      |              |            |
+*** Customizing
+*** Supportability Considerations
+*** Error Analysis
+**** Debugging
+**** Logging and Tracing
+**** Other Error Analysis Tools
+*** Other

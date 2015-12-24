@@ -324,14 +324,17 @@ Data foundations are the tables that actual source financial lines are stored. T
 There are 3 types of data would be stored in RTC:
 
 *Reported financial data on line item level*
+
 This is the data which central finance takes care of already: the FI line items. This is the basis of the consolidation, and normally comes from an FI system. However, we have to take care of special situations and the transformations that typically take place when the data is copied from the local accounting to the group accounting.
 
 *Reported financial data on aggregated level*
+
 There will be most likely cases where the data is not provided on line item level. Examples are very small subsidiaries, that just do not do accounting on such a detailed level (they might just use a PC program). Or I remember one case where a joint venture was managed not so jointly, so one of the two parents did not get the detailed information, but only the high level aggregated data.
 
 Saving such kind of aggregated data to ACDOCA is not that easy, and a seperate aggregated table, like ACDOCC, would be more achievable.  
 
 *Additional data*
+
 Not all data is in ACDOCA, and not all data in the full detail needed by consolidation. For example we do not have the investment information in ACDOCA. Or Financial Services store the details about the customer accounts in their own table, and only have an aggregated view in ACODCA. Another example is subledgers which are not (yet) integrated into ACDOCA.
 
 How to save this additonal data? Extending fields on ACDOCA and ACDOCC, or join additional tables? Either need model to be adjusted on DB level. Ensuring the flexiblity and performance at same time on the enrichment of data foundation is a big challenge(see next chaper).
@@ -357,24 +360,24 @@ Helmut has decribed 4 options to store consolidated results:
 4. Consolidation results will be saved to a BW Cube.
 
 *ACDOCA Extend Ledger* 
-/The data from the subsidiaries will reside completely in one ACDOCA Ledger, all eliminations and adjustments are posted in an extend ledger. The Pros is that SFIN functionalities can be resued; While the Cons are the requirements of strikly alignment of master data, and save to ACDOCA via posting interfaces(see next section)./
+The data from the subsidiaries will reside completely in one ACDOCA Ledger, all eliminations and adjustments are posted in an extend ledger. The Pros is that SFIN functionalities can be resued; While the Cons are the requirements of strikly alignment of master data, and save to ACDOCA via posting interfaces(see next section).
 
 ~Here should have some simple explanation on what is extend ledger, and what is the difference between standard ledger. Extend Ledger is now changed to the name Special Purpose Ledger, which is of the application component FI-SL. You can define ledgers for reporting purposes. You can keep these user-defined ledgers as general ledgers or susidiary ledgers with various account assignment objects. Account assignment objects can either be SAP dimensions from various applications or customer-defined dimensions. You can refer [[http://help.sap.com/erp2005_ehp_04/helpdata/en/da/6ada3889432f48e10000000a114084/frameset.htm][SAP online help]] for more details on Special Purpose Ledger.~
 
 *ACDOCA Independent Ledger*
-/The data from the subsidiaries will reside in ACDOCA. But we will use a different ledger and different master data for consolidation. We need to extend ACDOCA access so that when reading data from ACDOCA for that ledger the data from the subsidiaries in the different ledger can be added via a view (kind of a virtualized ledger). This is already been in discussion to handle the challenge of integrating ledgers like Financial Services that want to stay in their own tables, but also want to eliminate the replicated or aggregated footprint in ACDOCA. This is however not available yet./ 
+The data from the subsidiaries will reside in ACDOCA. But we will use a different ledger and different master data for consolidation. We need to extend ACDOCA access so that when reading data from ACDOCA for that ledger the data from the subsidiaries in the different ledger can be added via a view (kind of a virtualized ledger). This is already been in discussion to handle the challenge of integrating ledgers like Financial Services that want to stay in their own tables, but also want to eliminate the replicated or aggregated footprint in ACDOCA. This is however not available yet.
 
-/The Pros compared to ACDOCA Extend Ledger is the decoupling of master data, but the Cons is that the technology is not yet available./
+The Pros compared to ACDOCA Extend Ledger is the decoupling of master data, but the Cons is that the technology is not yet available.
 
 *ACDOCC*
-/The data from subsidiaries will reside in ACDOCA. We will use a (more or less complex, but definitely flexible) view on top of ACDOCA. All data created by consolidation is stored in a new table ACDOCC./ 
+The data from subsidiaries will reside in ACDOCA. We will use a (more or less complex, but definitely flexible) view on top of ACDOCA. All data created by consolidation is stored in a new table ACDOCC.
 
-/The Pros compared the former 2 options are that fields in ACDOCC can be defined (and extended) independently from ACDOCA, and records created by consolidation functions can just be stored, no FI posting logic to be considered. The Cons are that separated data set causes it hard to find relationship between group and local data, and cannot resue SFIN existing reports and Firoi APPs.
+The Pros compared the former 2 options are that fields in ACDOCC can be defined (and extended) independently from ACDOCA, and records created by consolidation functions can just be stored, no FI posting logic to be considered. The Cons are that separated data set causes it hard to find relationship between group and local data, and cannot resue SFIN existing reports and Firoi APPs.
 
 *BW Cube*
-/Similar to Planning we could store the data created by consolidation in a BW cube, while we read the subsidiary data from ACDOCA via a HANA View./
+Similar to Planning we could store the data created by consolidation in a BW cube, while we read the subsidiary data from ACDOCA via a HANA View.
 
-/The Pros compared the former 3 options is that it is most flexible in modeling. But the Cons is that it is not the with S4HANA targets Cloud./ 
+The Pros compared the former 3 options is that it is most flexible in modeling. But the Cons is that it is not the with S4HANA targets Cloud. 
 
 | <15>            | <50>                                               |
 | *Decision*      | The optimal solution would be probably to enable an extend ledger for ACDOCA for those customers which are already advanced enough to use this, and to provide ACDOCC for all others. If we can do only one, the reasonable approach in terms of customer base is probably ACDOCC. |
@@ -474,16 +477,18 @@ Explain your view on architecture-related risks and give hints about potential u
 
 **** Highly depands on BPC
 | <20>                 | <50>                                               |
-| Description          | RTC highly depends on BPC, and need BPC as the main front-end tool. The situation is that BPC is not within S4HANA, and it in turns highly depends on BW cubes. BW cubes would be prohibited in S4HANA future cloud releases. There is also found mental design difference between RTC and BPC, as RTC is a embedded consolidation solution, which BPC is designed for a stand alone solution. Besides, synchronize the release strategy and timeline is quite a big challenge with 2 different teams under 2 different programs. |
-| Impact(for customer) | Customer who wants S4HANA Cloud version could not fully utilize the RTC, as there is no plan for BPC running on cloud. For the S4HANA On-Premise version, sophisticated methods are introduced to make a standalone consolidation application looks like embedded in S4HANA could produce some awkward and uncomfortable feelings. |
+| Description          | RTC highly depends on BPC, and needs BPC as the main front-end tool. The situation is that BPC is not within S4HANA, and it in turns highly depends on BW cubes. BW cubes are already prohibited in S4HANA cloud releases. There is also foundmental design difference between RTC and BPC, as RTC is an embedded consolidation solution, while BPC was designed for a standalone solution. Besides, synchronizing the release strategy and timeline is quite a big challenge with 2 different teams under 2 different programs. |
+| Impact(for customer) | Customer who wants S4HANA Cloud version could not fully utilize the RTC, as there is no plan for BPC running on cloud. For the S4HANA On-Premise version, sophisticated methods are introduced to make a standalone consolidation application looks like embedded in S4HANA, which could produce some awkward and uncomfortable feelings. (This is a bit weak as we do have the same situation in planning, and I did not get feedback that the planning solution thus is badly received.) |
 | Impact Rating        | Very High                                          |
 | Risk Probability     | Very High                                          |
 | Mitigation Activity  | Considering even without BPC, RTC can still provide some preparation for consolidation. Differentiate consolidation into Low and High level. The low level could be done by RTC self, which already provide values to customers. The high level could be done by BPC or BCS. And some building blocks should be pluggable and replaceable, thus introduce the flexibility during implementation, which would also do help in mitigating risks. |
 | Responsible Person   | PO, Arch, and Program level management team        |
 | Due Date             | null                                               |
+
 *** Validation Engine and Currency Translation Architecture Details
 Consolidation rules validation and currency tranlsation could be both built on HRF. 
 
+*** Design of ACDOCC
 *** Planned Design Documents
 Here the sprint teams can list the software design documents (SDD), which will be created in order to implement the architecture. The list can also be created over 
 
