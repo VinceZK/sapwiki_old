@@ -48,6 +48,31 @@ With the emergence of S4HANA and the concept of central finance, we can build an
 *** Underlying Platform/Application Server
 RTC is built on S4HANA, both On-Premise and Cloud, with On-Premise version delivering first. 
 
+*** Comparision of BPC, BCS, and EC-CS 
+
+**** BPC embedded version
+Highly depands on BW technologies,like: virtual info-object, virtual info-provider, real-time cubes, multi info-provider, composite info-provider, aggregatation level, planning functions, and so on. Compared with its standard version, the modeling is done in BW, BPC only provides a mapping UI so that the consolidation process know how to consume the BW model. 
+
+The UI contains 2 parts: 
+
+1. WebUI is newly developed using SAPUI5, it is mainly for customizing and administrative tasks.
+2. Analytic Office with EPM add-on is for reporting.
+
+**** BCS
+BCS is too depands on BW technologies, with the difference is that it is a traditional ABAP application, that all the customizing and administrative UIs are developed using ABAP GUI. But the reporting tools is with BPC, because data is anyway exposed using BW mutli-deminsion views. 
+
+From functional perspective, BCS is more appeal to large SAP clients, as it has more integration with SAP financial applications. But less attractive for those non-SAP customers or others who need more flexibility. 
+
+**** EC-CS
+It is an even older consolidation application that is the predecessor of BCS. Like BCS, it is developed totally  using ABAP, and is fully integrated with SAP financial applications. The difference is that it has nothing to do with BW. EC-CS has its own set of DB tables (ECMCT and ECMCA) to store consolidation data and related customizatin data.
+
+The limits are mainly on the flexibility and performance. Reporting based on legacy Report Painter is also a drawback.
+
+**** RTC
+Regarding with RTC, as the emergence of S4HANA and ACDOCA, both flexibility and performance are well covered by core technologies. Thus its architecture would be more similar with EC-CS. But while EC-CS still has independent tables,liek: /ECMCT/ for aggregated data and /ECMCA/ for line item data, RTC can direct use ACDOCA for consolidation. There is no more data copy, and it realizes the combination of OLTP and OLAP. 
+
+As BPC already delivers fancy UI and mature consolidation logic, RTC should achieve reuse. Virtual info-providers and virtual info-objects can be used as the main modeling tool and the intermediary layer which connects BPC and S4HANA finance. Thus BPC UIs and consolidition process can run directly on the actual data.   
+ 
 *** Product Type
 Financial analytical application, with data write-back and simulation features.
 
@@ -55,7 +80,7 @@ Financial analytical application, with data write-back and simulation features.
 | Delivery Artifacts             | Comments                                               |
 |--------------------------------+--------------------------------------------------------|
 | ABAP & AMDP                    | Main consolidation logic                               |
-| HRF/BRF+ rules                 | Consolidation, elimination, and validation rules       |
+| HRF/BRF+ rules                 | CDS views, HRF modeling, BRF+ objects                  |
 | HANA Calculation View          | Not compliant with S4HANA Guideline, but needed by BPC |
 | BW info-provider & info-object | Not compliant with S4HANA Guideline, but needed by BPC |
 | CDS View                       | Reporting and Analytics models                         |
@@ -73,14 +98,12 @@ Sinopec already has a centralized finance system with all its subsidiaries finan
 Siemens has established a so called global template. That means that the group defines the master data centrally, but there is ample possibility for the subsidiaries to extend the master data, for example to create additional accounts in the account hierarchy below a central given account. This is actually a quite frequent approach. Siemens does this with a naming convention: the first 6 digits are reserved for the group, digit 7 and 8 are reserved for the division, the last two digits are reserved for the subsidiary. Exception are all account numbers containing the digit 9, they are reserved for the subsidiary.
 
 *** Main Use Cases / Functional Scope
-
 **** Year-End close (pre)consolidation
 Traditional consolidation takes days. It needs to extract data from group's sub financial systems, which needs the sub systems finish the closing first. Then transform the data, and load it to the consolidation system. The overall closing and ETL process are very time-consuming. No bother to mention if corrections are needed, the entire process could be re-processed. Corporation stakeholders suffers waiting too long a period for consolidated statements. While Real-time Consolidation can perfectly solve the problem. RTC is based on Central Finance which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls.
 
 **** Acquisition & Re-organization 
 When a new business entity is added/removed from the organization, management teams want see the simulated consolidated results immediately to support decision.RTC can well cope this kind of requirements. 
  
-
 *** List all Required SAP Products/Product Versions to Support the Main Use Cases
 S4HANA Finance, Central Finance 1.0, BPC //To-do: versions should be checked
 
@@ -323,18 +346,15 @@ Data foundations are the tables that actual source financial lines are stored. T
 
 There are 3 types of data would be stored in RTC:
 
-*Reported financial data on line item level*
-
+*Reported financial data on line item level* | 
 This is the data which central finance takes care of already: the FI line items. This is the basis of the consolidation, and normally comes from an FI system. However, we have to take care of special situations and the transformations that typically take place when the data is copied from the local accounting to the group accounting.
 
-*Reported financial data on aggregated level*
-
+*Reported financial data on aggregated level* | 
 There will be most likely cases where the data is not provided on line item level. Examples are very small subsidiaries, that just do not do accounting on such a detailed level (they might just use a PC program). Or I remember one case where a joint venture was managed not so jointly, so one of the two parents did not get the detailed information, but only the high level aggregated data.
 
 Saving such kind of aggregated data to ACDOCA is not that easy, and a seperate aggregated table, like ACDOCC, would be more achievable.  
 
-*Additional data*
-
+*Additional data* | 
 Not all data is in ACDOCA, and not all data in the full detail needed by consolidation. For example we do not have the investment information in ACDOCA. Or Financial Services store the details about the customer accounts in their own table, and only have an aggregated view in ACODCA. Another example is subledgers which are not (yet) integrated into ACDOCA.
 
 How to save this additonal data? Extending fields on ACDOCA and ACDOCC, or join additional tables? Either need model to be adjusted on DB level. Ensuring the flexiblity and performance at same time on the enrichment of data foundation is a big challenge(see next chaper).
@@ -510,6 +530,10 @@ The auto-generated documents during consolidation should be posted to either ACD
 
 ** Glossary
 Add definitions of terms which are relevant for understanding the document to the glossary. As alternative add the terms to the [[https://wiki.wdf.sap.corp/wiki/display/ArGlossary/Contribute+to+SAP%2527s+Architecturepedia][architecture glossary in the Wiki]]. 
+
+*** SAP existing financial consolidation applications
+
+**** BCS
 
 *** Business Rules with HANA Rules Framework
 

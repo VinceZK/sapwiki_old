@@ -4,51 +4,229 @@
 #+TITLE: SDD-Validation Engine
 ** General Information
 *** Stakeholders and Roles
-| Role                  | Name          |
-|-----------------------+---------------|
-| Author(s)             | Vincent Zhang |
-| Architect             | Vincent Zhang |
-| Product Owner         | Carol.Pan     |
-| Information Developer |               |
-| Quality Responsible   |               |
-| Developers            |               |
+| Role                  | Name                              |
+|-----------------------+-----------------------------------|
+| Author(s)             | Vincent Zhang                     |
+| Architect             | Vincent Zhang                     |
+| Product Owner         | Carol Pan                         |
+| Information Developer |                                   |
+| Quality Responsible   | Yao Cen                           |
+| Developers            | Liu Chang, Zhou Kaiyuan, Steve Mo |
 
 *** References
-| Document Title | Date | Link | Comments |
-|----------------+------+------+----------|
-|                |      |      |          | 
-  
-*** IP Compliance and Patents
-You must always store architecture and design documents 'IP safe' (currently cPro) so that (if needed) SAP can prove that a certain idea or concept was invented or designed at a certain point in time.
+|                             |                  |             | <30>                           |
+| Document Title              | Date             | Link        | Comments                       |
+|-----------------------------+------------------+-------------+--------------------------------|
+| BCS Online Help             | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/ab/d7ecf125f0ce43be3ce68bf9289165/content.htm?frameset=/en/62/f7e73ac6e7ec28e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=92&show_children=false][online help]] | The validation of BCS is mainly focus on data consistency of 1) Reported financial data, 2)Standardized financial data, 3)Consolidated data, 4)Additional financial data, 5)Journals |
+| EC-CS Online Help           | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/fe/32941867f811d299610000e8a5999a/content.htm?frameset=/en/fe/32941b67f811d299610000e8a5999a/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=5&show_children=false][online help]] | The help doc doesn't describe any information on EC-CS's data validation. It's not clear how EC-CS define those rules, but it is for sure EC-CS has this functionality. |
+| EC-CS Rules and Validation  | <2015-12-26 Sat> | [[https://help.sap.com/saphelp_470/helpdata/en/27/06e23954d9035de10000000a114084/content.htm?frameset=/en/5b/d2318e43c611d182b30000e829fbfe/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=223&show_children=false][online help]] | Enterprise Controlling (EC) provides a generic tool for Validations, Substitutions, and Rules. FI-SL, EC-CS, and other SAP systems can use this kind of validation tool. It seems quite a old technology, but still have some reference value. |
+| Special Purpose Ledger      | <2015-12-26 Sat> | [[https://help.sap.com/saphelp_470/helpdata/en/5b/d220ba43c611d182b30000e829fbfe/content.htm][online help]] | Special Purpose Ledger let you define ledgers for reporting purposes. You can keep these user-defined ledgers as general ledgers or subsidiary ledgers with various account assignment objects. Account assignment objects can either be SAP dimensions from various applications (such as account, cost center, business area, profit center) or customer-defined dimensions (such as region). |
+| BPC Online Help             | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/94/e0f3a56f174607855bc345a45df847/content.htm?frameset=/en/b9/bceda8f53d4bc9bb772da27f576c89/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=139&show_children=false][online help]] | The help doc describes the _Rules_ of BPC standard model. You can get a general idea of how rules are applied in financial consolidation. |
+| Planning Functions          | <2015-12-26 Sat> | [[http://help.sap.com/saphelp_nw74/helpdata/en/4c/acf4b354423b9fe10000000a42189b/content.htm?frameset=/en/4c/acf4b354423b9fe10000000a42189b/frameset.htm&current_toc=/en/44/1f81d8cb5f0d1ae10000000a114a6b/plain.htm&node_id=18&show_children=false][online help]] | Planning functions are used in BW Integrated Planning for system-supported editing and generating data. Consolidation of BPC is based on planning functions. Formulas(FOX) are used to provide you with a simple programming language for manipulating transaction data. |
+| Consolidations              | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/Consolidations][scnwiki]]     | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
+| HANA Rules Framework on scn | <2015-12-14 Mon> | [[http://scn.sap.com/docs/doc-63159][HRF guides]]  | This guide is on scn, it is opened to public. it is an index page maintained by hrf develop team, which includes videos and latest guides of all about hrf. |
+| BRF+                        |                  |             |                                |
+| BRF+ Integrates HRF         |                  |             |                                |
+| HRF vs BRF+                 | <2015-12-24 Thu> | [[https://scn.sap.com/community/public-sector/blog/2015/12/03/hrf-vs-brfplus-for-public-sector][HRF vs BRF+]] | A good comparison btw hrf and brf+ in practise |
 
-In addition, consider patents: Does your design extend the current state-of-the-art in any way? If you think so, or even if you think it might, please go to the [[https://wiki.wdf.sap.corp/wiki/display/patents/Home][Patents@SAP]] Wiki and follow the process described there. Not only is it required of all employees to notify SAP if they make an invention, but participation in the SAP patent program is rewarded in several ways (including money), so by taking part in the SAP patent program, you can help SAP protect its innovation and receive recognition along the way.
+*** IP Compliance and Patents
+you must always store architecture and design documents 'ip safe' (currently cpro) so that (if needed) sap can prove that a certain idea or concept was invented or designed at a certain point in time.
+
+in addition, consider patents: does your design extend the current state-of-the-art in any way? if you think so, or even if you think it might, please go to the [[https://wiki.wdf.sap.corp/wiki/display/patents/home][patents@sap]] wiki and follow the process described there. not only is it required of all employees to notify sap if they make an invention, but participation in the sap patent program is rewarded in several ways (including money), so by taking part in the sap patent program, you can help sap protect its innovation and receive recognition along the way.
+
 
 ** Design
 *** Key Requirements and Design Goals
+Validation Engine (VE in short) is a software component that provides RTC the ability to validate and/or substitute data through a whole consolidation campaign. VE is both a rule definition tool and a rule running environment. It is decoupled from other RTC's components so that a unified rule language can be used. Thus, not only permits the simplicity of software, but also the possibility for LOB users to define their own consolidation rules.
+
+**** Following Design Goals *MUST* be Met:
+1. High performance, some rules can be even validated during reporting (aka on-the-fly).
+2. VE can fulfill most of the financial consolidation requirements. Sophisticate logics can be achieved through scripting and/or programming. 
+
+**** Following Design Goals *SHOULD* be Met:
+1. The rule description language should be intuitive and easy for LOB users to handle.  
+2. VE should be built on HRF/BRF+.
+3. VE should push down calculation and posting logic to HANA.
+4. External consolidation rules can be converted and imported in.
+
 *** Context
+VE lays in the core of RTC. It provides data validation, data substitution, and rule services for all the consolidation steps in RTC. Financial consolidations are rather diverse among corporations. Different company has different rules when doing consolidations. VE allows user to define calculation, data mapping, and posting logics before, during, and after a consolidation campaign.
+
+#+Caption: Validation Engine in RTC
+[[../image/ValidationEngineContext.png]]  
+
+**** Data Validation
+Data Validation ensure the consistency of the financial data, which may include:
+- *Reported financial data*: Aggregated local financial data provided by flexible uploading.
+- *Standardized financial data*: Local data has been converted/substituted with group standards. 
+- *Consolidated data*: Data has been consolidated and eliminated.
+- *Additional financial data*: Other data that not resides in ACDOCA or historic data.
+- *Journals*: Line item level journals posted in the Central Finance.
+
+Take balance sheet as an example, the basic accounting rule that must be fulfilled is _Assets = Liability + Equity_. To realize this, we should first provide a vocabulary that forms the context of all the data which is needed to run the validation(could be a whole balance sheet). Then we edit rules using Rule Expression Language provided by HRF to describe the above formula. The algorithm could be like this:
+
+1. Get sum of all the amounts whose account is belong to assets type.
+2. Get sum of all the amounts whose account is belong to liability and equity type.
+3. Compare the 2 summarized amounts to see if they are equal or not.
+4. Output the messages and determine if the process can be continue or blocked. 
+
+To be in mind, the outputs of data validation are messages or logs that tell user whether rules are applied successfully or failed. Consolidation process can use this result to determine whether subsequent tasks should be blocked or not.
+
+**** Validation Rules in Posting
+Posting in accounting means balances in subledgers and the general journal are shifted into the general ledger. Posting in RTC means saving adjustment documents which are generated automatically or entered manually into ACDOCC. 
+
+Following tasks in consolidation will generate postings:
+- Adjustments to reported financial data, which is manually posted in CF.
+- Standardizing entries, automatically generates postings. 
+- Inter-Unit elimination, adjustment documents are generated automatically.
+- Reclassification.
+- Allocation.
+
+To allow automatically posting, rules must be defined in advance. These rules controls how RTC generates postings. For example:
+- Determine the posting level.
+- Control key figures to be posted: Local amount, Group amount, or Transaction amount.
+- Balance validation before each posting.
+
+**** Currency Translation Rule
+Currency Translation means to translate monetary amounts into a different currency.
+
+Notably, you can translate the financial data reported by consolidation units into the group currency of the consolidation group. The consolidation system typically collects the financial data reported by consolidation units in local currency. You need to translate this data into group currency before you can create consolidated financial statements.
+
+Currency Translation needs following rules to be defined:
+1. Group together the accounting objects to be translated as selections in various ways.
+2. Mapping the accounting objects group to different translation keys.
+3. Assign target accounts for translation difference to be posted.
+
+**** Inter-Unit Elimination and Reconciliation Rule
+*Inter-Unit (IU) elimination* enables you to eliminate business relationships, based on the trade of goods and services, between the consolidation units within a consolidation group. The business relationships to be eliminated exist between a pair of consolidation units. From the group’s perspective, these business relationships must be eliminated. For, when viewing the corporate group as a single entity, the group cannot have, for example, receivables and payables from and to itself.
+
+Prior to running interunit eliminations, you can use *reconciliations* to determine any elimination differences without having the system post elimination entries. By doing this, you can correct posting errors in the reported financial data, or manually post standardizing entries.
+
+Following rules could be defined:
+1. You select a pair of characteristic groups/units, which are used to determine the elimination difference. You can further restrict the values by adding more characteristics,like: document type, subassignments, and others.
+2. You define account objects to which elimination differences are posted.
+3. You define tasks and methods that connects the selections and target accounts to generated postings during elimination.
+ 
 *** Major Building Blocks
-*** Interfaces / Communication Handling
+Validation Engine (VE in short) will deliver 2 types of artifacts:
+1. Tools and APIs for rule modeling, rule running, and rule editing.
+2. HRF contents on predefined consolidation rules. 
+
+VE also has high interactions with other RTC components, like Data Modeling. It is supposed that rule modeling is part of consolidation data modeling. They should be modeled and generated at same time. Following diagram describes the detail:
+
+#+Caption: Validation Engine Overview
+[[../image/ValidationEngine.png]]  
+
+**** Vocabulary Modeling                                               :Zhou:
+Vocabulary in HRF is used by end users to express the business logic either with the rule expression language or with the selection of actions to be performed. There could be several vocabularies in the scope of an application. The vocabulary typically consists of data objects, actions, outputs, and aliases.
+
+*Data objects* could be HANA runtime objects like tables, HANA views, and CDS views. This HANA tables and views can be associated together to form a data model and runtime context upon which rules can be defined and run.
+
+*Outputs* defines a output structure after rules are applied. Output can be as simple as a boolean return, or can be as complex as a report outputs. It can be defined based on data objects, or freely adding scalar fields.
+
+*Actions* are XSJS functions which is used to trigger some asynchronous tasks,like sending a mail, calling a procedure, and so on. Actions may not be allowed in S4HANA.
+
+*Alias* is a shortcut which refers vocabulary entities and REL elements, such as conditions and expressions. It is mainly for simplifying the rule expressing language, and provides re-usability of regularly used rule expressions. 
+
+There could be no less than following vocabulary models in RTC:
+1. Financial Statement Version including balance sheets and P&L sheets.
+2. Accounting group assignments to currency translation keys and methods.
+3. Master data validation, like account, company code, cost center, profit center, and so on.
+
+**** API for HRF/BRF+ Objects Generating and Accessing                :Steve:
+HRF and BRF+ are 2 different rule frameworks in SAP. While BRF+ is designed and built in ABAP world, HRF is aimed to provide high performance and for pure HANA applications. The artifacts HRF generates are HANA runtime objects, like DB procedure, tables, and views. There is a roadmap on merging the 2 frameworks into one. But currently, BRF+ can integrate with HRF in some extend.
+
+You can do modeling in BRF+ which then generates HRF objects. The design time of BRF+ is just a substitution of Eclipse based BRF studio. The mapping between BRF+ objects and HRF objects can be described in the table bellow:
+
+We need test all the BRF+ interfaces which are used to generate HRF objects. Upon on these APIs, we design how vocabulary modeling can be integrated with consolidation data modeling. Because we do not want modeling twice: one for consolidation, and the other for validation. We could get conclusions whether the BRF+ APIs can fulfill all our requirements, if not, how we get a workaround solution? 
+
+We also need to get a set of rule accessing APIs to allow ABAP (or CDS) consume the generated objects. To achieve this, we should further investigate the HANA runtime objects that are generated by HRF. 
+
+**** UI for Maintaining Rules and Assignment                          :Chang:
+The UI is for LOB users to maintain consolidation rules. Rule Expression Language of HRF is reused as the rule scripts. REL is designed for LOB users and close to natural language. It is an ideal scripting language for financial consolidation. 
+
+HRF also provides an easy to implement and configurable SAPUI5 control that exposes the framework’s capabilities to the business users and implementers. The two controls are:
+
+1. Text Rule Editor: Simple, natural, and intuitive business condition language (Rule Expression Language)
+#+Caption: Text Rule Editor
+[[../image/TextRuleEdior.png]]  
+
+2. Decision table supports fork path. 
+#+Caption: Decision Table
+[[../image/DecisonTable.png]]  
+
+The rule maintenance UI should be close to consolidation context, rather than HRF/BRF+ context. There is no reason for a LOB user to learn terms of HRF/BRF+. 
+
+Rules are based on models. Some models are rather static, like currency translation. Others are based on consolidation model and financial statement version which are rather dynamic. The rule maintenance UI should hide as much complexity as possible. 
+
+Rules are assigned to consolidation tasks, which will be triggered and monitored in consolidation monitor tool. The assignment is indirect through rule templates. Rule template is a concept of HRF. Rules can be created by referencing an exiting template, while the template is then assigned to a rule service. When the rule service is called, it will run all the rules that have references of the assigned template. Rule templates will be pre-delivered as contents. And they may have 1:1 mapping with consolidation tasks. 
+
+**** Consumption and Interception                                     :Vince:
+The artifacts generated by VE are DB procedures, views, and BRF+ functions. These runtime objects can be called by ABAP. The ABAP caller APIs will be further encapsulated into oDATA services, which then can be consumed by Fiori APPs. 
+
+~Whether CDS can consume views generated by HRF still needs investigation.~
+
+VE artifacts will be forged into the consolidation monitor. Consolidation Monitor is the main APP of RTC, which lists all the tasks that a consolidation campaign would have. Tasks need validations on the data, and do calculations and postings according to the predefined rules. The results of tasks are both the consolidated financial data, and the validation logs. 
+
+VE artifacts should be also easily embedded into other applications like existing accounting post. Consolidation rules can then get validated before documents are posted. The interception point should be carefully chosen. If VE artifacts are embedded into CF's middleware, then validation results should be logged in CF's logging system; If VE artifacts are embedded into a front-end document posting APP(like FB01), then messages should be popped to remind users. In both situations, we should provide a set of strict embedded APIs to avoid miss use.
+
+It seems also possible for a VE artifact output a report list (or even a hierarchy). Then we should think about which consolidation report need to be exposed using VE. 
+
+**** UI for Validation Log                                            :Chang:
+The display of validation log should be decoupled. Validation log could be displayed centrally in consolidation monitor, or embedded in a specific area of a specific APP. In ABAP, we can reuse Application Log framework which can save, display and filter logs in a unified manner. In Fiori, we should find a suitable UI control(or UI component) to achieve the same thing.   
+
+There are 3 kinds of VE outputs:
+1. The message or log output
+2. The list output used for reporting
+3. The simple true/false output used to control process
+
+The validation log UI only deal with the first kind of output. The message or log should be multi-language support, which requires it must integrate with ABAP message framework. 
+
+**** Formula & Script (maybe not necessary)                           :Vince:
+REL provided by HRF is probably not enough for financial consolidation. Additional Formula and script could be needed. Currently, there is no script engine considered, I suppose potential complex logic could be done via ABAP or CDS. 
+
+Meanwhile, I could also guess formula or scripting may not necessary. Unlike BPC, we are running a embedded consolidation application that highly based on ACDOCA. There is no such complex logic like: data copying or MDX operations needed. Based on the documentations of BCS and EC-CS, I could only imagine some simple logics, arithmetic calculations, aggregations, and string functions are needed. Those are covered by REL well. Besides, we could also provide HRF alias to simplify the rule composition.
+
+The need of formula & script still needs further investigation.  
+
 *** Design Challenges resulting from Non-Functional Requirements
-*** User Interface
+**** How to use REL to build a set of alias that suits consolidation
+**** Can ABAP internal tables be passed to HRF context
+**** Whether HRF is good for data substitution/mapping
+**** Complex scripts and formula can not be provided by HRF/BRF+
+**** How to allow other rule engines to be integrated in
+*** Vocabulary Modeling                                                :Zhou:
+**** Financial Statement Version
+*** User Interface                                                    :Chang:
+*** Interfaces/Communication Handling                                 :Steve:
 *** Used Components and Frameworks
-| Name | Description | Software Component | Implications |
-|------+-------------+--------------------+--------------|
-|      |             |                    |              |
-*** Package / Development Component Concept
+| Name | Description                  | Software Component | Implications |
+|------+------------------------------+--------------------+--------------|
+| HRF  | HANA Rule Framework          |                    |              |
+| BRF+ | Business Rule Framework plus |                    |              |
+
+*** Package/Development Component Concept
 *** New Coupling of Software Components
 | SWC | Depends on SWC | Description of coupling and effects |
 |-----+----------------+-------------------------------------|
 |     |                |                                     |
-*** Upgrade / Migration / Compatibility
+*** Upgrade/Migration/Compatibility
 *** TCO Considerations
-*** Analytics / BI Content
 *** Compliance to Standards and Guidelines
-**** Applied Architecture / Design Guidelines
-| Name                      | Version/Date | Link |
-|---------------------------+--------------+------|
-| Architecture Guideline of |              |      |
-| BOPF Development Guide    |              |      |
+**** Applied Architecture/Design Guidelines
+- [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline][CDS Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
+- [[https://ux.wdf.sap.corp/fiori-design/foundation/get-started/][Firoi Design Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
+
 **** Approved deviations
+| <8>      | <l30>                          | <l10>      |
+| Rule ID  | Deviation                      | Approval Status |
+|----------+--------------------------------+------------|
+| OC-xXX   |                                |            |
+
+
 ** Design Details Documentation
 *** Database Design
 *** Testability and Test Environment
