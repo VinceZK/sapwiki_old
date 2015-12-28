@@ -61,3 +61,24 @@
   (should (equal (dk-sapwiki-get-attribute-value "PAGEID")
 		 "1774869651"))
   (dk-sapwiki-fetch))
+
+(ert-deftest dk-attachment-upload ()
+  (dk-url-http-get
+   dk-sapwiki-lock-url 
+   (list (cons "pageId"  "1774869651"))
+   (lambda (status)
+     (set-buffer (current-buffer))
+     (goto-char 1)
+     (let* ((atl-tokenv (progn 
+			 (re-search-forward "\\(<meta name=\"ajs-atl-token\" content=\"\\)\\([^\"]+\\)" nil t)
+			 (buffer-substring (match-beginning 2) (match-end 2)))))
+       (dk-url-http-post-multipart dk-sapwiki-upload-url 
+       				   (list (cons "pageId"  "1774869651"))
+       				   (list (cons 'atl_token atl-tokenv)
+					 (cons 'comment_0 "Uploaded by emacs!")
+					 (cons 'confirm "Attach"))
+       				   (list (list 'file_0  "DecisionTable.png" "image/png"
+					       (with-temp-buffer
+						 (insert-file-contents "image/DecisionTable.png")
+						 (buffer-substring-no-properties (point-min) (point-max)))))
+       				   'dk-switch-to-url-buffer)))))

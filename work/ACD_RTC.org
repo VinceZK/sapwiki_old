@@ -49,7 +49,6 @@ With the emergence of S4HANA and the concept of central finance, we can build an
 RTC is built on S4HANA, both On-Premise and Cloud, with On-Premise version delivering first. 
 
 *** Comparision of BPC, BCS, and EC-CS 
-
 **** BPC embedded version
 Highly depands on BW technologies,like: virtual info-object, virtual info-provider, real-time cubes, multi info-provider, composite info-provider, aggregatation level, planning functions, and so on. Compared with its standard version, the modeling is done in BW, BPC only provides a mapping UI so that the consolidation process know how to consume the BW model. 
 
@@ -121,7 +120,7 @@ S4HANA Finance, Central Finance 1.0, BPC //To-do: versions should be checked
 | OC-01    | due to BPC's architecture we have to use calculation View | Approved by Chief Arch Christian |
 
 
-** Boundary Conditions
+** Boundarby Conditions
 Real-time Consolidation(RTC in short) runs mainly based on Central Finance(CF in short), which can synchronize journals from all the subsidiary finance systems in a real-time fashion. CF realizes the so-called "Transactional BW"(through SLT and MDG), which breaks through the world of OLTP and OLAP. Compared to traditional ETL-based BW system, CF can significantly improve the raw data quality and reduce the delay of reporting. 
   
 In other case, corporations may already have their subsidiaries using a centralized finance system (based on S4HANA finance). Thus the data synchronization is not necessary. RTC then can be run directly on S4HANA finance without the CF.

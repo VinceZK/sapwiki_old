@@ -25,8 +25,8 @@
 | Planning Functions          | <2015-12-26 Sat> | [[http://help.sap.com/saphelp_nw74/helpdata/en/4c/acf4b354423b9fe10000000a42189b/content.htm?frameset=/en/4c/acf4b354423b9fe10000000a42189b/frameset.htm&current_toc=/en/44/1f81d8cb5f0d1ae10000000a114a6b/plain.htm&node_id=18&show_children=false][online help]] | Planning functions are used in BW Integrated Planning for system-supported editing and generating data. Consolidation of BPC is based on planning functions. Formulas(FOX) are used to provide you with a simple programming language for manipulating transaction data. |
 | Consolidations              | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/Consolidations][scnwiki]]     | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
 | HANA Rules Framework on scn | <2015-12-14 Mon> | [[http://scn.sap.com/docs/doc-63159][HRF guides]]  | This guide is on scn, it is opened to public. it is an index page maintained by hrf develop team, which includes videos and latest guides of all about hrf. |
-| BRF+                        |                  |             |                                |
-| BRF+ Integrates HRF         |                  |             |                                |
+| BRF+ Online Help            | <2015-12-21 Mon> | [[http://help.sap.com/saphelp_dsm10/helpdata/en/9a/6b67ce7c26446483af079719edf679/frameset.htm][online help]] | This help doc gets all you need to working with BRF+, but lack the API Reference. |
+| HRF in BRF+ Overview        | <2015-12-23 Wed> | [[\\cnpvgl000\Restricted\FGI\50_Project\Central_Finance\99_Knowledge\03_Consolidation\HRF\HowToUseHRFinBRFplus.docx][Share file]]  | A step-by-step guide on how to modeling HRF objects in BRF+ enviroment |
 | HRF vs BRF+                 | <2015-12-24 Thu> | [[https://scn.sap.com/community/public-sector/blog/2015/12/03/hrf-vs-brfplus-for-public-sector][HRF vs BRF+]] | A good comparison btw hrf and brf+ in practise |
 
 *** IP Compliance and Patents
@@ -50,7 +50,7 @@ Validation Engine (VE in short) is a software component that provides RTC the ab
 4. External consolidation rules can be converted and imported in.
 
 *** Context
-VE lays in the core of RTC. It provides data validation, data substitution, and rule services for all the consolidation steps in RTC. Financial consolidations are rather diverse among corporations. Different company has different rules when doing consolidations. VE allows user to define calculation, data mapping, and posting logics before, during, and after a consolidation campaign.
+VE lays in the core of RTC. It provides data validation, data substitution, and rule services for all the consolidation tasks in RTC. Financial consolidations are rather diverse among corporations. Different company has different rules when doing consolidations. VE allows user to define calculation, data mapping, and posting logics before, during, and after a consolidation campaign.
 
 #+Caption: Validation Engine in RTC
 [[../image/ValidationEngineContext.png]]  
@@ -88,7 +88,7 @@ To allow automatically posting, rules must be defined in advance. These rules co
 - Balance validation before each posting.
 
 **** Currency Translation Rule
-Currency Translation means to translate monetary amounts into a different currency.
+*Currency Translation* means to translate monetary amounts into a different currency.
 
 Notably, you can translate the financial data reported by consolidation units into the group currency of the consolidation group. The consolidation system typically collects the financial data reported by consolidation units in local currency. You need to translate this data into group currency before you can create consolidated financial statements.
 
@@ -138,6 +138,13 @@ HRF and BRF+ are 2 different rule frameworks in SAP. While BRF+ is designed and 
 
 You can do modeling in BRF+ which then generates HRF objects. The design time of BRF+ is just a substitution of Eclipse based BRF studio. The mapping between BRF+ objects and HRF objects can be described in the table bellow:
 
+| HRF Entity    | BRF+ Entity                 |
+|---------------+-----------------------------|
+| Rule          | DB Rule                     |
+| Rule Template | N/A                         |
+| Rule Service  | Function with mode database |
+| Vocabulary    | DB Vocabulary               |
+
 We need test all the BRF+ interfaces which are used to generate HRF objects. Upon on these APIs, we design how vocabulary modeling can be integrated with consolidation data modeling. Because we do not want modeling twice: one for consolidation, and the other for validation. We could get conclusions whether the BRF+ APIs can fulfill all our requirements, if not, how we get a workaround solution? 
 
 We also need to get a set of rule accessing APIs to allow ABAP (or CDS) consume the generated objects. To achieve this, we should further investigate the HANA runtime objects that are generated by HRF. 
@@ -159,7 +166,7 @@ The rule maintenance UI should be close to consolidation context, rather than HR
 
 Rules are based on models. Some models are rather static, like currency translation. Others are based on consolidation model and financial statement version which are rather dynamic. The rule maintenance UI should hide as much complexity as possible. 
 
-Rules are assigned to consolidation tasks, which will be triggered and monitored in consolidation monitor tool. The assignment is indirect through rule templates. Rule template is a concept of HRF. Rules can be created by referencing an exiting template, while the template is then assigned to a rule service. When the rule service is called, it will run all the rules that have references of the assigned template. Rule templates will be pre-delivered as contents. And they may have 1:1 mapping with consolidation tasks. 
+Rules are assigned to consolidation tasks, which will be triggered and monitored in consolidation monitor tool. The assignment is indirect through rule templates. Rule template is a concept of HRF. Rules can be created by referencing an existing template, while the template is then assigned to a rule service. When the rule service is called, it will run all the rules that have references of the assigned template. Rule templates will be pre-delivered as contents. And they may have 1:1 mapping with consolidation tasks. 
 
 **** Consumption and Interception                                     :Vince:
 The artifacts generated by VE are DB procedures, views, and BRF+ functions. These runtime objects can be called by ABAP. The ABAP caller APIs will be further encapsulated into oDATA services, which then can be consumed by Fiori APPs. 

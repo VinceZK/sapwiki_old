@@ -66,12 +66,21 @@
   :type 'string)
 
 (defcustom dk-sapwiki-push-url
+  (concat dk-sapwiki-main-url "pages/doattachfile.action")
+  "The url used to updated the wikipage"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
+(defcustom dk-sapwiki-upload-url
   (concat dk-sapwiki-main-url "pages/doeditpage.action")
   "The url used to updated the wikipage"
   :group 'sapwiki
   :version "1.0"
   :package-version '(sapwiki . "1.0")
   :type 'string)
+
 
 (defcustom dk-sapwiki-user
   "i046147" "SAP i<number>"
@@ -150,6 +159,67 @@
                         args
                         "&")))
         (url-retrieve url callback cbargs)))
+
+(defun dk-url-http-post-multipart (url args fields files callback &optional charset cbargs)
+      "Send FIELDS and FILES to URL as a multipart HTTP POST.
+       fields is an alist, eg ((field-name . \"value\")); 
+       files  is an a list of \(fieldname \"filename\" \"file MIME type\" \"file data\")*"
+      (let ((url-request-method "POST")
+	    (query-string
+	     (mapconcat (lambda (arg)
+			  (concat (url-hexify-string (car arg))
+				  "="
+				  (url-hexify-string (cdr arg))))
+			args
+			"&"))
+	    (url-request-extra-headers
+	     '(("Content-Type" . (format "multipart/form-data; boundary=%S"
+					 (dk-http-post-multipart-boundary)))))
+	    (url-request-data (dk-http-post-encode-multipart-data fields files charset)))
+        (url-retrieve (concat url "?" query-string)
+		      callback cbargs)))
+
+(defun dk-http-post-encode-multipart-data (fields files charset)
+  "Return FIELDS and FILES encoded for use as the data for a multipart HTTP POST request.
+   FIELDS is an alist, eg ((field-name . \"value\")); 
+   FILES is an alist of \(fieldname \"filename\" \"file MIME type\" \"file data\")*"
+  (dk-http-post-join-lines
+   (mapcar (lambda (field)
+             (dk-http-post-bound-field
+              (format "Content-Disposition: form-data; name=%S" (symbol-name (car field)))
+              ""
+              (cdr field)))
+	   fields)
+   (cl-mapcan (lambda (file)
+                (destructuring-bind (fieldname filename mime-type data) file
+                  (dk-http-post-bound-field
+                   (format "Content-Disposition: form-data; name=%S; filename=%S" fieldname filename)
+                   (format "Content-type: %s" (dk-http-post-content-type mime-type charset))
+                   ""
+                   data)))
+              files)
+   (format "--%s--" (dk-http-post-multipart-boundary))))
+
+(defun dk-http-post-join-lines (&rest bits)
+  (let ((sep "\r\n"))
+    (mapconcat (lambda (bit)
+		 (if (listp bit)
+		     (apply 'dk-http-post-join-lines bit)
+                   bit))
+	       bits sep)))
+
+(defun dk-http-post-bound-field (&rest parts)
+  (let ((boundary (format "--%s" (dk-http-post-multipart-boundary))))
+    (dk-http-post-join-lines  boundary parts)))
+
+(defun dk-http-post-multipart-boundary ()
+  "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="
+  "------WebKitFormBoundaryua5prsBzOn069eZh")
+
+(defun dk-http-post-content-type (content-type &optional charset)
+  (if charset
+      (format "%s; charset=%s" content-type charset)
+    content-type))
 
 (defun dk-sapwiki-check-login-successfully ( )
   (and (boundp 'url-cookie-secure-storage)
