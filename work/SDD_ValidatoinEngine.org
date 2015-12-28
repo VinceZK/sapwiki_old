@@ -149,11 +149,11 @@ HRF also provides an easy to implement and configurable SAPUI5 control that expo
 
 1. Text Rule Editor: Simple, natural, and intuitive business condition language (Rule Expression Language)
 #+Caption: Text Rule Editor
-[[../image/TextRuleEdior.png]]  
+[[../image/TextRuleEditor.png]]  
 
 2. Decision table supports fork path. 
 #+Caption: Decision Table
-[[../image/DecisonTable.png]]  
+[[../image/DecisionTable.png]]  
 
 The rule maintenance UI should be close to consolidation context, rather than HRF/BRF+ context. There is no reason for a LOB user to learn terms of HRF/BRF+. 
 

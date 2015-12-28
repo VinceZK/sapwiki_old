@@ -313,13 +313,13 @@ HRF has 2 kinds of rule editors, one is Text-Based Rules, and the other is Decis
 Simple, natural, and intuitive business condition language (Rule Expression Language)
 
 #+CAPTION: Text-Based Rules
-[[../image/Text-based_rules.png]]
+[[../image/TextRuleEditor.png]]
 
 *Decsion Table:* 
 Simple and intuitive UI control that supports text rules and decision tables
 
 #+CAPTION: Decison Table
-[[../image/Decison_Table.png]]
+[[../image/DecisionTable.png]]
 
 While RTC can leverage HRF's high performance and intuitive rules editor, how to map existing rules of BPC and BCS, or even 3^{rd} party consolidation applications into HRF is still a big challenge.  
   
