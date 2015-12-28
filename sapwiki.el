@@ -99,7 +99,8 @@
 (defvar dk-sapwiki-pageID nil)
 (defvar dk-sapwiki-title nil)
 (defvar dk-sapwiki-version-comment nil)
-
+(defvar dk-sapwiki-attachments nil)
+  
 (defun dk-sapwiki-login ()
   (interactive)
   (unless dk-sapwiki-pwd
@@ -300,7 +301,7 @@
      'dk-sapwiki-process-push (list work-buffer))
     (message "Pushed!")))
 
-(defun dk-sapwiki-process-push (status work-buffer)
+(defun ydk-sapwiki-process-push (status work-buffer)
   "The function is called only if post is not successfully"
   (switch-to-buffer (current-buffer))
   (message "Push Failed!"))
@@ -916,6 +917,41 @@ contextual information."
        attributes))
      info))
 
+(defun dk-collect-attachments (source)
+  " (fieldname \"filename\" \"MIME type\" \"file data\")*"
+  (let* ((filename (file-name-nondirectory source))
+	 (mimetype (dk-get-mime-type filename)))
+      (add-to-list 'dk-sapwiki-attachments
+      		   (list (dk-get-next-fieldname-symbol)
+      			 filename
+			 mimetype
+			 (dk-get-attachment-rawdata source)))))
+
+(defun dk-get-next-fieldname-symbol ()
+  (if dk-sapwiki-attachments
+      (make-symbol
+       (concat "file_"
+	       (number-to-string
+		(+ (string-to-number
+		    (nth 1
+			 (split-string
+			  (symbol-name
+			   (car (car dk-sapwiki-attachments)))
+			  "_")))
+		  1))))
+    (make-symbol "file_0")))
+	     
+
+(defun dk-get-mime-type (filename)
+  "Currently, only image is allowed! "
+  (concat "image/" (file-name-extension filename)))
+
+(defun dk-get-attachment-rawdata (source)
+  "Return the raw data of the attachment"
+  (with-temp-buffer
+    (insert-file-contents source)
+    (buffer-substring-no-properties (point-min) (point-max))))    
+  
 (defun dk-sapwiki-link (link desc info)
   "Transcode a LINK object from Org to HTML.
 DESC is the description part of the link, or the empty string.
@@ -989,6 +1025,7 @@ INFO is a plist holding contextual information.  See
      ((and (plist-get info :html-inline-images)
 	   (org-export-inline-image-p
 	    link (plist-get info :html-inline-image-rules)))
+      (dk-collect-attachments path)
       (dk-html--format-image path attributes-plist info))
      ;; Radio target: Transcode target's contents and use them as
      ;; link's description.
@@ -1258,6 +1295,7 @@ information."
   (&optional async subtreep visible-only body-only exp-plist)
   "Export current buffer to an HTML buffer."
   (interactive)
+  (setq dk-sapwiki-attachments ())
   (org-export-to-buffer 'sapwiki "*sapwiki export*"
     async subtreep visible-only body-only
     (cdr (assoc "sapwiki" org-publish-project-alist))

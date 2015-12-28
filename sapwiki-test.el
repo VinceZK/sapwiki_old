@@ -82,3 +82,16 @@
 						 (insert-file-contents "image/DecisionTable.png")
 						 (buffer-substring-no-properties (point-min) (point-max)))))
        				   'dk-switch-to-url-buffer)))))
+
+(ert-deftest dk-collect-attachments ()
+  (should (equal (dk-get-mime-type "DecisionTable.png")
+  		 "image/png"))
+  (should (equal (length (dk-get-attachment-rawdata
+  			  "image/DecisionTable.png"))
+  		 21362))
+  (setq dk-sapwiki-attachments ())
+  (dk-collect-attachments "image/DecisionTable.png")
+  (should (equal (symbol-name (car (car dk-sapwiki-attachments))) "file_0"))
+  (dk-collect-attachments "image/TextRuleEditor.png")
+  (should (equal (symbol-name (car (car dk-sapwiki-attachments))) "file_1"))
+  (setq dk-sapwiki-attachments ()))
