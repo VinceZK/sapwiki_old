@@ -66,7 +66,7 @@
   :type 'string)
 
 (defcustom dk-sapwiki-push-url
-  (concat dk-sapwiki-main-url "pages/doattachfile.action")
+  (concat dk-sapwiki-main-url "pages/doeditpage.action")
   "The url used to updated the wikipage"
   :group 'sapwiki
   :version "1.0"
@@ -74,7 +74,7 @@
   :type 'string)
 
 (defcustom dk-sapwiki-upload-url
-  (concat dk-sapwiki-main-url "pages/doeditpage.action")
+  (concat dk-sapwiki-main-url "pages/doattachfile.action")
   "The url used to updated the wikipage"
   :group 'sapwiki
   :version "1.0"
@@ -100,12 +100,13 @@
 (defvar dk-sapwiki-title nil)
 (defvar dk-sapwiki-version-comment nil)
 (defvar dk-sapwiki-attachments nil)
+(defvar dk-sapwiki-attachment-comments nil)
   
 (defun dk-sapwiki-login ()
   (interactive)
   (unless dk-sapwiki-pwd
     (setq dk-sapwiki-pwd (read-passwd "Enter your password: ")))
-  (message "username=%s, password=%s" dk-sapwiki-user dk-sapwiki-pwd)
+  ;; (message "username=%s, password=%s" dk-sapwiki-user dk-sapwiki-pwd)
   (dk-url-http-post dk-sapwiki-login-url
 		    (list (cons "os_username" dk-sapwiki-user)
 			  (cons "os_password" dk-sapwiki-pwd))
@@ -174,9 +175,9 @@
 			args
 			"&"))
 	    (url-request-extra-headers
-	     '(("Content-Type" . (format "multipart/form-data; boundary=%S"
-					 (dk-http-post-multipart-boundary)))))
-	    (url-request-data (dk-http-post-encode-multipart-data fields files charset)))
+	     (list (cons "Content-Type"  (format "multipart/form-data; boundary=%S"
+						 (dk-http-post-multipart-boundary)))))
+	    (url-request-data (dk-http-post-encode-multipart-data fields files charset)))	
         (url-retrieve (concat url "?" query-string)
 		      callback cbargs)))
 
@@ -190,8 +191,8 @@
               (format "Content-Disposition: form-data; name=%S" (symbol-name (car field)))
               ""
               (cdr field)))
-	   fields)
-   (cl-mapcan (lambda (file)
+   	   fields)
+   (mapcar (lambda (file)
                 (destructuring-bind (fieldname filename mime-type data) file
                   (dk-http-post-bound-field
                    (format "Content-Disposition: form-data; name=%S; filename=%S" fieldname filename)
@@ -214,8 +215,7 @@
     (dk-http-post-join-lines  boundary parts)))
 
 (defun dk-http-post-multipart-boundary ()
-  "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="
-  '------WebKitFormBoundaryua5prsBzOn069eZh)
+  "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=")
 
 (defun dk-http-post-content-type (content-type &optional charset)
   (if charset
@@ -299,12 +299,30 @@
 	   (cons "entityId"  dk-sapwiki-pageID)
 	   (cons "newSpaceKey" newSpaceKey))
      'dk-sapwiki-process-push (list work-buffer))
+    
+    (add-to-list 'dk-sapwiki-attachment-comments
+		 (cons 'atl_token atl-token))
+    (add-to-list 'dk-sapwiki-attachment-comments
+		 (cons 'confirm "Attach") t)
+    (dk-url-http-post-multipart
+     dk-sapwiki-upload-url
+     (list (cons "pageId"  dk-sapwiki-pageID))
+     dk-sapwiki-attachment-comments
+     dk-sapwiki-attachments
+     'dk-sapwiki-process-attchments)
+    
     (message "Pushed!")))
 
-(defun ydk-sapwiki-process-push (status work-buffer)
+(defun dk-sapwiki-process-push (status work-buffer)
   "The function is called only if post is not successfully"
   (switch-to-buffer (current-buffer))
   (message "Push Failed!"))
+
+(defun dk-sapwiki-process-attchments (status work-buffer)
+  "The function is called only if post is not successfully"
+  (switch-to-buffer (current-buffer))
+  (message "Upload Attachments Failed!"))
+
 ;;------------------------------------------------------
 ;;End of 1. Connect to SAP wiki, uploading/downloading
 ;;------------------------------------------------------
@@ -901,21 +919,42 @@ contextual information."
 
 (defun dk-html--wrap-image (contents info &optional caption label)
   "Wrap CONTENTS string within an appropriate environment for images.INFO is a plist used as a communication channel.  When optional arguments CAPTION and LABEL are given, use them for caption and \"id\" attribute."
+  (dk-collect-attachment-comments (format "%s (via emacs)" caption))
   (format "<p>%s</p>\n<p align=\"center\">%s</p>"
 	  contents caption))
 
+(defun dk-collect-attachment-comments (caption)
+  " (fieldname . \"value\")*"
+  (add-to-list 'dk-sapwiki-attachment-comments
+	       (cons (dk-get-next-comment-symbol) caption)))
+
+(defun dk-get-next-comment-symbol ()
+  (if dk-sapwiki-attachment-comments
+      (make-symbol
+       (concat "comment_"
+	       (number-to-string
+		(+ (string-to-number
+		    (nth 1
+			 (split-string
+			  (symbol-name
+			   (car (car dk-sapwiki-attachment-comments)))
+			  "_")))
+		  1))))
+    (make-symbol "comment_0")))
+
 (defun dk-html--format-image (source attributes info)
-    (org-html-close-tag
-     "img"
-     (org-html--make-attribute-string
-      (org-combine-plists
-       (list :class "confluence-embedded-image"
-	     :src (concat "/wiki/download/attachments/"
-			   dk-sapwiki-pageID "/"
-			   (file-name-nondirectory source))
-	     :alt (file-name-nondirectory source))
-       attributes))
-     info))
+  (dk-collect-attachments source)
+  (org-html-close-tag
+   "img"
+   (org-html--make-attribute-string
+    (org-combine-plists
+     (list :class "confluence-embedded-image"
+	   :src (concat "/wiki/download/attachments/"
+			dk-sapwiki-pageID "/"
+			(file-name-nondirectory source))
+	   :alt (file-name-nondirectory source))
+     attributes))
+   info))
 
 (defun dk-collect-attachments (source)
   " (fieldname \"filename\" \"MIME type\" \"file data\")*"
@@ -946,10 +985,11 @@ contextual information."
   "Currently, only image is allowed! "
   (concat "image/" (file-name-extension filename)))
 
-(defun dk-get-attachment-rawdata (source)
-  "Return the raw data of the attachment"
+(defun dk-get-attachment-rawdata (filename)
+  "Return the raw data of the attachment
+   TODO: try to differenciate the relative path and absolute path"
   (with-temp-buffer
-    (insert-file-contents source)
+    (insert-file-contents (concat "../image/" filename))
     (buffer-substring-no-properties (point-min) (point-max))))    
   
 (defun dk-sapwiki-link (link desc info)
@@ -1025,7 +1065,6 @@ INFO is a plist holding contextual information.  See
      ((and (plist-get info :html-inline-images)
 	   (org-export-inline-image-p
 	    link (plist-get info :html-inline-image-rules)))
-      (dk-collect-attachments path)
       (dk-html--format-image path attributes-plist info))
      ;; Radio target: Transcode target's contents and use them as
      ;; link's description.
@@ -1296,6 +1335,7 @@ information."
   "Export current buffer to an HTML buffer."
   (interactive)
   (setq dk-sapwiki-attachments ())
+  (setq dk-sapwiki-attachment-comments ())
   (org-export-to-buffer 'sapwiki "*sapwiki export*"
     async subtreep visible-only body-only
     (cdr (assoc "sapwiki" org-publish-project-alist))

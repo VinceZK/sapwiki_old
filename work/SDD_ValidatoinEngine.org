@@ -24,7 +24,7 @@
 | BPC Online Help             | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/94/e0f3a56f174607855bc345a45df847/content.htm?frameset=/en/b9/bceda8f53d4bc9bb772da27f576c89/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=139&show_children=false][online help]] | The help doc describes the _Rules_ of BPC standard model. You can get a general idea of how rules are applied in financial consolidation. |
 | Planning Functions          | <2015-12-26 Sat> | [[http://help.sap.com/saphelp_nw74/helpdata/en/4c/acf4b354423b9fe10000000a42189b/content.htm?frameset=/en/4c/acf4b354423b9fe10000000a42189b/frameset.htm&current_toc=/en/44/1f81d8cb5f0d1ae10000000a114a6b/plain.htm&node_id=18&show_children=false][online help]] | Planning functions are used in BW Integrated Planning for system-supported editing and generating data. Consolidation of BPC is based on planning functions. Formulas(FOX) are used to provide you with a simple programming language for manipulating transaction data. |
 | Consolidations              | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/Consolidations][scnwiki]]     | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
-| HANA Rules Framework on scn | <2015-12-14 Mon> | [[http://scn.sap.com/docs/doc-63159][HRF guides]]  | This guide is on scn, it is opened to public. it is an index page maintained by hrf develop team, which includes videos and latest guides of all about hrf. |
+| HANA Rules Framework on scn | <2015-12-14 Mon> | [[http://scn.sap.com/docs/DOC-63159][HRF guides]]  | This guide is on scn, it is opened to public. it is an index page maintained by hrf develop team, which includes videos and latest guides of all about hrf. |
 | BRF+ Online Help            | <2015-12-21 Mon> | [[http://help.sap.com/saphelp_dsm10/helpdata/en/9a/6b67ce7c26446483af079719edf679/frameset.htm][online help]] | This help doc gets all you need to working with BRF+, but lack the API Reference. |
 | HRF in BRF+ Overview        | <2015-12-23 Wed> | [[\\cnpvgl000\Restricted\FGI\50_Project\Central_Finance\99_Knowledge\03_Consolidation\HRF\HowToUseHRFinBRFplus.docx][Share file]]  | A step-by-step guide on how to modeling HRF objects in BRF+ enviroment |
 | HRF vs BRF+                 | <2015-12-24 Thu> | [[https://scn.sap.com/community/public-sector/blog/2015/12/03/hrf-vs-brfplus-for-public-sector][HRF vs BRF+]] | A good comparison btw hrf and brf+ in practise |
@@ -152,7 +152,7 @@ We also need to get a set of rule accessing APIs to allow ABAP (or CDS) consume 
 **** UI for Maintaining Rules and Assignment                          :Chang:
 The UI is for LOB users to maintain consolidation rules. Rule Expression Language of HRF is reused as the rule scripts. REL is designed for LOB users and close to natural language. It is an ideal scripting language for financial consolidation. 
 
-HRF also provides an easy to implement and configurable SAPUI5 control that exposes the framework’s capabilities to the business users and implementers. The two controls are:
+HRF also provides an easy to implement and configurable SAPUI5 control that exposes the framework capabilities to the business users and implementers. The two controls are:
 
 1. Text Rule Editor: Simple, natural, and intuitive business condition language (Rule Expression Language)
 #+Caption: Text Rule Editor
@@ -198,9 +198,10 @@ The need of formula & script still needs further investigation.
 
 *** Design Challenges resulting from Non-Functional Requirements
 **** How to use REL to build a set of alias that suits consolidation
-**** Can ABAP internal tables be passed to HRF context
+**** Can ABAP internal tables be passed to HRF context (The feature will be availible in next release)
 **** Whether HRF is good for data substitution/mapping
 **** Complex scripts and formula can not be provided by HRF/BRF+
+/IBP/CL_RM_RUELS_UTILITY
 **** How to allow other rule engines to be integrated in
 *** Vocabulary Modeling                                                :Zhou:
 **** Financial Statement Version

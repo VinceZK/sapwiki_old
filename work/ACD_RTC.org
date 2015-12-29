@@ -225,7 +225,7 @@ RTC mainly interacts with 3 SAP applications: CF, BPC, and IBPF. Each takes a ro
 Details on each building blocks and their relationships are explained below.
 
 #+CAPTION: Overall Architecture Diagram
-[[../image/Overall%20Architecture%20Diagram.png]]
+[[../image/OverallArchitectureDiagram.png]]
 
 **** Line Item Level Data Integration
 Local financial systems synchronize their line items into CF's central journal repository(ACDOCA). The synchronization is realized through SLT. It is a middle-ware which can listen changes at database level and synchronize the updates to CF real-timely. 

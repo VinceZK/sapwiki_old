@@ -62,36 +62,81 @@
 		 "1774869651"))
   (dk-sapwiki-fetch))
 
-(ert-deftest dk-attachment-upload ()
-  (dk-url-http-get
-   dk-sapwiki-lock-url 
-   (list (cons "pageId"  "1774869651"))
-   (lambda (status)
-     (set-buffer (current-buffer))
-     (goto-char 1)
-     (let* ((atl-tokenv (progn 
-			 (re-search-forward "\\(<meta name=\"ajs-atl-token\" content=\"\\)\\([^\"]+\\)" nil t)
-			 (buffer-substring (match-beginning 2) (match-end 2)))))
-       (dk-url-http-post-multipart dk-sapwiki-upload-url 
-       				   (list (cons "pageId"  "1774869651"))
-       				   (list (cons 'atl_token atl-tokenv)
-					 (cons 'comment_0 "Uploaded by emacs!")
-					 (cons 'confirm "Attach"))
-       				   (list (list 'file_0  "DecisionTable.png" "image/png"
-					       (with-temp-buffer
-						 (insert-file-contents "image/DecisionTable.png")
-						 (buffer-substring-no-properties (point-min) (point-max)))))
-       				   'dk-switch-to-url-buffer)))))
-
 (ert-deftest dk-collect-attachments ()
   (should (equal (dk-get-mime-type "DecisionTable.png")
   		 "image/png"))
   (should (equal (length (dk-get-attachment-rawdata
-  			  "image/DecisionTable.png"))
+  			  "DecisionTable.png"))
   		 21362))
   (setq dk-sapwiki-attachments ())
-  (dk-collect-attachments "image/DecisionTable.png")
+  (dk-collect-attachments "../image/DecisionTable.png")
   (should (equal (symbol-name (car (car dk-sapwiki-attachments))) "file_0"))
-  (dk-collect-attachments "image/TextRuleEditor.png")
+  (dk-collect-attachments "../image/TextRuleEditor.png")
   (should (equal (symbol-name (car (car dk-sapwiki-attachments))) "file_1"))
-  (setq dk-sapwiki-attachments ()))
+  (setq dk-sapwiki-attachments ())
+  (setq dk-sapwiki-attachment-comments ())
+  (dk-collect-attachment-comments "Decision Table")
+  (should (equal (symbol-name (car (car dk-sapwiki-attachment-comments))) "comment_0"))
+  ;(should (equal (cdr (assoc 'comment_0 dk-sapwiki-attachment-comments)) "Decision Table"))
+  (dk-collect-attachment-comments "Text Rule Editor")
+  (should (equal (symbol-name (car (car dk-sapwiki-attachment-comments))) "comment_1"))
+  ;(should (equal (cdr (rassoc 'comment_1 dk-sapwiki-attachment-comments)) "Text Rule Editor"))
+  (setq dk-sapwiki-attachment-comments ()))
+
+(ert-deftest dk-post-encode-multipart-data ()
+  (with-current-buffer (get-buffer-create "form-data")
+    (erase-buffer)
+    (insert 
+     (dk-http-post-encode-multipart-data
+      (list (cons 'atl_token "asdkfhsakdfjklasjdflkjasdklfj")
+	    (cons 'comment_0 "Decison Table (Uploaded by emacs!)")		 
+	    (cons 'comment_1 "Overall Architecture (Uploaded by emacs!)")
+	    (cons 'comment_2 "Text Rule Editor (Uploaded by emacs!)")
+	    (cons 'confirm "Attach"))
+      (list (list 'file_0  "DecisionTable.png" "image/png"
+		  (with-temp-buffer
+		    (insert-file-contents "image/DecisionTable.png")
+		    (buffer-substring-no-properties (point-min) (point-max))))
+	    (list 'file_1  "Overall Architecture Diagram.png" "image/png"
+		  (with-temp-buffer
+		    (insert-file-contents "image/Overall Architecture Diagram.png")
+		    (buffer-substring-no-properties (point-min) (point-max))))
+	    (list 'file_2  "TextRuleEditor.png" "image/png"
+		  (with-temp-buffer
+		    (insert-file-contents "image/TextRuleEditor.png")
+		    (buffer-substring-no-properties (point-min) (point-max)))))
+      nil))))
+
+(ert-deftest dk-attachment-upload ()
+  (dk-url-http-get
+   "https://wiki.wdf.sap.corp/wiki/pages/viewpageattachments.action"
+   (list (cons "pageId"  "1774869651"))
+   (lambda (status)
+     (set-buffer (current-buffer))
+     (goto-char 1)
+     (let ((atl-tokenv (progn 
+   			 (re-search-forward "\\(<meta name=\"ajs-atl-token\" content=\"\\)\\([^\"]+\\)" nil t)
+   			 (buffer-substring (match-beginning 2) (match-end 2)))))
+      ;; (message "atl-token = %s" atl-tokenv)))))
+       (dk-url-http-post-multipart dk-sapwiki-upload-url 
+       				   (list (cons "pageId"  "1774869651"))
+       				   (list (cons 'atl_token atl-tokenv)
+					 (cons 'comment_0 "Decison Table (Uploaded by emacs!)")		 
+					 (cons 'comment_1 "Overall Architecture (Uploaded by emacs!)")
+					 (cons 'comment_2 "Text Rule Editor (Uploaded by emacs!)")
+       					 (cons 'confirm "Attach"))
+       				   (list (list 'file_0  "DecisionTable.png" "image/png"
+       				    	       (with-temp-buffer
+       				    		 (insert-file-contents "image/DecisionTable.png")
+       				    		 (buffer-substring-no-properties (point-min) (point-max))))
+					 (list 'file_1  "Overall Architecture Diagram.png" "image/png"
+       					       (with-temp-buffer
+       					 	 (insert-file-contents "image/Overall Architecture Diagram.png")
+       					 	 (buffer-substring-no-properties (point-min) (point-max))))
+					 (list 'file_2  "TextRuleEditor.png" "image/png"
+       					       (with-temp-buffer
+       					 	 (insert-file-contents "image/TextRuleEditor.png")
+       					 	 (buffer-substring-no-properties (point-min) (point-max)))))
+       				   'dk-switch-to-url-buffer)))))
+
+
