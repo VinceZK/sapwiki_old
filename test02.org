@@ -1,0 +1,256 @@
+#+PAGEID: 1774869651
+#+TITLE: ACD for Real-time Consolidation
+#+STARTUP: align
+#+OPTIONS: toc:1
+** Abstract
+
+Real-time Consolidation(RTC in short) provides corporation the ability of generating consolidated financial statements and reports on-the-fly. RTC is built on Central Finance(CF in short), which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls.
+
+*** Administrative Data
+
+| Attribute        | Value                   |
+|------------------+-------------------------|
+| ACD              | Real-time Consolidation |
+| Related Use Case | link to Jira            |
+| Responsible      | Vincent Zhang           |
+| Target Readiness | Incubation              |
+| Status           | in progress             |
+| Version          | 0.1(Draft Version       |
+| Version History  | adf                     |
+
+** Background and Context
+
+Provide in this chapter information why this architecture concept was created (for which business needs, for which use cases, for which formal requirements, etc.) and provide some key information about the context of the concept.
+
+*** Number of Customers expected with release now in development
+
+25+ customers have explicitly stated high interest on Real-time Consolidation based on Central Finance
+
+*** Underlying Platform/Application Server
+
+S/4 HANA on Premise/Cloud
+
+*** Product Type
+
+Analytical Application aakljdfkjaksldjfklkl;la;
+
+*** Delivery
+
+Analytical Application
+
+*** Business Case
+
+Consolidation is discussed in 80 % of the cases of which we have customer discussions on Central Finance. Central Finance carries all Financial Data from the entire system landscape. It is not understood by the customers why they need to load the data from somewhere else for the consolidation. Group Reporting on Central Finance has limited informative value without consolidation. Central Finance is supplied in real-time. Necessary corrections in local close are updated real-time. There is no need for the waiting time of ETL.
+
+*** Main Use Cases / Functional Scope
+
+**** Year-End close (pre)consolidation
+
+Traditional consolidation takes days. It needs to extract data from group's sub financial systems, which needs the sub systems finish the closing first. Then transform the data, and load it to the consolidation system. The overall closing and ETL process are very time-consuming. No bother to mention if corrections are needed, the entire process could be re-processed. Corporation stakeholders suffers waiting too long a period for consolidated statements. While Real-time Consolidation can perfectly solve the problem. RTC is based on Central Finance which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls.
+
+**** Acquisition & Re-organization
+
+*** List all Required SAP Products/Product Versions to Support the Main Use Cases
+
+SFIN2.0, Central Finance 1.0, BPC //To-do: versions should be checked
+
+*** Relevant Product Line Architecture Guideline
+
+- [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline][CDS Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
+
+
+*** Deviations from Product Line Architecture and Product Experience Requirements
+
+| <l10>      | <l50>                                              | <l20>                |
+| Rule ID    | Deviation                                          | Approval Status      |
+|------------+----------------------------------------------------+----------------------|
+| e.t. OC-01 | for example: due to BPC's architecture we have to use CDS | Approved by Christian |
+
+** Boundary Conditions
+
+Real-time Consolidation is run on Central Finance. It is under the assumption that CF is correctly implemented, that data in all the sub financial systems is synchronized real-timely. Based on the central journal repository, RTC generates consolidation models and interfaces for the consumption by existing consolidation tools, like: BPC, BCS, and so on. In the initial releases, RTC will consider the BPC as the main consolidation front-end tools, or the inter-actor.
+
+1. *Quality Attribute Scenario: &quot;Consolidation&quot;*
+
+
+| <l30>                          | <l30>                          |
+| *Who initiates activity (interactor)?* | BPC consolidation tools        |
+| *Addressed part of the system which executes initiated activity (executor)?* | BPC runtime environment        |
+| *How does the interaction between initiator and executor take place?* | BPC consolidation tools will send analysis request to RTC models. RTC will return the data BPC needed. |
+| *Under which conditions / environment does the interaction take place?* | Mostly, the year-end closing period the usage cloud be high BPC and RTC could be in different machine, the network cost should be considered. |
+| *Result of activity*           | Data is correct,Performance is good |
+| *KPI*                          | n line items in xx ms          |
+
+*** Product Standards
+
+Ensure compliance with product standards. To do so, go through the product standard requirements of categor &quot;architecture & technology&quot; in the Product Standard Compliance tool (PSC) before you start defining your architecture and describe in this section how product standard requirements influence the architecture to be defined.
+
+Add a link to the PS planning in PSC or describe deviations within this chapter. dasfasdfasd
+
+For further information on product standards, see [[https://portal.wdf.sap.corp/wcm/ROLES://portal_content/cp/roles/cto/DevelopmentResources/Idea-To-Market/Infocenters/WS%20Office%20of%20the%20CTO/Development%20Resources/I2M/I2M%20Product%20Standards][go/productstandards]]
+
+*** Technology Descisions asdfsadf
+
+Define which technologies / frameworks are used in which architecture area and for specific topics:
+
+| Architecture                           | Technologies to be Used                 |
+|----------------------------------------+-----------------------------------------|
+| Clients                                | BPC, BCS, and other consolidation tools |
+| Presentation Layer / User Interface    | Office EPM Add-in, Fiori                |
+| Business Logic Layer                   | CDS/embedded-BW/Rules Engines           |
+| Analytics / Reporting                  | Office EPM Add-in, Fiori graphic        |
+| Integration Middleware                 | Depends on Central Finance middle-ware  |
+| Business Process Management / Workflow | BRF+                                    |
+| Data Persistency                       | HANA                                    |
+| Development Environment                | Eclipse Fiori, ABAP, HANA Stuido        |
+| Lifecycle Management                   | CTS                                     |
+| tbd                                    |                                         |
+
+*** Reuse
+
+List the reuse components (engines, objects, intrinsic/common services, 3rd party components) which have to be used for this development program/project/topic/integration scenario. Mention reuse components which explicitly must not be used within this development program.
+
+General Principles for Reuse
+
+- Take reuse into account in every architecture definition. Well planned reuse has a big positive influence on stability, quality, common look and feel, TCO and TCD of the complete application.
+- But consider the costs in relationship to the benefits when reusing a function or feature from others. In especially check if the prerequisites (system, hardware, licenses, implementation and customizing efforts, etc) which are required to use the reuse functions are acceptable for customers. If you answer one of the following questions with yes please consult with your local reuse expert
+- Does the used service or functionality force the customer to install an additional system?
+- Does the usage of a service or functionality force the customer to implement and customize a new application or technology hub?
+- Does the new framework or functionality which is planned exist in a similar version in other areas (Examples are rules engines, business object frameworks, master data )?
+
+
+Recommendations
+
+If you want to develop a new framework or functionality which could be of interest for other groups too, please check whether synergies would be possible.
+
+The following reuse components must / should / must not be used within this development:
+
+| <l20>                | <l10>      | <l20>                | <l10>      | <l25>                     |
+| Reuse Component to be Used | Owned by   | Maintenance Guaranteed? | Usage      | Remark / explanation      |
+|----------------------+------------+----------------------+------------+---------------------------|
+| Enter name and version, example:Business partner | Enter owner of reuse component, for example ECC, AP Foundation | Is maintenance of reuse component as long as maintenance of this developmentYes/No | must       | Business partner has to be used for the entire application. Existing own implementations have to be replaced. |
+| BPC Consolidation Tools |            |                      |            |                           |
+| Central Finance      |            |                      |            |                           |
+| BRF+                 |            |                      |            |                           |
+
+*** Cross-Release Compatibilty
+
+Describe boundary conditions to ensure smooth upgrade / migration.
+
+General Principles for Cross-Release Compatibility
+
+A new release of an SAP application can always be integrated with any release of any other SAP application that is still in mainstream and extended maintenance. After an upgrade of an SAP application, all previously used scenarios are still available.
+
+Release Synchronization schema to be followed (Details see[[https://portal.wdf.sap.corp/wcm/ROLES://portal_content/cp/roles/cto/DevelopmentResources/ReleaseStrategyTransparency/Infocenters/WS%20PTG/PTG/Operations%20%26%20Program%20Office/Release%20Management][/go/releasemanagement]])
+
+*** Other External Forces / Constraints and Assumptions
+
+Describe other external forces, constraints and assumptions, which influence or restrict your architecture. This could also be resource, skillset and timeline constraints, etc.
+
+Real-time Consolidation highly depends on Central Finance. CF provides the data bases for the RTC to consume. The successfully implementation of CF puts directly impacts on RTC.
+
+BPC is the only legal consolidation and planning product in SAP. RTC may be bundled with BPC for sales and marketing.
+
+** Architecture Definition
+
+The architecture chapter shall describe the main building blocks of the architecture and their relationships. Depict also how the building blocks are integrated with building blocks outside the program/topic. This section can be structured into sub-chapters.
+
+For conceptual and technical architecture diagrams use Technical Architecture Modeling (TAM): [[http://ency.wdf.sap.corp:1080/Modeling/Standard/][http://ency.wdf.sap.corp:1080/Modeling/Standard/]]. Provide at least one overview picture of the topic (TAM block/component diagram) and an according description. You are welcome to provide more diagrams according to TAM.
+
+*** Architecture Context and Overview
+
+Describe how the software developed within this project relates to existing SAP software, Provide an architecture overview diagram which depicts all major component and their relationships. Describe the overall architecture concept and explain the role of each component.
+
+We recommend to describe the architecture according to the following sequence First, explain the concepts, on which the architecture is based. This may be business concepts, technical concepts or patterns. ARIS diagrams block diagrams, or entity-relationship diagrams may be useful for visualization.
+
+Second, give the component view of your architecture. What are the building blocks and how do they relate to each other. Include a block diagram.
+
+Third, describe behavior of the system/components (dynamic view). You may use an activity diagram to visualize it.
+
+*** Main Architecture Challenges and Decisions
+
+**** Architecture Challenges: title
+
+Explain the architecture challenge which can be a quality to be ensured by the architecture or restrictive boundary conditions
+
+*Decison*: We have to use HANA caclulation Viewa.
+
+*By*: Christian
+
+<2015-11-18 Wed>: <span class="timestamp-wrapper">  *Date*  </span>
+
+*Description*: blabla
+
+*** Integration with other Systems
+
+Depict how the software to be developed communicates with other applications and systems. Include a block diagram illustrating the integration.
+
+**** Public APIs and Contracts
+
+List all public APIs/enterprise services which are offered, be it newly created API or changes on existing APIs
+
+| Name of API/Contract | Type                          | Changed/New | Description |
+|----------------------+-------------------------------+-------------+-------------|
+|                      | sync/async web services, RFC, |             |             |
+
+*** Security
+
+Describe how the architecture protects the software against attacks or misuse.
+
+To do so, define how communication channels (protocol, data, &hellip;) are protected. Describe how authentication, authorization and logging are performed. Consider architecture requirements pertaining to confidentiality, integrity and availability.
+
+*** Deployment and Operations
+
+It is recommended to work with the local Technical Component and Delivery Architecture (TCDA) team on defining deployment and operations architecture. Contact is the Delivery Architecture Engineer maintained in [[https://ifp.wdf.sap.corp/sap(bD1lbiZjPTAwMSZpPTEmcz1TSUQlM2FBTk9OJTNhcHdkZjU3ODJfSUZQXzAxJTNhWEhRWUJUMFlnaXNneEZlWWZTemIwR1FhWnZxaXotY2lkX1Z3TUF0Zy1BVFQ=)/bc/bsp/sap/zpr/default.htm][program repository]] entry of your program.
+
+**** Deployed Component Structure and Deployment Options
+
+Show all interdependencies of (groups of) software components using a package diagram (TAM). Assign the components to software layers, for example see: [[https://wiki.wdf.sap.corp/display/archGov/Software+Layers][https://wiki.wdf.sap.corp/display/archGov/Software+Layers]]
+
+Describe software component structure, package structure and their deployment options. Deployment options describe the different possibilities how the software components can be distributed across different systems. Indicate cross-component communication. Mention explicitly, if there are new dependencies between software components.
+
+Describe deployment unit and process component structure if relevant.
+
+**** System Landscape
+
+Describe typical system landscape required to run the software developed within this program productive at a customer site. Show how the main deployable building blocks are distributed within that landscape. Determine which landscape components are mandatory and which are optional to run the software
+
+**** Operation Concept
+
+Describe how the planned software is operated and estimate the impact on TCO. This includes a rough description of complexity of installation, configuration, update, monitoring, and troubleshooting. Explain also how easy product and landscape optimization can be done during product lifecycle (such as scalability and high availability).
+
+In case TCO is high, explain a roadmap how simplification in next versions can be done (for example from complexity hiding to complexity reduction).
+
+*** Testing
+
+Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.
+
+*** Architecture Details (Further Refinement)
+
+Use further chapters to refine the architecture and describe specific topics.
+
+*** Architecture Risks
+
+Explain your view on architecture-related risks and give hints about potential upcoming problems. Risks can arise for example from changes in the scope, from work-arounds necessary, from dependencies on other components, or from immature technologies/concepts. Fill in the table for each risk.
+
+**** Risk: title
+
+| <l15>           | <l60>                                                        |
+| Description     | Example: To improve performance a cache will be implemented. However the cache only shows effect for objects with more than 1000 attributes. |
+| Impact(for customer) | Example: customers see no effect when using cache with objects with less than 1000 attributes |
+| Impact Rating   | Impact Rating                                                |
+| Risk Probability | Low/High/Very High                                           |
+| Mitigation Activity | Example: cache can be activated/de-activated. In addition describe in documentation when cache is useful and when not. |
+| Responsible Person | Name of person responsible for risk mitigation activity      |
+| Due Date        | Due date for mitigation                                      |
+
+*** Planned Design Documents
+
+Here the sprint teams can list the software design documents (SDD), which will be created in order to implement the architecture. The list can also be created over time.
+
+** Glossary asdfasdf
+
+Add definitions of terms which are relevant for understanding the document to the glossary. As alternative add the terms to the architecture [[https://wiki.wdf.sap.corp/wiki/display/ArGlossary/Contribute+to+SAP%27s+Architecturepedia][architecture glossary in the Wiki]].

@@ -106,7 +106,6 @@
   (interactive)
   (unless dk-sapwiki-pwd
     (setq dk-sapwiki-pwd (read-passwd "Enter your password: ")))
-  ;; (message "username=%s, password=%s" dk-sapwiki-user dk-sapwiki-pwd)
   (dk-url-http-post dk-sapwiki-login-url
 		    (list (cons "os_username" dk-sapwiki-user)
 			  (cons "os_password" dk-sapwiki-pwd))
@@ -125,16 +124,22 @@
 
 (defun dk-sapwiki-push (arg versionComment)
   (interactive "P\nsVersion Comment: ")
+  (setq dk-sapwiki-version-comment versionComment)
+
   (unless (dk-sapwiki-check-login-successfully)
     (dk-sapwiki-login))
+  
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
-  (setq dk-sapwiki-version-comment versionComment)
+  ;; (dk-url-http-get dk-sapwiki-fetch-url 
+  ;; 		   (list (cons "pageId" dk-sapwiki-pageID))
+  ;; 		   'dk-sapwiki-ediff (list (current-buffer))))
+
   (message "Lock the wiki for editting.")  
   (dk-url-http-get dk-sapwiki-lock-url 
-		   (list (cons "pageId"  dk-sapwiki-pageID))
-		   'dk-extract-hidden-token (list (current-buffer))))
-		   ;'dk-switch-to-url-buffer))
+  		   (list (cons "pageId"  dk-sapwiki-pageID))
+  		   'dk-extract-hidden-token (list (current-buffer))))
+		   ;; 'dk-switch-to-url-buffer))
 
 (defun dk-url-http-get (url args callback &optional cbargs)
   (let ((url-request-method "GET")
@@ -264,22 +269,39 @@
   (with-current-buffer buffer
     (buffer-string)))
 
+(defun dk-sapwiki-ediff (status work-buffer)
+  (message "Fetch the lastest version, and compare...")
+  (set-buffer (current-buffer))
+  (goto-char 1)
+  (dk-iterate-html-tag)
+  (ediff-buffers work-buffer result-org-buffer)
+  (set-buffer result-org-buffer)
+  (erase-buffer)
+  (message "Lock the wiki for editting.")  
+  (dk-url-http-get dk-sapwiki-lock-url 
+		   (list (cons "pageId"  dk-sapwiki-pageID))
+		   'dk-extract-hidden-token (list (current-buffer))))
+
 (defun dk-extract-hidden-token (status work-buffer)
   (message "Push the wiki...")
   (set-buffer (current-buffer))
   (goto-char 1)
-  (let* ((parentPageString (progn
-			     (re-search-forward "\\(<meta name=\"ajs-parent-page-title\" content=\"\\)\\([^\"]+\\)" nil t)
-			     (buffer-substring (match-beginning 2) (match-end 2))))
-	 (newSpaceKey (progn
-			(re-search-forward "\\(<meta name=\"ajs-space-key\" content=\"\\)\\([^\"]+\\)" nil t)
-			(buffer-substring (match-beginning 2) (match-end 2))))
-	 (atl-token (progn 
-		      (re-search-forward "\\(<meta name=\"ajs-atl-token\" content=\"\\)\\([^\"]+\\)" nil t)
-		      (buffer-substring (match-beginning 2) (match-end 2))))
-	 (originalVersion (progn		     
-			    (re-search-forward "\\(<meta name=\"page-version\" content=\"\\)\\([^\"]+\\)" nil t)
-			    (buffer-substring (match-beginning 2) (match-end 2)))))
+  (let* ((parentPageString
+	  (progn
+	    (re-search-forward "\\(<meta name=\"ajs-parent-page-title\" content=\"\\)\\([^\"]+\\)" nil t)
+	    (buffer-substring (match-beginning 2) (match-end 2))))
+	 (newSpaceKey
+	  (progn
+	    (re-search-forward "\\(<meta name=\"ajs-space-key\" content=\"\\)\\([^\"]+\\)" nil t)
+	    (buffer-substring (match-beginning 2) (match-end 2))))
+	 (atl-token
+	  (progn 
+	    (re-search-forward "\\(<meta name=\"ajs-atl-token\" content=\"\\)\\([^\"]+\\)" nil t)
+	    (buffer-substring (match-beginning 2) (match-end 2))))
+	 (originalVersion
+	  (progn		     
+	    (re-search-forward "\\(<meta name=\"page-version\" content=\"\\)\\([^\"]+\\)" nil t)
+	    (buffer-substring (match-beginning 2) (match-end 2)))))
     (set-buffer work-buffer)
     (dk-sapwiki-export-as-html)
     (dk-url-http-post

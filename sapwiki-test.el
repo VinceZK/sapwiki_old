@@ -114,29 +114,35 @@
    (lambda (status)
      (set-buffer (current-buffer))
      (goto-char 1)
-     (let ((atl-tokenv (progn 
-   			 (re-search-forward "\\(<meta name=\"ajs-atl-token\" content=\"\\)\\([^\"]+\\)" nil t)
-   			 (buffer-substring (match-beginning 2) (match-end 2)))))
-      ;; (message "atl-token = %s" atl-tokenv)))))
-       (dk-url-http-post-multipart dk-sapwiki-upload-url 
-       				   (list (cons "pageId"  "1774869651"))
-       				   (list (cons 'atl_token atl-tokenv)
-					 (cons 'comment_0 "Decison Table (Uploaded by emacs!)")		 
-					 (cons 'comment_1 "Overall Architecture (Uploaded by emacs!)")
-					 (cons 'comment_2 "Text Rule Editor (Uploaded by emacs!)")
-       					 (cons 'confirm "Attach"))
-       				   (list (list 'file_0  "DecisionTable.png" "image/png"
-       				    	       (with-temp-buffer
-       				    		 (insert-file-contents "image/DecisionTable.png")
-       				    		 (buffer-substring-no-properties (point-min) (point-max))))
-					 (list 'file_1  "Overall Architecture Diagram.png" "image/png"
-       					       (with-temp-buffer
-       					 	 (insert-file-contents "image/Overall Architecture Diagram.png")
-       					 	 (buffer-substring-no-properties (point-min) (point-max))))
-					 (list 'file_2  "TextRuleEditor.png" "image/png"
-       					       (with-temp-buffer
-       					 	 (insert-file-contents "image/TextRuleEditor.png")
-       					 	 (buffer-substring-no-properties (point-min) (point-max)))))
-       				   'dk-switch-to-url-buffer)))))
+     (let ((atl-tokenv
+	    (progn 
+	      (re-search-forward "\\(<meta name=\"ajs-atl-token\" content=\"\\)\\([^\"]+\\)" nil t)
+	      (buffer-substring (match-beginning 2) (match-end 2)))))
+       (dk-url-http-post-multipart
+	dk-sapwiki-upload-url 
+	(list (cons "pageId"  "1774869651"))
+	(list (cons 'atl_token atl-tokenv)
+	      (cons 'comment_0 "Decison Table (Uploaded by emacs!)")		 
+	      (cons 'comment_1 "Overall Architecture (Uploaded by emacs!)")
+	      (cons 'comment_2 "Text Rule Editor (Uploaded by emacs!)")
+	      (cons 'confirm "Attach"))
+	(list (list 'file_0  "DecisionTable.png" "image/png"
+		    (with-temp-buffer
+		      (insert-file-contents "image/DecisionTable.png")
+		      (buffer-substring-no-properties (point-min) (point-max))))
+	      (list 'file_1  "Overall Architecture Diagram.png" "image/png"
+		    (with-temp-buffer
+		      (insert-file-contents "image/Overall Architecture Diagram.png")
+		      (buffer-substring-no-properties (point-min) (point-max))))
+	      (list 'file_2  "TextRuleEditor.png" "image/png"
+		    (with-temp-buffer
+		      (insert-file-contents "image/TextRuleEditor.png")
+		      (buffer-substring-no-properties (point-min) (point-max)))))
+	'dk-switch-to-url-buffer)))))
 
+(ert-deftest dk-ediff-test ()
+  (message "ediff returns: %s"
+	   (ediff-buffers
+	    (find-file "test01.org")
+	    (find-file "test02.org"))))
 

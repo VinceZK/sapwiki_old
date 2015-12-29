@@ -254,4 +254,3 @@ Here the sprint teams can list the software design documents (SDD), which will b
 ** Glossary
 
 Add definitions of terms which are relevant for understanding the document to the glossary. As alternative add the terms to the architecture [[https://wiki.wdf.sap.corp/wiki/display/ArGlossary/Contribute+to+SAP%27s+Architecturepedia][architecture glossary in the Wiki]].
-
