@@ -12,6 +12,8 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(custom-enabled-themes (quote (misterioso)))
+ '(ediff-split-window-function (quote split-window-horizontally))
+ '(ediff-window-setup-function (quote ediff-setup-windows-default))
  '(ispell-program-name "/usr/local/Cellar/ispell/3.3.02/bin/ispell")
  '(org-export-show-temporary-export-buffer nil)
  '(org-export-with-sub-superscripts (quote {}))
@@ -25,6 +27,7 @@
      (underline . "<u>%s</u>")
      (verbatim . "<em>%s</em>"))))
  '(org-startup-indented t)
+ '(org-support-shift-select t)
  '(org-use-sub-superscripts (quote {}))
  '(package-enable-at-startup nil)
  '(selection-coding-system (quote utf-8))
@@ -127,6 +130,7 @@ my:el-get-packages
 
 ; winner-mode provides C-<left> to get back to previous window layout
 (winner-mode 1)
+(add-hook 'ediff-after-quit-hook-internal 'winner-undo)
 
 ;; whenever an external process changes a file underneath emacs, and there
 ;; was no unsaved changes in the corresponding buffer, just revert its

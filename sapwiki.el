@@ -1351,7 +1351,7 @@ information."
     (format "<span>%s</span>"
 	    (replace-regexp-in-string "--" "&#x2013;" value))))
 
-;;;###Autoload
+;;;###autoload
 (defun dk-sapwiki-export-as-html
   (&optional async subtreep visible-only body-only exp-plist)
   "Export current buffer to an HTML buffer."
