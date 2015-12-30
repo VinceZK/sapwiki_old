@@ -57,6 +57,14 @@
   :package-version '(sapwiki . "1.0")
   :type 'string)
 
+(defcustom dk-sapwiki-info-url
+  (concat dk-sapwiki-main-url "pages/viewinfo.action")
+  "The url used to fetch content from sapwiki"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
 (defcustom dk-sapwiki-lock-url
   (concat dk-sapwiki-main-url "pages/editpage.action")
   "The url used to lock the wikipage"
@@ -81,7 +89,6 @@
   :package-version '(sapwiki . "1.0")
   :type 'string)
 
-
 (defcustom dk-sapwiki-user
   "i046147" "SAP i<number>"
   :group 'sapwiki
@@ -101,6 +108,8 @@
 (defvar dk-sapwiki-version-comment nil)
 (defvar dk-sapwiki-attachments nil)
 (defvar dk-sapwiki-attachment-comments nil)
+(defvar dk-sapwiki-current-page-version nil)
+(defvar dk-sapwiki-latest-page-version nil)
   
 (defun dk-sapwiki-login ()
   (interactive)
@@ -119,7 +128,10 @@
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
   (dk-url-http-get dk-sapwiki-fetch-url 
 		   (list (cons "pageId" dk-sapwiki-pageID))
-		   'dk-sapwiki-to-org (list (current-buffer))))
+		   'dk-sapwiki-to-org (list (current-buffer)))
+  (dk-sapwiki-get-pageinfo
+   (lambda ()
+     (setq dk-sapwiki-current-page-version dk-sapwiki-latest-page-version))))
 		   ;'dk-switch-to-url-buffer))
 
 (defun dk-sapwiki-push (arg versionComment)
@@ -131,15 +143,36 @@
   
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
-  ;; (dk-url-http-get dk-sapwiki-fetch-url 
-  ;; 		   (list (cons "pageId" dk-sapwiki-pageID))
-  ;; 		   'dk-sapwiki-ediff (list (current-buffer))))
 
-  (message "Lock the wiki for editting.")  
-  (dk-url-http-get dk-sapwiki-lock-url 
-  		   (list (cons "pageId"  dk-sapwiki-pageID))
-  		   'dk-extract-hidden-token (list (current-buffer))))
-		   ;; 'dk-switch-to-url-buffer))
+  (message "Get the lastest version...")
+  (dk-sapwiki-get-pageinfo
+   (lambda (work-buffer)
+     (if (equal dk-sapwiki-current-page-version
+		dk-sapwiki-latest-page-version)
+	 (progn
+	   (message "Lock the wiki for uploading.")  
+	   (dk-url-http-get
+	    dk-sapwiki-lock-url 
+	    (list (cons "pageId"  dk-sapwiki-pageID))
+	    'dk-extract-hidden-token (list work-buffer)))
+       (progn
+	 (message "Fetch the lastest version, and do the comparing...")  
+	 (dk-url-http-get
+	  dk-sapwiki-fetch-url 
+	  (list (cons "pageId" dk-sapwiki-pageID))
+	  'dk-sapwiki-ediff (list work-buffer)))))
+   (list (current-buffer))))
+
+(defun dk-sapwiki-get-pageinfo (callback &optional cbargs)
+  (dk-url-http-get
+   dk-sapwiki-info-url 
+   (list (cons "pageId" dk-sapwiki-pageID))
+   (lambda (status)
+     (set-buffer (current-buffer))
+     (goto-char 1)
+     (re-search-forward "\\(<meta name=\"page-version\" content=\"\\)\\([^\"]+\\)" nil t)
+     (setq dk-sapwiki-latest-page-version (buffer-substring (match-beginning 2) (match-end 2)))
+     (apply callback cbargs))))
 
 (defun dk-url-http-get (url args callback &optional cbargs)
   (let ((url-request-method "GET")
@@ -255,6 +288,10 @@
     The buffer contains the raw HTTP response sent by the server."
   (switch-to-buffer (current-buffer)))
 
+(defun dk-erase-result-org-buffer ()
+  (with-current-buffer result-org-buffer
+    (erase-buffer)))
+
 (defun dk-sapwiki-to-org (status work-buffer)
   (message "Fetch Successfully, and converting to org-mode...")
   (set-buffer (current-buffer))
@@ -270,18 +307,13 @@
     (buffer-string)))
 
 (defun dk-sapwiki-ediff (status work-buffer)
-  (message "Fetch the lastest version, and compare...")
+  (setq dk-sapwiki-current-page-version
+	(+ dk-sapwiki-latest-page-version 1))
   (set-buffer (current-buffer))
   (goto-char 1)
   (dk-iterate-html-tag)
-  (ediff-buffers work-buffer result-org-buffer)
-  (set-buffer result-org-buffer)
-  (erase-buffer)
-  (message "Lock the wiki for editting.")  
-  (dk-url-http-get dk-sapwiki-lock-url 
-		   (list (cons "pageId"  dk-sapwiki-pageID))
-		   'dk-extract-hidden-token (list (current-buffer))))
-
+  (ediff-buffers work-buffer result-org-buffer))
+  
 (defun dk-extract-hidden-token (status work-buffer)
   (message "Push the wiki...")
   (set-buffer (current-buffer))
@@ -332,7 +364,9 @@
      dk-sapwiki-attachment-comments
      dk-sapwiki-attachments
      'dk-sapwiki-process-attchments)
-    
+
+    (setq dk-sapwiki-current-page-version
+	  (+ dk-sapwiki-latest-page-version 1))
     (message "Pushed!")))
 
 (defun dk-sapwiki-process-push (status work-buffer)
@@ -365,6 +399,7 @@
 
 (defvar begin-tag-list ())
 (defvar result-org-buffer (get-buffer-create "result-org-buffer"))
+(add-hook 'ediff-after-quit-hook-internal 'dk-erase-result-org-buffer)
 
 (defun dk-search-html-tag ()
   "Search for html tags <xxx> in current buffer.

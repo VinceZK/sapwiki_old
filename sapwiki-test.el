@@ -146,3 +146,7 @@
 	    (find-file "test01.org")
 	    (find-file "test02.org"))))
 
+(ert-deftest dk-get-pageinfo ()
+  ;;(run-at-time "10 sec" nil 'dk-sapwiki-get-pageinfo)
+  (setq dk-sapwiki-pageID "1815488354")
+  (dk-sapwiki-get-pageinfo))

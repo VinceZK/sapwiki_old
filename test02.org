@@ -3,7 +3,7 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
 ** Abstract
-
+asdfsadfsadfsadf
 Real-time Consolidation(RTC in short) provides corporation the ability of generating consolidated financial statements and reports on-the-fly. RTC is built on Central Finance(CF in short), which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls.
 
 *** Administrative Data
@@ -20,7 +20,7 @@ Real-time Consolidation(RTC in short) provides corporation the ability of genera
 
 ** Background and Context
 
-Provide in this chapter information why this architecture concept was created (for which business needs, for which use cases, for which formal requirements, etc.) and provide some key information about the context of the concept.
+Provide in this chapter information why this architecture concept was created (for which business needs, for which use cases, for which formal requirements, etc.) and provide some key information about the context of the concept.f asdfsadfasdfasd
 
 *** Number of Customers expected with release now in development
 
