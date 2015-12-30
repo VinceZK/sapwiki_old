@@ -126,13 +126,38 @@
     (dk-sapwiki-login))
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
-  (dk-url-http-get dk-sapwiki-fetch-url 
-		   (list (cons "pageId" dk-sapwiki-pageID))
-		   'dk-sapwiki-to-org (list (current-buffer)))
+
+  (message "Get the lastest version...")
+  (dk-url-http-get
+   dk-sapwiki-fetch-url 
+   (list (cons "pageId" dk-sapwiki-pageID))
+   'dk-sapwiki-fetch-internal))
+
+(defun dk-sapwiki-pull ()
+  (interactive)
+  (unless (dk-sapwiki-check-login-successfully)
+    (dk-sapwiki-login))
+  (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
+  (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
+  (setq dk-sapwiki-current-page-version (dk-sapwiki-get-attribute-value "VERSION"))
+  
+  (message "Get the lastest version number...")
   (dk-sapwiki-get-pageinfo
-   (lambda ()
-     (setq dk-sapwiki-current-page-version dk-sapwiki-latest-page-version))))
-		   ;'dk-switch-to-url-buffer))
+   (lambda (work-buffer)
+     (if (equal dk-sapwiki-current-page-version
+		dk-sapwiki-latest-page-version)
+	 (message "Current version is the latest!")
+       (message "Fetch the lastest version content...")  
+       (if (not dk-sapwiki-current-page-version)
+	   (dk-url-http-get
+	    dk-sapwiki-fetch-url 
+	    (list (cons "pageId" dk-sapwiki-pageID))
+	    'dk-sapwiki-pull-internal (list work-buffer))	
+	 (dk-url-http-get
+	  dk-sapwiki-fetch-url 
+	  (list (cons "pageId" dk-sapwiki-pageID))
+	  'dk-sapwiki-ediff (list work-buffer))))
+     (list (current-buffer)))))
 
 (defun dk-sapwiki-push (arg versionComment)
   (interactive "P\nsVersion Comment: ")
@@ -143,6 +168,7 @@
   
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
+  (setq dk-sapwiki-current-page-version (dk-sapwiki-get-attribute-value "VERSION"))
 
   (message "Get the lastest version...")
   (dk-sapwiki-get-pageinfo
@@ -155,13 +181,12 @@
 	    dk-sapwiki-lock-url 
 	    (list (cons "pageId"  dk-sapwiki-pageID))
 	    'dk-extract-hidden-token (list work-buffer)))
-       (progn
-	 (message "Fetch the lastest version, and do the comparing...")  
-	 (dk-url-http-get
-	  dk-sapwiki-fetch-url 
-	  (list (cons "pageId" dk-sapwiki-pageID))
-	  'dk-sapwiki-ediff (list work-buffer)))))
-   (list (current-buffer))))
+       (message "Fetch the lastest version content, and do the comparing...")  
+       (dk-url-http-get
+	dk-sapwiki-fetch-url 
+	(list (cons "pageId" dk-sapwiki-pageID))
+	'dk-sapwiki-ediff (list work-buffer)))))
+  (list (current-buffer)))
 
 (defun dk-sapwiki-get-pageinfo (callback &optional cbargs)
   (dk-url-http-get
@@ -288,18 +313,21 @@
     The buffer contains the raw HTTP response sent by the server."
   (switch-to-buffer (current-buffer)))
 
-(defun dk-erase-result-org-buffer ()
-  (with-current-buffer result-org-buffer
-    (erase-buffer)))
+(defun dk-sapwiki-fetch-internal (status)
+  (message "Fetch Successfully, converting to org-mode...")
+  (set-buffer (current-buffer))
+  (goto-char 1)
+  (dk-iterate-html-tag)
+  (switch-to-buffer result-org-buffer))
 
-(defun dk-sapwiki-to-org (status work-buffer)
-  (message "Fetch Successfully, and converting to org-mode...")
+(defun dk-sapwiki-pull-internal (status work-buffer)
+  (message "Fetch Successfully, converting to org-mode...")
   (set-buffer (current-buffer))
   (goto-char 1)
   (dk-iterate-html-tag)
   (set-buffer result-org-buffer)
   (copy-to-buffer work-buffer 1 (point-max))
-  (erase-buffer)
+  (dk-merged-with-latest-version work-buffer)
   (switch-to-buffer work-buffer))
 
 (defun dk-get-buffer-as-string (buffer)
@@ -307,8 +335,6 @@
     (buffer-string)))
 
 (defun dk-sapwiki-ediff (status work-buffer)
-  (setq dk-sapwiki-current-page-version
-	(+ dk-sapwiki-latest-page-version 1))
   (set-buffer (current-buffer))
   (goto-char 1)
   (dk-iterate-html-tag)
@@ -364,10 +390,43 @@
      dk-sapwiki-attachment-comments
      dk-sapwiki-attachments
      'dk-sapwiki-process-attchments)
-
-    (setq dk-sapwiki-current-page-version
-	  (+ dk-sapwiki-latest-page-version 1))
+    
+    (dk-increase-page-version work-buffer)
     (message "Pushed!")))
+
+(defun dk-increase-page-version (work-buffer)
+  (setq dk-sapwiki-current-page-version
+	(+ dk-sapwiki-current-page-version 1))
+  (setq dk-sapwiki-latest-page-version
+	dk-sapwiki-current-page-version)
+  (dk-update-page-version work-buffer))
+
+(defun dk-merged-with-latest-version (work-buffer)
+  (with-current-buffer result-org-buffer (erase-buffer))
+  (setq dk-sapwiki-current-page-version dk-sapwiki-latest-page-version)
+  (dk-update-page-version work-buffer))
+
+(add-hook 'ediff-after-quit-hook-internal 'dk-merged-with-latest-version)
+
+(defun dk-update-page-version (work-buffer) 
+  (with-current-buffer work-buffer
+    (goto-char 1)
+    (if (re-search-forward "\\(+VERSION: \\)\\([^\n\r]+\\)" nil t)
+	(replace-match dk-sapwiki-current-page-version nil nil nil 2)
+      (goto-char 1)
+      (re-search-forward "+PAGEID: [^\n\r]+")
+      (insert ?\n)
+      (insert "#+VERSION: " dk-sapwiki-current-page-version ?\n))))
+
+(defun dk-update-page-title (work-buffer)
+  (with-current-buffer work-buffer
+    (goto-char 1)
+    (if (re-search-forward "\\(+TITLE: \\)\\([^\n\r]+\\)" nil t)
+	(replace-match dk-sapwiki-title nil nil nil 2)
+      (goto-char 1)
+      (re-search-forward "+VERSION: [^\n\r]+")
+      (insert ?\n)
+      (insert "#+TITLE: " dk-sapwiki-title ?\n))))  
 
 (defun dk-sapwiki-process-push (status work-buffer)
   "The function is called only if post is not successfully"
@@ -399,7 +458,6 @@
 
 (defvar begin-tag-list ())
 (defvar result-org-buffer (get-buffer-create "result-org-buffer"))
-(add-hook 'ediff-after-quit-hook-internal 'dk-erase-result-org-buffer)
 
 (defun dk-search-html-tag ()
   "Search for html tags <xxx> in current buffer.
