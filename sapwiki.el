@@ -110,7 +110,8 @@
 (defvar dk-sapwiki-attachment-comments nil)
 (defvar dk-sapwiki-current-page-version nil)
 (defvar dk-sapwiki-latest-page-version nil)
-  
+(defvar dk-sapwiki-work-buffer nil)
+
 (defun dk-sapwiki-login ()
   (interactive)
   (unless dk-sapwiki-pwd
@@ -185,19 +186,20 @@
        (dk-url-http-get
 	dk-sapwiki-fetch-url 
 	(list (cons "pageId" dk-sapwiki-pageID))
-	'dk-sapwiki-ediff (list work-buffer)))))
-  (list (current-buffer)))
+	'dk-sapwiki-ediff (list work-buffer))))
+   (list (current-buffer))))
 
 (defun dk-sapwiki-get-pageinfo (callback &optional cbargs)
   (dk-url-http-get
    dk-sapwiki-info-url 
    (list (cons "pageId" dk-sapwiki-pageID))
-   (lambda (status)
+   (lambda (status cbargs)
      (set-buffer (current-buffer))
      (goto-char 1)
      (re-search-forward "\\(<meta name=\"page-version\" content=\"\\)\\([^\"]+\\)" nil t)
      (setq dk-sapwiki-latest-page-version (buffer-substring (match-beginning 2) (match-end 2)))
-     (apply callback cbargs))))
+     (apply callback cbargs))
+   (list cbargs)))
 
 (defun dk-url-http-get (url args callback &optional cbargs)
   (let ((url-request-method "GET")
@@ -327,7 +329,7 @@
   (dk-iterate-html-tag)
   (set-buffer result-org-buffer)
   (copy-to-buffer work-buffer 1 (point-max))
-  (dk-merged-with-latest-version work-buffer)
+  (dk-merged-with-latest-version)
   (switch-to-buffer work-buffer))
 
 (defun dk-get-buffer-as-string (buffer)
@@ -338,6 +340,7 @@
   (set-buffer (current-buffer))
   (goto-char 1)
   (dk-iterate-html-tag)
+  (setq dk-sapwiki-work-buffer work-buffer)
   (ediff-buffers work-buffer result-org-buffer))
   
 (defun dk-extract-hidden-token (status work-buffer)
@@ -401,10 +404,10 @@
 	dk-sapwiki-current-page-version)
   (dk-update-page-version work-buffer))
 
-(defun dk-merged-with-latest-version (work-buffer)
+(defun dk-merged-with-latest-version ()
   (with-current-buffer result-org-buffer (erase-buffer))
   (setq dk-sapwiki-current-page-version dk-sapwiki-latest-page-version)
-  (dk-update-page-version work-buffer))
+  (dk-update-page-version dk-sapwiki-work-buffer))
 
 (add-hook 'ediff-after-quit-hook-internal 'dk-merged-with-latest-version)
 
@@ -454,7 +457,7 @@
     "<ac:image>" "<sub>" "<sup>"))
 
 (defconst dk-wiki-html5-close-tags
-  '("<ri:attachment/>" "<br/>" "<hr/>" "<col/>" "<p/>"))
+  '("<ri:attachment/>" "<ri:url/>" "<br/>" "<hr/>" "<col/>" "<p/>"))
 
 (defvar begin-tag-list ())
 (defvar result-org-buffer (get-buffer-create "result-org-buffer"))
@@ -1036,7 +1039,8 @@ contextual information."
   "Wrap CONTENTS string within an appropriate environment for images.INFO is a plist used as a communication channel.  When optional arguments CAPTION and LABEL are given, use them for caption and \"id\" attribute."
   (dk-collect-attachment-comments (format "%s (via emacs)" caption))
   (format "<p>%s</p>\n<p align=\"center\">%s</p>"
-	  contents caption))
+	  (replace-regexp-in-string "-replaceable_caption-" caption contents)
+	  caption))
 
 (defun dk-collect-attachment-comments (caption)
   " (fieldname . \"value\")*"
@@ -1067,7 +1071,14 @@ contextual information."
 	   :src (concat "/wiki/download/attachments/"
 			dk-sapwiki-pageID "/"
 			(file-name-nondirectory source))
-	   :alt (file-name-nondirectory source))
+	   :alt (file-name-nondirectory source)
+	   :data-linked-resource-type "attachment"
+	   :data-linked-resource-default-alias (file-name-nondirectory source)
+	   :data-base-url dk-sapwiki-main-url
+	   :data-linked-resource-content-type (dk-get-mime-type (file-name-nondirectory source))
+	   :data-linked-resource-container-id dk-sapwiki-pageID
+	   :data-linked-resource-container-version dk-sapwiki-current-page-version
+	   :data-element-title "-replaceable_caption-")
      attributes))
    info))
 

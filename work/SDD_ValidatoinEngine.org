@@ -1,4 +1,5 @@
 #+PAGEID: 1815488354
+#+VERSION: 6
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Validation Engine
@@ -52,7 +53,7 @@ Validation Engine (VE in short) is a software component that provides RTC the ab
 *** Context
 VE lays in the core of RTC. It provides data validation, data substitution, and rule services for all the consolidation tasks in RTC. Financial consolidations are rather diverse among corporations. Different company has different rules when doing consolidations. VE allows user to define calculation, data mapping, and posting logics before, during, and after a consolidation campaign.
 
-#+Caption: Validation Engine in RTC
+#+CAPTION: Validation Engine in RTC
 [[../image/ValidationEngineContext.png]]  
 
 **** Data Validation
@@ -155,11 +156,11 @@ The UI is for LOB users to maintain consolidation rules. Rule Expression Languag
 HRF also provides an easy to implement and configurable SAPUI5 control that exposes the framework capabilities to the business users and implementers. The two controls are:
 
 1. Text Rule Editor: Simple, natural, and intuitive business condition language (Rule Expression Language)
-#+Caption: Text Rule Editor
+#+CAPTION: Text Rule Editor
 [[../image/TextRuleEditor.png]]  
 
 2. Decision table supports fork path. 
-#+Caption: Decision Table
+#+CAPTION: Decision Table
 [[../image/DecisionTable.png]]  
 
 The rule maintenance UI should be close to consolidation context, rather than HRF/BRF+ context. There is no reason for a LOB user to learn terms of HRF/BRF+. 
@@ -241,6 +242,9 @@ The need of formula & script still needs further investigation.
 *** Complex Algorithms and Applied Patterns
 *** Design Alternatives and Trade-Offs
 *** Guide to the Implementation
+dsflasdjfkl
+
+
 ** Appendix
 *** Glossary
 | Term | Abbreviation | Definition |

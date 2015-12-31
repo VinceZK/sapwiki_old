@@ -149,4 +149,8 @@
 (ert-deftest dk-get-pageinfo ()
   ;;(run-at-time "10 sec" nil 'dk-sapwiki-get-pageinfo)
   (setq dk-sapwiki-pageID "1815488354")
-  (dk-sapwiki-get-pageinfo))
+  (dk-sapwiki-get-pageinfo
+   (lambda (pageversion)
+     (message "Page version: %s" pageversion)
+     (should (equal pageversion "6")))
+   (list dk-sapwiki-latest-page-version)))
