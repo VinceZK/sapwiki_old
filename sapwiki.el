@@ -112,19 +112,21 @@
 (defvar dk-sapwiki-latest-page-version nil)
 (defvar dk-sapwiki-work-buffer nil)
 
-(defun dk-sapwiki-login ()
+(defun dk-sapwiki-login (&optional callback)
   (interactive)
   (unless dk-sapwiki-pwd
     (setq dk-sapwiki-pwd (read-passwd "Enter your password: ")))
   (dk-url-http-post dk-sapwiki-login-url
 		    (list (cons "os_username" dk-sapwiki-user)
 			  (cons "os_password" dk-sapwiki-pwd))
-		    'dk-sapwiki-process-login))
+		    'dk-sapwiki-process-login
+		    (list callback)))
 
 (defun dk-sapwiki-fetch ()
   (interactive)
   (unless (dk-sapwiki-check-login-successfully)
-    (dk-sapwiki-login))
+    (dk-sapwiki-login)
+    (return nil))
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
 
@@ -193,13 +195,13 @@
   (dk-url-http-get
    dk-sapwiki-info-url 
    (list (cons "pageId" dk-sapwiki-pageID))
-   (lambda (status cbargs)
+   (lambda (status callback cbargs)
      (set-buffer (current-buffer))
      (goto-char 1)
      (re-search-forward "\\(<meta name=\"page-version\" content=\"\\)\\([^\"]+\\)" nil t)
      (setq dk-sapwiki-latest-page-version (buffer-substring (match-beginning 2) (match-end 2)))
      (apply callback cbargs))
-   (list cbargs)))
+   (list callback cbargs)))
 
 (defun dk-url-http-get (url args callback &optional cbargs)
   (let ((url-request-method "GET")
@@ -292,11 +294,6 @@
        (assoc "wiki.wdf.sap.corp" url-cookie-secure-storage)
        (aref (nth 1 (cdr (assoc "wiki.wdf.sap.corp" url-cookie-secure-storage))) 2)))
 
-(defun dk-sapwiki-process-login (status)
-  (if (dk-sapwiki-check-login-successfully)
-      (message "Login successfully")
-    (user-error "Login failed")))
-
 (defun dk-sapwiki-get-attribute-value (attribute-name)
   (with-current-buffer (current-buffer)
     (goto-char 1)
@@ -314,6 +311,14 @@
   "Switch to the buffer returned by `url-retreive'.
     The buffer contains the raw HTTP response sent by the server."
   (switch-to-buffer (current-buffer)))
+
+(defun dk-sapwiki-process-login (status &optional callback)
+  (if (dk-sapwiki-check-login-successfully)
+      (progn
+	(message "Login successfully")
+        (and (functionp callback)
+	     (apply callback)))
+    (user-error "Login failed")))
 
 (defun dk-sapwiki-fetch-internal (status)
   (message "Fetch Successfully, converting to org-mode...")
