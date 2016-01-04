@@ -460,7 +460,8 @@
     "<i>" "<b>" "<code>" "<u>" "<s>" "<strong>" "<table>"
     "<colgroup>" "<col>" "<thead>" "<tr>" "<th>"
     "<tbody>" "<td>" "<ul>" "<li>" "<ol>" "<a>"
-    "<ac:image>" "<sub>" "<sup>"))
+    "<ac:image>" "<sub>" "<sup>" "<ac:structured-macro>"
+    "<ac:parameter>" "<ac:plain-text-body>"))
 
 (defconst dk-wiki-html5-close-tags
   '("<ri:attachment/>" "<ri:url/>" "<br/>" "<hr/>" "<col/>" "<p/>"))
@@ -474,7 +475,7 @@
     <tag> is the html tag found.
     beg-pos is the position before the first '<' in the buffer.
     end-pos is the position after the last '>' in the buffer."
-  (when (re-search-forward "<[^>]+[/]*>" nil t)
+  (when (re-search-forward "<[^>!]+[/]*>" nil t)
     (cons
      (downcase
       (replace-regexp-in-string
@@ -614,10 +615,14 @@
   (insert ?\n))
 
 (defsubst dk-process-p ()
-  (dk-process-in-line-ele)
-  (goto-char (point-max))
-  (insert ?\n)
-  (insert ?\n))
+  (goto-char 1)
+  ;; if inline <img>, there is no need to do any font decoration replacement
+  (if (re-search-forward "<ac:image [^|]+</ac:image>" nil t)
+      (replace-match "" nil nil)
+    (dk-process-in-line-ele)
+    (goto-char (point-max))
+    (insert ?\n)
+    (insert ?\n)))
 
 (defsubst dk-process-table ()
   ;(org-table-align)
@@ -731,18 +736,18 @@
       (insert (number-to-string (/ (string-to-number (match-string 2 tag-string)) 20))))
   (insert "> "))
 
-(defsubst dk-process-riattachment (tag-string)
-  (insert "[[")
-  (string-match "\\( ri:filename=\"\\)\\([^\"]+\\)"
-		tag-string)
-  (insert (concat "../image/" (match-string 2 tag-string))))
-
 (defsubst dk-process-riurl (tag-string)
   (insert "[[")
   (string-match "\\( ri:value=\"\\)\\([^\"]+\\)"
 		tag-string)
   (insert (concat "../image/"
 		  (file-name-nondirectory (match-string 2 tag-string)))))
+
+(defsubst dk-process-riattachment (tag-string)
+  (insert "[[")
+  (string-match "\\( ri:filename=\"\\)\\([^\"]+\\)"
+		tag-string)
+  (insert (concat "../image/" (match-string 2 tag-string))))
 
 (defsubst dk-process-begin-acimage (tag-string)
   (insert "#+CAPTION: ")
@@ -753,6 +758,42 @@
 
 (defsubst dk-process-end-acimage ()  
   (insert "]]")
+  (insert ?\n)
+  (insert ?\n))
+
+(defsubst dk-process-begin-acparameter (tag-string)
+  (string-match "\\( ac:name=\"\\)\\([^\"]+\\)" tag-string)
+  (pcase (match-string 2 tag-string)
+    ("language" (insert "#+BEGIN_SRC "))
+    ("title" (insert "#+CAPTION: "))))
+
+(defsubst dk-process-end-acparameter ()
+  ;; remove newline
+  (goto-char 1)
+  (if (not (re-search-forward "#\\+[a-zA-Z]+" nil t))
+      (erase-buffer)
+    (goto-char 1)
+    (re-search-forward "[\r\n]+" nil t)
+    (replace-match "" nil nil)
+    (insert ?\n)))
+
+(defsubst dk-process-end-acplaintextbody ()
+  (goto-char 1)
+  (re-search-forward "<!\\[CDATA\\[" nil t)
+  (replace-match "")
+  (re-search-forward "\\]\\]>" nil t)
+  (replace-match ""))
+
+(defsubst dk-process-end-acstructured ()
+  (goto-char 1)
+  (re-search-forward "+CAPTION:" nil t)
+  (transpose-lines (- (what-line) 1))
+  (goto-char 1)
+q  (forward-line 1)
+  (re-search-forward "+BEGIN_SRC" nil t)
+  (transpose-lines (- (what-line) 2))
+  (goto-char (point-max))
+  (insert "\n#+END_SRC")
   (insert ?\n)
   (insert ?\n))
 
@@ -772,6 +813,7 @@
     (with-current-buffer (cdr (car begin-tag-list))
       (pcase (car begin-tag)
 	("<a>" (dk-process-begin-a tag-string))
+	("<ac:parameter>" (dk-process-begin-acparameter tag-string))
 	("<ac:image>" (dk-process-begin-acimage tag-string))))))
 
 (defsubst dk-process-html-end-tag (end-tag)
@@ -791,6 +833,7 @@
 		;(equal "</th>" (car end-tag))
 		(equal "</ul>" (car end-tag))	      
 		(equal "</ol>" (car end-tag))
+		(equal "</ac:structured-macro>" (car end-tag))
 		(equal "</ac:image>" (car end-tag)))
       (append-to-buffer (cdr nearest-tag)
 			(cdr (cdr (car nearest-tag)))
@@ -824,6 +867,9 @@
 	("</ol>" (dk-process-ol))
 	("</li>" (dk-process-li))
 	("</a>" (dk-process-end-a))
+	("</ac:parameter>" (dk-process-end-acparameter))
+	("</ac:plain-text-body>" (dk-process-end-acplaintextbody))
+	("</ac:structured-macro>" (dk-process-end-acstructured))
 	("</ac:image>" (dk-process-end-acimage)))
 
       (append-to-buffer (dk-get-parent-buffer)
@@ -912,6 +958,7 @@
 		     (clock . dk-sapwiki-clock)
 		     (timestamp . dk-sapwiki-timestamp)
 		     (planning . dk-sapwiki-planning)
+		     (src-block . dk-sapwiki-src-block)
 		     ))
 
 (defun dk-sapwiki-template (contents info)
@@ -1052,7 +1099,7 @@ contextual information."
 (defun dk-html--wrap-image (contents info &optional caption label)
   "Wrap CONTENTS string within an appropriate environment for images.INFO is a plist used as a communication channel.  When optional arguments CAPTION and LABEL are given, use them for caption and \"id\" attribute."
   (dk-collect-attachment-comments (format "%s (via emacs)" caption))
-  (format "%s\n<p align=\"center\">%s</p>"
+  (format "<p align=\"center\">%s</p>\n<p align=\"center\">%s</p>"
 	  (replace-regexp-in-string "-replaceable_caption-" caption contents)
 	  caption))
 
@@ -1472,6 +1519,28 @@ information."
     (format "<span>%s</span>"
 	    (replace-regexp-in-string "--" "&#x2013;" value))))
 
+(defun dk-sapwiki-src-block (src-block contents info)
+  "Transcode a SRC-BLOCK element from Org to HTML.
+CONTENTS holds the contents of the item.  INFO is a plist holding
+contextual information."
+  (if (org-export-read-attribute :attr_html src-block :textarea)
+      (org-html--textarea-block src-block)
+    (let ((lang (org-element-property :language src-block))
+	  (caption (org-export-get-caption src-block))
+	  (code (org-html-format-code src-block info)))
+      (format
+       "<table class=\"wysiwyg-macro\" data-macro-name=\"code\"
+          data-macro-parameters=\"firstline=1|linenumbers=true%s\"
+          data-macro-schema-version=\"1\" data-macro-body-type=\"PLAIN_TEXT\">
+          <tbody><tr><td class=\"wysiwyg-macro-body\">\n%s\n</td></tr></tbody></table>"
+       (format "%s%s"
+	       (if lang (format "|language=%s" lang) "")		   
+	       (if caption (format "|title=%s" (org-export-data caption info)) ""))
+       (mapconcat (lambda (line)
+		    (unless (string= line "") (format "<pre>%s</pre>" line)))
+		  (split-string code "\n")
+		  "\n")))))
+   
 ;;;###autoload
 (defun dk-sapwiki-export-as-html
   (&optional async subtreep visible-only body-only exp-plist)
