@@ -388,23 +388,24 @@
 	   (cons "newSpaceKey" newSpaceKey))
      'dk-sapwiki-process-push (list work-buffer))
     
-    (add-to-list 'dk-sapwiki-attachment-comments
-		 (cons 'atl_token atl-token))
-    (add-to-list 'dk-sapwiki-attachment-comments
-		 (cons 'confirm "Attach") t)
-    (dk-url-http-post-multipart
-     dk-sapwiki-upload-url
-     (list (cons "pageId"  dk-sapwiki-pageID))
-     dk-sapwiki-attachment-comments
-     dk-sapwiki-attachments
-     'dk-sapwiki-process-attchments)
+    (when dk-sapwiki-attachments
+      (add-to-list 'dk-sapwiki-attachment-comments
+		   (cons 'atl_token atl-token))
+      (add-to-list 'dk-sapwiki-attachment-comments
+		   (cons 'confirm "Attach") t)
+      (dk-url-http-post-multipart
+       dk-sapwiki-upload-url
+       (list (cons "pageId"  dk-sapwiki-pageID))
+       dk-sapwiki-attachment-comments
+       dk-sapwiki-attachments
+       'dk-sapwiki-process-attchments))
     
     (dk-increase-page-version work-buffer)
     (message "Pushed!")))
 
 (defun dk-increase-page-version (work-buffer)
   (setq dk-sapwiki-current-page-version
-	(+ dk-sapwiki-current-page-version 1))
+	(number-to-string (+ (string-to-number dk-sapwiki-current-page-version) 1)))
   (setq dk-sapwiki-latest-page-version
 	dk-sapwiki-current-page-version)
   (dk-update-page-version work-buffer))
@@ -424,7 +425,7 @@
       (goto-char 1)
       (re-search-forward "+PAGEID: [^\n\r]+")
       (insert ?\n)
-      (insert "#+VERSION: " dk-sapwiki-current-page-version ?\n))))
+      (insert "#+VERSION: " dk-sapwiki-current-page-version))))
 
 (defun dk-update-page-title (work-buffer)
   (with-current-buffer work-buffer
@@ -434,7 +435,7 @@
       (goto-char 1)
       (re-search-forward "+VERSION: [^\n\r]+")
       (insert ?\n)
-      (insert "#+TITLE: " dk-sapwiki-title ?\n))))  
+      (insert "#+TITLE: " dk-sapwiki-title))))  
 
 (defun dk-sapwiki-process-push (status work-buffer)
   "The function is called only if post is not successfully"
@@ -736,6 +737,13 @@
 		tag-string)
   (insert (concat "../image/" (match-string 2 tag-string))))
 
+(defsubst dk-process-riurl (tag-string)
+  (insert "[[")
+  (string-match "\\( ri:value=\"\\)\\([^\"]+\\)"
+		tag-string)
+  (insert (concat "../image/"
+		  (file-name-nondirectory (match-string 2 tag-string)))))
+
 (defsubst dk-process-begin-acimage (tag-string)
   (insert "#+CAPTION: ")
   (string-match "\\( ac:title=\"\\)\\([^\"]+\\)"
@@ -833,14 +841,15 @@
 	("<br/>" (dk-process-br))
 	("<hr/>" (dk-process-hr))
 	("<col/>" (dk-process-col tag-string))
-	("<ri:attachment/>"
-	 (dk-process-riattachment tag-string)))
+	("<ri:url/>" (dk-process-riurl tag-string))
+	("<ri:attachment/>" (dk-process-riattachment tag-string)))
       (append-to-buffer (dk-get-parent-buffer)
 			1 (point-max))
       (kill-buffer))))
 
 (defsubst dk-add-org-head-properties ()
   (with-current-buffer result-org-buffer
+    (erase-buffer)
     (when dk-sapwiki-pageID
       (insert "#+PAGEID: " dk-sapwiki-pageID)
       (insert ?\n))
@@ -1043,7 +1052,7 @@ contextual information."
 (defun dk-html--wrap-image (contents info &optional caption label)
   "Wrap CONTENTS string within an appropriate environment for images.INFO is a plist used as a communication channel.  When optional arguments CAPTION and LABEL are given, use them for caption and \"id\" attribute."
   (dk-collect-attachment-comments (format "%s (via emacs)" caption))
-  (format "<p>%s</p>\n<p align=\"center\">%s</p>"
+  (format "%s\n<p align=\"center\">%s</p>"
 	  (replace-regexp-in-string "-replaceable_caption-" caption contents)
 	  caption))
 
@@ -1076,6 +1085,9 @@ contextual information."
 	   :src (concat "/wiki/download/attachments/"
 			dk-sapwiki-pageID "/"
 			(file-name-nondirectory source))
+	   ;; :data-image-src (concat "/wiki/download/attachments/"
+	   ;; 			   dk-sapwiki-pageID "/"
+	   ;; 			   (file-name-nondirectory source))
 	   :alt (file-name-nondirectory source)
 	   :data-linked-resource-type "attachment"
 	   :data-linked-resource-default-alias (file-name-nondirectory source)

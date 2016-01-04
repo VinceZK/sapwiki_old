@@ -154,3 +154,9 @@
      (message "Page version: %s" pageversion)
      (should (equal pageversion "6")))
    (list dk-sapwiki-latest-page-version)))
+
+(ert-deftest dk-increase-page-version ()
+  (with-current-buffer "SDD_ValidationEngine.org"
+    (unless dk-sapwiki-current-page-version
+      (setq dk-sapwiki-current-page-version (dk-sapwiki-get-attribute-value "VERSION")))
+    (dk-increase-page-version (current-buffer)))) 
