@@ -523,6 +523,7 @@
       ("&gt;" (replace-match ">"))
       ("&lt;" (replace-match "<"))
       ("&nbsp;" (replace-match " "))
+      ("&#xa0;" (replace-match " "))
       ("&amp;" (replace-match "&")))))
       
 (defun dk-process-in-line-ele ()
@@ -547,7 +548,7 @@
   ;; remove whitesapces
   (goto-char (point-min))
   (while (re-search-forward "[\t\r\n]+" nil t)
-    (replace-match "" nil nil))
+    (replace-match ""))
   ;; re-add line break for //
   (goto-char (point-min))
   (while (re-search-forward "\\\\\\{2\\}" nil t)
@@ -557,9 +558,12 @@
   (dk-process-in-line-ele)
   (goto-char 1)
   ;; Remove headline numberring, org-mode doesn't need it
-  (when
-      (re-search-forward "\\([0-9]+[.]*\\)+\s" nil t)
+  (when (re-search-forward "\\([0-9]+[.]*\\)+\s" nil t)
     (replace-match "" nil nil))
+  ;; Replace :: to : in case there are tags
+  (goto-char 1)
+  (while (re-search-forward ": :" nil t)
+    (replace-match ":"))
   (goto-char 1)
   (insert stars)
   (goto-char (point-max))
@@ -603,8 +607,15 @@
 (defsubst dk-process-strike-through ()
   (dk-process-emphasis "+"))
 
+(defsubst dk-process-begin-span (tag-string)
+  (when (string-match " class=\"tag\"" tag-string)
+    (insert ":")))
+
 (defsubst dk-process-span ()
-  (insert ?\n))
+  (if (string= (buffer-substring-no-properties 1 2)
+	       ":")
+      (insert ":\n")
+    (insert ?\n)))
 
 (defsubst dk-process-sub ()
   (goto-char 1)
@@ -634,7 +645,6 @@
     (insert ?\n)))
 
 (defsubst dk-process-table ()
-  ;(org-table-align)
   (goto-char (point-max)) 
   (insert ?\n))
 
@@ -669,8 +679,6 @@
   (dk-process-in-line-ele)
   (goto-char 1)
   (insert "| ")
-  ;; (while (re-search-forward "[\n]+" nil t)
-  ;;   (replace-match "" nil nil))
   (goto-char (point-max))
   (insert " "))
 
@@ -817,6 +825,7 @@
     (with-current-buffer (cdr (car begin-tag-list))
       (pcase (car begin-tag)
 	("<a>" (dk-process-begin-a tag-string))
+	("<span>" (dk-process-begin-span tag-string))
 	("<ac:parameter>" (dk-process-begin-acparameter tag-string))
 	("<ac:image>" (dk-process-begin-acimage tag-string))))))
 
@@ -1079,6 +1088,47 @@ of contents as a string, or nil if it is empty."
                   (if (eq (org-element-type first-content) 'section) contents
                     (concat (dk-sapwiki-section first-content "" info) contents))
                   ))))))
+
+(defun dk-sapwiki-format-headline-function
+  (todo todo-type priority text tags info)
+  (let ((todo (dk-sapwiki--todo todo info))
+	(priority (dk-sapwiki--priority priority info))
+	(tags (dk-sapwiki--tags tags info)))
+    (concat todo (and todo " ")
+	    priority (and priority " ")
+	    text
+	    (and tags "&#xa0;&#xa0;&#xa0;") tags)))
+
+(defun dk-sapwiki--todo (todo info)
+  "Format TODO keywords into HTML."
+  (when todo
+    (format "<span class=\"%s %s%s\">%s</span>"
+	    (if (member todo org-done-keywords) "done" "todo")
+	    (plist-get info :html-todo-kwd-class-prefix)
+	    (org-html-fix-class-name todo)
+	    todo)))
+
+;;;; Priority
+
+(defun dk-sapwiki--priority (priority info)
+  "Format a priority into HTML.
+PRIORITY is the character code of the priority or nil.  INFO is
+a plist containing export options."
+  (and priority (format "<span>[%c]</span>" priority)))
+
+;;;; Tags
+
+(defun dk-sapwiki--tags (tags info)
+  "Format TAGS into HTML.
+INFO is a plist containing export options."
+  (when tags
+    (mapconcat
+     (lambda (tag)
+       (format "<span class=\"tag\">%s</span>"
+	       tag))
+     tags "&#xa0;")))
+
+(setq org-html-format-headline-function 'dk-sapwiki-format-headline-function)
 
 (defun dk-sapwiki-section (section contents info)
   ( or contents "" ))

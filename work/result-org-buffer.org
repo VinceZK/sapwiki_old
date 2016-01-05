@@ -1,9 +1,9 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
-** Call people                                                      :Vincent:
-*** Peter develop component one                                     
+** Call people                                                      :Vincent:Luna:
+*** TODO Peter develop component one                                     
 DEADLINE: <2015-11-17 Tue>
-*** Sarah test component one                                        
+*** DONE [#A] Sarah test component one                                        
 
 #+CAPTION: sql example
 #+BEGIN_SRC sql
