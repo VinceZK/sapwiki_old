@@ -1,21 +1,16 @@
-;;; abap-mode.el -- ABAP Major Mode
+;;; sapwiki.el --- Write SAP wiki using orgmode.
 
-;; 2015 - @hugo_dc
-;; http://hugo-dc.com
-;;
+;; Copyright (C) 2015 Vincent Zhang
 
-;; This file is not part of GNU Emacs
+;; Author: Vincent.Zhang <vincent.zhang@sap.com>
 
 ;; define keywords
 
 (setq abap-keywords-mayus '("REPORT" "DATA" "DATA:" "TYPE" "TYPES" "IF" "ELSE" "ENDIF" "LOOP" "TABLES" "AT" "BEGIN" "OF" "END" "ENDLOOP" "DO" "TIMES" "ENDDO" "PERFORM" "FORM" "APPEND" "CLEAR" "TO" "ENDFORM" "CALL" "FUNCTION" "EXPORTING" "EXCEPTIONS" "SELECT" "UP" "FROM" "INTO" "CORRESPONDING" "FIELDS" "TABLE" "GT" "LT" "EQ" "LE" "GE" "INSERT" "INTO" "MODIFY" "CASE" "WHEN" "USING" "LIKE" "CHANGING" "ENDCASE" "TYPE-POOLS" "ROWS" "INITIAL" "SIZE" "WITH" "HEADER" "LINE" "WRITE" "ASSIGNING" "READ" "IMPORT" "EXPORT"  "IMPORTING"))
 
-;;(setq abap-keywords (append 'abap-keywords-mayus (mapcar 'downcase 'abap-keywords-mayus)))
-
 (setq abap-keywords (append abap-keywords-mayus (mapcar 'downcase abap-keywords-mayus)))
 
-
-(setq abap-types    '("C" "I" "F" "STRING" "X" ) )
+(setq abap-types    '("C" "I" "F" "STRING" "X" "XSTRING") )
 (setq abap-constants '("SPACE" "SY" ))
 (setq abap-events    '("START-OF-SELECTION" "AT SELECTION-SCREEN"))
 (setq abap-functions '("STRLEN" "CONCATENATE" "SPLIT"))
@@ -63,7 +58,7 @@
 (setq abap-functions-regexp nil)
 
 ;; add the mode to the list
-(provide 'abap-mode)
+(provide 'abap_mode)
 
 ;; Local Variables:
 ;; coding: utf-8

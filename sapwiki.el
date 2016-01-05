@@ -48,7 +48,6 @@
   :version "1.0"
   :package-version '(sapwiki . "1.0")
   :type 'string)
-
 (defcustom dk-sapwiki-fetch-url
   (concat dk-sapwiki-main-url "plugins/viewstorage/viewpagestorage.action")
   "The url used to fetch content from sapwiki"
@@ -112,7 +111,7 @@
 (defvar dk-sapwiki-latest-page-version nil)
 (defvar dk-sapwiki-work-buffer nil)
 
-(defun dk-sapwiki-login (&optional callback)
+(defun sapwiki-login (&optional callback)
   (interactive)
   (unless dk-sapwiki-pwd
     (setq dk-sapwiki-pwd (read-passwd "Enter your password: ")))
@@ -122,10 +121,10 @@
 		    'dk-sapwiki-process-login
 		    (list callback)))
 
-(defun dk-sapwiki-fetch ()
+(defun sapwiki-fetch ()
   (interactive)
-  (unless (dk-sapwiki-check-login-successfully)
-    (dk-sapwiki-login)
+  (unless (dk-sapwiki-check-logged)
+    (sapwiki-login)
     (return nil))
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
@@ -136,10 +135,10 @@
    (list (cons "pageId" dk-sapwiki-pageID))
    'dk-sapwiki-fetch-internal))
 
-(defun dk-sapwiki-pull ()
+(defun sapwiki-pull ()
   (interactive)
-  (unless (dk-sapwiki-check-login-successfully)
-    (dk-sapwiki-login))
+  (unless (dk-sapwiki-check-logged)
+    (sapwiki-login))
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
   (setq dk-sapwiki-current-page-version (dk-sapwiki-get-attribute-value "VERSION"))
@@ -162,12 +161,12 @@
 	  'dk-sapwiki-ediff (list work-buffer))))
      (list (current-buffer)))))
 
-(defun dk-sapwiki-push (arg versionComment)
+(defun sapwiki-push (arg versionComment)
   (interactive "P\nsVersion Comment: ")
   (setq dk-sapwiki-version-comment versionComment)
 
-  (unless (dk-sapwiki-check-login-successfully)
-    (dk-sapwiki-login))
+  (unless (dk-sapwiki-check-logged)
+    (sapwiki-login))
   
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
   (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
@@ -289,10 +288,17 @@
       (format "%s; charset=%s" content-type charset)
     content-type))
 
-(defun dk-sapwiki-check-login-successfully ( )
+(defun dk-sapwiki-check-logged ()
   (and (boundp 'url-cookie-secure-storage)
        (assoc "wiki.wdf.sap.corp" url-cookie-secure-storage)
        (aref (nth 1 (cdr (assoc "wiki.wdf.sap.corp" url-cookie-secure-storage))) 2)))
+
+(defun dk-sapwiki-check-login-successfully ()
+  (set-buffer (current-buffer))
+  (goto-char 1)
+  (if (re-search-forward "you are currently logged in as I" nil t)
+      t
+    nil))
 
 (defun dk-sapwiki-get-attribute-value (attribute-name)
   (with-current-buffer (current-buffer)
@@ -302,23 +308,6 @@
       (if (re-search-forward search-string nil t)
 	  (buffer-substring (match-beginning 2) (match-end 2))
 	nil))))
- 
-(defun dk-process-tr-kill-url-buffer (status)
-  "Kill the buffer returned by `url-retrieve'."
-  (kill-buffer (current-buffer)))
-
-(defun dk-switch-to-url-buffer (status)
-  "Switch to the buffer returned by `url-retreive'.
-    The buffer contains the raw HTTP response sent by the server."
-  (switch-to-buffer (current-buffer)))
-
-(defun dk-sapwiki-process-login (status &optional callback)
-  (if (dk-sapwiki-check-login-successfully)
-      (progn
-	(message "Login successfully")
-        (and (functionp callback)
-	     (apply callback)))
-    (user-error "Login failed")))
 
 (defun dk-sapwiki-fetch-internal (status)
   (message "Fetch Successfully, converting to org-mode...")
@@ -442,11 +431,28 @@
   (switch-to-buffer (current-buffer))
   (message "Push Failed!"))
 
-(defun dk-sapwiki-process-attchments (status work-buffer)
+(defun dk-sapwiki-process-attchments (status)
   "The function is called only if post is not successfully"
   (switch-to-buffer (current-buffer))
   (message "Upload Attachments Failed!"))
 
+(defun dk-sapwiki-process-login (status &optional callback)
+  (if (dk-sapwiki-check-login-successfully)
+      (progn
+	(message "Login successfully")
+        (and (functionp callback)
+	     (apply callback)))
+    (setq dk-sapwiki-pwd nil)
+    (user-error "Login failed")))
+
+(defun dk-process-tr-kill-url-buffer (status)
+  "Kill the buffer returned by `url-retrieve'."
+  (kill-buffer (current-buffer)))
+
+(defun dk-switch-to-url-buffer (status)
+  "Switch to the buffer returned by `url-retreive'.
+    The buffer contains the raw HTTP response sent by the server."
+  (switch-to-buffer (current-buffer)))
 ;;------------------------------------------------------
 ;;End of 1. Connect to SAP wiki, uploading/downloading
 ;;------------------------------------------------------
@@ -618,7 +624,10 @@
   (goto-char 1)
   ;; if inline <img>, there is no need to do any font decoration replacement
   (if (re-search-forward "<ac:image [^|]+</ac:image>" nil t)
-      (replace-match "" nil nil)
+      (progn
+	(replace-match "" nil nil)
+	(delete-trailing-whitespace)
+	(insert ?\n))
     (dk-process-in-line-ele)
     (goto-char (point-max))
     (insert ?\n)
@@ -771,27 +780,22 @@
   ;; remove newline
   (goto-char 1)
   (if (not (re-search-forward "#\\+[a-zA-Z]+" nil t))
-      (erase-buffer)
-    (goto-char 1)
-    (re-search-forward "[\r\n]+" nil t)
-    (replace-match "" nil nil)
+      (erase-buffer)   
+    (goto-char (point-max))
     (insert ?\n)))
-
+    
 (defsubst dk-process-end-acplaintextbody ()
   (goto-char 1)
   (re-search-forward "<!\\[CDATA\\[" nil t)
   (replace-match "")
   (re-search-forward "\\]\\]>" nil t)
-  (replace-match ""))
+  (replace-match "")
+  (delete-trailing-whitespace))
 
 (defsubst dk-process-end-acstructured ()
   (goto-char 1)
-  (re-search-forward "+CAPTION:" nil t)
-  (transpose-lines (- (what-line) 1))
-  (goto-char 1)
-q  (forward-line 1)
-  (re-search-forward "+BEGIN_SRC" nil t)
-  (transpose-lines (- (what-line) 2))
+  (if (re-search-forward "+CAPTION:" nil t)
+      (transpose-lines 1))
   (goto-char (point-max))
   (insert "\n#+END_SRC")
   (insert ?\n)
@@ -932,8 +936,7 @@ q  (forward-line 1)
 	      ((dk-check-close-html-tag (car this-tag))
 	       (dk-process-html-close-tag this-tag))
 	      (t (user-error "html parse error!"))))))
-  (with-current-buffer result-org-buffer
-    (org-mode)))
+  (with-current-buffer result-org-buffer (org-mode)))
 ;;------------------------------------------------------
 ;;End of 2. Convert the wiki html to orgmode format
 ;;------------------------------------------------------
@@ -1463,7 +1466,8 @@ contextual information."
 			"\n</colgroup>"))))
 		 (org-html-table-first-row-data-cells table info) "\n")))))
        (format "<table%s>\n%s\n%s\n%s</table>"
-	       (if (equal attributes "") "" (concat " " attributes))
+	       ;; (if (equal attributes "") "" (concat " " attributes))
+	       ""
 	       (if (not caption) ""
 		 (format (if (plist-get info :html-table-caption-above)
 			     "<caption class=\"t-above\">%s</caption>"

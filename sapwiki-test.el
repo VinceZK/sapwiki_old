@@ -54,13 +54,13 @@
 		    'dk-switch-to-url-buffer))
   
 (ert-deftest dk-sapwiki-login ()
- (dk-sapwiki-login))
+ (sapwiki-login))
 
 (ert-deftest dk-sapwiki-fetch ()
   (find-file "/work/test01.org")
   (should (equal (dk-sapwiki-get-attribute-value "PAGEID")
 		 "1774869651"))
-  (dk-sapwiki-fetch))
+  (sapwiki-fetch))
 
 (ert-deftest dk-collect-attachments ()
   (should (equal (dk-get-mime-type "DecisionTable.png")
@@ -148,7 +148,8 @@
 
 (ert-deftest dk-get-pageinfo ()
   ;;(run-at-time "10 sec" nil 'dk-sapwiki-get-pageinfo)
-  (setq dk-sapwiki-pageID "1815488354")
+  ;;(setq dk-sapwiki-pageID "1815488354")
+  (setq dk-sapwiki-pageID "1815502412")
   (dk-sapwiki-get-pageinfo
    (lambda (pageversion)
      (message "Page version: %s" pageversion)
