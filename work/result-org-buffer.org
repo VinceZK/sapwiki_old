@@ -1,7 +1,7 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
 ** Call people                                                      :Vincent:Luna:
-*** TODO Peter develop component one                                     
+*** TODO [#B] Peter develop component one                                     
 DEADLINE: <2015-11-17 Tue>
 *** DONE [#A] Sarah test component one                                        
 
@@ -67,3 +67,5 @@ This is a paragraph begin  =verbatim-em= some words in the middle  ~code~ still 
 3. Dimension view of /Account Type/ =>P_ConsAcctType_T
 
 
+
+(buffer-substring-no-properties 1 2)

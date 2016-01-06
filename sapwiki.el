@@ -377,17 +377,17 @@
 	   (cons "newSpaceKey" newSpaceKey))
      'dk-sapwiki-process-push (list work-buffer))
     
-    (when dk-sapwiki-attachments
-      (add-to-list 'dk-sapwiki-attachment-comments
-		   (cons 'atl_token atl-token))
-      (add-to-list 'dk-sapwiki-attachment-comments
-		   (cons 'confirm "Attach") t)
-      (dk-url-http-post-multipart
-       dk-sapwiki-upload-url
-       (list (cons "pageId"  dk-sapwiki-pageID))
-       dk-sapwiki-attachment-comments
-       dk-sapwiki-attachments
-       'dk-sapwiki-process-attchments))
+    (dolist (comments-package dk-sapwiki-attachment-comments)
+	    (add-to-list 'comments-package
+			 (cons 'atl_token atl-token))
+	    (add-to-list 'comments-package
+			 (cons 'confirm "Attach") t)
+	    (dk-url-http-post-multipart
+	     dk-sapwiki-upload-url
+	     (list (cons "pageId"  dk-sapwiki-pageID))
+	     comments-package
+	     (pop dk-sapwiki-attachments)
+	     'dk-sapwiki-process-attchments))
     
     (dk-increase-page-version work-buffer)
     (message "Pushed!")))
@@ -1161,12 +1161,24 @@ contextual information."
   
 
 (defun dk-collect-attachment-comments (caption)
-  " (fieldname . \"value\")*"
-  (add-to-list 'dk-sapwiki-attachment-comments
-	       (cons (dk-get-next-comment-symbol) caption)))
+  "(((fieldname . \"value\") ...)*)"
+  (let ((current-container (car dk-sapwiki-attachment-comments)))
+    (if (and current-container
+	     (< (length current-container) 5))
+	(progn
+	 (add-to-list 'current-container
+		      (cons (dk-get-next-comment-symbol current-container)
+			    caption))
+	 (setcar dk-sapwiki-attachment-comments current-container))
+      (setq current-container ())
+      (add-to-list 'current-container
+		   (cons (dk-get-next-comment-symbol current-container)
+			 caption))
+      (add-to-list 'dk-sapwiki-attachment-comments
+		   current-container nil 'eq))))
 
-(defun dk-get-next-comment-symbol ()
-  (if dk-sapwiki-attachment-comments
+(defun dk-get-next-comment-symbol (current-container)
+  (if current-container
       (make-symbol
        (concat "comment_"
 	       (number-to-string
@@ -1174,7 +1186,7 @@ contextual information."
 		    (nth 1
 			 (split-string
 			  (symbol-name
-			   (car (car dk-sapwiki-attachment-comments)))
+			   (car (car current-container)))
 			  "_")))
 		  1))))
     (make-symbol "comment_0")))
@@ -1204,14 +1216,27 @@ contextual information."
    info))
 
 (defun dk-collect-attachments (source)
-  " (fieldname \"filename\" \"MIME type\" \"file data\")*"
+  " ((fieldname \"filename\" \"MIME type\" \"file data\")...)*"
   (let* ((filename (file-name-nondirectory source))
-	 (mimetype (dk-get-mime-type filename)))
-      (add-to-list 'dk-sapwiki-attachments
+	 (mimetype (dk-get-mime-type filename))
+	 (current-container (car dk-sapwiki-attachments)))
+    (if (and current-container
+	     (< (length current-container) 5))
+	(progn
+	  (add-to-list 'current-container
+		       (list (dk-get-next-fieldname-symbol)
+      			 filename
+			 mimetype
+			 (dk-get-attachment-rawdata source)))
+	  (setcar dk-sapwiki-attachments current-container))
+      (setq current-container ())
+      (add-to-list 'current-container
       		   (list (dk-get-next-fieldname-symbol)
       			 filename
 			 mimetype
-			 (dk-get-attachment-rawdata source)))))
+			 (dk-get-attachment-rawdata source)))
+      (add-to-list 'dk-sapwiki-attachments
+		   current-container nil 'eq))))
 
 (defun dk-get-next-fieldname-symbol ()
   (if dk-sapwiki-attachments
