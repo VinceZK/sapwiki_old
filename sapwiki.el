@@ -1152,9 +1152,13 @@ contextual information."
 (defun dk-html--wrap-image (contents info &optional caption label)
   "Wrap CONTENTS string within an appropriate environment for images.INFO is a plist used as a communication channel.  When optional arguments CAPTION and LABEL are given, use them for caption and \"id\" attribute."
   (dk-collect-attachment-comments (format "%s (via emacs)" caption))
-  (format "<p align=\"center\">%s</p>\n<p align=\"center\">%s</p>"
-	  (replace-regexp-in-string "-replaceable_caption-" caption contents)
-	  caption))
+  (if caption
+      (format "<p align=\"center\">%s</p>\n<p align=\"center\">%s</p>"
+	      (replace-regexp-in-string "-replaceable_caption-" caption contents)
+	      caption)
+    (format "<p align=\"center\">%s</p>"
+	    (replace-regexp-in-string "-replaceable_caption-" caption contents))))
+  
 
 (defun dk-collect-attachment-comments (caption)
   " (fieldname . \"value\")*"

@@ -1,6 +1,7 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+PAGEID: 1774869651
+#+VERSION: 82
 #+TITLE: ACD of Real-time Consolidation
 ** Abstract
 Real-time Consolidation(RTC in short) is SAP's next generation financial consolidation system, which is bulit on S4HANA platform and leverages HANA's in-memory technology. 
@@ -114,13 +115,14 @@ S4HANA Finance, Central Finance 1.0, BPC //To-do: versions should be checked
 - [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
   
 *** Deviations from Product Line Architecture and Product Experience Requirements
-| <8>      | <l30>                          | <l10>      |
-| Rule ID  | Deviation                      | Approval Status |
-|----------+--------------------------------+------------|
-| OC-01    | due to BPC's architecture we have to use calculation View | Approved by Chief Arch Christian |
+| <10>       | <l40>                                    | <l20>                |
+| Rule ID    | Deviation                                | Approval Status      |
+|------------+------------------------------------------+----------------------|
+| OC-AR-2    | No ABAP coding or BW content shall be used for analytic data access or metadata description. BPC embedded version is highly depands on BW,  we have to develop info-objects and info-providers. | Approved by Chief Arch Klensh Christian: HANA Calc view through Virtual Provider is the right track and realistic for the integration with BPC in mid-term (half year).   But in long-term, it is expected to switch to CDS. |
+| OC-APP-3   | It is not allowed to create new HANA repository objects because they do not fulfill the lifecycle requirements of Zero Downtime Management (ZDM). Existing HANA content which shall be used in S/4HANA shall be migrated / converted to ABAP managed artefacts. We must develop HANA calculation views becasue BPC cannot consume CDS views. Virtual inof-provider can mapping to a calculation view, it is a mature technology. | Approved by Chief Arch Klensh Christian: HANA Calc view through Virtual Provider is the right track and realistic for the integration with BPC in mid-term (half year).   But in long-term, it is expected to switch to CDS. |
 
 
-** Boundarby Conditions
+** Boundarby Conditionsu
 Real-time Consolidation(RTC in short) runs mainly based on Central Finance(CF in short), which can synchronize journals from all the subsidiary finance systems in a real-time fashion. CF realizes the so-called "Transactional BW"(through SLT and MDG), which breaks through the world of OLTP and OLAP. Compared to traditional ETL-based BW system, CF can significantly improve the raw data quality and reduce the delay of reporting. 
   
 In other case, corporations may already have their subsidiaries using a centralized finance system (based on S4HANA finance). Thus the data synchronization is not necessary. RTC then can be run directly on S4HANA finance without the CF.
@@ -491,13 +493,13 @@ In case TCO is high, explain a roadmap how simplification in next versions can b
 *** TODO Testing
 Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.
 
-*** TODO Architecture Risks
+*** Architecture Risks
 Explain your view on architecture-related risks and give hints about potential upcoming problems. Risks can arise for example from changes in the scope, from work-arounds necessary, from dependencies on other components, or from immature technologies/concepts. Fill in the table for each risk.
 
 **** Highly depands on BPC
 | <20>                 | <50>                                               |
 | Description          | RTC highly depends on BPC, and needs BPC as the main front-end tool. The situation is that BPC is not within S4HANA, and it in turns highly depends on BW cubes. BW cubes are already prohibited in S4HANA cloud releases. There is also foundmental design difference between RTC and BPC, as RTC is an embedded consolidation solution, while BPC was designed for a standalone solution. Besides, synchronizing the release strategy and timeline is quite a big challenge with 2 different teams under 2 different programs. |
-| Impact(for customer) | Customer who wants S4HANA Cloud version could not fully utilize the RTC, as there is no plan for BPC running on cloud. For the S4HANA On-Premise version, sophisticated methods are introduced to make a standalone consolidation application looks like embedded in S4HANA, which could produce some awkward and uncomfortable feelings. (This is a bit weak as we do have the same situation in planning, and I did not get feedback that the planning solution thus is badly received.) |
+| Impact(for customer) | Customer who wants S4HANA Cloud version could not fully utilize the RTC, as there is no plan for BPC running on cloud. |
 | Impact Rating        | Very High                                          |
 | Risk Probability     | Very High                                          |
 | Mitigation Activity  | Considering even without BPC, RTC can still provide some preparation for consolidation. Differentiate consolidation into Low and High level. The low level could be done by RTC self, which already provide values to customers. The high level could be done by BPC or BCS. And some building blocks should be pluggable and replaceable, thus introduce the flexibility during implementation, which would also do help in mitigating risks. |

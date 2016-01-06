@@ -47,6 +47,7 @@ in addition, consider patents: does your design extend the current state-of-the-
   endloop.
 #+END_SRC
 
+
 ** Design
 *** Key Requirements and Design Goals
 Validation Engine (VE in short) is a software component that provides RTC the ability to validate and/or substitute data through a whole consolidation campaign. VE is both a rule definition tool and a rule running environment. It is decoupled from other RTC's components so that a unified rule language can be used. Thus, not only permits the simplicity of software, but also the possibility for LOB users to define their own consolidation rules.
@@ -241,10 +242,10 @@ The need of formula & script still needs further investigation.
 - [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
 
 **** Approved deviations
-| <8>      | <l30>                          | <l10>      |
-| Rule ID  | Deviation                      | Approval Status |
-|----------+--------------------------------+------------|
-| OC-xXX   |                                |            |
+| <8>      | <l40>                                    | <l20>                |
+| Rule ID  | Deviation                                | Approval Status      |
+|----------+------------------------------------------+----------------------|
+| C-BRMS-2 | HRF must not be used directly but through the BRFplus encapsulation only. In case BRFplus encapsulation is not updated or enough, we may need bypass BRF+ APIs. |                      |
 
 
 ** Design Details Documentation
@@ -268,3 +269,4 @@ dsflasdjfkl
 **** Logging and Tracing
 **** Other Error Analysis Tools
 *** Other
+
