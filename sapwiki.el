@@ -163,7 +163,8 @@
 
 (defun sapwiki-push (arg versionComment)
   (interactive "P\nsVersion Comment: ")
-  (setq dk-sapwiki-version-comment versionComment)
+  (setq dk-sapwiki-version-comment
+	(format "%s(pushed by emacs)" versionComment))
 
   (unless (dk-sapwiki-check-logged)
     (sapwiki-login))
@@ -1224,22 +1225,22 @@ contextual information."
 	     (< (length current-container) 5))
 	(progn
 	  (add-to-list 'current-container
-		       (list (dk-get-next-fieldname-symbol)
+		       (list (dk-get-next-fieldname-symbol current-container)
       			 filename
 			 mimetype
 			 (dk-get-attachment-rawdata source)))
 	  (setcar dk-sapwiki-attachments current-container))
       (setq current-container ())
       (add-to-list 'current-container
-      		   (list (dk-get-next-fieldname-symbol)
+      		   (list (dk-get-next-fieldname-symbol current-container)
       			 filename
 			 mimetype
 			 (dk-get-attachment-rawdata source)))
       (add-to-list 'dk-sapwiki-attachments
 		   current-container nil 'eq))))
 
-(defun dk-get-next-fieldname-symbol ()
-  (if dk-sapwiki-attachments
+(defun dk-get-next-fieldname-symbol (current-container)
+  (if current-container
       (make-symbol
        (concat "file_"
 	       (number-to-string
@@ -1247,7 +1248,7 @@ contextual information."
 		    (nth 1
 			 (split-string
 			  (symbol-name
-			   (car (car dk-sapwiki-attachments)))
+			   (car (car current-container)))
 			  "_")))
 		  1))))
     (make-symbol "file_0")))
@@ -1257,11 +1258,11 @@ contextual information."
   "Currently, only image is allowed! "
   (concat "image/" (file-name-extension filename)))
 
-(defun dk-get-attachment-rawdata (filename)
+(defun dk-get-attachment-rawdata (source)
   "Return the raw data of the attachment
    TODO: try to differenciate the relative path and absolute path"
   (with-temp-buffer
-    (insert-file-contents (concat "../image/" filename))
+    (insert-file-contents source)
     (buffer-substring-no-properties (point-min) (point-max))))    
   
 (defun dk-sapwiki-link (link desc info)

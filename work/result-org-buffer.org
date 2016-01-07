@@ -39,7 +39,7 @@ This Learning Map is for Searching Learning Material , it is designed for you to
 *** Second /level/
 
 this is a simple paragraph\\
-line breakaaa
+line break
 
 This is a paragraph begin  =verbatim-em= some words in the middle  ~code~ still some middle words  /italic/ *bold*  _underlined_  +strike-through+  in span This is a paragraph end
 
