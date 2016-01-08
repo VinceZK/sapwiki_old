@@ -38,7 +38,7 @@ in addition, consider patents: does your design extend the current state-of-the-
 #+CAPTION: how to access acdoca
 #+BEGIN_SRC sql
    select * from acdoca
-   where rlcnt = '500'
+   where rclnt = '500'
 #+END_SRC
 
 #+BEGIN_SRC abap
