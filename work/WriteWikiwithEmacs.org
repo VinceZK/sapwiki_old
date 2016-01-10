@@ -4,7 +4,7 @@
 #+OPTIONS: toc:1
 #+TITLE: Writing Wikipage with Emacs
 ** Introduction
-SAPWIKI is widely used among development teams inside SAP. A lot of Software Design Documents, Architecture Concept Documents, and Development Guidelines are written and published on SAPWIKI. Many teams have already composed very cool wikipages and sites, but writing wikis with Emacs is even cool...
+SAPWIKI is widely used among development teams inside SAP. A lot of Software Design Documents, Architecture Concept Documents, and Development Guidelines are written and published on SAPWIKI. Many teams have already composed very cool wiki pages and sites, but writing wiki with Emacs is even cool...
 
 #+CAPTION: Write in Emacs and publish to SAPWIKI
 [[../image/Emacs2Wiki.png]]  
@@ -93,14 +93,14 @@ You can fold/unfold headlines. Place the cursor on the headlines, and then press
 
 *** Ordered/Unordered List
 Within an entry of the outline tree, hand-formatted lists can provide additional structure. 
-**** Unordered list items start with '-' or  '+'.
+**** Unordered list items start with "-" or  "+".
 
 #+BEGIN_SRC abap
 - book1
 - book2
 #+END_SRC
 
-**** Ordered list items start with a numeral followed by either a period, such as '1. '
+**** Ordered list items start with a numeral followed by either a period, such as "1. "
 
 #+BEGIN_SRC abap
 1. item1
@@ -114,7 +114,7 @@ You can make words *bold*, /italic/, _underlined_, =verbatim= and ~code~, and, i
 #+END_SRC
  
 *** Insert a Table
-Format table in Emacs is easy and fancy in plain ASCII. Any line with '|' as the first non-whitespace character is considered part of a table. '|' is also the column separator.
+Format table in Emacs is easy and fancy in plain ASCII. Any line with "|" as the first non-whitespace character is considered part of a table. "|" is also the column separator.
 
 #+BEGIN_SRC abap
 | Name  | Phone | Age |
@@ -123,7 +123,7 @@ Format table in Emacs is easy and fancy in plain ASCII. Any line with '|' as the
 | Anna  |  4321 |  25 |
 #+END_SRC
 
-A table is re-aligned automatically each time you press <TAB> or <RET> or C-c C-c inside the table. <TAB> also moves to the next field (<RET> to the next row) and creates new table rows at the end of the table or before horizontal lines. The indentation of the table is set by the first line. Any line starting with '|-' is considered as a horizontal separator line and will be expanded on the next re-align to span the whole table width. So, to create the above table, you would only type:
+A table is re-aligned automatically each time you press <TAB> or <RET> or C-c C-c inside the table. <TAB> also moves to the next field (<RET> to the next row) and creates new table rows at the end of the table or before horizontal lines. The indentation of the table is set by the first line. Any line starting with "|-" is considered as a horizontal separator line and will be expanded on the next re-align to span the whole table width. So, to create the above table, you would only type:
 
 #+BEGIN_SRC abap
 |Name|Phone|Age|
@@ -155,7 +155,7 @@ Type *C-c .* will prompt for a date and insert a corresponding timestamp.
 #+END_SRC
 
 *** Insert Code Blocks
-You can insert code snipes and examples using code block like this:
+You can insert code snippets and examples using code block like this:
 
 #+CAPTION: Code block on SQL and ABAP
 [[../image/CodeBlockExample.png]]  
@@ -260,16 +260,16 @@ You can still use C-c and C-v for copy and paste, C-s and C-f for save and searc
 2. *C-c !*: Like C-c ., but insert an inactive timestamp that will not cause an agenda entry.
 3. *C-u C-c .*: Like C-c . and C-c !, but use the alternative format which contains date and time. The default time can be rounded to multiples of 5 minutes.
 4. *S-<left>/S-<right>*: Change date at cursor by one day. These key bindings conflict with shift-selection and related modes.
-5. *S-<up>/S-<down>*: Change the item under the cursor in a timestamp. The cursor can be on a year, month, day, hour or minute. When the timestamp contains a time range like '15:30-16:30', modifying the first time will also shift the second, shifting the time block with constant length. To change the length, modify the second time. Note that if the cursor is in a headline and not at a timestamp, these same keys modify the priority of an item. 
+5. *S-<up>/S-<down>*: Change the item under the cursor in a timestamp. The cursor can be on a year, month, day, hour or minute. When the timestamp contains a time range like "15:30-16:30", modifying the first time will also shift the second, shifting the time block with constant length. To change the length, modify the second time. Note that if the cursor is in a headline and not at a timestamp, these same keys modify the priority of an item. 
 
 *** Link
-1. *C-c C-l*: Insert a link.
-2. *C-c C-o*: Open link at point.
+1. *C-c C-o*: Open link at point.
+2. *C-c C-l*: Insert a link.
 
 *** Column width and alignment
 The width of columns is automatically determined by the table editor. And also the alignment of a column is determined automatically from the fraction of number-like versus non-number fields in the column.
 
-Sometimes a single field or a few fields need to carry more text, leading to inconveniently wide columns. Or maybe you want to make a table with several columns having a fixed width, regardless of content. To set25 the width of a column, one field anywhere in the column may contain just the string '<N>' where 'N' is an integer specifying the width of the column in characters. The next re-align will then set the width of this column to this value.
+Sometimes a single field or a few fields need to carry more text, leading to inconveniently wide columns. Or maybe you want to make a table with several columns having a fixed width, regardless of content. To set25 the width of a column, one field anywhere in the column may contain just the string "<N>" where "N" is an integer specifying the width of the column in characters. The next re-align will then set the width of this column to this value.
 
 #+BEGIN_SRC abap
 |       | <6>    |
@@ -281,13 +281,36 @@ Sometimes a single field or a few fields need to carry more text, leading to inc
 |     4 | four   | 
 #+END_SRC
 
-Fields that are wider become clipped and end in the string '=>'. Note that the full text is still in the buffer but is hidden. To see the full text, hold the mouse over the field, a tool-tip window will show the full content. To edit such a field, use the command C-c ` (that is C-c followed by the grave accent). This will open a new window with the full field. Edit it and finish with C-c C-c.
+Fields that are wider become clipped and end in the string "=>". Note that the full text is still in the buffer but is hidden. To see the full text, hold the mouse over the field, a tool-tip window will show the full content. To edit such a field, use the command C-c ` (that is C-c followed by the grave accent). This will open a new window with the full field. Edit it and finish with C-c C-c.
 
-*** TODO Tricks on Spell Checking
+*** Tricks on Spell Checking
+You need to install ASpell to achieve spell check. Emacs already gets integration with it. The only thing you need to do is to tell where ASpell.exe resides. You set the variable "ispell-program-name" to the path of ASpell.
 
-*** TODO Tricks on Ediff Comparing and Merging
+My suggestion is you do spell check after you finish writing, do not let the error spelling break your thoughts. Type *M-x ispell-buffer* if you want a spell check over your entire article. Or type  *M-x ispell-region* if you only want to check over a region. 
 
+ASpell prompts suggestions listed in the top area. You select words by typing the bullet number before it. If you do not want do the replacement, type <SPC> to skip it, or type <i> to insert it to your local dictionary. 
 
+If you want to achieve the effect like when you writing in MS WORD. Error spelling words will be underscored on the fly, then you add following lines in the ".emacs" file:
+
+#+BEGIN_SRC lisp
+(dolist (hook '(org-mode-hook))
+  (add-hook hook (lambda () (flyspell-mode 1))))
+#+END_SRC
+
+=I personally do like flyspell mode. Because the red wave lines are really rather disruptive.= 
+
+*** Tricks on Ediff Comparing and Merging
+Ediff is a powerful difference comparing and merging tool in GNU. You may need some time to master it.But I already did some configuration and developments so that Ediff can serve well with SAPWiki.
+
+Ediff will be called when run *sapwiki-pull* and *sapwiki-push*. The 2 commands will do version comparing, if the remote version number is larger then the local version number, then Ediff will be called. The window is vertically split with left contains the local content, and the right contains the remote content. There is also a float frame, which can be expanded when you type <?>.  
+
+Differences are marked, you can do merging by typing <a> or <b>. <a> means you accept the local version snippet, while <b> means you accept the remote version one. 
+
+After all the differences are compared and merged, you type <q> followed by <y> to finish. The local version number is then set to the remote version number. You can then do push again.
+
+My only suggestion is when you run Ediff, you should use a big screen monitor, larger then 27'. 
+
+  
 ** Sync with SAPWIKI
 There are 4 commands used to sync with SAPWiki. They are login, push, pull, and fetch (prefixed with sapwiki-). The 4 commands can be called by typing like *M-x sapwiki-login*. If you are familiar with git, then these commands are quite similar. 
 
@@ -322,30 +345,30 @@ Fetch command only fetch the remote content and convert it to org format in a se
 The general limitation comes from the fact:
  =Org format cannot be fully mapped to HTML=
 
-You can use HTML to represent any format or layout you want. The limitation is just your imagination. But regarding with Org-mode, it is designed to focus on writing, and recording your thoughts. It doesn't has such various layout representation. 
+You can use HTML to represent any format or layout you want. The limitation is only your imagination. But regarding with Org-mode, it is designed to focus on writing your thoughts down. It doesn't have such various layout representation. 
 
-Following specific limitation should be aware during your writing.
+Following specific limitations should be aware of during your writing.
 
 *** Table cell can only contain one paragraph
-The ASCII table has limitation on table layout. For example, you can use HTML to format a complex table with one cell contains a list or hierarchy, or event contain another table. 
+The ASCII table has limitation on table layout. For example, you can use HTML to format a complex table with one cell contains a list or hierarchy, or even contains another table. 
 
-ASCII table doesn't has such flexibility, you can only maintain one paragraph in one cell.
+ASCII table doesn't have such flexibility, you can only maintain one paragraph in one cell.
 *** List can not be nested
-A item of a plain list cannot again have child list. This is limitation comes from my code. It is just a little difficult to convert the nested list into SAPWiki HTML format. I hope this can be resolved in future. 
+An item of a plain list cannot again have children lists. This limitation comes from my code. It is just a little difficult to convert the nested list into SAPWiki HTML format. I hope this can be resolved in near future. 
 *** Only 4 headline levels supported
-You can only have 4 level headlines. '*' is corresponding to '<h1>', '**' is corresponding to '<h2>', and so on. The reason why only 4 levels supported is because I think it is enough. Two many levels only increase complexity and confuse. 
+You can only have 4 level headlines. "*" is corresponding to "<h1>", "**" is corresponding to "<h2>", and so on. The reason why only 4 levels supported is because I think it is enough. Two many levels only increase complexity and confusion. 
 *** SAPWiki session time-out cannot be noticed
-After the successful login, you may still need to run "sapwiki-login" again to refresh the login session. There is no automatically mechanism to do the refresh. You need to remember or strange error message will be pop up when you do push, pull, or fetch. 
+After successful login, you may still need to run "sapwiki-login" again to refresh the login session. This will not be got automatically renewed. You need always keep in mind to run "sapwiki-login", or strange error message will be pop up when you do push, pull, or fetch. 
 
 
 ** Contacts
 Developed and maintained by _Vincent Zhang_.
 
-All the codes and logics are in sapwiki.el which mainly contains 3 parts:
+All the codes and logics are in "c:/SAP/sapwiki/sapwiki.el" which mainly contains 3 parts:
 1. Connect with SAPWiki.
 2. Convert SAPWiki HTML to Org format.
 3. Convert Org format to SAPWiki HTML.
 
 sapwiki-test.el contains test scripts. 
 
-Any bugs or issues please send an email to Vincent.zhang@sap.com.
+Any bugs or issues please send emails to [[mailto:Vincent.zhang@sap.com]].
