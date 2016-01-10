@@ -297,10 +297,10 @@ If you want to achieve the effect like when you writing in MS WORD. Error spelli
   (add-hook hook (lambda () (flyspell-mode 1))))
 #+END_SRC
 
-=I personally do like flyspell mode. Because the red wave lines are really rather disruptive.= 
+=I personally DO NOT like flyspell mode. Because the red wave lines are really disruptive.= 
 
 *** Tricks on Ediff Comparing and Merging
-Ediff is a powerful difference comparing and merging tool in GNU. You may need some time to master it.But I already did some configuration and developments so that Ediff can serve well with SAPWiki.
+Ediff is a powerful difference comparing and merging tool in GNU. You may need some time to get familiar with it.But I already did some configuration and developments so that Ediff is tailored to SAPWiki usage.
 
 Ediff will be called when run *sapwiki-pull* and *sapwiki-push*. The 2 commands will do version comparing, if the remote version number is larger then the local version number, then Ediff will be called. The window is vertically split with left contains the local content, and the right contains the remote content. There is also a float frame, which can be expanded when you type <?>.  
 
@@ -308,7 +308,7 @@ Differences are marked, you can do merging by typing <a> or <b>. <a> means you a
 
 After all the differences are compared and merged, you type <q> followed by <y> to finish. The local version number is then set to the remote version number. You can then do push again.
 
-My only suggestion is when you run Ediff, you should use a big screen monitor, larger then 27'. 
+My only suggestion is when you run Ediff, you should use a big desktop monitor, larger then 27'. 
 
   
 ** Sync with SAPWIKI
