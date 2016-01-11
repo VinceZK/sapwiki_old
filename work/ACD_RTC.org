@@ -1,7 +1,7 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+PAGEID: 1774869651
-#+VERSION: 84
+#+VERSION: 85
 #+TITLE: ACD of Real-time Consolidation
 ** Abstract
 Real-time Consolidation(RTC in short) is SAP's next generation financial consolidation system, which is built on S4HANA platform and leverages HANA's in-memory technology. 
@@ -250,7 +250,20 @@ These foundation tables includes: ACDOCA, ACDOCC, and other data sources like AC
 
 The consolidation customization data is used to define a consolidation Hierarchy, Scope, and Group. Consolidation =Hierarchy= is a kind of tree structure which defines the aspect of this consolidation campaign. For example, from the aspect of corporate organization structure, or the geography, or the products. =Scope= is a sub-tree of the total =Hierarchy= which only includes those nodes that are relevant to this consolidation campaign. Irrelevant nodes (like 10% own of the entity) are removed from the =Scope=. =Groups= are again sub-trees of =Scope= which may contain other groups or consolidation units (leaf nodes). =Groups= provides a intermediate consolidation view which is very useful for management analysis.
 
-+Fields in the fact view should be assigned different roles. Roles include: Consolidation unit, partner unit, account, sub assignment, version, and so on. Those field and role mappings are maintained in a customization table, and are part of modeling. Consolidation process will do different calculation logics on different fields based on the roles assigned to them.+  
++Fields in the fact view should be assigned different roles. Roles include: Consolidation unit, partner unit, account, sub assignment, version, and so on. Those field and role mappings are maintained in a customization table, and are part of modeling. Consolidation process will do different calculation logics on different fields based on the roles assigned to them.+ 
+Fields in fact view are implicitly assigned to different roles. Roles include: Key, Consolidation unit, Account, Currency, Sub-assignment, Version, and so on. When defining CDS views, we can add an abbreviation prefix to each field's semantic name. Each field's role is then assigned without having to using an additional mapping table. Following table indicates how we category Fields to their roles:
+| Field Role          | Abbr. Prefix | Semantic Name Example |
+|---------------------+--------------+-----------------------|
+| Key                 | K            | K.FiscalYear          |
+| Account             | A            | A.AccNum              |
+| Transaction         | T            | T.PostingLvl          |
+| Currency            | C            | C.GroupCurr           |
+| Unit                | M            | M.BaseUnit            |
+| Consolidation Unit  | U            | U.RCOMP               |
+| Partner Unit        | P            | P.PartnerComp         |
+| Consolidation Group | G            | G.ConsGroup           |
+| Account Assignment  | H            | H.SubCategory         |
+| Amount              | V            | V.GroupCurrAmount     |
 
 Those consolidation customization data are exposed via CDS views, which then can be associated with the fact view for reporting, or assigned to HRF vocabulary for rules definition. Although the consolidation hierarchy are changed frequently, but the meta of these objects are rather stable. So both the CDS views and HRF vocabulary can be pre-delivered as static artifacts (colored with yellow). 
 

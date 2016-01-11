@@ -1,5 +1,5 @@
 #+PAGEID: 1815502588
-#+VERSION: 9
+#+VERSION: 11
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: Writing Wikipage with Emacs
@@ -290,9 +290,11 @@ My suggestion is you do spell check after you finish writing, do not let the err
 
 ASpell prompts suggestions listed in the top area. You select words by typing the bullet number before it. If you do not want do the replacement, type <SPC> to skip it, or type <i> to insert it to your local dictionary. 
 
+*When you do spell check, remember to fully unfold your articles.*
+
 If you want to achieve the effect like when you writing in MS WORD. Error spelling words will be underscored on the fly, then you add following lines in the ".emacs" file:
 
-#+BEGIN_SRC lisp
+#+BEGIN_SRC abap
 (dolist (hook '(org-mode-hook))
   (add-hook hook (lambda () (flyspell-mode 1))))
 #+END_SRC
@@ -309,6 +311,8 @@ Differences are marked, you can do merging by typing <a> or <b>. <a> means you a
 After all the differences are compared and merged, you type <q> followed by <y> to finish. The local version number is then set to the remote version number. You can then do push again.
 
 My only suggestion is when you run Ediff, you should use a big desktop monitor, larger then 27'. 
+
+*When you do spell check, remember to fully unfold your articles.*
 
   
 ** Sync with SAPWIKI
@@ -343,7 +347,7 @@ Fetch command only fetch the remote content and convert it to org format in a se
 
 ** Limitations
 The general limitation comes from the fact:
- =Org format cannot be fully mapped to HTML=
+=Org format cannot be fully mapped to HTML=
 
 You can use HTML to represent any format or layout you want. The limitation is only your imagination. But regarding with Org-mode, it is designed to focus on writing your thoughts down. It doesn't have such various layout representation. 
 
