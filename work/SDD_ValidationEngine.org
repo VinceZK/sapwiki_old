@@ -1,5 +1,5 @@
 #+PAGEID: 1815488354
-#+VERSION: 23
+#+VERSION: 24
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Validation Engine
@@ -9,7 +9,7 @@
 |-----------------------+-----------------------------------|
 | Author(s)             | Vincent Zhang                     |
 | Architect             | Vincent Zhang                     |
-| Product Owner         | Carol Pan                         |
+| Product Owner         | Shi Ying, Carol Pan                 |
 | Information Developer |                                   |
 | Quality Responsible   | Yao Cen                           |
 | Developers            | Liu Chang, Zhou Kaiyuan, Steve Mo |
@@ -34,18 +34,6 @@
 you must always store architecture and design documents 'ip safe' (currently cpro) so that (if needed) sap can prove that a certain idea or concept was invented or designed at a certain point in time.
 
 in addition, consider patents: does your design extend the current state-of-the-art in any way? if you think so, or even if you think it might, please go to the [[https://wiki.wdf.sap.corp/wiki/display/patents/home][patents@sap]] wiki and follow the process described there. not only is it required of all employees to notify sap if they make an invention, but participation in the sap patent program is rewarded in several ways (including money), so by taking part in the sap patent program, you can help sap protect its innovation and receive recognition along the way.
-
-#+CAPTION: how to access acdoca
-#+BEGIN_SRC sql
-   select * from acdoca
-   where rclnt = '500'
-#+END_SRC
-
-#+BEGIN_SRC abap
-  loop at itab into ls_wa.
-   write :/ ls_wa-field1.
-  endloop.
-#+END_SRC
 
 
 ** Design

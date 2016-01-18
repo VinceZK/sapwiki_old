@@ -297,7 +297,7 @@
 (defun dk-sapwiki-check-login-successfully ()
   (set-buffer (current-buffer))
   (goto-char 1)
-  (if (re-search-forward "you are currently logged in as I" nil t)
+  (if (re-search-forward "you are currently logged in as " nil t)
       t
     nil))
 

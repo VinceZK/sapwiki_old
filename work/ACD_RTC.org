@@ -98,6 +98,17 @@ Sinopec already has a centralized finance system with all its subsidiaries finan
 Siemens has established a so called global template. That means that the group defines the master data centrally, but there is ample possibility for the subsidiaries to extend the master data, for example to create additional accounts in the account hierarchy below a central given account. This is actually a quite frequent approach. Siemens does this with a naming convention: the first 6 digits are reserved for the group, digit 7 and 8 are reserved for the division, the last two digits are reserved for the subsidiary. Exception are all account numbers containing the digit 9, they are reserved for the subsidiary.
 
 *** Main Use Cases / Functional Scope
+
+**** Data Load
+
+**** Data Validation
+
+**** Currency Translation
+
+**** Inter-Unit Elimination
+
+**** Inter-Company Reconciliation
+
 **** Year-End close (pre)consolidation
 Traditional consolidation takes days. It needs to extract data from group's sub financial systems, which needs the sub systems finish the closing first. Then transform the data, and load it to the consolidation system. The overall closing and ETL process are very time-consuming. No bother to mention if corrections are needed, the entire process could be re-processed. Corporation stakeholders suffers waiting too long a period for consolidated statements. While Real-time Consolidation can perfectly solve the problem. RTC is based on Central Finance which acts as a central repository for all the financial data, it synchronizes journals from sub systems in a real-time fashion. RTC does consolidations directly based on the central journal repository. There is no additional data replicas needed, Consolidation experts can do pre-consolidations at anytime, without notifying sub financial system to close first.Thus he/she can find problems before year-end closing consolidation actually happens. This permits corrections can be made in sub systems before-hand. Besides, consolidation rules can even be applied in the document posting processes, which guarantee efficient and effective financial controls.
 
@@ -170,10 +181,6 @@ General Principles for Reuse
 - Does the used service or functionality force the customer to install an additional system?
 - Does the usage of a service or functionality force the customer to implement and customize a new application or technology hub?
 - Does the new framework or functionality which is planned exist in a similar version in other areas (Examples are rules engines, business object frameworks, master data, ...)?
-
-Recommendations
-
-If you want to develop a new framework or functionality which could be of interest for other groups too, please check whether synergies would be possible.
 
 The following reuse components must/should/must not be used within this development:
 
@@ -273,7 +280,6 @@ Unlike consolidation customization view and master data view, the meta of fact v
 [[../image/DataModeling.png]]
 
 This building block is dotted because it can be replaced by BPC's modeling tool. In case BPC is not possible due to release strategy or other reasons, RTC should provide a flexible modeling tool. In both cases, RTC should provide a set of modeling APIs that can generate CDS views, and allow other consolidation tools to integrate with. 
-
 
 **** Data Exposure via BW/CDS
 Multi-dimension views can be created either using BW info-providers or using CDS analytic views. They are both underlying modeling technologies that Data modeling tool depends on. The BW info-provider is only used to integrate with BPC and BCS. As both of them are build on BW components. 
