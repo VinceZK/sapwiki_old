@@ -241,14 +241,14 @@ Local financial systems synchronize their line items into CF's central journal r
 
 Data mapping happens when the newly created items are entering into CF through a master data mapping application called MDG(Master Data Governance). Mater data is mapped from local to group, these could includes: Accounts, Chart of Accounts, company code, cost center, and so on. 
 
-There is also an error handling component(AIF) which centrally process all the processing logs. If error happens, the context is saved for future re-process. 
+There is also an error handling component(AIF) which centrally process all the processing logs. If error happens, the context is saved for future re-processing. 
 
-This building block is developed and maintained by CF's Waldorf team. RTC is highly depends on this component which permits data quality and timeliness. Meanwhile, RTC provides validation and currency translation services to CF. Additional consolidation rules and currency translations are applied before line items posted to ACDOCA.   
+This building block is developed and maintained by CF's Waldorf team. RTC is highly depends on this component which permits data quality and timeliness. Meanwhile, RTC provides validation and currency translation services to CF. Additional consolidation rules and currency translations are applied before line items saved to ACDOCA.   
 
 **** Manual Adjustment Posting
 Adjustments can be made by posting additional financial documents. These adjustment documents can be either posted in original local financial systems and then synchronized to CF, or posted directly in CF. In both cases, the consolidation validation rules and currency translation should be applied. The latter case should also reuse the existing document posting UI.
 
-If ACDOCC is used, user can also has the option to post documents to ACDOCC. Then a more light document posting UI would be provided by RTC, and less posting validation would be applied.  
+If ACDOCC is used, user can also have the option to post documents to ACDOCC. Then a lighter document posting UI would be introduced by RTC, and less posting validation would be applied.  
 
 **** Data Modeling
 Data modeling is to create multi-dimension views and HRF vocabulary based on foundation tables. 
