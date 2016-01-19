@@ -24,7 +24,7 @@
 (defcustom dk-sapjira-main-url
   "https://sapjira.wdf.sap.corp/"
   "The main URL of SAPWIKI"
-  :group 'sapjira 
+  :group 'sapjira
   :version "1.0"
   :package-version '(sapjira . "1.0")
   :type 'string)
@@ -89,7 +89,7 @@
 			  (cons "os_password" dk-sapwiki-pwd)
 			  (cons "login" "Log In"))
 		    'dk-sapjira-process-login))
-		    ;; 'dk-switch-to-url-buffer)) 
+		    ;; 'dk-switch-to-url-buffer))
 		   ;; (list callback)))
 
 (defun dk-sapjira-process-login (status &optional callback)
@@ -141,6 +141,8 @@
 	 (cons "id" dk-sapjira-issue-id)
 	 (cons "timeLogged" "2h")
 	 (cons "startDate" "15/Jan/16 4:38 PM")
+	 ;; (cons "startDate"
+	 ;;       (format-time-string "%d/%b/%y %I:%M %p"))
 	 (cons "adjustEstimate" "auto")
 	 (cons "comment" "via emacs")
 	 (cons "atl_token" dk-sapjira-atl-token))
