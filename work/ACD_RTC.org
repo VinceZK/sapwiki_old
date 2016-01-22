@@ -251,17 +251,24 @@ Adjustments can be made by posting additional financial documents. These adjustm
 If ACDOCC is used, user has the third option to post documents to ACDOCC only for consolidation purpose. +Then a lighter document posting UI would be introduced by RTC, and less posting validation would be applied.+ This will be detial covered in the =Posting= block.  
 
 **** Flexible Upload
+Flexible upload allows user to upload reported financial data, additional financial data, and master data from a file into CF. It should be part of RTC's  =Data Collection=, but as CF also has the similar functionalities, re-usability should be considered. 
 
+But there could be still difference between each other. I suppose CF is using flexible upload mianly for the group reporting, and the data is loaded to ACDOCA. Strict posting validation could be applied in this case; While for RTC, the financial data is uploaded only for the purpose of consolidation, and the data is saved in ACDOCC. Only light validation logic should be applied. 
+
+Whether flexible upload is combined or how to combine still needs further investigation.   
 
 **** Data Modeling
-Data modeling is to create multi-dimension views and HRF vocabulary based on foundation tables. 
+Data modeling is to define fields and rules for a consolidation compaign. From technique point of view, data modeling is to create multi-dimension views and consolidation rules based on foundation tables. These activities could be simplified by consolidation modeling tools. 
 
-These foundation tables includes: ACDOCA, ACDOCC, and other data sources like ACDOCP (or customer specific data extensions). They are used to generate a fact view. Master data views which are generate upon existing master data tables will then be associated to the fact view to form a multi-dimension view. The multi-dimension view can then be used for reporting and analytics. Master data could be freely extended, both horizontally and vertically, according to various consolidation requirements.
+These foundation tables includes: ACDOCA, ACDOCC, and other data sources like ACDOCP (or customer specific data extensions). They are used to generate a fact view.
 
-The consolidation customization data is used to define a consolidation Hierarchy, Scope, and Group. Consolidation =Hierarchy= is a kind of tree structure which defines the aspect of this consolidation campaign. For example, from the aspect of corporate organization structure, or the geography, or the products. =Scope= is a sub-tree of the total =Hierarchy= which only includes those nodes that are relevant to this consolidation campaign. Irrelevant nodes (like 10% own of the entity) are removed from the =Scope=. =Groups= are again sub-trees of =Scope= which may contain other groups or consolidation units (leaf nodes). =Groups= provides a intermediate consolidation view which is very useful for management analysis.
+Master data views(includes Hierarchies) which are generated upon existing master data tables will then be associated to the fact view to form a multi-dimension view. The multi-dimension view can then be used for reporting and analytics. Master data could be freely extended, both horizontally and vertically, according to various consolidation requirements.
 
-+Fields in the fact view should be assigned different roles. Roles include: Consolidation unit, partner unit, account, sub assignment, version, and so on. Those field and role mappings are maintained in a customization table, and are part of modeling. Consolidation process will do different calculation logics on different fields based on the roles assigned to them.+ 
-Fields in fact view are implicitly assigned to different roles. Roles include: Key, Consolidation unit, Account, Currency, Sub-assignment, Version, and so on. When defining CDS views, we can add an abbreviation prefix to each field's semantic name. Each field's role is then assigned without having to using an additional mapping table. Following table indicates how we category Fields to their roles:
+The consolidation customization data is used to define consolidation Units, Groups, and Scope. A =Unit= can be only assigned to one =Group=; =Group= can also contains sub-groups, thus to from a consolidation hierarchy. Nodes in the hierachy could be time-dependent or version-dependent. Details can be found in building block "Consolidation Unit/Group/Scope" 
+
+Consolidation =Unit= is a kind of tree structure which defines the aspect of this consolidation campaign. For example, from the aspect of corporate organization structure, or the geography, or the products. =Scope= is a sub-tree of the total =Hierarchy= which only includes those nodes that are relevant to this consolidation campaign. Irrelevant nodes (like 10% own of the entity) are removed from the =Scope=. =Groups= are again sub-trees of =Scope= which may contain other groups or consolidation units (leaf nodes). =Groups= provides a intermediate consolidation view which is very useful for management analysis.
+
+Fields in fact view are implicitly assigned to different roles. Roles include: Key, Consolidation dimension(unit), Account, Currency, Sub-assignment, Version, and so on. When defining CDS views, we can add an abbreviation prefix to each field's semantic name. Each field's role is then assigned without having to using an additional mapping table. Following table indicates how we category Fields to their roles:
 | Field Role          | Abbr. Prefix | Semantic Name Example |
 |---------------------+--------------+-----------------------|
 | Key                 | K            | K.FiscalYear          |
@@ -282,12 +289,14 @@ Unlike consolidation customization view and master data view, the meta of fact v
 #+CAPTION: Data Modeling Diagram
 [[../image/DataModeling.png]]
 
-This building block is dotted because it can be replaced by BPC's modeling tool. In case BPC is not possible due to release strategy or other reasons, RTC should provide a flexible modeling tool. In both cases, RTC should provide a set of modeling APIs that can generate CDS views, and allow other consolidation tools to integrate with. 
+This building block is dotted because it can be replaced by BPC's modeling tool. In case BPC is not possible due to release strategy or other reasons, RTC should provide a flexible modeling tool. In both cases, RTC should provide a set of modeling APIs that can generate CDS views, assign CDS views to HRF vocabulary, and allow other consolidation tools to integrate with. 
 
 **** Data Exposure via BW/CDS
 Multi-dimension views can be created either using BW info-providers or using CDS analytic views. They are both underlying modeling technologies that Data modeling tool depends on. The BW info-provider is only used to integrate with BPC and BCS. As both of them are build on BW components. 
 
 CDS analytic views are preferred as it is SAP's future modeling scripts, and the only modeling technology allowed by S4HANA guideline. The expectation is that BW can support CDS well, so that there is no need to support 2 different modeling technologies. 
+
+HRF vocabulary is also a data exposure technology. But it is for rule defination and exectuion. 
 
 **** Data Collection
 Data is collected from all the subsidiaries, or the de-centralized systems through various ways. In the best situation, CF already helps to collect all the data correctly and timely. Then this building block only provides validation reports to make sure the local financial data is correct and ready for the consolidation. 
@@ -318,12 +327,11 @@ How consolidation processes depends on the rules defined in the rule engine. Cus
 
 There could be difference generated during consolidation. For example, when local currency amount is translated to group currency amount, due to the fluctuation of currency rate, the translated group amount could be unbalanced. Thus, adjustment documents would be posted automatically, and the difference amount will be recorded to an account that specified in the rule engine. 
 
-The process runs hours in traditional Consolidation applications. But within Real-time Consolidation, it should be done in minutes(without scheduling any batch jobs). Sometimes, it could be run on-the-fly without doing any document posting. For example, when the operator wants to see updated results after small adjustments or new journals come in.   
+The process runs in hours in traditional Consolidation applications. But within Real-time Consolidation, it should be done in minutes(without scheduling any batch jobs). Sometimes, it could be run on-the-fly without doing any document posting. For example, when the operator wants to see updated results after small adjustments or new journals come in.   
 
 This building block could include APIs and UIs that are used to initiate, monitor, and get results from the consolidation process.  
  
-**** TODO Consolidation Group/Scope Definition
-Under research
+**** Consolidation Scope/Group Definition
 
 **** Reporting
 Reports or queries are based on multi-dimension views that exposed either by BW or CDS. Tools like BEx Query Designer and Design Studio could be used to create queries based on multi-dimension views. Those queries can be then consumed by AO and Fiori.
@@ -392,7 +400,7 @@ Saving such kind of aggregated data to ACDOCA is not that easy, and a separate a
 *Additional data* | 
 Not all data is in ACDOCA, and not all data in the full detail needed by consolidation. For example we do not have the investment information in ACDOCA. Or Financial Services store the details about the customer accounts in their own table, and only have an aggregated view in ACODCA. Another example is sub-ledgers which are not (yet) integrated into ACDOCA.
 
-How to save this additional data? Extending fields on ACDOCA and ACDOCC, or join additional tables? Either need model to be adjusted on DB level. Ensuring the flexibility and performance at same time on the enrichment of data foundation is a big challenge(see next chapter).
+How to save this additional data? Extending fields on ACDOCA and ACDOCC, or join additional tables? Either need model to be adjusted on DB level. Ensuring the flexibility and performance at same time on the enrichment of data foundation is a big challenge(see next chapter "Data foundation enrichment").
   
 *** Main Architecture Challenges and Decisions
 **** TODO Have to use calculation views and BW content 
@@ -487,8 +495,8 @@ A direct load into BCS instead of the intermediate step with the operational ODS
 **** TODO Rule framework
 Describe why HRF/BRF+ is chosen as the reuse rule framework. 
 
-**** TODO CDS and AMDP as the main push-down-to-HANA methods
-**** TODO Fiori as the main UI tech
+**** TODO CDS, AMDP and HRF as the main push-down-to-HANA methods
+**** TODO Fiori as the main UI technology
 *** TODO Integration with other Systems
 **** Integration with BPC
 **** Integration with CF
