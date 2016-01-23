@@ -89,8 +89,6 @@
 			  (cons "os_password" dk-sapwiki-pwd)
 			  (cons "login" "Log In"))
 		    'dk-sapjira-process-login))
-		    ;; 'dk-switch-to-url-buffer))
-		   ;; (list callback)))
 
 (defun dk-sapjira-process-login (status &optional callback)
   (if (dk-sapjira-check-login-successfully)
@@ -199,7 +197,8 @@
 
 (defun dk-sapjira-http-post (url args callback &optional cbargs)
   "Send ARGS to URL as a POST request."
-  (let ((url-request-method "POST")
+  (let ((dk-sapwiki-block-auth t)
+	(url-request-method "POST")
 	(url-request-extra-headers
 	 '(("Content-Type" . "application/x-www-form-urlencoded")
 	   ("X-Atlassian-Token" . "nocheck")
@@ -227,7 +226,8 @@
     'dk-sapjira-process-issue-detail))
 
 (defun dk-sapjira-http-get (url args callback &optional cbargs)
-  (let ((url-request-method "GET")
+  (let ((dk-sapwiki-block-auth t)
+	(url-request-method "GET")
 	(url-request-extra-headers
 	 '(("X-Requested-With" . "XMLHttpRequest")
 	   ("X-SITEMESH-OFF" . "off")))

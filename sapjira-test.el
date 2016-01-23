@@ -11,7 +11,5 @@
   (sapjira-fetch "68070"))
 
 (ert-deftest dk-sapjira-get-issue-detail ()
-  (require 'url)
-  (let* ((my-credetial '(("sapjira.wdf.sap.corp:443" ("i046147" . "Zkle@2016"))))
-	 (url-basic-auth-storage 'my-credetial))
-    (dk-sapjira-get-issue-detail "118")))
+  (setq dk-sapjira-block-auth t)
+  (dk-sapjira-get-issue-detail "118"))

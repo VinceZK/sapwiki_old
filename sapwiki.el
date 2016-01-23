@@ -110,6 +110,8 @@
 (defvar dk-sapwiki-current-page-version nil)
 (defvar dk-sapwiki-latest-page-version nil)
 (defvar dk-sapwiki-work-buffer nil)
+(defvar dk-sapwiki-block-auth nil
+  "Flag whether to block url.el's usual interactive authorisation procedure")
 
 (defun sapwiki-login (&optional callback)
   (interactive)
@@ -204,7 +206,8 @@
    (list callback cbargs)))
 
 (defun dk-url-http-get (url args callback &optional cbargs)
-  (let ((url-request-method "GET")
+  (let ((dk-sapwiki-block-auth t)
+	(url-request-method "GET")
 	(query-string
 	 (mapconcat (lambda (arg)
 		      (concat (url-hexify-string (car arg))
@@ -217,7 +220,8 @@
 
 (defun dk-url-http-post (url args callback &optional cbargs)
       "Send ARGS to URL as a POST request."
-      (let ((url-request-method "POST")
+      (let ((dk-sapwiki-block-auth t)
+	    (url-request-method "POST")
             (url-request-extra-headers
              '(("Content-Type" . "application/x-www-form-urlencoded")))
             (url-request-data
@@ -233,7 +237,8 @@
       "Send FIELDS and FILES to URL as a multipart HTTP POST.
        fields is an alist, eg ((field-name . \"value\")); 
        files  is an a list of \(fieldname \"filename\" \"file MIME type\" \"file data\")*"
-      (let ((url-request-method "POST")
+      (let ((dk-sapwiki-block-auth t)
+	    (url-request-method "POST")
 	    (query-string
 	     (mapconcat (lambda (arg)
 			  (concat (url-hexify-string (car arg))
@@ -454,6 +459,14 @@
   "Switch to the buffer returned by `url-retreive'.
     The buffer contains the raw HTTP response sent by the server."
   (switch-to-buffer (current-buffer)))
+
+(defun dk-sapwiki-handle-authentication (orig-fun &rest args)
+  (if dk-sapwiki-block-auth
+      (message "User is not logged in, or session is timeout!")
+    (apply orig-fun args)))
+
+(advice-add 'url-http-handle-authentication
+	    :around #'dk-sapwiki-handle-authentication)
 ;;------------------------------------------------------
 ;;End of 1. Connect to SAP wiki, uploading/downloading
 ;;------------------------------------------------------
