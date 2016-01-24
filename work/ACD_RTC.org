@@ -662,12 +662,33 @@ Describe how the planned software is operated and estimate the impact on TCO. Th
 
 In case TCO is high, explain a roadmap how simplification in next versions can be done (for example from complexity hiding to complexity reduction).
 
-*** TODO Testing
+*** Testing
 ~Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.~
 
 **** Integration Test with BPC
+We already did PoC that technically proves BPC can directly consume data in ACDOCA through BW virtual info-provider. If we want to do futher testings, we need establish a complete testing environment. The enviroment should synchronize with BPC code pool in a high frequency and have a complete set of data for testing.  
+
+The current situation is RTC and BPC are in 2 different code lines. BPC is developed in KIW, and RTC is in ER9. BPC code is synchronized to ER9 in a 2-weeks frequency, which is far beyond our testing requirements. We cannot test in KIW, as KIW is not a S/4 HANA system, and transport our codes from ER9 to KIW is impossible.  
+
+If RTC and BPC own a dedicate testing environment(I give it a name TST), that is to buy and install a new S/4 enviroment. Then how code from both ER9 and KIW is synchronized to TST, and then merged into the main line still needs lots of configuration and operational effort. 
+
+There is a solution that I think is most feasible. The solution is to request BPC developers to do double maintenance in KIW and ER9. Suppose the BPC main code is already sychornized to ER9, if bug or issues are tested out, then BPC developer do fix directly in ER9, and record the changes in a special change request, which will be excluded in the final release. Meanwhile, these fixes will be re-typed in KIW. Then next time, along with the new features, these fixes will be transported to ER9 and overwrite the existing ones. 
 
 **** Performance Test
+Performance tests should be done before the initial release. We want get a general idea of how much fast RTC can achieve, and whether we can improve. The main output could be a matrix like bellow:
+
+| Senarios/Num-of-Items  | 100,000 | 1,000,000 | 10,000,000 | 100,000,000 | 1,000,000,000 |
+|------------------------+---------+-----------+------------+-------------+---------------|
+| Data Validation        | 100ms   | 500ms     |            |             |               |
+| Currency Translation   |         |           |            |             |               |
+| Inter-unit Elimination |         |           |            |             |               |
+| Reporting on-the-fly   |         |           |            |             |               |
+
+The first column contains senarios we think is perfromance relevant during consolidation; The first row is the data volumn that represented by number of items of ACDOCA. Started from 100,000 lines, and ended with 1 billion lines(we can increase the end value if in real cases, there will be more line items in ACDOCA). The cells are filled with time spent in excuting a senario. Time should be differenciated by DB time, ABAP time, UI time, and the overall response time that end-user can feel. 
+
+Besides, the corresponding memory and cpu consumption should be recorded in other tables. 
+
+The performance result help us to understand the bottleneck, and know how to improve. Meanwhile, according to this discrete data, we could reduction a performance formular which can be used to estimate the reponse time and do hardware sizing in a given data volumn. 
 
 *** Architecture Risks
 ~Explain your view on architecture-related risks and give hints about potential upcoming problems. Risks can arise for example from changes in the scope, from work-around necessary, from dependencies on other components, or from immature technologies/concepts. Fill in the table for each risk.~
