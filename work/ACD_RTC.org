@@ -1,7 +1,7 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+PAGEID: 1774869651
-#+VERSION: 85
+#+VERSION: 86
 #+TITLE: ACD of Real-time Consolidation
 ** Abstract
 Real-time Consolidation(RTC in short) is SAP's next generation financial consolidation system, which is built on S4HANA platform and leverages HANA's in-memory technology. 
@@ -25,15 +25,15 @@ The high level consolidation building blocks (backlogs) includes:
 - Collaborations.
   
 *** Administrative Data
-| Attribute        | Value                     |
-|------------------+---------------------------|
-| ACD              | Real-time Consolidation   |
-| Related Use Case | link to Jira              |
-| Responsible      | Vincent Zhang             |
-| Target Readiness | Incubation                |
-| Status           | in progress               |
-| Version          | 0.7(Draft Version)        |
-| Version History  | link to wiki History page |
+| Attribute        | Value                   |
+|------------------+-------------------------|
+| ACD              | Real-time Consolidation |
+| Related Use Case | [[https://sapjira.wdf.sap.corp/secure/IssueHierarchyOverview!default.jspa?projectKey=REALTIMECONSOLIDATION&displayMode=hierarchy][Link to Jira]]            |
+| Responsible      | Vincent Zhang           |
+| Target Readiness | Incubation              |
+| Status           | in progress             |
+| Version          | 0.7(Draft Version)      |
+| Version History  | [[https://wiki.wdf.sap.corp/wiki/pages/viewpreviousversions.action?pageId=1774869651][Wikipage History]]        |
 
 
 ** Background and Context
@@ -358,6 +358,7 @@ Elimination usually exists between a pair of consolidation units, such as:
 
 Prior to running inter-unit eliminations, you can use reconciliations to determine any elimination differences without having the system post elimination entries. By doing this, you can correct posting errors in the reported financial data, or manually post standardizing entries. So posting functions will be called either automatically or manually during inter-unit elimination. 
 
+**** TODO Posting
 **** Validation Engine
 Validation Engine is the core of financial consolidation. It is used for storing and running consolidation rules, and rules could be applied in all other building blocks. Easy customization and high performance of applying rules are the key targets that this building block should achieve.  
 
@@ -400,7 +401,7 @@ API should also be provided to allow external rate repository to be imported int
 **** Consolidation Monitor 
 Consolidation monitor provides a central place to view consolidation hierarchy, groups, and units. You can also executes consolidation tasks(like data collecting, standardizing, and elimination), and monitor the progress of execution.
 
-How consolidation processes depends on the consolidation hierarchy defined, tasks assigned and the rules maintained. Customers usually define consolidation rules based on their own needs. There are also standards to follow, like: GAAP and IFRS, which are legal requirements that all the corporations must follow. 
+How consolidation processes depends on the consolidation hierarchy defined, tasks assigned and the rules maintained. Customers usually define consolidation rules based on their own needs. There are also standards to follow, like: GAAP and IFRS, which are legal requirements that all the corporations must follow.
 
 There could be difference generated during consolidation. For example, when local currency amount is translated to group currency amount, due to the fluctuation of currency rate, the translated group amount could be unbalanced. Thus, adjustment documents would be posted automatically, and the difference amount will be recorded to an account that specified in the rules. 
 
@@ -614,7 +615,7 @@ The compromise approach is to mix use of different UI technologies in different 
 | <15>            | <50>                                               |
 | *Decision*      | First try to reuse BPC's existing UI. If not possible, try to use Fiori and ABAP dynpro. Firoi is for LoB user oriented, while ABAP dynpro is for customization and master data Maintenance. |
 | *By*            | Team                                               |
-| *Date*          | <2016-01-24 Sun>                                                   |
+| *Date*          | <2016-01-24 Sun>                                   |
 | *Description*   | Consolidation Monitor, Data Modeling, and Document Posting should reuse BPC's existing UI, RTC only need to provide suitable API for BPC's consume. Customization, Master Data Maintenance, and Flexible Upload can use ABAP dynpro first, as using the auto-generated Maintenance view is the fastest way. Later these UIs should be moved to Fiori. Rule Maintenance need to be achieved using Firoi, as HRF provides UI5 controls which can be easily integrated into Firoi UIs. Reporting can be realized using either way. Analytic Office is also an auxiliary front-end tool for massive data reporting. |
 
 *** Integration with other Systems
@@ -666,29 +667,29 @@ In case TCO is high, explain a roadmap how simplification in next versions can b
 ~Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.~
 
 **** Integration Test with BPC
-We already did PoC that technically proves BPC can directly consume data in ACDOCA through BW virtual info-provider. If we want to do futher testings, we need establish a complete testing environment. The enviroment should synchronize with BPC code pool in a high frequency and have a complete set of data for testing.  
+We already did PoC that technically proves BPC can directly consume data in ACDOCA through BW virtual info-provider. If we want to do further testings, we need establish a complete testing environment. The environment should synchronize with BPC code pool in a high frequency and have a complete set of data for testing.  
 
 The current situation is RTC and BPC are in 2 different code lines. BPC is developed in KIW, and RTC is in ER9. BPC code is synchronized to ER9 in a 2-weeks frequency, which is far beyond our testing requirements. We cannot test in KIW, as KIW is not a S/4 HANA system, and transport our codes from ER9 to KIW is impossible.  
 
-If RTC and BPC own a dedicate testing environment(I give it a name TST), that is to buy and install a new S/4 enviroment. Then how code from both ER9 and KIW is synchronized to TST, and then merged into the main line still needs lots of configuration and operational effort. 
+If RTC and BPC own a dedicate testing environment(I give it a name TST), that is to buy and install a new S/4 environment. Then how code from both ER9 and KIW is synchronized to TST, and then merged into the main line still needs lots of configuration and operational effort. 
 
-There is a solution that I think is most feasible. The solution is to request BPC developers to do double maintenance in KIW and ER9. Suppose the BPC main code is already sychornized to ER9, if bug or issues are tested out, then BPC developer do fix directly in ER9, and record the changes in a special change request, which will be excluded in the final release. Meanwhile, these fixes will be re-typed in KIW. Then next time, along with the new features, these fixes will be transported to ER9 and overwrite the existing ones. 
+There is a solution that I think is most feasible. The solution is to request BPC developers to do double maintenance in KIW and ER9. Suppose the BPC main code is already synchronized to ER9, if bug or issues are tested out, then BPC developer do fix directly in ER9, and record the changes in a special change request, which will be excluded in the final release. Meanwhile, these fixes will be re-typed in KIW. Then next time, along with the new features, these fixes will be transported to ER9 and overwrite the existing ones. 
 
 **** Performance Test
 Performance tests should be done before the initial release. We want get a general idea of how much fast RTC can achieve, and whether we can improve. The main output could be a matrix like bellow:
 
-| Senarios/Num-of-Items  | 100,000 | 1,000,000 | 10,000,000 | 100,000,000 | 1,000,000,000 |
+| Scenarios/Num-of-Items | 100,000 | 1,000,000 | 10,000,000 | 100,000,000 | 1,000,000,000 |
 |------------------------+---------+-----------+------------+-------------+---------------|
 | Data Validation        | 100ms   | 500ms     |            |             |               |
 | Currency Translation   |         |           |            |             |               |
 | Inter-unit Elimination |         |           |            |             |               |
 | Reporting on-the-fly   |         |           |            |             |               |
 
-The first column contains senarios we think is perfromance relevant during consolidation; The first row is the data volumn that represented by number of items of ACDOCA. Started from 100,000 lines, and ended with 1 billion lines(we can increase the end value if in real cases, there will be more line items in ACDOCA). The cells are filled with time spent in excuting a senario. Time should be differenciated by DB time, ABAP time, UI time, and the overall response time that end-user can feel. 
+The first column contains scenarios we think is performance relevant during consolidation; The first row is the data volume that represented by number of items of ACDOCA. Started from 100,000 lines, and ended with 1 billion lines(we can increase the end value if in real cases, there will be more line items in ACDOCA). The cells are filled with time spent in executing a scenario. Time should be differentiated by DB time, ABAP time, UI time, and the overall response time that end-user can feel. 
 
-Besides, the corresponding memory and cpu consumption should be recorded in other tables. 
+Besides, the corresponding memory and CPU consumption should be recorded in other tables. 
 
-The performance result help us to understand the bottleneck, and know how to improve. Meanwhile, according to this discrete data, we could reduction a performance formular which can be used to estimate the reponse time and do hardware sizing in a given data volumn. 
+The performance result help us to understand the bottleneck, and know how to improve. Meanwhile, according to this discrete data, we could derive a performance formula which can be used to estimate the response time and do hardware sizing in a given data volume. 
 
 *** Architecture Risks
 ~Explain your view on architecture-related risks and give hints about potential upcoming problems. Risks can arise for example from changes in the scope, from work-around necessary, from dependencies on other components, or from immature technologies/concepts. Fill in the table for each risk.~

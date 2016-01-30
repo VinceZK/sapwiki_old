@@ -48,6 +48,7 @@
   :version "1.0"
   :package-version '(sapwiki . "1.0")
   :type 'string)
+
 (defcustom dk-sapwiki-fetch-url
   (concat dk-sapwiki-main-url "plugins/viewstorage/viewpagestorage.action")
   "The url used to fetch content from sapwiki"
