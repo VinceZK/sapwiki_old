@@ -1,0 +1,136 @@
+#+PAGEID: 18
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Currency Translation
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name                           |
+|-----------------------+--------------------------------|
+| Author(s)             | Vincent Zhang                  |
+| Architect             | Vincent Zhang                  |
+| Product Owner         | Shi Ying, Carol Pan            |
+| Information Developer |                                |
+| Quality Responsible   | Yao Cen                        |
+| Developers            | Summer Xia, Lynn Chen, Jane Ni |
+
+*** References
+|                   |                  |             | <30>                           |
+| Document Title    | Date             | Link        | Comments                       |
+|-------------------+------------------+-------------+--------------------------------|
+| EC-CS Online Help | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/fe/32941867f811d299610000e8a5999a/content.htm?frameset=/en/fe/32941b67f811d299610000e8a5999a/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=5&show_children=false][online help]] | The help doc doesn't describe any information on EC-CS's data validation. It's not clear how EC-CS define those rules, but it is for sure EC-CS has this functionality. |
+| BCS Online Help   | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/ab/d7ecf125f0ce43be3ce68bf9289165/content.htm?frameset=/en/62/f7e73ac6e7ec28e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=92&show_children=false][online help]] | The validation of BCS is mainly focus on data consistency of 1) Reported financial data, 2)Standardized financial data, 3)Consolidated data, 4)Additional financial data, 5)Journals |
+| BPC Online Help   | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/94/e0f3a56f174607855bc345a45df847/content.htm?frameset=/en/b9/bceda8f53d4bc9bb772da27f576c89/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=139&show_children=false][online help]] | The help doc describes the _Rules_ of BPC standard model. You can get a general idea of how rules are applied in financial consolidation. |
+| Consolidations    | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/Consolidations][scnwiki]]     | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
+
+** Design
+*** Key Requirements and Design Goals
+
+
+**** Following Design Goals *MUST* be Met:
+   
+**** Following Design Goals *SHOULD* be Met:
+
+*** Context
+
+*** Major Building Blocks
+Currency Translation enables you to translate financial data reported by consolidation units into the currency of your consolidation group.
+
+Financial data reported by consolidation units is usually collected in the Consolidation application in local currency. You need to translate this data into group currency before you can create consolidated financial statements.
+
+Currency Translation for RTC should push the main translation logic into HANA, so that performance can be garantee when running on huge amount data. Besides, CT for RTC should be in a simple and clear philosophy that further enhancement and hack could be possible for customers. The overall design diagram is like bellow:
+
+#+Caption: Currency Translation Overview
+[[../image/CurrencyTranslation.png]]  
+
+Currently, the design mainly refers EC-CS and ERP Foreign Currency Valuation. It seems too sophisticate and not simple enough for attracting more future developments. It is worth to have more research on how BPC realizes its currency conversion. We should leverage the 2 kinds of philosophy. What I like is simple in core, sophisticate outside.
+
+**** Financial Statement Item Set
+Do we re-use EC-CS FS item tables(TF100) and maintanence UI(CX13)?
+
+If the RTC is only designed for FI, the answer could be possiblely "YES". But consolidation algorithm should not be limited to FI. If the data basis is mainly on this kind of hierarchy-like finance structure, it will bound the future usages. Following question should be think harder:
+
+1. Is it possible using CDS instead of FS item set?
+2. Is it possible using Validation Engine to allow flexible data stream definition?
+3. Why EC-CS creates another FS structure for consolidation instead of using FSV?
+
+**** Translation on-the-fly        :Jane:                                       
+Given an FSV, Translation procedures (cumulative and period), Rate Indicators, Differential FS Items, I could run currency translation on-the-fly. 
+
+An AMDP function will be developed which calls HANA function =CONVERT_CURRENCY= based on data and logic provided above. The output of AMDP should be an FSV-like hierarchy structure which again is mapped to an CDS view. I can use AO to view the translated result. Following outputs are expected:
+1. Code is clean and neat.
+2. Could be no input parameters, but the output should a FSV-like table.
+3. Must have 2 different translation procedures: cumulative and period.
+4. Must have following rate indicators: spot rate, current rate, average rate, and history rate.
+5. Different translation procedures and rate indicators should be applied to different FS item sets.
+6. The translation differences should generate additional lines and assigned to different differential FS items.
+7. The output Balance Sheet and Income Statement should be correct, and can be viewed using AO. 
+
+Need Carol's help to provide an FSV and related FS items. All other stuff can be mocked. 
+
+**** Final Translation (with posting)     :Jane:
+Based on the =Translation on-the-fly=, I can post the translated results to ACDOCC. I can build CDS views on ACDOCC so that the final translation result can be viewed through reporting tools. 
+
+According to different translation procedures, some amount could be read from ACDOCA, so it could be a union of ACDOCA and ACDOCC to represent the final translated result.
+
+The posting API should ready at that time.
+
+**** Translation Procedure and Rate Indicator
+
+**** Translation Difference Process
+
+**** Rounding Difference Process
+  
+
+*** Design Challenges resulting from Non-Functional Requirements
+*** Vocabulary Modeling                                               
+*** User Interface                                                    
+*** Interfaces/Communication Handling                                
+*** Used Components and Frameworks
+| Name | Description                  | Software Component | Implications |
+|------+------------------------------+--------------------+--------------|
+| HRF  | HANA Rule Framework          |                    |              |
+| BRF+ | Business Rule Framework plus |                    |              |
+
+*** Package/Development Component Concept
+*** New Coupling of Software Components
+| SWC | Depends on SWC | Description of coupling and effects |
+|-----+----------------+-------------------------------------|
+|     |                |                                     |
+*** Upgrade/Migration/Compatibility
+*** TCO Considerations
+*** Compliance to Standards and Guidelines
+**** Applied Architecture/Design Guidelines
+- [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline][CDS Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
+- [[https://ux.wdf.sap.corp/fiori-design/foundation/get-started/][Firoi Design Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
+
+**** Approved deviations
+| <8>      | <l40>                                    | <l20>                |
+| Rule ID  | Deviation                                | Approval Status      |
+|----------+------------------------------------------+----------------------|
+| C-BRMS-2 | HRF must not be used directly but through the BRFplus encapsulation only. In case BRFplus encapsulation is not updated or enough, we may need bypass BRF+ APIs. |                      |
+
+
+** Design Details Documentation
+*** Database Design
+*** Testability and Test Environment
+*** Complex Algorithms and Applied Patterns
+*** Design Alternatives and Trade-Offs
+*** Guide to the Implementation
+
+
+** Appendix
+*** Glossary
+| Term | Abbreviation | Definition |
+|------+--------------+------------|
+|      |              |            |
+*** Customizing
+*** Supportability Considerations
+*** Error Analysis
+**** Debugging
+**** Logging and Tracing
+**** Other Error Analysis Tools
+*** Other
