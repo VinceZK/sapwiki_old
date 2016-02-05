@@ -9,7 +9,7 @@
 |-----------------------+-----------------------------------|
 | Author(s)             | Vincent Zhang                     |
 | Architect             | Vincent Zhang                     |
-| Product Owner         | Shi Ying, Carol Pan                 |
+| Product Owner         | Shi Ying, Carol Pan               |
 | Information Developer |                                   |
 | Quality Responsible   | Yao Cen                           |
 | Developers            | Liu Chang, Zhou Kaiyuan, Steve Mo |
@@ -205,7 +205,69 @@ The need of formula & script still needs further investigation.
 /IBP/CL_RM_RUELS_UTILITY
 **** How to allow other rule engines to be integrated in
 *** Vocabulary Modeling                                                :Zhou:
-**** Financial Statement Version
+**** Financial Statement Version 
+Check the amount of hierarchy nodes is equal or not.
+
+*ACDOCC/ACDOCA/SETHEADER/SETNODE/SETLEAF*
+1. Sum (amount of ACDOCA) where node = "Assets" as "Assets"
+2. Sum (amount of ACDOCA) where node = "Liability" as "Liability"
+3. Sum (amount of ACDOCA) where node = "Equity" as "Equity"
+4. If (Assets = Liability + Equity), then successful message, else error message. 
+
+**** Document Posting
+Check fields, amount, combination etc. 
+
+*ACDOCC/ACDOCA*
+
+=Prerequisite=:
+If company code = "F001" and account = "1001010" (expense)
+
+=Check=:
+Cost center is in the range "xxxx" to "xxxx".
+
+Actual Rule in HRF Decision Table (Rule Name: DocumentPosting): 
+| CompanyCode | GroupAccount | CostCenter                                   | Output |
+|-------------+--------------+----------------------------------------------+--------|
+| 'F001'      | '0003051090' | is not between 'SFUT000200' and 'SFUT000243' | 'E'    |
+|             |              |                                              | 'S'    |
+
+
+| Expectation | CCode | Group Account |    Doc No. | Item No. | Cost Center |
+|-------------+-------+---------------+------------+----------+-------------|
+| should fail | F001  |    0003051090 | 1900004211 |   000002 | 0000001101  |
+| should pass | F001  |    0003051090 | 0100009825 |   000002 | SFUT000243  |
+| should pass | F001  |    0003051090 | 0100009821 |   000002 | SFUT000242  |
+| Should pass | F001  |    0003082090 | 1900004205 |   000006 | 0000001102  |
+
+  
+*ACDOCC/ACDOCA/COEP* ~ERP is realized using User Exit~
+
+=Prerequisite=:
+If controlling area = "0001" and account type = "expense", 
+
+=Check=:
+1. Sum (planned amount of COEP) where account type = "expense" and cost center = "c001" and current period = "2015001" as "planned"
+2. Sum (actual amount of ACDOCA) where account type = "expense" and cost center = "c001" and current period = "2015001" as "actual".
+3. If (actual > planned), then give error message.
+
+**** Total Data Validation
+Relationship between items.
+
+*Any Table* 
+
+1. Sum ( amount of ACDOCA union ACDOCC ) where account group = "current asset" as sum1
+2. Sum ( amount of ACDOCA union ACDOCC) where acount group = "current liability" as sum2
+3. If (sum1 / sum2 < 1), then give warning message.
+
+**** Run Business Rule
+Output result will be used by documents generation.
+
+*ACDOCC/ACDOCA*
+
+1. Sum (amount of ACDOCA) where company code = "A" and account = "AR" and trading partner = "B" as sum1
+2. Sum (amount of ACDOCA) where company code = "B" and acounnt = "AP" and trading partner = "A" as sum2
+3. If (sum1 <> sum2), posting the difference (sum1 - sum2) to company code "A" and account "xxxxxxxx". 
+
 *** User Interface                                                    :Chang:
 *** Interfaces/Communication Handling                                 :Steve:
 *** Used Components and Frameworks

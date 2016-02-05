@@ -1,7 +1,7 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+PAGEID: 1774869651
-#+VERSION: 86
+#+VERSION: 87
 #+TITLE: ACD of Real-time Consolidation
 ** Abstract
 Real-time Consolidation(RTC in short) is SAP's next generation financial consolidation system, which is built on S4HANA platform and leverages HANA's in-memory technology. 
@@ -618,7 +618,32 @@ The compromise approach is to mix use of different UI technologies in different 
 | *Date*          | <2016-01-24 Sun>                                   |
 | *Description*   | Consolidation Monitor, Data Modeling, and Document Posting should reuse BPC's existing UI, RTC only need to provide suitable API for BPC's consume. Customization, Master Data Maintenance, and Flexible Upload can use ABAP dynpro first, as using the auto-generated Maintenance view is the fastest way. Later these UIs should be moved to Fiori. Rule Maintenance need to be achieved using Firoi, as HRF provides UI5 controls which can be easily integrated into Firoi UIs. Reporting can be realized using either way. Analytic Office is also an auxiliary front-end tool for massive data reporting. |
 
-*** Integration with other Systems
+**** Consolidation Hierarchy
+| <20>                 | <50>                                               | <50>                                               |
+|----------------------+----------------------------------------------------+----------------------------------------------------|
+| Solutions            | Pros                                               | Cons                                               |
+|----------------------+----------------------------------------------------+----------------------------------------------------|
+| BW hierarchy         | Support both version and time dependent.           | BW persistency is client-independent.              |
+|                      | Native OLAP engine based on BEx Query.             | Not easy to read/write data from out-side BW.      |
+|----------------------+----------------------------------------------------+----------------------------------------------------|
+| SET hierarchy        | Generic modeling with fundamental framework.       | Cannot model same entity on both group node and leaf node. |
+|                      | Support both version and time dependent.           | Need to build web maintenance UI.                  |
+|----------------------+----------------------------------------------------+----------------------------------------------------|
+| HR Org.              | Very good support on time-dependent on node level. | No version dependent.                              |
+|                      |                                                    | Maintenance UI still based on SAPGUI.              |
+|                      |                                                    | UI is too HR specific and not easy to rebuild UI.  |
+|                      |                                                    | Not allowed to build new entity type.              |
+|----------------------+----------------------------------------------------+----------------------------------------------------|
+| Universal Hierarchy  | Version / time dependent based on requirements.    | High effort.                                       |
+|                      | Multiple entity types based on generic persistency. |                                                    |
+|                      | Single persistency and single maintenance UI.      |                                                    |
+|----------------------+----------------------------------------------------+----------------------------------------------------|
+| Cons. Hierarchy      | Support both version and time dependent.           | Create from scrach for both Backend & UI           |
+|                      | Support multiple node types in one hierarchy.      | High effort                                        |
+|                      | Support cross area (e.g.: Controlling Area) in one hierarchy |                                                    |
+|                      | Specific to consolidation but still could be flexible |                                                    |
+|----------------------+----------------------------------------------------+----------------------------------------------------|
+*** Integration with Other Systems
 **** Integration with CF
 CF does most of the data collection tasks for RTC. To more seamlessly integration, consolidation logic should evenly embedded in transactions and executes when transaction happens. Thus some data validation and substitution should be applied during document posting. RTC will provide such kind of APIs.
 
@@ -640,7 +665,7 @@ The following table lists all public APIs which are offered, be it newly created
 | ACDOCC posting       | ABAP-based      | New        | Provide data validation and posting to ACDOCC logic in the write-back class, flexible upload, and other external processes. |
 | Validation & Substitutions | ABAP-based and HANA View | New        | A set of APIs that can be embedded in consolidation tasks, existing ABAP codes, and CDS views through join/union/association. They provide data validating and substitution services which the provides LoB users exists to maintain their rules. |
 
-*** TODO Security 
+*** TODO Security
 ~Describe how the architecture protects the software against attacks or misuse.~
 
 ~To do so, define how communication channels (protocol, data, ...) are protected. Describe how authentication, authorization and logging are performed. Consider architecture requirements pertaining to confidentiality, integrity and availability.~ 

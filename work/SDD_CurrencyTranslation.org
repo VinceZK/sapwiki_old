@@ -1,5 +1,5 @@
-#+PAGEID: 18
-#+VERSION: 1
+#+PAGEID: 1818041661
+#+VERSION: 3
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Currency Translation
@@ -23,6 +23,7 @@
 | BPC Online Help   | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/94/e0f3a56f174607855bc345a45df847/content.htm?frameset=/en/b9/bceda8f53d4bc9bb772da27f576c89/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=139&show_children=false][online help]] | The help doc describes the _Rules_ of BPC standard model. You can get a general idea of how rules are applied in financial consolidation. |
 | Consolidations    | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/Consolidations][scnwiki]]     | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
 
+
 ** Design
 *** Key Requirements and Design Goals
 
@@ -45,14 +46,20 @@ Currency Translation for RTC should push the main translation logic into HANA, s
 
 Currently, the design mainly refers EC-CS and ERP Foreign Currency Valuation. It seems too sophisticate and not simple enough for attracting more future developments. It is worth to have more research on how BPC realizes its currency conversion. We should leverage the 2 kinds of philosophy. What I like is simple in core, sophisticate outside.
 
-**** Financial Statement Item Set
+**** Financial Statement Item Set       :Frank:
 Do we re-use EC-CS FS item tables(TF100) and maintanence UI(CX13)?
 
-If the RTC is only designed for FI, the answer could be possiblely "YES". But consolidation algorithm should not be limited to FI. If the data basis is mainly on this kind of hierarchy-like finance structure, it will bound the future usages. Following question should be think harder:
+If the RTC is only designed for FI, the answer could be possiblely "YES". But consolidation algorithm should not be limited to FI. If the data basis is mainly on this kind of hierarchy-like finance structure, it will limit the future usages. Following questions should be think deeper:
 
 1. Is it possible using CDS instead of FS item set?
 2. Is it possible using Validation Engine to allow flexible data stream definition?
 3. Why EC-CS creates another FS structure for consolidation instead of using FSV?
+
+To answer the above questions, following research task could be done:
+1. Combine CDS and HRF to boundary the data area for everything?
+2. If FS item set is defined, the corresponding CDS view and HRF vocabulary(Alias is considerable) are also generated.
+3. Currency Translation and Inter-Unit Elimination will choose actually the CDS and Vocabulary correlated.
+4. There must be some fields mandatory for a specific task. Take currency translation as an example, an amount field, a currency key field, and an account field should exist. 
 
 **** Translation on-the-fly        :Jane:                                       
 Given an FSV, Translation procedures (cumulative and period), Rate Indicators, Differential FS Items, I could run currency translation on-the-fly. 
@@ -64,7 +71,8 @@ An AMDP function will be developed which calls HANA function =CONVERT_CURRENCY= 
 4. Must have following rate indicators: spot rate, current rate, average rate, and history rate.
 5. Different translation procedures and rate indicators should be applied to different FS item sets.
 6. The translation differences should generate additional lines and assigned to different differential FS items.
-7. The output Balance Sheet and Income Statement should be correct, and can be viewed using AO. 
+7. The output Balance Sheet and Income Statement should be correct, and can be viewed using AO.
+8. Error handling should be processed in an elegant way. 
 
 Need Carol's help to provide an FSV and related FS items. All other stuff can be mocked. 
 
