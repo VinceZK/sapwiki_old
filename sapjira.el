@@ -95,6 +95,7 @@
 
 (defvar dk-sapjira-atl-token nil)
 (defvar dk-sapjira-issue-id nil)
+(defvar dk-sapjira-issue-log nil)
 (defvar dk-sapjira-issue-logs nil)
 
 (defun sapjira-login (&optional callback)
@@ -130,13 +131,10 @@
        (setq dk-sapjira-atl-token
 	     (aref (nth 0 (cdr (assoc "sapjira.wdf.sap.corp" url-cookie-secure-storage))) 2))))
 
-(defun sapjira-logwork (issue-num)
-  "TODO: Fill/check the list: dk-sapjira-issue-logs here"
-  (dk-sapjira-browse-issue
-   issue-num
-   (lambda (issue-num)
-     (message "Begin logging work for issue: %s...." issue-num)
-     (dk-sapjira-logwork-internal issue-num))))
+(defun sapjira-logwork ()
+  "The function will first iterate all the open sprints, then the open tasks under the sprints. Finally, find all the non-logged work log and post to SAPJIRA. Afterwards, status will be changed."
+  (interactive)
+  (dk-sapjira-do-open-sprints))
 
 (defun dk-sapjira-browse-issue (issue-num callback &optional cbargs)
   (dk-sapjira-http-get
@@ -154,9 +152,7 @@
 (defun dk-sapjira-logwork-internal (issue-num)
 "[(\"<2016-01-18 Mon>\" \"4h\" \"comments\").....]"
 (mapc (lambda (log-item)
-	(let ((startDate (format-time-string
-			  "%d/%b/%y %I:%M %p"
-			  (date-to-time (nth 0 log-item))))
+	(let ((startDate  (nth 0 log-item))
 	      (timeLogged (nth 1 log-item))
 	      (comment (nth 2 log-item)))
 	  (dk-sapjira-logwork-internal-single
@@ -170,7 +166,9 @@
 	 (cons "decorator" "dialog")
 	 (cons "id" dk-sapjira-issue-id)
 	 (cons "timeLogged" timeLogged)
-	 (cons "startDate" startDate)
+	 (cons "startDate" (format-time-string
+			    "%d/%b/%y %I:%M %p"
+			    (date-to-time startDate)))
 	 (cons "adjustEstimate" "auto")
 	 (cons "comment" (concat comment "(via Emacs)"))
 	 (cons "atl_token" dk-sapjira-atl-token))
@@ -181,21 +179,30 @@
   (set-buffer (current-buffer))
   (goto-char 1)
   (if (re-search-forward "<div class=\"dialog-title hidden\"></div>" nil t)
-      (message "Work log of issue:%s on date:%s is successfully logged!"
-	       issue-num
-	       startDate)
-    (message "Log work failed for issue:%s on date:%s"
+      (progn
+	(dk-sapjira-set-logged-flag startDate)
+	(message "Work log of issue:%s on date:%s is successfully logged!"
+		 issue-num
+		 startDate))
+    (message "Work logging failed for issue:%s on date:%s"
 	     issue-num
 	     startDate)))
 
-(defun sapjira-set-done (issue-num)
+(defun dk-sapjira-set-logged-flag (date)
+  (mapcar (lambda (item)
+	    (when (string= (car item) date)
+	      (setcdr (cdr (cdr item)) '("X"))))
+	  dk-sapjira-issue-logs))
+	      
+    
+(defun dk-sapjira-set-done (issue-num)
   (dk-sapjira-dispatch-workflow
    "811"
    issue-num
    (lambda (status issue-num)
      (message "Issue:%s is set to DONE!" issue-num))))
 
-(defun sapjira-re-open (issue-num)
+(defun dk-sapjira-re-open (issue-num)
   (dk-sapjira-dispatch-workflow
    "831"
    issue-num
@@ -350,84 +357,142 @@
 ;;------------------------------------------------------
 ;; Define a org export backend for sapjira
 ;;------------------------------------------------------
-(require 'ox)
-(eval-when-compile (require 'cl) (require 'table nil 'noerror))
 
-;;; Define Back-End
+(defun dk-sapjira-do-open-sprints ()
+  (org-map-entries
+   'dk-sapjira-process-sprint
+   "/+OPEN"
+   nil
+   'dk-sapjira-skip-non-sprint))
 
-(org-export-define-backend 'sapjira
-  '((headline . dk-sapjira-headline)
-    (node-property . org-html-node-property)
-    (drawer . org-html-drawer)
-    (inner-template . dk-sapjira-inner-template)
-    (template . dk-sapjira-template)
-    (plain-text . dk-sapjira-plain-text)
-    (property-drawer . org-html-property-drawer)
-    (table . dk-sapjira-html-table)
-    (table-cell . dk-sapjira-table-cell)
-    (table-row . dk-sapjira-table-row)
-    (timestamp . dk-sapjira-timestamp))
-  :options-alist
-  '(
-    (:sapjira-mode "SAPJIRA_MODE" nil "Slacker")))
+(defun dk-sapjira-process-sprint ()
+  (dk-sapjira-do-open-tasks)
+  (dk-sapjira-sprint-post-process))
 
-(defun dk-sapjira-headline (headline contents info)
-  (let* ((todo (and (plist-get info :with-todo-keywords)
-		   (let ((todo (org-element-property :todo-keyword headline)))
-		     (and todo (org-export-data todo info)))))
-	 (todo-type (and todo (org-element-property :todo-type headline)))
-	 (text (org-export-data (org-element-property :title headline) info))
-	 (tags (and (plist-get info :with-tags)
-		    (org-export-get-tags headline info))))
-    (format "todo:%s, todo-type:%s, text:%s, tags:%s"
-	    todo todo-type text tags)))
+(defun dk-sapjira-sprint-post-process ()
+  (message "Sprint: %s" (org-entry-get nil "TITLE"))
+  (let ((all-done t))
+    (org-map-entries
+     (lambda ()
+       (message "Task: %s;  Status: %s"
+		(org-entry-get nil "TITLE")
+		(org-entry-get nil "TODO"))
+       (unless (string= (org-entry-get (point) "TODO")
+			"DONE")
+	 (setq all-done nil)))
+     "+Type=\"Task\""
+     'tree)
+    (when all-done
+      (org-entry-put (point) "TODO" "DONE"))))
+     
+(defun dk-sapjira-skip-non-sprint ()
+  (if (string-match "CF_RTC-Sprint"
+		    (dk-sapjira-current-headline))
+      nil
+    (point)))
 
-(defun dk-sapjira-inner-template (contents info)
-  "Return body of document string after HTML conversion.
-CONTENTS is the transcoded contents string.  INFO is a plist
-holding export options."
-  contents)
+(defun dk-sapjira-current-headline ()
+  (let ((org-trust-scanner-tags t))
+    (org-entry-get nil "ITEM")))
 
-(defun dk-sapjira-template (contents info)
-  (org-export-collect-headlines info))
+(defun dk-sapjira-do-open-tasks ()
+  (org-map-entries
+   'dk-sapjira-process-task
+   "/+OPEN"
+   'tree
+   'dk-sapjira-skip-non-task))
 
-(defun dk-sapjira-plain-text (text info)
-  text)  
+(defun dk-sapjira-process-task ()
+  (setq dk-sapjira-issue-logs nil)
+  (setq dk-sapjira-issue-log nil)
+  ;;(message "Task Tags: %s" org-scanner-tags)
+  ;;(org-entry-put (point) "Remaining" "4h")
+  (org-map-entries
+   (lambda ()
+     ;; (org-element-map (org-element-parse-buffer) 'link
+     ;;   (lambda (link)
+     ;; 	 (message "Link is: %s"
+     ;; 		  (org-element-contents link))))
+     
+     (org-element-map (org-element-parse-buffer) 'table-row
+       'dk-sapjira-process-table)
+     
+     (message "Logged Issues: %s" dk-sapjira-issue-logs)
+     ;; (when dk-sapjira-issue-logs
+     ;;   (dk-sapjira-browse-issue
+     ;; 	(org-entry-get nil "IssueNum")
+     ;; 	(lambda (issue-num)
+     ;; 	  (message "Begin logging work for issue: %s...." issue-num)
+     ;; 	  (dk-sapjira-logwork-internal issue-num))))
+     
+     (org-element-map (org-element-parse-buffer) 'table-row
+       'dk-sapjira-table-post-process))
+   "+Type=\"Task\""
+   'tree)
+  (if (and (string= (org-entry-get nil "TODO") "DONE")
+	   (dk-sapjira-check-work-log-success))
+      (dk-sapjira-set-done (org-entry-get nil "IssueNum"))))
+      
+(defun dk-sapjira-check-work-log-success ()
+  (if (not dk-sapjira-issue-logs)
+      nil
+    (catch 'Exit
+      (dolist (issue-log dk-sapjira-issue-logs)
+	(unless (nth 3 issue-log)
+	  (throw 'Exit nil)))
+      t)))
 
-(defun dk-sapjira-table (table contents info)
-  (format "[%s]" contents))
+(defun dk-sapjira-process-table (table-row)
+  (unless (eq (org-element-property :type table-row)
+	      'rule)
+    (org-element-map table-row 'table-cell
+      (lambda (table-cell)
+	(let* ((cell-contents (org-element-contents table-cell))
+	       (current-cell (car cell-contents)))
+	  (if (and current-cell
+		   (eq (org-element-type current-cell)
+		       'timestamp))
+	      (push (org-element-property :raw-value
+					  current-cell)
+		    dk-sapjira-issue-log)
+	    (when dk-sapjira-issue-log
+	      (push current-cell dk-sapjira-issue-log))))))
+    (when dk-sapjira-issue-log
+      (setq dk-sapjira-issue-log (nreverse dk-sapjira-issue-log))
+      (when (and (car (cdr dk-sapjira-issue-log))
+		 (not (nth 3 dk-sapjira-issue-log)))	
+	(add-to-list 'dk-sapjira-issue-logs
+		     dk-sapjira-issue-log t))
+      (setq dk-sapjira-issue-log nil))))
+ 
+(defun dk-sapjira-skip-non-task ()
+  (if (string-match "CF_RTC-Sprint"
+		    (dk-sapjira-current-headline))
+      (point)
+    nil))
 
-(defun dk-sapjira-table-cell (table-cell contents info)
-  (let* ((table-row (org-export-get-parent table-cell))
-	 (table (org-export-get-parent-table table-cell)))
-    (if (and (org-export-table-has-header-p table info)
-	     (= 1 (org-export-table-row-group table-row info)))
-	"HEADLINE"
-      contents)))
+(defun dk-sapjira-setter-test ()
+  (org-element-map (org-element-parse-buffer) 'table-row
+    (lambda (table-row)
+      (let ((begin-point (org-element-property :begin table-row))
+	    (end-point (org-element-property :end table-row)))
+	(goto-char begin-point)
+	(message "Current Line: %s"
+		 (org-table-get nil 1))
+	(org-table-put nil 2 "X" t)))))
 
-(defun dk-sapjira-table-row (table-row contents info)
-  (let* ((row-number (org-export-table-row-number table-row info)))
-    contents))
-
-(defun org-html-timestamp (timestamp contents info)
-  timestamp)
-
-(defun dk-sapjira-node-property (node-property contents info)
-  "Transcode a NODE-PROPERTY element from Org to HTML.
-CONTENTS is nil.  INFO is a plist holding contextual
-information."
-  (format "%s:%s"
-          (org-element-property :key node-property)
-          (let ((value (org-element-property :value node-property)))
-            (if value (concat " " value) ""))))
-
-(defun dk-sapjira-property-drawer (property-drawer contents info)
-  "Transcode a PROPERTY-DRAWER element from Org to HTML.
-CONTENTS holds the contents of the drawer.  INFO is a plist
-holding contextual information."
-  (and (org-string-nw-p contents)
-       (format "<pre class=\"example\">\n%s</pre>" contents)))
-
-(defun dk-org-sapjira-export-as-json ()
-  (org-export-to-buffer 'sapjira "*SAPJIRA Export*"))
-   ;; (org-export-as 'sapjira))
+(defun dk-sapjira-table-post-process (table-row)
+  (unless (eq (org-element-property :type table-row)
+	      'rule) 
+    (goto-char (org-element-property :begin table-row))
+    (let ((day (org-table-get nil 2)))
+      (when (string-match
+	     "<[0-9]\\{4\\}-[0-1][0-9]-[0-3][0-9] [[:alpha:]]\\{3\\}>"
+	     day)
+	(catch 'exit
+	  (dolist (issue-log dk-sapjira-issue-logs)
+	    (when (and (string= (car issue-log) day)
+		       (nth 3 issue-log))
+	      (org-table-put nil 5 (nth 3 issue-log) t)
+	      (throw 'exit issue-log))))))))
+  

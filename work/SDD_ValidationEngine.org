@@ -217,13 +217,13 @@ Check the amount of hierarchy nodes is equal or not.
 **** Document Posting
 Check fields, amount, combination etc. 
 
-*ACDOCC/ACDOCA*
+*1. Check cost center based on a line item in ACDOCC/ACDOCA*
 
 =Prerequisite=:
 If company code = "F001" and account = "1001010" (expense)
 
 =Check=:
-Cost center is in the range "xxxx" to "xxxx".
+Cost center is in a range between "xxxx" and "xxxx".
 
 Actual Rule in HRF Decision Table (Rule Name: DocumentPosting): 
 | CompanyCode | GroupAccount | CostCenter                                   | Output |
@@ -304,7 +304,6 @@ Output result will be used by documents generation.
 *** Complex Algorithms and Applied Patterns
 *** Design Alternatives and Trade-Offs
 *** Guide to the Implementation
-dsflasdjfkl
 
 
 ** Appendix
