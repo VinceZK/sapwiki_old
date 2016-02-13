@@ -53,8 +53,11 @@ comments starts here, it will combined with the headline .......
 |------------------+----------+---------------------------+---|
 
 
-* OPEN CF_RTC-Sprint5
-
+* DONE CF_RTC-Sprint5
+:PROPERTIES:
+:id: 4683
+:Type: Sprint
+:END:
 ** DONE Presentation Prepare and Rehearsal - for Vincent
 :PROPERTIES:
 :IssueNum: 254
@@ -88,31 +91,64 @@ comments starts here, it will combined with the headline .......
 :END:
 
 
-* OPEN CF_RTC-Sprint6
-
-** OPEN SDD writing
+* DONE CF_RTC-Sprint6
 :PROPERTIES:
-:IssueNum: 255
+:id: 5872
+:Type: Sprint
+:END:
+** DONE SDD-Posting 
+:PROPERTIES:
+:IssueNum: 283
+:IssueID: 2633256
+:Sprint: 5872
 :Type: Task
 :Priority: Medium
-:Estimate: 17h
-:Remaining: 4h
+:Estimate: 18h
 :END:
-[[https://sapjira.wdf.sap.corp/browse/REALTIMECONSOLIDATION-254][REALTIMECONSOLIDATION-255]]
+[[https://sapjira.wdf.sap.corp/browse/REALTIMECONSOLIDATION-283][REALTIMECONSOLIDATION-283]]
 |   |                  |  <4> | <25>                      |   |
 |   | Day              | LT: Log Time | Comments                  | L |
 |---+------------------+------+---------------------------+---|
-| # | <2016-01-18 Mon> |      |                           |   |
-| # | <2016-01-19 Tue> |    4 | Refine the overall architecture diagram | X |
-| # | <2016-01-20 Wed> |    4 | Rehearsal and integrate with the team for the Validation Engine demo |   |
-| # | <2016-01-21 Thu> |    2 |                           |   |
-| # | <2016-01-22 Fri> |      |                           |   |
+| # | <2016-02-01 Mon> |    2 | Talking and Thinking      | X |
+| # | <2016-02-02 Tue> |    3 | Help others               | X |
+| # | <2016-02-03 Wed> |      |                           |   |
+| # | <2016-02-04 Thu> |      |                           |   |
+| # | <2016-02-05 Fri> |      |                           |   |
 |---+------------------+------+---------------------------+---|
-| # | <2016-01-25 Mon> |    1 | Presentation on the overall architecture to Helmut |   |
-| # | <2016-01-26 Tue> |    2 |                           |   |
-| # | <2016-01-27 Wed> |    4 | Demonstration the validation Engine to Helmut and the team |   |
-| # | <2016-01-28 Thu> |      |                           |   |
-| # | <2016-01-29 Fri> |      |                           |   |
+| # | <2016-02-08 Mon> |    4 |                           | X |
+| # | <2016-02-09 Tue> |    3 |                           | X |
+| # | <2016-02-10 Wed> |    2 |                           | X |
+| # | <2016-02-11 Thu> |    3 | Final Adjustment          | X |
+| # | <2016-02-12 Fri> |      |                           |   |
 |---+------------------+------+---------------------------+---|
-| # | TotalHours       |   17 |                           |   |
+| # | *TotalHours*     |   17 |                           |   |
+#+TBLFM: @13$3=vsum(@3$3..@12$3)
+
+
+** DONE Data Validation - Balance Sheet Assets, Liabilities & Equity - Local
+:PROPERTIES:
+:IssueNum: 149
+:IssueID: 2559791
+:Sprint: 5872
+:Type: Backlog Item
+:Priority: Medium
+:Estimate: 312h
+:END:
+[[https://sapjira.wdf.sap.corp/browse/REALTIMECONSOLIDATION-149][REALTIMECONSOLIDATION-149]]
+|   |                  |  <4> | <25>                      |   |
+|   | Day              | LT: Log Time | Comments                  | L |
+|---+------------------+------+---------------------------+---|
+| # | <2015-12-14 Mon> |    1 | Disscuss with PO          | X |
+| # | <2015-12-15 Tue> |    2 | Draw diagram              | X |
+| # | <2015-12-16 Wed> |      |                           |   |
+| # | <2015-12-17 Thu> |      |                           |   |
+| # | <2015-12-18 Fri> |      |                           |   |
+|---+------------------+------+---------------------------+---|
+| # | <2015-12-21 Mon> |      |                           |   |
+| # | <2015-12-22 Tue> |      |                           |   |
+| # | <2015-12-23 Wed> |      |                           |   |
+| # | <2015-12-24 Thu> |      |                           |   |
+| # | <2015-12-25 Fri> |      |                           |   |
+|---+------------------+------+---------------------------+---|
+| # | *TotalHours*     |    3 |                           |   |
 #+TBLFM: @13$3=vsum(@3$3..@12$3)

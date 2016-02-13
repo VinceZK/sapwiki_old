@@ -10,34 +10,21 @@
 	  ("<2016-01-25 Mon>" "3h" "Presentation on the overall architecture to Helmut")
 	  ("<2016-01-26 Tue>" "2h" "Rehearsal for the demo")
 	  ("<2016-01-27 Wed>" "4h" "Demonstration the validation Engine to Helmut and the team")))
-  (dk-sapjira-browse-issue
-   "254"
-   (lambda (issue-num)
-     (message "Begin logging work for issue: %s...." issue-num)
-     (dk-sapjira-logwork-internal issue-num))))
+  (dk-sapjira-logwork-internal "2633256" "auto" 283))
 
 (ert-deftest sapjira-set-done ()
-  (dk-sapjira-set-done "254"))
+  (dk-sapjira-set-done "2633256" 283))
 
 (ert-deftest sapjira-re-open ()
-  (dk-sapjira-re-open "254"))
+  (dk-sapjira-re-open "2633256" 283))
 
 (ert-deftest sapjira-fetch ()
-  (sapjira-fetch "68070"))
-
-(ert-deftest sapjira-fetch-open ()
-  (sapjira-fetch-open))
-
-(ert-deftest dk-sapjira-get-issue-detail ()
-  (dk-sapjira-get-issue-detail "118"))
+  (find-file "sapjira.org")
+  (sapjira-fetch))
 
 (ert-deftest dk-sapjira-get-working-sprint ()
   (find-file "sapjira.org")
-  (dk-sapjira-get-working-sprint))
-
-(ert-deftest dk-sapjira-setter-test ()
-  (find-file "sapjira-table.org")
-  (dk-sapjira-setter-test))
+  (dk-sapjira-do-open-sprints))
 
 (ert-deftest dk-sapjira-check-work-log-success ()
   (let ((dk-sapjira-issue-logs
