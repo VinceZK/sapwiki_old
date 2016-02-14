@@ -26,7 +26,7 @@
 ;;    in the page head:
 ;;      #+STARTUP: align
 ;;      #+TODO: TODO | OPEN DONE
-;;      #+PROJECT: <Your project name>
+;;      #+PROJECT: <Your jira project name>
 ;;    sapjira-fetch only fetch Sprints and Issues defination information.
 ;;    Those worklog information is not downloaded. For example: If you
 ;;    have logged your work through SAPJIRA web UI, then these changes will
