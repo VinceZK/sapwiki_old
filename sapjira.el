@@ -576,30 +576,31 @@ Then call the SAPJIRA log work web service to post the results. Waiting callback
    (lambda ()
      (org-element-map (org-element-parse-buffer) 'table-row
        'dk-sapjira-process-table)
+     ;; (message "TotalHours: %s" dk-sapjira-total-hours)
      ;; (message "Logged Issues: %s" dk-sapjira-issue-logs))
      (let* ((org-trust-scanner-tags t)
-	    (issue-id (org-entry-get nil "IssueID"))
-	    (issue-num (org-entry-get nil "IssueNum"))
-	    (estimate
-	     (string-to-number
-	      (substring
-	       (org-entry-get nil "Estimate") 0 -1)))
-	    (todo (org-entry-get nil "TODO")))
+     	    (issue-id (org-entry-get nil "IssueID"))
+     	    (issue-num (org-entry-get nil "IssueNum"))
+     	    (estimate
+     	     (string-to-number
+     	      (substring
+     	       (org-entry-get nil "Estimate") 0 -1)))
+     	    (todo (org-entry-get nil "TODO")))
        (when dk-sapjira-issue-logs
-	 (message "Log work for task: %s"
-		  (org-entry-get nil "ITEM"))
-	 (if (and (string= todo "DONE")
-		  dk-sapjira-total-hours
-		  (> estimate dk-sapjira-total-hours))
-	     (dk-sapjira-logwork-internal issue-id "leave" issue-num)
-	   (dk-sapjira-logwork-internal issue-id "auto" issue-num))
-	 (setq dk-sapjira-total-hours nil)
-	 (dk-sapjira-waiting-for-success)
-	 (org-element-map (org-element-parse-buffer) 'table-row
-	   'dk-sapjira-table-post-process))
+     	 (message "Log work for task: %s"
+     		  (org-entry-get nil "ITEM"))
+     	 (if (and (string= todo "DONE")
+     		  dk-sapjira-total-hours
+     		  (> estimate dk-sapjira-total-hours))
+     	     (dk-sapjira-logwork-internal issue-id "leave" issue-num)
+     	   (dk-sapjira-logwork-internal issue-id "auto" issue-num))
+     	 (setq dk-sapjira-total-hours nil)
+     	 (dk-sapjira-waiting-for-success)
+     	 (org-element-map (org-element-parse-buffer) 'table-row
+     	   'dk-sapjira-table-post-process))
        (if (and (string= todo "DONE")
-		(dk-sapjira-check-work-log-success))
-	   (dk-sapjira-set-done issue-id issue-num))))  
+     		(dk-sapjira-check-work-log-success))
+     	   (dk-sapjira-set-done issue-id issue-num))))  
    "+Type={Task\\|Backlog Item}"
    'tree))
 
