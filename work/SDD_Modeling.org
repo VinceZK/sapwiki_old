@@ -1,0 +1,129 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Modeling
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name                           |
+|-----------------------+--------------------------------|
+| Author(s)             | Vincent Zhang                  |
+| Architect             | Vincent Zhang                  |
+| Product Owner         | Shi Ying, Carol Pan            |
+| Information Developer |                                |
+| Quality Responsible   | Yao Cen                        |
+| Developers            | Sam                            |
+
+*** References
+|                   |                  |               | <30>                           |
+| Document Title    | Date             | Link          | Comments                       |
+|-------------------+------------------+---------------+--------------------------------|
+| EC-CS Modeling    | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/ab/cae87873fc11d2996b0000e8a5999a/content.htm?frameset=/en/05/b0a3c88a8b11d299830000e8a5999a/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=9&show_children=false][online help]]   | Modeling in EC-CS is actually configurations on consolidation master data and controlling. As EC-CS already has data container ECMCA & EMMCT. Modeling tasks could include defination of: Dimension, Cons Unit, Cons Group, Cons Chart of Account, Subassigment, Version, and Ledger. |
+| BCS Modeling      | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/25/dd833b36b0980fe10000000a11402f/content.htm?frameset=/en/9d/f4783b5fed4834e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=12&show_children=false][online help]]   | modeling in bcs differs from ec-cs is the requirement to define =data basis=. data basis is a bw cube (combine data sources as data streams), which consists of characteristics and key figures with their respective roles for consolidation. base on data basis, consolidation areas can be defined which are subsets of characteristics and key figures. besides, all the master data and configuration are quite same with ec-cs. |
+| BPC Modeling      | <2015-12-23 wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/61/4248fcbed34a32b4e0637185fda206/content.htm?frameset=/en/99/3b45ce7bd64133ac81afd1698d93c5/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=126][online help]]   | BPC has 2 versions: Standard and Embeded. There are differences on modeling of the 2 products versions. RTC refers much more to its embeded version. In its embeded version, modeling means tie a BW virtual-provider and define fields role. |
+| SAP SET           | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c1/fcdf390ab90b35e10000000a11402f/content.htm?frameset=/en/c1/fcdf390ab90b35e10000000a11402f/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=3&show_children=true#jump3][online help]]   | Introduce what is SAP SET, different types of SET, and how it is used in SAP enviroment. |
+| Chart of Accounts | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c7/a88ab243dd11d182b30000e829fbfe/content.htm?frameset=/en/e5/077a8a4acd11d182b90000e829fbfe/frameset.htm&current_toc=/en/e5/078d0b4acd11d182b90000e829fbfe/plain.htm&node_id=9][online help]]   | Chart of Accounts in SAP means a list of all G/L accounts used by one or several company codes. But in other FI/Accounting software it may have different meanings. |
+| BCS Configuration | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/1.1.1+SEM-BCS+Configuration+in+BW+and+ECC][scnwiki]]       | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
+| HANA Script       | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
+| AMDP Guide        | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
+
+
+** Design
+*** Key Requirements and Design Goals
+
+**** Following Design Goals *MUST* be Met:
+   
+**** Following Design Goals *SHOULD* be Met:
+
+*** Context
+
+*** Major Building Blocks  
+**** Version
+Reuse BCS or EC-CS?
+
+**** Ledger
+Reuse accounting ledger or EC-CS ledger? It seems BCS doesn't have ledger concept.
+
+**** Consolidation Chart of Account
+Chart of accounts is optional in BCS. Because you can use multiple hierarchy of account in info-object.
+
+EC-CS has its own consolidation COA which is different with G/L COA. But you can map cons COA to a G/L COA.
+
+EC-CS COA is assigned with FS item hierarchies, which afterwards has FS items assigned. Should verify if FS item hierarchy has something to do with SET. 
+
+**** Financial Statement Item
+Does RTC use FS Item or G/L Account?
+
+**** Consolidation Unit/Dimension and Group 
+BCS defines its cons unit by assigning ~Cons Unit~ role to info-objects, like: company, profit center, cost center, and so on. And cons group is an attribute of a cons unit info-object.
+
+EC-CS has both maintanence views for cons unit and cons group. Additionally, EC-CS has the concept =Dimension=. The consolidation unit depends on the dimension in which it was created. This means that the master record you create for a consolidation unit exists only in that dimension.
+
+Despite the different represntation, the basic idea of cons unit and cons group are rather same. No mater it is in BCS or EC-CS. And Even BPC has very similar concepts. 
+
+RTC may reuse the tables and maintanence views of EC-CS to define its own =Unit & Group=. Then try to map and synchronize them to the correponding objects in BPC.
+
+**** Consolidation Area
+Define a subsets of characteristic fields and amount fields from ACDOCA & ACDOCC. Meanwhile, fix values are defined when filtering and saving. 
+
+Fixed values includes: the version, the fiscal year, the period, and all possible fields you can define.
+
+Consolidation Tasks are also assigned to consolidation area.
+
+**** Subassigment and Breakdown Category
+
+**** Custom Attributes and Enhancement 
+
+
+*** Design Challenges resulting from Non-Functional Requirements
+*** Vocabulary Modeling                                               
+*** User Interface                                                    
+*** Interfaces/Communication Handling                                
+*** Used Components and Frameworks
+| Name | Description                  | Software Component | Implications |
+|------+------------------------------+--------------------+--------------|
+| HRF  | HANA Rule Framework          |                    |              |
+| BRF+ | Business Rule Framework plus |                    |              |
+
+*** Package/Development Component Concept
+*** New Coupling of Software Components
+| SWC | Depends on SWC | Description of coupling and effects |
+|-----+----------------+-------------------------------------|
+|     |                |                                     |
+*** Upgrade/Migration/Compatibility
+*** TCO Considerations
+*** Compliance to Standards and Guidelines
+**** Applied Architecture/Design Guidelines
+- [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline][CDS Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
+- [[https://ux.wdf.sap.corp/fiori-design/foundation/get-started/][Firoi Design Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
+
+**** Approved deviations
+| <8>      | <l40>                                    | <l20>                |
+| Rule ID  | Deviation                                | Approval Status      |
+|----------+------------------------------------------+----------------------|
+| C-BRMS-2 | HRF must not be used directly but through the BRFplus encapsulation only. In case BRFplus encapsulation is not updated or enough, we may need bypass BRF+ APIs. |                      |
+
+
+** Design Details Documentation
+*** Database Design
+*** Testability and Test Environment
+*** Complex Algorithms and Applied Patterns
+*** Design Alternatives and Trade-Offs
+*** Guide to the Implementation
+
+
+** Appendix
+*** Glossary
+| Term | Abbreviation | Definition |
+|------+--------------+------------|
+|      |              |            |
+*** Customizing
+*** Supportability Considerations
+*** Error Analysis
+**** Debugging
+**** Logging and Tracing
+**** Other Error Analysis Tools
+*** Other
