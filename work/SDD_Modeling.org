@@ -1,27 +1,27 @@
-#+PAGEID: 
-#+VERSION: 1
+#+PAGEID: 1821717599
+#+VERSION: 2
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Modeling
 ** General Information
 *** Stakeholders and Roles
-| Role                  | Name                           |
-|-----------------------+--------------------------------|
-| Author(s)             | Vincent Zhang                  |
-| Architect             | Vincent Zhang                  |
-| Product Owner         | Shi Ying, Carol Pan            |
-| Information Developer |                                |
-| Quality Responsible   | Yao Cen                        |
-| Developers            | Sam                            |
+| Role                  | Name                |
+|-----------------------+---------------------|
+| Author(s)             | Vincent Zhang       |
+| Architect             | Vincent Zhang       |
+| Product Owner         | Shi Ying, Carol Pan |
+| Information Developer |                     |
+| Quality Responsible   | Yao Cen             |
+| Developers            | Sam                 |
 
 *** References
 |                   |                  |               | <30>                           |
 | Document Title    | Date             | Link          | Comments                       |
 |-------------------+------------------+---------------+--------------------------------|
-| EC-CS Modeling    | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/ab/cae87873fc11d2996b0000e8a5999a/content.htm?frameset=/en/05/b0a3c88a8b11d299830000e8a5999a/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=9&show_children=false][online help]]   | Modeling in EC-CS is actually configurations on consolidation master data and controlling. As EC-CS already has data container ECMCA & EMMCT. Modeling tasks could include defination of: Dimension, Cons Unit, Cons Group, Cons Chart of Account, Subassigment, Version, and Ledger. |
-| BCS Modeling      | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/25/dd833b36b0980fe10000000a11402f/content.htm?frameset=/en/9d/f4783b5fed4834e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=12&show_children=false][online help]]   | modeling in bcs differs from ec-cs is the requirement to define =data basis=. data basis is a bw cube (combine data sources as data streams), which consists of characteristics and key figures with their respective roles for consolidation. base on data basis, consolidation areas can be defined which are subsets of characteristics and key figures. besides, all the master data and configuration are quite same with ec-cs. |
-| BPC Modeling      | <2015-12-23 wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/61/4248fcbed34a32b4e0637185fda206/content.htm?frameset=/en/99/3b45ce7bd64133ac81afd1698d93c5/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=126][online help]]   | BPC has 2 versions: Standard and Embeded. There are differences on modeling of the 2 products versions. RTC refers much more to its embeded version. In its embeded version, modeling means tie a BW virtual-provider and define fields role. |
-| SAP SET           | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c1/fcdf390ab90b35e10000000a11402f/content.htm?frameset=/en/c1/fcdf390ab90b35e10000000a11402f/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=3&show_children=true#jump3][online help]]   | Introduce what is SAP SET, different types of SET, and how it is used in SAP enviroment. |
+| EC-CS Modeling    | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/ab/cae87873fc11d2996b0000e8a5999a/content.htm?frameset=/en/05/b0a3c88a8b11d299830000e8a5999a/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=9&show_children=false][online help]]   | Modeling in EC-CS is actually configurations on consolidation master data and controlling. As EC-CS already has data container ECMCA & EMMCT. Modeling tasks could include definition of: Dimension, Cons Unit, Cons Group, Cons Chart of Account, Subassigment, Version, and Ledger. |
+| BCS Modeling      | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/25/dd833b36b0980fe10000000a11402f/content.htm?frameset=/en/9d/f4783b5fed4834e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=12&show_children=false][online help]]   | Modeling in BCS differs from EC-CS is the requirement to define =Data Basis=. Data basis is a bw cube (combine data sources as data streams), which consists of characteristics and key figures with their respective roles for consolidation. base on data basis, consolidation areas can be defined which are subsets of characteristics and key figures. besides, all the master data and configuration are quite same with EC-CS. |
+| BPC Modeling      | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/61/4248fcbed34a32b4e0637185fda206/content.htm?frameset=/en/99/3b45ce7bd64133ac81afd1698d93c5/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=126][online help]]   | BPC has 2 versions: Standard and Embedded. There are differences on modeling of the 2 products versions. RTC refers much more to its embedded version. In its embedded version, modeling means tie a BW virtual-provider and define fields role. |
+| SAP SET           | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c1/fcdf390ab90b35e10000000a11402f/content.htm?frameset=/en/c1/fcdf390ab90b35e10000000a11402f/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=3&show_children=true#jump3][online help]]   | Introduce what is SAP SET, different types of SET, and how it is used in SAP environment. |
 | Chart of Accounts | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c7/a88ab243dd11d182b30000e829fbfe/content.htm?frameset=/en/e5/077a8a4acd11d182b90000e829fbfe/frameset.htm&current_toc=/en/e5/078d0b4acd11d182b90000e829fbfe/plain.htm&node_id=9][online help]]   | Chart of Accounts in SAP means a list of all G/L accounts used by one or several company codes. But in other FI/Accounting software it may have different meanings. |
 | BCS Configuration | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/1.1.1+SEM-BCS+Configuration+in+BW+and+ECC][scnwiki]]       | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
 | HANA Script       | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
@@ -36,41 +36,100 @@
 **** Following Design Goals *SHOULD* be Met:
 
 *** Context
-
-*** Major Building Blocks  
-**** Version
-Reuse BCS or EC-CS?
+There are some terminologies and concepts should be compared among BCS, EC-CS, BPC, and G/L Accounting. We will choose the right ones in RTC, so that modeling in RTC can be more simpler and straight forward. 
+ 
+**** G/L Account or Financial Statement Item
+RTC can use G/L Accounts to do consolidation, thus sharing the same set of account master data. But we still have doubts on why LC and EC-CS added FS item into their context? If there is good reasons to have an additional set of account master data for consolidation other than G/L Account?
 
 **** Ledger
-Reuse accounting ledger or EC-CS ledger? It seems BCS doesn't have ledger concept.
+Reuse G/L ledger or EC-CS ledger? It seems BCS doesn't have the ledger concept.
+
+The G/L ledger contains =Company Codes=. All the configurations are maintained on each company code. While in EC-CS, the ledger doesn't contain any company code, and all the configurations are globally maintained on ledger. 
+
+Considering if I want to do profit center consolidation, then what's meaning of ledger of profit centers? 
+
+**** Version
+In G/L Accounting, =Version= (or field RVERS) is absolute and remained only for the reason of compatibility. IBPF uses the combination of  =Ledger= and  =Category= for its version dimension. 
+
+Do we need the field =RVERS= or not? If yes, do we reuse BCS' or EC-CS'?
 
 **** Consolidation Chart of Account
-Chart of accounts is optional in BCS. Because you can use multiple hierarchy of account in info-object.
+Chart of Accounts is optional in BCS. Because you can use multiple hierarchies of account in an info-object. EC-CS has its own consolidation COA, but you can map cons COA to a G/L COA.
 
-EC-CS has its own consolidation COA which is different with G/L COA. But you can map cons COA to a G/L COA.
+EC-CS COA is assigned with FS item hierarchies which contains has FS items represented in a hierarchy view. G/L COA has FSV instead. Table bellow describes the correspondences between EC-CS and G/L Accounting.
 
-EC-CS COA is assigned with FS item hierarchies, which afterwards has FS items assigned. Should verify if FS item hierarchy has something to do with SET. 
+| *EC-CS*          | EC-CS COA | FS Item Hierarchy | FS Item | FS Item Set |
+| *G/L Accounting* | G/L COA   | FSV               | Account | Account Set |
 
-**** Financial Statement Item
-Does RTC use FS Item or G/L Account?
+ Should verify if FS item hierarchy has something to do with SET and HRRP. 
 
 **** Consolidation Unit/Dimension and Group 
 BCS defines its cons unit by assigning ~Cons Unit~ role to info-objects, like: company, profit center, cost center, and so on. And cons group is an attribute of a cons unit info-object.
 
-EC-CS has both maintanence views for cons unit and cons group. Additionally, EC-CS has the concept =Dimension=. The consolidation unit depends on the dimension in which it was created. This means that the master record you create for a consolidation unit exists only in that dimension.
+EC-CS has both maintenance views for cons unit and cons group. Additionally, EC-CS has the concept =Dimension=. The consolidation unit depends on the dimension in which it was created. This means that the master record you create for a consolidation unit exists only in that dimension.
 
-Despite the different represntation, the basic idea of cons unit and cons group are rather same. No mater it is in BCS or EC-CS. And Even BPC has very similar concepts. 
+Despite the different representation, the basic idea of cons unit and cons group are rather same. No mater it is in BCS or EC-CS. And Even BPC has very similar concepts. 
 
-RTC may reuse the tables and maintanence views of EC-CS to define its own =Unit & Group=. Then try to map and synchronize them to the correponding objects in BPC.
+RTC may reuse the tables and maintenance views of EC-CS to define its own =Unit & Group=. Then try to map and synchronize them to the corresponding objects in BPC.
 
 **** Consolidation Area
-Define a subsets of characteristic fields and amount fields from ACDOCA & ACDOCC. Meanwhile, fix values are defined when filtering and saving. 
+Consolidation Area only appears in BCS. In BPC the similar concept is consolidation environment without completely match. Consolidation area is to define a subsets of characteristic fields and amount fields from data basis tables (like ACDOCA). Meanwhile, permanent values are defined for filtering and default values. 
 
-Fixed values includes: the version, the fiscal year, the period, and all possible fields you can define.
+Permanent values could include: Version, Fiscal Year, Period, and all possible fields you can define to boundary a consolidation campaign. 
 
-Consolidation Tasks are also assigned to consolidation area.
+Consolidation Methods and Tasks are also assigned to consolidation area.
+
+In EC-CS, there is no such concept, instead it has =Global Parameter=. The global parameters includes dimension, Cons Unit/Group, Version, Fiscal Year, Period, and so on. These information can be accessed among all the consolidation tasks. The limitation is that EC-CS only allows single dimension consolidation, thus not such flexible as BCS.
 
 **** Subassigment and Breakdown Category
+
+
+*** Major Building Blocks  
+Before modeling in RTC, there should be some master data already exist in Central Finance system. For example, Version, Ledger, Company Code, Account, and so on. How to define this master data is not included in this SDD. Here we assume these settings are already there. 
+
+We also need to split 2 branches for modeling: one is modeling for the integration with BPC, and the other is modeling for RTC itself. That is to say, if RTC runs currency translation and elimination, there should be a model for those tasks to rely on. 
+
+It is of course not a good idea to develop 2 kinds of modeling tool. But to find a solution that the 2 branches share most of same and only differentiate at a point where there is no way to share anymore. Following diagram describes a possible solution under the premise that BPC can only consume BW info-providers. 
+
+#+Caption: Data Modeling Tools
+[[../image/DataModelingTools.png]]
+
+What will be done in RTC is to choose foundation tables / views, and project fields of them. The fields will be then assigned different roles so that semantically, consolidation tasks can be told how to deal with those fields. 
+
+There are permanent parameters defined so that consolidation campaign is narrowed into certain columns and rows of a foundation table. 
+
+Based on above definitions, a CDS view could be generated which includes projected fields and their role information. The data is also filtered according to the the permanent parameters. The CDS view is now actually a consolidation area that well boundary a consolidation campaign, based on which all the consolidation tasks can be run. And the branch is spitted here.
+
+The BPC branch will use the CDS view to create HANA calculation view, where additional data mapping, join, and fields calculations happen there. BW info-providers can then be build on the HANA Calc view, which afterwords can be consumed by BPC modeling tool. There, field roles will be assigned again, because the semantic information may not be consistent between RTC and BPC, and the information could be lost during HANA Calc view creation. 
+
+The RTC branch can use the CDS view to generate HRF vocabulary which allow end-users to define their own rules. The CDS view can also be directly consumed by consolidation tasks. 
+
+Based on the above diagram, we call have following building blocks:   
+
+**** Modeling UI
+Modeling UI is a central place where RTC modeling happens. Users use this transaction to assign foundation tables, do field projection and role assignments, set permanent parameters, and other controls to portray a consolidation area. 
+
+#+Caption: Modeling UI
+[[../image/ModelingTool.png]]
+
+**** Field Projection and Role Assignment UI
+Fields are projected from data foundation tables, like ACDOCA or ACDOCC. These fields are categorized into certain groups. Some groups are mandatory for consolidation, and even the number of fields is fixed. Based on existing knowledge from BCS and EC-CS, I category fields into following groups:
+
+#+Caption: Field Projection & Role Assignment
+[[../image/FieldRoleAssignment.png]]
+
+User first assigns a foundation table/view, then the above screen is pop up to let user project fields, assigned roles, and set permanent parameters. Only certain groups are allowed to set permanent parameters, these parameters will be represented as ~where~ and ~group~ statement during CDS view generation.
+
+Some groups are mandatory, for example ~Consolidation Unit/Dimension~, you must at least assign one field (at maximum two) for this group of fields. ~Financial Statement Item~ is also mandatory. 
+
+This UI representation of field projection and role assignment is tailored to ACDOCA table. It should be flexible enough for other tables. So templates will be designed which allow user to using exist settings. For example, template for ACDOCA should already have some field assigned for those  mandatory field groups. User can also extend the view and save as their own templates.
+
+**** CDS View Generation
+There are existing APIs to allow ABAP generates CDS views. Transportation is also utilized in the set of APIs which allow the generated CDS views can be transported from DEV to QA, and to Product system.
+
+The demo ABAP program is: WB_DDLS_API_EXAMPLE_PROG
+
+More details can be found in: https://wiki.wdf.sap.corp/wiki/display/TIPABAPVB/CDS+DDL+API+Description
 
 **** Custom Attributes and Enhancement 
 

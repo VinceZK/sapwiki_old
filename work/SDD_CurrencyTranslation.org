@@ -1,5 +1,5 @@
 #+PAGEID: 1818041661
-#+VERSION: 3
+#+VERSION: 4
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Currency Translation
@@ -15,21 +15,20 @@
 | Developers            | Summer Xia, Lynn Chen, Jane Ni |
 
 *** References
-|                   |                  |               | <30>                           |
-| Document Title    | Date             | Link          | Comments                       |
-|-------------------+------------------+---------------+--------------------------------|
-| EC-CS Online Help | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/5c/c1bba4445f11d189f00000e81ddfac/content.htm?frameset=/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=104&show_children=true#jump104][online help]]   | The help doc doesn't describe any information on EC-CS's data validation. It's not clear how EC-CS define those rules, but it is for sure EC-CS has this functionality. |
-| BCS Online Help   | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/a3/6d723b784b1400e10000000a114084/content.htm?frameset=/en/a3/6d723b784b1400e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=116&show_children=true#jump116][online help]]   | The validation of BCS is mainly focus on data consistency of 1) Reported financial data, 2)Standardized financial data, 3)Consolidated data, 4)Additional financial data, 5)Journals |
-| BPC Online Help   | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/7b/4479fd9b394314a257d92d9be6a71f/content.htm][online help]]   | The help doc describes the _Rules_ of BPC standard model. You can get a general idea of how rules are applied in financial consolidation. |
-| SAP SET           | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c1/fcdf390ab90b35e10000000a11402f/content.htm?frameset=/en/c1/fcdf390ab90b35e10000000a11402f/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=3&show_children=true#jump3][online help]]   | Introduce what is SAP SET, different types of SET, and how it is used in SAP enviroment. |
-| Consolidations    | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/Consolidations][scnwiki]]       | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
-| HANA Script       | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
-| AMDP Guide        | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
+|                |                  |               | <30>                           |
+| Document Title | Date             | Link          | Comments                       |
+|----------------+------------------+---------------+--------------------------------|
+| EC-CS CT       | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/5c/c1bba4445f11d189f00000e81ddfac/content.htm?frameset=/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=104&show_children=true#jump104][online help]]   | This document describe much about currency tranlsation in EC-CS. It is the main document that potrays you how currency tranlsation is done in consolidation. |
+| BCS CT         | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/a3/6d723b784b1400e10000000a114084/content.htm?frameset=/en/a3/6d723b784b1400e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=116&show_children=true#jump116][online help]]   | The validation of BCS is mainly focus on data consistency of 1) Reported financial data, 2)Standardized financial data, 3)Consolidated data, 4)Additional financial data, 5)Journals |
+| BPC CT         | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/7b/4479fd9b394314a257d92d9be6a71f/content.htm][online help]]   | The help doc describes the _Rules_ of BPC standard model. You can get a general idea of how rules are applied in financial consolidation. |
+| SAP SET        | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c1/fcdf390ab90b35e10000000a11402f/content.htm?frameset=/en/c1/fcdf390ab90b35e10000000a11402f/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=3&show_children=true#jump3][online help]]   | Introduce what is SAP SET, different types of SET, and how it is used in SAP enviroment. |
+| Consolidations | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/Consolidations][scnwiki]]       | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
+| HANA Script    | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
+| AMDP Guide     | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
 
 
 ** Design
 *** Key Requirements and Design Goals
-
 
 **** Following Design Goals *MUST* be Met:
    
