@@ -5,50 +5,103 @@
 #+TITLE: SDD-Currency Translation
 ** General Information
 *** Stakeholders and Roles
-| Role                  | Name                           |
-|-----------------------+--------------------------------|
-| Author(s)             | Vincent Zhang                  |
-| Architect             | Vincent Zhang                  |
-| Product Owner         | Shi Ying, Carol Pan            |
-| Information Developer |                                |
-| Quality Responsible   | Yao Cen                        |
-| Developers            | Summer Xia, Lynn Chen, Jane Ni |
+| Role                  | Name                                                 |
+|-----------------------+------------------------------------------------------|
+| Author(s)             | Vincent Zhang                                        |
+| Architect             | Vincent Zhang                                        |
+| Product Owner         | Shi Ying, Carol Pan                                  |
+| Information Developer |                                                      |
+| Quality Responsible   | Yao Cen                                              |
+| Developers            | Steve Mo, Marvin Qian, Liu Chang, Lynn Chen, Jane Ni |
 
 *** References
-|                |                  |               | <30>                           |
-| Document Title | Date             | Link          | Comments                       |
-|----------------+------------------+---------------+--------------------------------|
-| EC-CS CT       | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/5c/c1bba4445f11d189f00000e81ddfac/content.htm?frameset=/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=104&show_children=true#jump104][online help]]   | This document describe much about currency tranlsation in EC-CS. It is the main document that potrays you how currency tranlsation is done in consolidation. |
-| BCS CT         | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/a3/6d723b784b1400e10000000a114084/content.htm?frameset=/en/a3/6d723b784b1400e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=116&show_children=true#jump116][online help]]   | The validation of BCS is mainly focus on data consistency of 1) Reported financial data, 2)Standardized financial data, 3)Consolidated data, 4)Additional financial data, 5)Journals |
-| BPC CT         | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/7b/4479fd9b394314a257d92d9be6a71f/content.htm][online help]]   | The help doc describes the _Rules_ of BPC standard model. You can get a general idea of how rules are applied in financial consolidation. |
-| SAP SET        | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c1/fcdf390ab90b35e10000000a11402f/content.htm?frameset=/en/c1/fcdf390ab90b35e10000000a11402f/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=3&show_children=true#jump3][online help]]   | Introduce what is SAP SET, different types of SET, and how it is used in SAP enviroment. |
-| Consolidations | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/Consolidations][scnwiki]]       | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
-| HANA Script    | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
-| AMDP Guide     | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
+|                            |                  |               | <30>                           |
+| Document Title             | Date             | Link          | Comments                       |
+|----------------------------+------------------+---------------+--------------------------------|
+| EC-CS Currency Translation | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/5c/c1bba4445f11d189f00000e81ddfac/content.htm?frameset=/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=104&show_children=true#jump104][online help]]   | This document describe much about currency tranlsation in EC-CS. It is the main document that potrays you how currency tranlsation is done in consolidation. |
+| BCS Currency Translation   | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/a3/6d723b784b1400e10000000a114084/content.htm?frameset=/en/a3/6d723b784b1400e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=116&show_children=true#jump116][online help]]   | The validation of BCS is mainly focus on data consistency of 1) Reported financial data, 2)Standardized financial data, 3)Consolidated data, 4)Additional financial data, 5)Journals |
+| BPC Currency Translation   | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/7b/4479fd9b394314a257d92d9be6a71f/content.htm][online help]]   | The help doc describes the _Rules_ of BPC standard model. You can get a general idea of how rules are applied in financial consolidation. |
+| Foreign Currency Valuation | <2016-02-27 Sat> | [[http://help.sap.com/saphelp_dimp50/helpdata/en/a6/004940f0030272e10000000a155106/content.htm?frameset=/en/e2/43c54012a9cc38e10000000a155106/frameset.htm&current_toc=/en/2d/830e405c538f5ce10000000a155106/plain.htm&node_id=347&show_children=false][online help]]   | How G/A Accounting deals with currency translation? User can costomize its valuation methods, define the valuation area, and set automatic posting. In general, it is quite simpler than currency translation during consolidation. As most of the translation are calcuated at document level. |
+| Currency                   | <2016-02-27 Sat> | [[http://help.sap.com/saphelp_dimp50/helpdata/en/e5/0781b44acd11d182b90000e829fbfe/content.htm?frameset=/en/c5/da683859cf3b45e10000009b38f8cf/frameset.htm&current_toc=/en/e5/078d0b4acd11d182b90000e829fbfe/plain.htm&node_id=19&show_children=false][online help]]   | Simple introduction on what is currency in SAP finance. Includes defination of =Currency Key=, =Exchange Rate Type=, and =Reference Currency=. |
+| SAP SET                    | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c1/fcdf390ab90b35e10000000a11402f/content.htm?frameset=/en/c1/fcdf390ab90b35e10000000a11402f/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=3&show_children=true#jump3][online help]]   | Introduce what is SAP SET, different types of SET, and how it is used in SAP enviroment. |
+| Consolidations             | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/Consolidations][scnwiki]]       | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
+| CONVERT_CURRENCY           | <2016-02-27 Sat> | [[https://help.sap.com/saphelp_hanaplatform/helpdata/en/d2/2d746ed2951014bb7fb0114ffdaf96/content.htm][online help]]   | Reference guide of HANA currency conversion function. |
+| HANA Script                | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
+| AMDP Guide                 | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
 
 
 ** Design
 *** Key Requirements and Design Goals
+Currency Translation of RTC should fully leverage HANA technology, so that a distinguished performance boost can be gain. It targets on translating financial statements from one currency to another currency. The translation algorithm can be customized or enhanced in an easy and understandable way. 
 
 **** Following Design Goals *MUST* be Met:
-   
+1. The core translation algorithm must be pushed down to HANA.
+2. Currency translation can be run on-the-fly for a consolidation unit. 
+3. There must be a way to easily define exhange rates or find translated values.
+4. The delivered translation algorithm must cover most of the translation cases in financial consolidation.
+5. Translation algorithm can be customized and enhanced by customer.
+6. Translation difference can be well represented.
+7. Rounding difference can be well handled.
+8. The translated result can be posted to ACDOCC as documents. 
+9. There must be audit trails to record who, when, and what of a currency translation run.
+
 **** Following Design Goals *SHOULD* be Met:
+1. The calculation is done by HANA function: CONVERT_CURRENCY.
+2. The translation algorithm should be realized using AMDP(HANA SQL scripts).
+3. Analytic Office can directly consume outputs of translation algorithm. 
+4. TCUR* tables should be reused to define exchange rates and rate types.
+5. Data filtering should re-use SAP SET, as it already provides customization UI.
+6. User can easily define the parameters of its currency translation run.
+7. Provisional run should be provided in case group values are not ready for reconciliation.
+8. Currency Translation can be run repeatly either in delta mode, or in replace mode.
+9. Differential item can be breakdown by subassignments.
 
 *** Context
-
-*** Major Building Blocks
 Currency Translation enables you to translate financial data reported by consolidation units into the currency of your consolidation group.
 
 Financial data reported by consolidation units is usually collected in the Consolidation application in local currency. You need to translate this data into group currency before you can create consolidated financial statements.
 
-Currency Translation for RTC should push the main translation logic into HANA, so that performance can be garantee when running on huge amount data. Besides, CT for RTC should be in a simple and clear philosophy that further enhancement and hack could be possible for customers. The overall design diagram is like bellow:
+*** Major Building Blocks
+Currency Translation of RTC should push the main translation algorithm into HANA, so that performance can be garanteed when running on huge amount of data. Besides, CT of RTC should be in a simple and clear philosophy that further enhancement and hack would be possible. The overall design diagram can be described this:
 
 #+Caption: Currency Translation Overview
 [[../image/CurrencyTranslation.png]]  
 
 Currently, the design mainly refers EC-CS and ERP Foreign Currency Valuation. It seems too sophisticate and not simple enough for attracting more future developments. It is worth to have more research on how BPC realizes its currency conversion. We should leverage the 2 kinds of philosophy. What I like is simple in core, sophisticate outside.
 
-**** Financial Statement Item Set       :Frank:
+**** Exchange Rate Indicator        :Chang:
+Customizing tables and UI
+
+**** Translation Method Customization                                 :Chang:
+A list of currency translation entries. Each translation entry is a combination  of an AMDP method, Exhange Rate Indicator, and Currency Translation Area. 
+
+**** Translation Method Runtime API       :Steve:
+An AMDP method that runs all the translation entries defined in the translation method customization. Unions all the return list of each translation entry run, and outputs the unioned the result by different ways. Details can be found in the following diagram:
+
+#+Caption: Currency Translation Method Run 
+[[../image/CT_MethodRun.png]]  
+
+**** Translation Algorithms               :Marvin:
+A translation algorithm deal with a single FS item SET, with one exchange rate indicator, and one pair of differential items. In the FS item SET, all the FS items applys the same translation logic with the same exhange rate, and records difference to the same differential items. 
+
+A translation algorithm maps to a tranlsation key, which is a charachter value(from '0' to 'Z') used during customizing. Or you can say: A translation key is a unqiue name of a tranlsation algorithm. The number of translation keys can be enumerated in finance consolidation. In EC-CS, only 11 keys are delievered(0~A). The use of the algorithms can also be combined with input parameters, which then can fulfill various practical use cases. 
+
+There comes the question of why RTC uses the concept =Translation Key=. As it is such a redundant concept only produces confusion. Because fundamentally, translation algorithm is simple. It finds the correct exchange rate, then multiply it with the source amount to get the target amount, and process the difference if different rates are used to different sets of FS items. User can then just use a multi-dimensional configuarition UI to set dimensional parameters to get a dedicate translation algorithm.
+
+Answer to that question is that it is difficult to generate an algorithm based on configuration. For most cases, you can use exhcange rate tables to get the right rate, but other cases require you get an already translated amount in somewhere (access other tables). And the =Source Amount= is also tricky, sometimes it is just a field in your table; sometimes, it is a cumulative value. To achieve this, you must need dynamic programing. Either you write a program that is powerful enough to recognize all the customization combinations, or the algorithm program is generated automatically after customizing. ABAP maybe can afford it, but not HANA SQL scripts. HANA SQL scripts is a declaretive language, dynamic programing for SQL scripts is somehow not effective. And it always has drawbacks on performance. 
+
+With the =Translation Keys=, the limit number of them can be hard-coded in the main program. According to the customization, difference algorithm is applied to different translation entries which are flagged with a dedicate translation key. For end-users, they must have some time to get familar with these keys, and the logic behind them. 
+
+~Not sure if EC-CS has the same reason for its 11 translation keys!~
+
+Detail logic of a generic translation algorithm can be described as in the following diagram:
+
+#+Caption: Currency Translation Algorithm for a Single Set 
+[[../image/CT_SingleSetAlgorithm.png]]  
+
+**** Subitem Assignment
+
+**** Currency Translation Area            :Frank:
 Do we re-use EC-CS FS item tables(TF100) and maintanence UI(CX13)?
 
 If the RTC is only designed for FI, the answer could be possiblely "YES". But consolidation algorithm should not be limited to FI. If the data basis is mainly on this kind of hierarchy-like finance structure, it will limit the future usages. Following questions should be think deeper:
@@ -61,9 +114,9 @@ To answer the above questions, following research task could be done:
 1. Combine CDS and HRF to boundary the data area for everything?
 2. If FS item set is defined, the corresponding CDS view and HRF vocabulary(Alias is considerable) are also generated.
 3. Currency Translation and Inter-Unit Elimination will choose actually the CDS and Vocabulary correlated.
-4. There must be some fields mandatory for a specific task. Take currency translation as an example, an amount field, a currency key field, and an account field should exist. 
+4. There must be some fields mandatory for a specific task. Take currency translation as an example, an amount field, a currency key field, and an account field should exist.
 
-**** Translation on-the-fly        :Jane:                                       
+**** On-The-Fly Translation                :Jane:                              
 Given an FSV, Translation procedures (cumulative and period), Rate Indicators, Differential FS Items, I could run currency translation on-the-fly. 
 
 An AMDP function will be developed which calls HANA function =CONVERT_CURRENCY= based on data and logic provided above. The output of AMDP should be an FSV-like hierarchy structure which again is mapped to an CDS view. I can use AO to view the translated result. Following outputs are expected:
@@ -78,18 +131,18 @@ An AMDP function will be developed which calls HANA function =CONVERT_CURRENCY= 
 
 Need Carol's help to provide an FSV and related FS items. All other stuff can be mocked. 
 
-**** Final Translation (with posting)     :Jane:
+**** Final Translation (with posting)    
 Based on the =Translation on-the-fly=, I can post the translated results to ACDOCC. I can build CDS views on ACDOCC so that the final translation result can be viewed through reporting tools. 
 
 According to different translation procedures, some amount could be read from ACDOCA, so it could be a union of ACDOCA and ACDOCC to represent the final translated result.
 
 The posting API should ready at that time.
 
-**** Translation Procedure and Rate Indicator
+**** Provisonal Translation
 
-**** Translation Difference Process
+**** Rounding
 
-**** Rounding Difference Process
+**** Audit Trail
   
 
 *** Design Challenges resulting from Non-Functional Requirements
