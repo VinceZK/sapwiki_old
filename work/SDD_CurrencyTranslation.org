@@ -1,5 +1,5 @@
 #+PAGEID: 1818041661
-#+VERSION: 5
+#+VERSION: 7
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Currency Translation

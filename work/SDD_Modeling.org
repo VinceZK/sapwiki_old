@@ -1,5 +1,5 @@
 #+PAGEID: 1821717599
-#+VERSION: 2
+#+VERSION: 6
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Modeling
@@ -21,7 +21,9 @@
 | EC-CS Modeling    | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/ab/cae87873fc11d2996b0000e8a5999a/content.htm?frameset=/en/05/b0a3c88a8b11d299830000e8a5999a/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=9&show_children=false][online help]]   | Modeling in EC-CS is actually configurations on consolidation master data and controlling. As EC-CS already has data container ECMCA & EMMCT. Modeling tasks could include definition of: Dimension, Cons Unit, Cons Group, Cons Chart of Account, Subassigment, Version, and Ledger. |
 | BCS Modeling      | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/25/dd833b36b0980fe10000000a11402f/content.htm?frameset=/en/9d/f4783b5fed4834e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=12&show_children=false][online help]]   | Modeling in BCS differs from EC-CS is the requirement to define =Data Basis=. Data basis is a bw cube (combine data sources as data streams), which consists of characteristics and key figures with their respective roles for consolidation. base on data basis, consolidation areas can be defined which are subsets of characteristics and key figures. besides, all the master data and configuration are quite same with EC-CS. |
 | BPC Modeling      | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/61/4248fcbed34a32b4e0637185fda206/content.htm?frameset=/en/99/3b45ce7bd64133ac81afd1698d93c5/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=126][online help]]   | BPC has 2 versions: Standard and Embedded. There are differences on modeling of the 2 products versions. RTC refers much more to its embedded version. In its embedded version, modeling means tie a BW virtual-provider and define fields role. |
+| Cons. Versions    | <2016-03-08 Tue> | [[http://help.sap.com/saphelp_470/helpdata/en/8c/cf7d7888f711d299810000e8a5999a/content.htm?frameset=/en/dc/f18b884efb11d39a350000e8a5999a/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=19][online help]]   | Version is rather a complicate concept in consolidation. As a lot of settings are based on version. There are also differences between EC-CS and BCS. In EC-CS, version is only a 3-char long code, while in BCS, the same 3-char long code is assigned with a combination of multiple characteristics. |
 | SAP SET           | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c1/fcdf390ab90b35e10000000a11402f/content.htm?frameset=/en/c1/fcdf390ab90b35e10000000a11402f/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=3&show_children=true#jump3][online help]]   | Introduce what is SAP SET, different types of SET, and how it is used in SAP environment. |
+| SAP Appl Log      | <2016-03-08 Tue> | [[http://help.sap.com/saphelp_sem40bw/helpdata/en/2a/fa0216493111d182b70000e829fbfe/content.htm?frameset=/en/2a/fa0230493111d182b70000e829fbfe/frameset.htm&current_toc=/en/2a/fa0b1a493111d182b70000e829fbfe/plain.htm&node_id=51&show_children=false][online help]]   | How to use SAP application log framework. |
 | Chart of Accounts | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c7/a88ab243dd11d182b30000e829fbfe/content.htm?frameset=/en/e5/077a8a4acd11d182b90000e829fbfe/frameset.htm&current_toc=/en/e5/078d0b4acd11d182b90000e829fbfe/plain.htm&node_id=9][online help]]   | Chart of Accounts in SAP means a list of all G/L accounts used by one or several company codes. But in other FI/Accounting software it may have different meanings. |
 | BCS Configuration | <2015-12-26 Sat> | [[http://wiki.scn.sap.com/wiki/display/ERPFI/1.1.1+SEM-BCS+Configuration+in+BW+and+ECC][scnwiki]]       | It is scnwiki page that contains all the practical knowledge regarding SAP BCS and EC-CS. I guess it is a private note book by a SAP finance consultant:-) |
 | HANA Script       | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
@@ -32,7 +34,7 @@
 *** Key Requirements and Design Goals
 Data Modeling is the prerequisite for consolidation. It defines the master data, customizing data, and transactional data that consolidation tasks are running on. 
 
-To be more specificly, data modeling can be characterized by:
+To be more specifically, data modeling can be characterized by:
 1. Define Currencies;
 2. Define Versions;
 3. Define Data Foundations and Consolidation Area;
@@ -44,17 +46,17 @@ To be more specificly, data modeling can be characterized by:
 **** Following Design Goals *MUST* be Met:
 1. Fully take advantages of HANA and S/4 architecture;
 2. Modeling artifacts can be consumed by BPC;
-3. Performance must be garantee for the generated modeling artifacts.
+3. Performance must be guarantee for the generated modeling artifacts.
 
 **** Following Design Goals *SHOULD* be Met:
-1. Modeling tools should be intuiative and fulfill most of the consolidation requirements;
-2. Modeling tools should provide errorproof features to avoid data inconsistency.
+1. Modeling tools should be intuitive and fulfill most of the consolidation requirements;
+2. Modeling tools should provide error-proof features to avoid data inconsistency.
 
 
 *** Context
-As mentioned, Modeling is the prerequisite for consolidation. There are lots of master data, customizaions, settings, and even system configurations should be prepared before consolidation tasks actually run.
+As mentioned, Modeling is the prerequisite for consolidation. There are lots of master data, customizations, settings, and even system configurations should be prepared before consolidation tasks actually run.
 
-It is a heavy task that could be done by different roles includes: system adminstrators for connectivities, consultants, developers, and accountants. But after modelingis perfectly set, consolidation tasks can be run smoothly and recrusivly.  
+It is a heavy task that could be done by different roles includes: system administrators for connectivities, consultants, developers, and accountants. But after modelings perfectly set, consolidation tasks can be run smoothly and recursively.  
 
 Most terminologies and concepts of financial consolidation appears during modeling. Some of them are vital and should be carefully chosen among BCS, EC-CS, BPC, and G/L Accounting. We try to make Real-time Consolidation be more simpler and straight forward. 
  
@@ -88,7 +90,7 @@ BPC uses =Flow= to distinguish different journal items that are generated during
 
 In Accounting, we have =Document Type=, =Transaction Type=, and  =Business Transaction= to differentiate types of journal items that are generated by different components and different purposes.
 
-The question is: does RTC need BPC's =Flow= concept, or we still use accounting types combination? =Flow= is a more genaric concept that although it is very abstract, but once you understand it, you can do everything with it. The accounting types combination may be more useful for FI applications, but they are even inexplicable for people outside SAP FI.
+The question is: does RTC need BPC's =Flow= concept, or we still use accounting types combination? =Flow= is a more generic concept that although it is very abstract, but once you understand it, you can do everything with it. The accounting types combination may be more useful for FI applications, but they are even inexplicable for people outside SAP FI.
 
 We need keep this in mind during development.
  
@@ -123,24 +125,24 @@ It's just too much concepts and layers here. Think if can be simplified during d
 
 
 *** Major Building Blocks  
-Modeling can contain many things, but in this SDD, we only talk about master/customization data and schema defination for a consolidation. Other topics like system conectivity, data collection, and so on may exceed the area of consolidation itself.
+Modeling can contain many things, but in this SDD, we only talk about master/customization data and schema definition for a consolidation. Other topics like system connectivity, data collection, and so on may exceed the area of consolidation itself.
 
-The master/customization data maintenance is quite straight forward once all the concepts are cleared and defined. The tool can either be auto-generated maintenance views, or be specificly developed UIs and APIs for both manual input and batch input. 
+The master/customization data maintenance is quite straight forward once all the concepts are cleared and defined. The tool can either be auto-generated maintenance views, or be specifically developed UIs and APIs for both manual input and batch input. 
 
-Schema defination or what we call =Data Modeling= can be the main development stuff. Tools are developed to allow users easily define the schema of their consolidation data. All the consolidation tasks are running on this data schema and producing consolidated results.
+Schema definition or what we call =Data Modeling= can be the main development stuff. Tools are developed to allow users easily define the schema of their consolidation data. All the consolidation tasks are running on this data schema and producing consolidated results.
  
-We need to split 2 branches for data modeling: one is modeling for the integration with BPC, and the other is modeling for RTC itself. That is to say RTC runs some of the consolidation tasks, and then gives the half-processed results to BPC for further consolidations. Following diagram describes details of the apporach.  
+We need to split 2 branches for data modeling: one is modeling for the integration with BPC, and the other is modeling for RTC itself. That is to say RTC runs some of the consolidation tasks, and then gives the half-processed results to BPC for further consolidations. Following diagram describes details of the approach.  
 
 #+Caption: Data Modeling at Design Time
 [[../image/DataModelingDesignTime.png]]
 
-The first step is creating a foundation view on ACDOCA(and other tables if necessary). The foundation view projects fields from ACDOCA (and joined or unioned other data sources), apply filters(where conditions), do field mappings and alignments. This can be achieved using CDS modeling technology which is a genaric database modeling technology that can fulfill almost anything. 
+The first step is creating a foundation view on ACDOCA(and other tables if necessary). The foundation view projects fields from ACDOCA (and joined or union-ed other data sources), apply filters(where conditions), do field mappings and alignments. This can be achieved using CDS modeling technology which is a generic database modeling technology that can fulfill almost anything. 
 
-User should ensure the performance of the foundation view, because most of the consolidation tasks afterwards are pumping data from it. 
+User should ensure the performance of the foundation view, because most of the consolidation tasks afterwords are pumping data from it. 
 
-The foundation view is then assigned to a consolidation environment, which is boundary defination of a consolidation compaign for a specific purpose. You can also assign a consolidation journal table other than ACDOCC(default one), and do field mapping with the foundation view. Those 2 steps are in dotted rectangles because they are optional. In RTC's early releases, only ACDOCA and ACDOCC will be involved, so there is no need to do fields mappings, as the 2 tables share most of the field names. 
+The foundation view is then assigned to a consolidation environment, which is boundary definition of a consolidation campaign for a specific purpose. You can also assign a consolidation journal table other than ACDOCC(default one), and do field mapping with the foundation view. Those 2 steps are in dotted rectangles because they are optional. In RTC's early releases, only ACDOCA and ACDOCC will be involved, so there is no need to do fields mappings, as the 2 tables share most of the field names. 
  
-Versions can be defined to allow parallel consolidations in the same consolidation environment according to different aspects. For example, atual and plan, US GAAP and IFRS. You can use 2 fields: =Data Category= and =Accounting Principle= to define various version combinations. Each combination can have its specific customizations, like consolidation frequency, and so on.
+Versions can be defined to allow parallel consolidations in the same consolidation environment according to different aspects. For example, actual and plan, US GAAP and IFRS. You can use 2 fields: =Data Category= and =Accounting Principle= to define various version combinations. Each combination can have its specific customizations, like consolidation frequency, and so on.
 
 Based on above definitions, you can run validations to check if all the setting are right, and activate the consolidation environment. Following rules could be validated:
 
@@ -149,7 +151,7 @@ Based on above definitions, you can run validations to check if all the setting 
 3. Fields are correctly mapped to ACDOCC;
 4. All necessary fixed parameters and values are set.
 
-After successfully activation, the consolidation environment can run consolidastion tasks. In the initial release of RTC, it could be only a status change, as ACDOCA and ACDOCC are already mapped at table level. But in future releases, a CDS view will be generated which encapsulates the mapping information. This CDS view is called =Consolidation Area View=. It must contain a subset of fields of the consolidation journal table(ACDOCC), and share the same field names. Thus permits the values can be correctly saved into target fields without additional mapping logic in HANA scripts.
+After successfully activation, the consolidation environment can run consolidation tasks. In the initial release of RTC, it could be only a status change, as ACDOCA and ACDOCC are already mapped at table level. But in future releases, a CDS view will be generated which encapsulates the mapping information. This CDS view is called =Consolidation Area View=. It must contain a subset of fields of the consolidation journal table(ACDOCC), and share the same field names. Thus permits the values can be correctly saved into target fields without additional mapping logic in HANA scripts.
 
 ~If possible, there will also a HANA calculation view be generated based on consolidation journal table(ACDOCC) for the consumption of BPC.~
 
@@ -161,13 +163,84 @@ User can either choose do all the consolidation tasks in BPC, or some of tasks (
 
 Following building blocks needed to realize modeling component: 
 
-**** Consolidation Environment Defination UI
-Modeling UI is a central place where RTC modeling happens. Users use this transaction to assign foundation tables, do field projection and role assignments, set permanent parameters, and other controls to portray a consolidation area. 
+**** Consolidation Environment Definition UI     :Sam:
+A consolidation environment is the most parent object that contains everything. Here I list few that would be delivered in the initial release:
+1. *Data Stream* defines the consolidation data views, and journal table to persist consolidation result.
+2. *Version* defines the version characteristics combinations, and version specific settings.
+3. *Assignment* assigns FI objects like ledger, CoA, and Fiscal Year Variant.
+4. *Settings* additional settings control how the consolidation environment is used. 
 
-#+Caption: Modeling UI
-[[../image/ModelingTool.png]]
+User can define multiple consolidation environments, with each have 3 different status: =Active=, =Saved=, and =Error=. Only active consolidation environments can run consolidation tasks. 
 
-**** Field Projection and Role Assignment UI
+In the detail screen of a consolidation environment, you can state its dimension. Currently, only 1 dimension is supported. User can select among =Company=, =Profit Center=, and =Cost Center= dimensions. Each dimension has a combined partner unit assigned. If using ACDOCA&ACDOCC, partner dimension is selected default.
+
+In the =Data Stream= tab, a CDS view based on ACDOCA is chosen as the consolidation data view. This is the only mandatory view that contains all the financial journals. Other views can be added for different consolidation tasks. As in the initial release, only consolidation data view is involved, so the UI is designed as a form just for the simplification. But behind, you should be awarded a consolidation environment could have multiple data views. 
+
+The consolidation journal table currently is fixed as ACDOCC. It is supposed in future use can assign his own journal table to persist consolidation results. Consolidation area view can be generated automatically based on the mapping information between consolidation data view and consolidation journal table. There will be a data mapping screen in future releases, but currently, ACDOCA and ACDOCC are supposed already mapped, and there is no need to generated the consolidation area view. You can just hide it in the initial release.
+
+#+Caption: Consolidation Environment UI Tab 1
+[[../image/ConsEnvDefinationUI_1.png]]
+
+In the =Version= tab, you define field combination for different version IDs. Currently, only 4 fixed characteristic fields are used to define a version combination. But in future, it is supposed to allow user to define version combination freely. 
+
+Each version combination can be assigned with version specific settings. Those settings affect how some consolidation tasks run for the assigned version only. 
+
+#+Caption: Consolidation Environment UI Tab 2
+[[../image/ConsEnvDefinationUI_2.png]]
+
+The =Assignments= tab allows user to assign financial objects, like: fiscal year variant, Consolidation Chart of Accounts. There could be more those kind of financial objects need to be bound to a consolidation area. 
+#+Caption: Consolidation Environment UI Tab 3
+[[../image/ConsEnvDefinationUI_3.png]]
+
+=Settings= tab contains additional settings that globally controls how consolidation run. 
+#+Caption: Consolidation Environment UI Tab 4
+[[../image/ConsEnvDefinationUI_4.png]]
+
+=Admin= tab contains administrative data of the consolidation environment.
+#+Caption: Consolidation Environment UI Tab 5
+[[../image/ConsEnvDefinationUI_5.png]]  
+
+**** Version, Ledger, Category Master Data Maintenance UI     :Lynn:
+*Version* in consolidation means different copies of consolidated results for different purposes under a same consolidation area. So that although there are some differences among these versions, but they share most of the common master data and settings. For example, based on the same actual financial data, chart of accounts, and organizational structure, you can do consolidation for US GAAP, or IFRS.
+
+But "Version" has a board meanings, for example, a program has multiple versions. Consolidation versions stand for a combination of different characteristic fields, like: Actual/GAAP/Legal, Plan/IFRS/Management. How many characteristic fields are involved to form a version combination can be freely defined by customers. There comes confusion between version-related fields and version itself. 
+
+For example, the last field in the tab2 mock UI names ~Version~ too. But actually, it stands for the VERSN field in COEP. Add this field is only for the data integration with CO. The right 4 fields combination is called a consolidation version which is assigned with a version ID of 001. They all call ~version~ in different context. 
+
+You develope a customization table for version ID definition. Refer EC-CS' table: TF200 and TF201. 
+
+~There are still some uncertainties about BCS' version combination. Actually, version ID and version combination are 2 redundant information.~   
+
+*Ledger* in consolidation is combined with =Accounting Principle=. You can just regard them as the same thing at concept level. So =Ledger= is also a version-related field used in version combination. You develop a customization table to allow user store different ledgers and ledger level settings. You can refer EC-CS' ledger customization.
+
+*Category* is used to specify the consolidation purpose for, take an example, plan or actual. Try to reuse IBPF's existing category maintenance view: FCOMV_CATEGORY
+
+*Valuation* missing information. Need Ying's verification.
+ 
+Version is the most complicate configurations in consolidation. You can refer EC-CS and BCS to see how they realize the consolidation version. Regarding with RTC, in its initial release, we should only pick the essential parts of them. 
+
+**** Foundation View Validation Method        :Lynn:
+When the foundation view is assigned to a consolidation area, combined with other settings on consolidation area, there are rules should be check and validated. These rules could be(no more less):
+1. If correct filters are set;
+2. If all mandatory fields are projected;
+3. Fields are correctly mapped to ACDOCC;
+4. All necessary fixed parameters and values are set.
+
+To achieve this, you should read the meta data of the CDS view. Please refer ABAP program: ~WB_DDLS_API_EXAMPLE_PROG~ to get idea on how to access CDS view source. 
+
+You should reuse SAP application log (SLG0&SLG1) to show the check result. You can also refer ABAP class: ZCL_BG_LOG in S4H.
+
+**** Foundation CDS View      :Frank:
+Foundation CDS view is the main source of consolidation data, based on what consolidation tasks are run to produce consolidated results. 
+
+In the initial releases, the source data is mainly coming from ACDOCA. You need to create a CDS view on ACDOCA and do necessary fields projections and data filtering.  There are also mapping and derivations need to be done at CDS level:
+1. Operational Account --> Group Account
+2. Company Code --> Company
+3. Fiscal Year Variant Alignment. [[http://help.sap.com/saphelp_470/helpdata/en/dc/f18b884efb11d39a350000e8a5999a/content.htm?frameset=/en/58/8e6a3c32853960e10000000a11402f/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=86][Check in KM]]
+
+Text fields should be avoided to join here. And field names should keep unchanged. The foundation CDS view should also avoid to use parameters as HANA calculation view can not consume parameterized CDS view. 
+
+**** Field Projection and Role Assignment
 Fields are projected from data foundation tables, like ACDOCA or ACDOCC. These fields are categorized into certain groups. Some groups are mandatory for consolidation, and even the number of fields is fixed. Based on existing knowledge from BCS and EC-CS, I category fields into following groups:
 
 #+Caption: Field Projection & Role Assignment
@@ -179,15 +252,12 @@ Some groups are mandatory, for example ~Consolidation Unit/Dimension~, you must 
 
 This UI representation of field projection and role assignment is tailored to ACDOCA table. It should be flexible enough for other tables. So templates will be designed which allow user to using exist settings. For example, template for ACDOCA should already have some field assigned for those  mandatory field groups. User can also extend the view and save as their own templates.
 
-**** CDS View Generation
+**** Generate Consolidation Area CDS View 
 There are existing APIs to allow ABAP generates CDS views. Transportation is also utilized in the set of APIs which allow the generated CDS views can be transported from DEV to QA, and to Product system.
 
 The demo ABAP program is: WB_DDLS_API_EXAMPLE_PROG
 
 More details can be found in: https://wiki.wdf.sap.corp/wiki/display/TIPABAPVB/CDS+DDL+API+Description
-
-**** Custom Attributes and Enhancement 
-
 
 *** Design Challenges resulting from Non-Functional Requirements
 *** Vocabulary Modeling                                               
