@@ -1,0 +1,52 @@
+* Requirements from Financial Consolidation
+** Financial Statements
+*** What a Financial Statement looks like
+** How Financial Consolidation Run?
+*** Collect Data from Subsidiaries
+1. Data is uploaded to consolidation system.
+2. Central Finance collects local FI data in a real-time fasion.
+*** Why ACDOCC is needed?
+CF can survive with only 90% of the FI data, but not financial consolidation.
+*** Standardlization
+1. Local COA to Group COA
+2. Fiscal Year & Period Alignment
+*** Currency Translation
+Difference process
+Rounding difference
+*** Elimination
+Inter-company Trading Partners
+*** Journal Posting
+Every changes on amount must be recorded and can be replayed. Journal is then introduced in Financial Consolidation. 
+
+Journals are generated automatically during currency translation and elimination. 
+**** Why we push posting to HANA?
+1. Avoid unnecessary roundtrips during CT and elimination.
+2. Imagine that a group has 1000 subsidiaries, each subsidiary generates 1000 lines during a consolidation run. Then total 1,000,000 lines will be saved into ACDOCC. Which also means the 1,000,000 lines will first transport from HAN to ABAP, and then again from ABAP to HANA.
+3. Get performance figures from PAK slides.
+**** Why customers like the document concept?
+1. Number Range Issue
+2. What's the current solution for sequential numbering?
+
+
+* Consolidation and Planning
+A single platform for Consolidation, Reporting, Planning, Analytics and Data. 
+** Plan on Consolidated Data or Consolidation on Planned Data
+** So it is only data integration, or do Consolidation and Planning share the similar programming model?
+*** BPC uses planning functions to do consolidation.
+Planning Functions mainly do data replication by adjusting characteristic value and key figures. Most of changes means copy existing lines into new lines. The algorithm is simple but powerful with the prerequisite underlying data structure must be the combination of characteristics and key figures. Which means it must run on a OLAP semantic layer.    
+Planning Functions includes:
+1. Copy
+2. Distribute
+3. Currency Translation/Unit Conversion
+4. Formula
+
+*** PAK emerges to push planning functions to HANA level.
+Planning Application Kit only supports cube right now. We are now using an ABAP write-back class to allow BPC write back consolodation results to ACDOCC.
+
+*** Is Planning Function the Best Choice for Consolidation?
+1. Planning Functions are based on BW cube, and cube is not allowed for S/4 Cloud
+2. Consolidation Model is rather fix comparing with planning models. Specialization on consolidation model can improve both performance and user-friendly.  
+3. Planning Functions require Consolidation Model to be Cube-like, but consolidation model can be relational. Look at EC-CS, it has no cube, only ECMCA and ECMCT. Or look at BCS, although it is built on BW cubes, but it not depands on planning functions. The benifit is good integration with accounting modules. Good integration means high data Quality, easily embeding, and real Real-time.
+4. Look at current consolidation solutions, Hyperion, Tidemark, or BPC/BCS, they all assume that financial data is collected correctly outside. But actually, the difficult part for analytic apps is the data collection. Without high quaility  source data, all beacutiful analytic charts are only good-looking.
+
+* Data Validation
