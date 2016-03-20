@@ -80,12 +80,19 @@ The development could be a maintenance view of a mapping table. User can define 
 
 Here, it is good to understand TCUR* tables. Understand how CONVERT_CURRENCY find the exchange rate through exchange rate type. 
 
+**** Selection CDS View      :Chang:
+A =Selection CDS View= is based on =Cons. Area CDS View= by adding filters on FS items and sub-items. 
+
+There should be a customization tool to allow user to create =Selection CDS View= easily rather then using CDS modeling tool. It is not just adding some where conditions, but also doing fields mapping from the =Cons Area CD View= to table ACDOCC. 
+
+=Selection CDS View= should have the same fields with =Cons Area CDS View=.  =Cons. Area CDS View='s fileds should be the sub-set of ACDOCC's, or ACDOCC can not hold all the information that =Cons Area CDS View= has. The de-projection from =Selection CDS View= to ACDOCC needs to map the existing fields, and add fix values or null values to those non-existing fields.   
+
 **** Translation Method Customization                                 :Chang:
-Translation method contains a list of currency translation entries and rounding entries. In runtime, the entries are executed in a pre-defined order. Rounding entries will be executed after all translation entries.
+Translation method contains a list of currency translation entries and rounding entries. In runtime, the entries can be executed parallel. But rounding entries must be executed after all translation entries finsihed.
 
-Translation entry is a combination of a Currency Translation Area, an Exchange Rate Indicator. a translation key, a pair of differential items, and some other settings. In other words, it contains all the parameters, context that a translation algorithm needed so that it can be run and gives an output. 
+A =Translation Entry= contains a Selection CDS View, an Exchange Rate Indicator. a translation key, a pair of differential items(with subitems if configured), and some other settings. In other words, it contains all the context and control parameters that a translation algorithm needs.
 
-Rounding entry contains one or two rounding areas, and a pair of rounding differences items. Rounding algorithm can be fixed into 3 types:
+A =Rounding Entry= contains one or two rounding areas, and a pair of rounding differences items. Rounding algorithm can be fixed into 3 types:
 1. If one rounding area is defined, you can only do rounding check by sum all the amount to see if the result is 0.
 2. If two rounding areas are defended, you can check whether the sum of each area's amount is equal, or
 3. you add the 2 summarized amount to see if it equals 0.
