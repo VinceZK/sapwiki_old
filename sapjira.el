@@ -121,6 +121,7 @@
 		    (list (cons "os_username" dk-sapwiki-user)
 			  (cons "os_password" dk-sapwiki-pwd)
 			  (cons "login" "Log In"))
+		    ;;'dk-switch-to-url-buffer))
 		    'dk-sapjira-process-login))
 
 (defun dk-sapjira-process-login (status &optional callback)
@@ -267,6 +268,18 @@
 		    "\"")
 	    nil)))
        (message "Issue:%s is REOPENED!" issue-num)))
+   t))
+
+(defun dk-sapjira-set-inprocess (issue-id issue-num &optional interactive)
+  (dk-sapjira-dispatch-workflow
+   "711"
+   issue-id
+   issue-num
+   (lambda (status issue-num interactive)
+     ;; (switch-to-buffer (current-buffer)))
+     (if (dk-sapjira-check-session-expired)
+	 (message "Session is expired, please re-logon!")
+       (message "Issue:%s is inprocess!" issue-num)))
    t))
 
 (defun dk-sapjira-dispatch-workflow
@@ -420,13 +433,15 @@
 	     ('customfields
 	      (setq sprint
 		    (dk-sapjira-get-customfield-value item "Sprint"))))))
-       issue)
+       issue)       
       (with-current-buffer dk-sapjira-work-buffer
 	(unless (org-map-entries
 		 (lambda ()
 		   (message "Issue %s is already there!" key-num))
 		 (concat "+IssueNum=\"" key-num "\"")
 		 nil)
+	  ;;TODO: Need test in sprint 9. 
+	  (dk-sapjira-set-inprocess key-id key-num)
 	  (org-element-map (org-element-parse-buffer)
 	      'headline
 	    (lambda (headline)

@@ -1,3 +1,8 @@
+* Christian Requirements
+I would be interested in introducing your new solution for consolidation in my Architecture Circle.
+Could you think of giving us a presentation in about two weeks ? I would come with a schedule proposal in this case.
+I heard from Helmut that you have some open questions regarding number ranges - we could then use this meeting to ask if somebody has more detailed experience. 
+
 * Requirements from Financial Consolidation
 ** Financial Statements
 *** What a Financial Statement looks like

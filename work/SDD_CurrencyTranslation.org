@@ -69,9 +69,29 @@ Currency Translation of RTC should push the main translation algorithm into HANA
 
 The whole component can be divided into 2 parts: one is customization, which includes some configuration UIs that allow users easily define their translation parameters; The other is the runtime program flow, which is realized mainly using AMDP. All yellow blocks are involved in this development, and all white ones stands for already existing objects.
 
+As HANA SQLscript supports little on dynamic programming. The only way to realize currency translation customization to runtime is through automatically generating CDS views and ADMP class. The detail field mapping logic and data flow can be find in following diagram. 
+
+#+Caption: Fields Mapping and Data Flow
+[[../image/FieldsMappingAndDataFlowDuringCT.png]]
+
 Currently, the design mainly refers EC-CS and BCS. It seems too sophisticate and not simple enough for attracting more future developments. It is worth to have more research on how BPC realizes its currency translation. We would leverage the 2 kinds of philosophy: customization-based & rule-based. 
 
 Details of each building blocks of currency translation are explained:
+
+**** Currency Translation Area            :Frank:
+Currency Translation Area is a data context that a translation algorithm is running on. It is derived from consolidation area, with further filtering on FS items and other characteristics. Items in a consolidation area shares the same parameters and algorithm.  
+
+If the RTC is only designed for FI, the answer could be possible "YES". But consolidation algorithm should not be limited to FI. If the data basis is mainly on this kind of hierarchy-like finance structure, it will limit the future usages. Following questions should be think deeper:
+
+1. Is it possible using CDS instead of FS item set?
+2. Is it possible using Validation Engine to allow flexible data stream definition?
+3. Why EC-CS creates another FS structure for consolidation instead of using FSV?
+
+To answer the above questions, following research task could be done:
+1. Combine CDS and HRF to boundary the data area for everything?
+2. If FS item set is defined, the corresponding CDS view and HRF vocabulary(Alias is considerable) are also generated.
+3. Currency Translation and Inter-Unit Elimination will choose actually the CDS and Vocabulary correlated.
+4. There must be some fields mandatory for a specific task. Take currency translation as an example, an amount field, a currency key field, and an account field should exist.
 
 **** Exchange Rate Indicator        :Chang:
 Exchange Rate Indicator is mapped to exchange rate type. In EC-CS, you can also map multiple exchange rate types to one indicator, with validation period assigned to each type. 
@@ -80,12 +100,15 @@ The development could be a maintenance view of a mapping table. User can define 
 
 Here, it is good to understand TCUR* tables. Understand how CONVERT_CURRENCY find the exchange rate through exchange rate type. 
 
-**** Selection CDS View      :Chang:
+**** Selection CDS View      :Chang:Marvin:
 A =Selection CDS View= is based on =Cons. Area CDS View= by adding filters on FS items and sub-items. 
 
 There should be a customization tool to allow user to create =Selection CDS View= easily rather then using CDS modeling tool. It is not just adding some where conditions, but also doing fields mapping from the =Cons Area CD View= to table ACDOCC. 
 
 =Selection CDS View= should have the same fields with =Cons Area CDS View=.  =Cons. Area CDS View='s fileds should be the sub-set of ACDOCC's, or ACDOCC can not hold all the information that =Cons Area CDS View= has. The de-projection from =Selection CDS View= to ACDOCC needs to map the existing fields, and add fix values or null values to those non-existing fields.   
+
+#+Caption: Selection Customization UI
+[[../image/SelectionUI.png]]
 
 **** Translation Method Customization                                 :Chang:
 Translation method contains a list of currency translation entries and rounding entries. In runtime, the entries can be executed parallel. But rounding entries must be executed after all translation entries finsihed.
@@ -143,21 +166,6 @@ As for financial consolidation, the translated results should be converted to fi
 
 **** Subitem Assignment
 Subitem assignment can be used to further narrow the consolidation area by adding additional filters other than FS item SET. 
-
-**** Currency Translation Area            :Frank:
-Currency Translation Area is a data context that a translation algorithm is running on. It is derived from consolidation area, with further filtering on FS items and other characteristics. Items in a consolidation area shares the same parameters and algorithm.  
-
-If the RTC is only designed for FI, the answer could be possible "YES". But consolidation algorithm should not be limited to FI. If the data basis is mainly on this kind of hierarchy-like finance structure, it will limit the future usages. Following questions should be think deeper:
-
-1. Is it possible using CDS instead of FS item set?
-2. Is it possible using Validation Engine to allow flexible data stream definition?
-3. Why EC-CS creates another FS structure for consolidation instead of using FSV?
-
-To answer the above questions, following research task could be done:
-1. Combine CDS and HRF to boundary the data area for everything?
-2. If FS item set is defined, the corresponding CDS view and HRF vocabulary(Alias is considerable) are also generated.
-3. Currency Translation and Inter-Unit Elimination will choose actually the CDS and Vocabulary correlated.
-4. There must be some fields mandatory for a specific task. Take currency translation as an example, an amount field, a currency key field, and an account field should exist.
 
 **** On-The-Fly Translation                :Jane:                              
 Given an FSV, Translation procedures (cumulative and period), Rate Indicators, Differential FS Items, I could run currency translation on-the-fly. 
