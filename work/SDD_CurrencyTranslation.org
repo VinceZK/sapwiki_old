@@ -61,37 +61,83 @@ Currency Translation enables you to translate financial data reported by consoli
 
 Financial data reported by consolidation units is usually collected in the Consolidation application in local currency. You need to translate this data into group currency before you can create consolidated financial statements.
 
-*** Major Building Blocks
 Currency Translation of RTC should push the main translation algorithm into HANA, so that performance can be guaranteed when running on huge amount of data. Besides, CT of RTC should be in a simple and clear philosophy that further enhancement and hack would be possible. The overall design diagram can be described like this:
 
 #+Caption: Currency Translation Overview
 [[../image/CurrencyTranslation.png]]  
 
-The whole component can be divided into 2 parts: one is customization, which includes some configuration UIs that allow users easily define their translation parameters; The other is the runtime program flow, which is realized mainly using AMDP. All yellow blocks are involved in this development, and all white ones stands for already existing objects.
+The whole component can be divided into 2 parts: one is customization, which includes some configuration UIs that allow users easily define their translation parameters; The other is the runtime program flow, which is realized mainly using AMDP and CDS. All yellow blocks are involved in this development, and all white ones stands for already existing objects.
 
-As HANA SQLscript supports little on dynamic programming. The only way to realize currency translation customization to runtime is through automatically generating CDS views and ADMP class. The detail field mapping logic and data flow can be find in following diagram. 
+As HANA SQLscript supports little dynamic programming. The only way to realize currency translation through customization is to dynamically generate CDS views and ADMP methods. How these artifacts are generated can be found in following diagram.
 
 #+Caption: Fields Mapping and Data Flow
 [[../image/FieldsMappingAndDataFlowDuringCT.png]]
 
-Currently, the design mainly refers EC-CS and BCS. It seems too sophisticate and not simple enough for attracting more future developments. It is worth to have more research on how BPC realizes its currency translation. We would leverage the 2 kinds of philosophy: customization-based & rule-based. 
+*Selection* has 2 types:
+1) Generate a CDS view;
+2) Without a CDS view. 
 
+Type 1 will generate a CDS view based on Cons Area CDS view by adding filtering on "RACCT" and other characteristic fields called subitems. Type 2 does not generate a CDS view but only saves filtering information. 
+
+Besides, selection will also add columns that do not appear in the Cons Area View but exist in ACDOCC. We call this operation "dis-projection", as it is an anti-opertion of "prejection". The complemented columns are given null or fixed values.
+
+~If Cons Area View is not created on ACDOCA, then the selection view also do the mapping work. Because any source data will be extracted, consolidated and saved to ACDOCC or other consolidation result table.~  
+ 
+*Translation Entry* is a customization object, which combines a selection view(type 1 selection), an exchange rate indicator, a translation key which points a tranlsation algorithm, and a pair of differential items with their subitems. 
+
+*Translation Method* boundles one or more translation entries and rounding entries. It then can be assigned to a cons unit. Currency translation is run by units.
+
+*Translation Method Class* is an AMDP class which is generated based on the customization of translation method. Before generation the codes, a check will be done. It first check if there are overlaps among the selections that are assigned to translation entries. Then it generates the AMDP class with following AMDP methods:
+1. A main run method which invokes all the transaltion entry method;
+2. Translation entry methods which correspond to each translation entry. In the translation entry method, it will the corresponding translation algorithm method, and then call the differential rows processing method. The output should be an ACDOCC-like internal table;
+3. Differential rows processing methods which correspond to transaltion entries. It will genereate new rows with FS item and subitem configured in the differential items section.
+4. The rounding methods are not decribed in the above diagram. But they definately exist. They correspond to rounding entries. Each rounding method could add rounding differential rows.
+5. The posting method should be inherited from the super class as it is always fix. It checks if there is translated reuslt exists in the temp table, if not, call the main run method; Then it pass the translated results to the core posting interface. 
+
+*ON-the-Fly CDS View* is created based on the result of the main run. As the main run returns a table so it is a table function and could be mapped to a CDS view. The CDS view is then be associated with other mater data CDS view which can form a analytical CDS view for currency translation test run. 
+
+*** Major Building Blocks
 Details of each building blocks of currency translation are explained:
 
-**** Currency Translation Area            :Frank:
-Currency Translation Area is a data context that a translation algorithm is running on. It is derived from consolidation area, with further filtering on FS items and other characteristics. Items in a consolidation area shares the same parameters and algorithm.  
+**** Selection                                                 :Chang:Marvin:
+A =Selection= is used to define additional filters on FS items(racct) and other characteristic fields(subitems) of =Cons Area CDS View=. 
 
-If the RTC is only designed for FI, the answer could be possible "YES". But consolidation algorithm should not be limited to FI. If the data basis is mainly on this kind of hierarchy-like finance structure, it will limit the future usages. Following questions should be think deeper:
+There should be a customization UI to allow user to define a selection. 
 
-1. Is it possible using CDS instead of FS item set?
-2. Is it possible using Validation Engine to allow flexible data stream definition?
-3. Why EC-CS creates another FS structure for consolidation instead of using FSV?
+#+Caption: Selection Customization UI
+[[../image/SelectionUI.png]]
 
-To answer the above questions, following research task could be done:
-1. Combine CDS and HRF to boundary the data area for everything?
-2. If FS item set is defined, the corresponding CDS view and HRF vocabulary(Alias is considerable) are also generated.
-3. Currency Translation and Inter-Unit Elimination will choose actually the CDS and Vocabulary correlated.
-4. There must be some fields mandatory for a specific task. Take currency translation as an example, an amount field, a currency key field, and an account field should exist.
+There are 2 types of =Selection=:
+1. Type1 generates a selection CDS view;
+2. Type2 doesn't generate a CDS view, but only saves the filter information.
+
+Type1 selection is used in translation entry. It is not just adding some filter conditions, but also doing fields mapping from the =Cons Area CDS View= to table ACDOCC. The CDS view generation logic need to be developed using ABAP. It reads the meta data of the =Cons Area CDS View= and ACDOCC, then generates the CDS DDL string. The string looks like this:
+
+#+CAPTION: Selection CDS DDL String
+#+BEGIN_SRC sql
+select company,
+       gjahr,
+       poper,
+       pbukrs,
+       racct,
+       ttype,
+       rhcur,
+       rwcur as SourceCurrency,
+       rkcur as TargetCurrency,
+       hsl,
+       wsl as SourceAmount, 
+       ksl as TargetAmount,
+       --rest fields of ACDOCC--
+  from C_RTC_ACDOCA
+ where racct is between '100000' and '101000'
+   and ttype is between '100' and '200'
+#+END_SRC
+
+~There are existing APIs to allow ABAP generates CDS views. Transportation is also utilized in the set of APIs which allow the generated CDS views can be transported from DEV to QA, and to Product system. The demo ABAP program is: *WB_DDLS_API_EXAMPLE_PROG*. More details can be found in: https://wiki.wdf.sap.corp/wiki/display/TIPABAPVB/CDS+DDL+API+Description~
+
+=Selection CDS View= should have the same fields with =Cons Area CDS View=.  =Cons. Area CDS View='s fileds should be the sub-set of ACDOCC's, or ACDOCC can not hold all the information that =Cons Area CDS View= has. The dis-projection from =Selection CDS View= to ACDOCC needs to map the existing fields, and add fix values or null values to those non-existing fields. The fields order should be same with ACDOCC.
+
+Type2 selection is mainly used in rounding selection, which does filtering on internal tables during runtime. So it only converts the filters into a where condition string: "racct is between '100000' and '101000' and ttype is between '100' and '200'". 
 
 **** Exchange Rate Indicator        :Chang:
 Exchange Rate Indicator is mapped to exchange rate type. In EC-CS, you can also map multiple exchange rate types to one indicator, with validation period assigned to each type. 
@@ -99,16 +145,6 @@ Exchange Rate Indicator is mapped to exchange rate type. In EC-CS, you can also 
 The development could be a maintenance view of a mapping table. User can define multiple indicators. The Exchange Rate Type, Translation Ratios, and Exchange Rates maintenance views can be re-used.  
 
 Here, it is good to understand TCUR* tables. Understand how CONVERT_CURRENCY find the exchange rate through exchange rate type. 
-
-**** Selection CDS View      :Chang:Marvin:
-A =Selection CDS View= is based on =Cons. Area CDS View= by adding filters on FS items and sub-items. 
-
-There should be a customization tool to allow user to create =Selection CDS View= easily rather then using CDS modeling tool. It is not just adding some where conditions, but also doing fields mapping from the =Cons Area CD View= to table ACDOCC. 
-
-=Selection CDS View= should have the same fields with =Cons Area CDS View=.  =Cons. Area CDS View='s fileds should be the sub-set of ACDOCC's, or ACDOCC can not hold all the information that =Cons Area CDS View= has. The de-projection from =Selection CDS View= to ACDOCC needs to map the existing fields, and add fix values or null values to those non-existing fields.   
-
-#+Caption: Selection Customization UI
-[[../image/SelectionUI.png]]
 
 **** Translation Method Customization                                 :Chang:
 Translation method contains a list of currency translation entries and rounding entries. In runtime, the entries can be executed parallel. But rounding entries must be executed after all translation entries finsihed.
