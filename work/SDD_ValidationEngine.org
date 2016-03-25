@@ -43,7 +43,7 @@ Validation Engine (VE in short) is a software component that provides RTC the ab
 **** Following Design Goals *MUST* be Met:
 1. High performance, some rules can be even validated during reporting (aka on-the-fly).
 2. VE can fulfill most of the financial consolidation requirements. Sophisticate logics can be achieved through scripting and/or programming. 
-
+   
 **** Following Design Goals *SHOULD* be Met:
 1. The rule description language should be intuitive and easy for LOB users to handle.  
 2. VE should be built on HRF/BRF+.

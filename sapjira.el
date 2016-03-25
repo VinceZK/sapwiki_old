@@ -137,8 +137,11 @@
 (defun dk-sapjira-check-login-successfully ()
   (set-buffer (current-buffer))
   (goto-char 1)
-  (if (re-search-forward "Sorry, your username and password are incorrect - please try again." nil t)
-      nil
+  (if (re-search-forward "Sorry, [^\n]+" nil t)
+      (progn
+	(message "Login Error: %s"
+	       (buffer-substring-no-properties (match-beginning 0) (match-end 0)))
+	nil)
     t))
 
 (defun dk-sapjira-get-token ()
@@ -208,34 +211,64 @@
   "Set task to the status DONE"
   (interactive)
   (let ((issue-id (org-entry-get nil "IssueID"))
-	(issue-num (org-entry-get nil "IssueNum")))
+	(issue-num (org-entry-get nil "IssueNum"))
+	(pre-action (org-entry-get nil "PreAction")))
     (if (not issue-id)
 	(message "Please move your cursor to a Task!")
       (setq dk-sapjira-work-buffer (current-buffer))
-      (dk-sapjira-set-done issue-id issue-num t))))
+      (pcase pre-action
+	("711" (dk-sapjira-set-done issue-id issue-num t))
+	("831" (dk-sapjira-set-done2 issue-id issue-num t))))))
 
 (defun dk-sapjira-set-done (issue-id issue-num &optional interactive)
+  (dk-sapjira-dispatch-workflow
+   "741"
+   issue-id
+   issue-num
+   (lambda (status issue-num interactive)
+     (if (dk-sapjira-check-session-expired)
+   	 (message "Session is expired, please re-logon!")
+       (when interactive
+   	 (with-current-buffer dk-sapjira-work-buffer
+	   (org-entry-put nil "PREACTION" "741")
+   	   (org-entry-put nil "TODO" "DONE")
+   	   (org-map-entries
+   	    (lambda ()
+   	      (unless (org-map-entries
+   		       (lambda ())
+   		       "+Type=\"Task\"/OPEN"
+   		       'tree)
+   		(org-entry-put nil "TODO" "DONE")))
+   	    (concat "+id=\""
+   		    (org-entry-get nil "Sprint")
+   		    "\"")
+   	    nil)))
+       (message "Issue:%s is set to DONE!" issue-num)))
+   t))
+
+(defun dk-sapjira-set-done2 (issue-id issue-num &optional interactive)
   (dk-sapjira-dispatch-workflow
    "811"
    issue-id
    issue-num
    (lambda (status issue-num interactive)
      (if (dk-sapjira-check-session-expired)
-	 (message "Session is expired, please re-logon!")
+   	 (message "Session is expired, please re-logon!")
        (when interactive
-	 (with-current-buffer dk-sapjira-work-buffer
-	   (org-entry-put nil "TODO" "DONE")
-	   (org-map-entries
-	    (lambda ()
-	      (unless (org-map-entries
-		       (lambda ())
-		       "+Type=\"Task\"/OPEN"
-		       'tree)
-		(org-entry-put nil "TODO" "DONE")))
-	    (concat "+id=\""
-		    (org-entry-get nil "Sprint")
-		    "\"")
-	    nil)))
+   	 (with-current-buffer dk-sapjira-work-buffer
+	   (org-entry-put nil "PREACTION" "811")
+   	   (org-entry-put nil "TODO" "DONE")
+   	   (org-map-entries
+   	    (lambda ()
+   	      (unless (org-map-entries
+   		       (lambda ())
+   		       "+Type=\"Task\"/OPEN"
+   		       'tree)
+   		(org-entry-put nil "TODO" "DONE")))
+   	    (concat "+id=\""
+   		    (org-entry-get nil "Sprint")
+   		    "\"")
+   	    nil)))
        (message "Issue:%s is set to DONE!" issue-num)))
    t))
 
@@ -254,19 +287,19 @@
    issue-id
    issue-num
    (lambda (status issue-num interactive)
-     ;; (switch-to-buffer (current-buffer)))
      (if (dk-sapjira-check-session-expired)
-	 (message "Session is expired, please re-logon!")
+   	 (message "Session is expired, please re-logon!")
        (when interactive
-	 (with-current-buffer dk-sapjira-work-buffer
-	   (org-entry-put nil "TODO" "OPEN")
-	   (org-map-entries
-	    (lambda ()
-	      (org-entry-put nil "TODO" "OPEN"))
-	    (concat "+id=\""
-		    (org-entry-get nil "Sprint")
-		    "\"")
-	    nil)))
+   	 (with-current-buffer dk-sapjira-work-buffer
+	   (org-entry-put nil "PREACTION" "831")
+   	   (org-entry-put nil "TODO" "OPEN")
+   	   (org-map-entries
+   	    (lambda ()
+   	      (org-entry-put nil "TODO" "OPEN"))
+   	    (concat "+id=\""
+   		    (org-entry-get nil "Sprint")
+   		    "\"")
+   	    nil)))
        (message "Issue:%s is REOPENED!" issue-num)))
    t))
 
@@ -332,6 +365,7 @@
        (list (cons "includeHistoricSprints" "false")
 	     (cons "includeFutureSprints" "false")
 	     (cons "_"  (format-time-string "%s%3N")))
+       ;;'dk-switch-to-url-buffer))))
        'dk-sapjira-process-sprints))))
 
 (defun dk-sapjira-process-sprints (status)
@@ -340,9 +374,11 @@
 	  (json-read-from-string
 	   (dk-sapjira-get-resp-json (current-buffer))))
 	 (sprints
-	  (plist-get json-plist :sprints)))
+	  (plist-get json-plist :sprints))
+	 (errorMsg
+	  (plist-get json-plist :errorMessages)))
     (if (not sprints)
-	(message "Session is timeout, please re-login!")
+	(message "Error: %s" errorMsg)
       (message "Sprints and Issues are fetched!")
       (dk-sapjira-process-sprints-internal sprints)
       (dk-sapjira-fetch-open-issues))))
@@ -440,7 +476,6 @@
 		   (message "Issue %s is already there!" key-num))
 		 (concat "+IssueNum=\"" key-num "\"")
 		 nil)
-	  ;;TODO: Need test in sprint 9. 
 	  (dk-sapjira-set-inprocess key-id key-num)
 	  (org-element-map (org-element-parse-buffer)
 	      'headline
@@ -460,6 +495,10 @@
 		  (insert ":IssueID: " key-id ?\n)
 		  (insert ":Sprint: " sprint ?\n)
 		  (insert ":Type: " type ?\n)
+		  (insert ":PreAction: " (pcase status
+					   ("Reopened" "831")
+					   ("In Progress" "711")
+					   ("Done" "741")) ?\n)
 		  (insert ":Priority: " priority ?\n)
 		  (insert ":Estimate: " estimate1 ?\n)
 		  (insert ":END:" ?\n)
@@ -596,6 +635,7 @@ Then call the SAPJIRA log work web service to post the results. Waiting callback
      (let* ((org-trust-scanner-tags t)
      	    (issue-id (org-entry-get nil "IssueID"))
      	    (issue-num (org-entry-get nil "IssueNum"))
+	    (pre-action (org-entry-get nil "PreAction"))
      	    (estimate
      	     (string-to-number
      	      (substring
@@ -615,7 +655,14 @@ Then call the SAPJIRA log work web service to post the results. Waiting callback
      	   'dk-sapjira-table-post-process))
        (if (and (string= todo "DONE")
      		(dk-sapjira-check-work-log-success))
-     	   (dk-sapjira-set-done issue-id issue-num))))  
+	   (pcase pre-action
+	     ("711" (progn
+		      (dk-sapjira-set-done issue-id issue-num)
+		      (org-entry-put nil "PREACTION" "741")))
+	      ("831" (progn
+		       (dk-sapjira-set-done2 issue-id issue-num)
+		       (org-entry-put nil "PREACTION" "811")))))))
+     	   ;; (dk-sapjira-set-done issue-id issue-num))))  
    "+Type={Task\\|Backlog Item}"
    'tree))
 

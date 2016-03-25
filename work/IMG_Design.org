@@ -1,0 +1,151 @@
+#+PAGEID: 1825545337
+#+VERSION: 6
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: IMG Design
+
+* Consolidation Environment
+Here you define a consolidation environment to get ready of your consolidation . It includes:
+
+** (Text Node) Create a Consolidation Foundation View
+You need to create a CDS view in HANA Studio. The CDS view select consolidation raw data from existing tables. Currently, the main journal table is *ACDOCA*. The CDS view project fields from ACDOCA, and do Chart of Accounts mapping, fiscal year and period alignment, and necessary data filtering on company codes/ledgers. SAP also delivers an example consolidation foundation view: *C_RTC_ACDOCA*, you can copy it to your own namespaces and modify it to your own needs. 
+
+** Define a Consolidation Ledger
+Reuse existing ledger IMG customization: Financial Accounting (New)-->Ledgers
+
+** Define a Group Chart of Accounts
+Reuse existing Chart of Accounts and G/L Accounting master data maintenance. 
+
+Financial Accounting (New)-->General Ledger Accounting (New) -->Mater Data-->G/L Accounts
+
+** Mapping Operational Chart of Accounts to Group Chart of Accounts
+When create a local G/L account, assign the corresponding group account number. The underlying DB field is SKA1-BILKT
+
+If time permits, RTC should develop a mapping application. You can do mapping like this:
+| Local CoA | Local Account   | Group CoA | Group Account |
+|-----------+-----------------+-----------+---------------|
+| CACN      | 1001*           | CORP      |       1002000 |
+| CAJP      | 2004001         | CORP      |       2004100 |
+| CAGM      | 3003001,3003002 | CORP      |       3003000 |
+| CAGM      | 4004001-4005999 | CORP      |       4004000 |
+
+** Define Group Fiscal Year Variants
+Reuse existing Fiscal Year Variants IMG nodes: Financial Accounting (New)-->Ledgers-->Fiscal Year and Posting Periods
+
+** Generate Fiscal Year Calendar
+Accounting team has a program to generate period level or day level granularity fiscal calendar. Maybe it is already existing in the IMG structure somewhere. But anyway we can create this node in our IMG structure. The program is: FINS_GENERATE_FISCAL_PERIOD . 
+
+** Define Version Related Fields
+Following Version Related Fields and their maintenance views are involved in the standard delivery:
+
+*** Data Category
+Maintenance View: FCOMV_CATEGORY
+
+*** Accounting Principle
+Maintenance View: V_RTC_ACC_PRC
+
+*** Valuation
+Maintenance View: V_RTC_VALUATN
+
+*** Version
+Maintenance View: V_RTC_VERSION
+
+** Define Consolidation Group and Unit
+Using SET to group Company/Profit center/Cost center to a Consolidation Group. Following the mapping paradigm like bellow:
+| Cons. Group | SET           |
+| Cons. Unit  | Item in a SET |
+
+** Define a Consolidation Environment.
+Consolidation environment combines all the customization above into a consolidation context along with some additional settings:
+1. Generate a consolidation area view which will do mapping from the foundation view to consolidation journal table: ACDOCC.
+2. Define a version which is a version fields combination.
+3. Do check and validations, if all settings are correct, then active the consolidation environment so that user can run consolidation tasks on it.
+
+The customization view is actually a modeling app which is now under developing. 
+
+* Currency Translation
+Define translation methods. Currently, a translation method can be only assigned to a consolidation environment, which means all the cons unit will apply the same currency translation logic. When the consolidation group/unit hierarchy can be defined in S/4, translation methods can then be assigned to cons unit.
+
+** Define Selections
+Selection is a new concept. It defines a filtering on a CDS view or table. The input could be SETs or HRF expression. The output is a selection string or a generated CDS view.
+
+The APP is under development.
+
+** Exchange Rate Indicator
+A mapping with exchange rate type.
+
+The APP is done.
+
+** Define Currency Translation Methods
+Translation Methods includes translation entries and rounding entries. Based on them, an AMDP class will be generated. 
+
+*** Translation Entry
+Translation entry combines a =Selection=, an exchange rate indicator, a translation key which points a translation algorithm, and a pair of differential items with their subitems.
+
+*** Rounding Entry 
+Contains 1 or 2 =Selection= to do rounding check and rounding difference processing. 
+
+** Define Translation Key
+A translation key is mapping to a translation algorithm. Here user can define his own translation algorithm using AMDP method, and assign it with a translation key in its own namespace. 
+
+SAP delivers 3~5 standard translation keys. 
+
+* BPC Integration
+You can define integration settings with BPC.
+
+** BPC Extent Property Maintenance
+You Maintenance following values for the BPC integration:
+
+*** Extent Company Code Properties for BPC: 
+Maintenance View: V_RTC_EXT_CEPC
+
+*** Extent Company Properties for BPC:
+Maintenance View: V_RTC_EXT_T880
+
+*** Extent Cost Center Properties for BPC:
+Maintenance View: V_RTC_EXT_SEGM
+
+*** Extent Segment Properties for BPC:
+Maintenance View: V_RTC_EXT_SEGM
+
+*** Extent GL Account Properties for BPC:
+Maintenance View: V_RTC_EXT_SKA1
+
+*** Extent Business Area Properties for BPC:
+Maintenance View: V_RTC_EXT_TGSBK
+
+** (Text Node) Create HANA Calculation Views
+You create a FACT HANA calculation view based the consolidation foundation CDS view. You need also create master data HANA views to expose you master data. 
+
+By default, SAP has delivered following standard HANA calculation views for your reference. They are all under HANA package: sap.erp.sfin.rtc
+
+| Calc View             | Description                      |
+|-----------------------+----------------------------------|
+| RTC_C_ACDOCA          | Fact table based on ACDOCA       |
+| RTC_C_ACDOCC          | Fact table based on ACDOCC       |
+| RTC_BUSINESSAREA_T880 | Attribute View of Business Area |
+| RTC_COSTCENTER_CSKS   | Attribute View of Cost Center    |
+| RTC_PROFITCENTER_CEPC | Attribute View of Profit Center  |
+| RTC_SEGMENT_SEGM      | Attribute View of Segment        |
+
+** (Text Node) Create BW Info-objects and Info-Provider
+You need to create virtual info-objects to mapping the master data HANA views. You then create a real-time cube with the same fields of the FACT HANA calculation view. Then union the Real-time cube with the fact view through a composite provider.
+
+SAP has delivered following BW contents for your reference:
+| BW Objects    | Description                        |
+|---------------+------------------------------------|
+| /ERP/RTC_RT01 | Real-time cube on RTC_C_ACDOCA     |
+| /ERP/RTC_CP01 | Composite Provider on RTC_C_ACDOCA  |
+| /ERP/RTC_AL01 | Aggregation Level on /ERP/RTC_CP01 |
+| /ERP/RTC_RT02 | Real-time cube on RTC_C_ACDOCC     |
+| /ERP/RTC_CP02 | Composite Provider on RTC_C_ACDOCC  |
+| /ERP/RTC_AL02 | Aggregation Level on /ERP/RTC_CP01 |
+
+** (Text Node) Write-back to S/4
+If you want to write-back the consolidated results to S/4, then you have to use an ABAP write-back class and a BW virtual provider. 
+
+SAP has delivered following objects for your reference:
+| BW/ABAP Objects              | Description                                                 |
+|------------------------------+-------------------------------------------------------------|
+| CL_RTC_ACDOCC_IPROV_WRITABLE | Write-back class to post consolidation journals to  ACDOCC |
+| /ERP/RTC_VP01                | BW Virtual Provider                                          |
