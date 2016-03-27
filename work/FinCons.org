@@ -55,3 +55,46 @@ Planning Application Kit only supports cube right now. We are now using an ABAP 
 4. Look at current consolidation solutions, Hyperion, Tidemark, or BPC/BCS, they all assume that financial data is collected correctly outside. But actually, the difficult part for analytic apps is the data collection. Without high quaility  source data, all beacutiful analytic charts are only good-looking.
 
 * Data Validation
+
+* Present to Stephen
+What he wants to hear?
+1. Good progress;
+2. Clear target;
+3. No big issue.
+
+But actually, progress is not so good, there is some risk.
+
+** Start with conculsion on last presentation
+
+** Performance Test Plan
+
+*** Performance benifits when pushing down to HANA
+
+*** How we do performance testing?
+Line Item: 5m, 10m, 50m, 100m, 500m, 1b
+
+Cons Unit: 50, 100, 500, 1000
+
+Testing process:
+3. Copy ACDOCA to ZACDOCA
+4. Write an ABAP program to generate test data in ZACDOCA
+5. Compose testing models
+6. Record and analysis results
+
+Before the first release!
+
+Roll-out the method to performance experts to get a more complete performance evaluation. 
+
+French team already has their S/4 landscape established. They require the released product.
+
+** 2 Branches
+1. ACDOCA-->Aggreated-->Currency Translation-->ACDOCC
+2. ACDOCA-->Aggreated-->BPC-->Write-back class-->ACDOCC-->BPC
+
+** Write-back to ACDOCC
+
+*** The ABAP write-back class
+
+*** The ADSO write-back approach
+
+** Integration Test with BPC
