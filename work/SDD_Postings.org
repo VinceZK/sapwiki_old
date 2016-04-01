@@ -32,16 +32,17 @@ Posting happens in most of the consolidation tasks. In some of the tasks (elimin
 **** Following Design Goals *MUST* be Met:
 1. The core posting logic must be pushed down to HANA.
 2. Posting can be automatically raised by consolidation tasks, or manually done through a UI.
-3. Posting module can be customized, enhanced, and integrated.
-4. Posting validation on item and document level can be defined.
+3. Posting methods can be customized, enhanced, and integrated.
+4. Posting validation on head, item and document level can be defined.
 5. Journal reversal & deletion.
 
 **** Following Design Goals *SHOULD* be Met:
 1. There should be core posting APIs implemented using AMDP.
-2. Core posting APIs should only realize generic logic, which means task independent.  
+2. Core posting APIs should only realize generic posting logic.  
 3. Validation Engine should be used to allow easily rule definition.
-4. Core posting APIs can be enhanced at HANA level.
-5. There should be a field to differentiate journals created by different consolidation steps.
+4. Manual posting UI layout should be easily customizable.
+5. Core posting APIs can be enhanced at HANA level.
+6. There should be a field to differentiate journals created by different consolidation steps.
 
 *** Context
 The fundamental difference between a consolidation APP and a conventional analytic APP is that consolidation changes amount based on rules and original data provided. Every change on amounts should be logged using journals. You run most consolidation tasks with journals posted. Posting means saving journals into database, and allows changing of amount to be replayed when reporting. 
@@ -84,7 +85,6 @@ The core posting API should be developed all by HANA SQL scripts. It contains co
 4. Support both single and mass processing.
 5. Input should be a table type of ACDOCC.
 6. Output should have a list of document numbers and error information if fails.
-7. Should consider the data integrity (commit and rollback correctly).
 
 The AMDP core posting API should be tested with currency translation immediately after completion. 
 
@@ -101,7 +101,7 @@ The write-back class does not need to wait the specification of how BPC's cube-l
 
 **** Posting Validation using Validation Engine                        :Steve:Chang:
 The core posting API should be embedded with VE call-points(db procedures). There are 2 call-points defined:
-1. Item level.
+1. Item  level.
 2. Document level.
 
 The integration development is for the preparation of Inter-Unit Elimination. 
