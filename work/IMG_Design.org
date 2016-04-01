@@ -119,14 +119,14 @@ You create a FACT HANA calculation view based the consolidation foundation CDS v
 
 By default, SAP has delivered following standard HANA calculation views for your reference. They are all under HANA package: sap.erp.sfin.rtc
 
-| Calc View             | Description                      |
-|-----------------------+----------------------------------|
-| RTC_C_ACDOCA          | Fact table based on ACDOCA       |
-| RTC_C_ACDOCC          | Fact table based on ACDOCC       |
+| Calc View             | Description                     |
+|-----------------------+---------------------------------|
+| RTC_C_ACDOCA          | Fact table based on ACDOCA      |
+| RTC_C_ACDOCC          | Fact table based on ACDOCC      |
 | RTC_BUSINESSAREA_T880 | Attribute View of Business Area |
-| RTC_COSTCENTER_CSKS   | Attribute View of Cost Center    |
-| RTC_PROFITCENTER_CEPC | Attribute View of Profit Center  |
-| RTC_SEGMENT_SEGM      | Attribute View of Segment        |
+| RTC_COSTCENTER_CSKS   | Attribute View of Cost Center   |
+| RTC_PROFITCENTER_CEPC | Attribute View of Profit Center |
+| RTC_SEGMENT_SEGM      | Attribute View of Segment       |
 
 ** (Text Node) Create BW Info-objects and Info-Provider
 You need to create virtual info-objects to mapping the master data HANA views. You then create a real-time cube with the same fields of the FACT HANA calculation view. Then union the Real-time cube with the fact view through a composite provider.
@@ -135,17 +135,18 @@ SAP has delivered following BW contents for your reference:
 | BW Objects    | Description                        |
 |---------------+------------------------------------|
 | /ERP/RTC_RT01 | Real-time cube on RTC_C_ACDOCA     |
-| /ERP/RTC_CP01 | Composite Provider on RTC_C_ACDOCA  |
+| /ERP/RTC_CP01 | Composite Provider on RTC_C_ACDOCA |
 | /ERP/RTC_AL01 | Aggregation Level on /ERP/RTC_CP01 |
 | /ERP/RTC_RT02 | Real-time cube on RTC_C_ACDOCC     |
-| /ERP/RTC_CP02 | Composite Provider on RTC_C_ACDOCC  |
+| /ERP/RTC_CP02 | Composite Provider on RTC_C_ACDOCC |
 | /ERP/RTC_AL02 | Aggregation Level on /ERP/RTC_CP01 |
 
 ** (Text Node) Write-back to S/4
 If you want to write-back the consolidated results to S/4, then you have to use an ABAP write-back class and a BW virtual provider. 
 
 SAP has delivered following objects for your reference:
-| BW/ABAP Objects              | Description                                                 |
-|------------------------------+-------------------------------------------------------------|
+| BW/ABAP Objects              | Description                                                |
+|------------------------------+------------------------------------------------------------|
 | CL_RTC_ACDOCC_IPROV_WRITABLE | Write-back class to post consolidation journals to  ACDOCC |
-| /ERP/RTC_VP01                | BW Virtual Provider                                          |
+| /ERP/RTC_VP01                | BW Virtual Provider                                        | 
+  
