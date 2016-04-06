@@ -137,13 +137,13 @@ We need to split 2 branches for data modeling: one is modeling for the integrati
 #+Caption: Data Modeling at Design Time
 [[../image/DataModelingDesignTime.png]]
 
-The first step is creating a foundation view on ACDOCA(and other tables if necessary). The foundation view projects fields from ACDOCA (and joined or union-ed other data sources), apply filters(where conditions), do field mappings and alignments. This can be achieved using CDS modeling technology which is a generic database modeling technology that can fulfill almost anything. 
+The first step is to create a foundation CDS view on ACDOCA(and other tables if necessary) in HANA stuido. The foundation view projects fields from ACDOCA (and join or union other data sources), apply filters(where conditions), do field mappings and alignments. We use CDS modeling tool as the foundation view creation is exactly DB modeling activities. It is not necessary to build a dedicate DB modeling tool for consolidation.
 
-User should ensure the performance of the foundation view, because most of the consolidation tasks afterwords are pumping data from it. 
+The performance of the foundation view should be guarantee, as most of the consolidation tasks afterwords are pumping data from it. 
 
-The foundation view is then assigned to a consolidation environment, which is boundary definition of a consolidation campaign for a specific purpose. You can also assign a consolidation journal table other than ACDOCC(default one), and do field mapping with the foundation view. Those 2 steps are in dotted rectangles because they are optional. In RTC's early releases, only ACDOCA and ACDOCC will be involved, so there is no need to do fields mappings, as the 2 tables share most of the field names. 
+The foundation view is then assigned to a consolidation model, which is boundary definition of a consolidation campaign for a specific purpose. You can also assign a consolidation journal table other than ACDOCC(default one), and do field mapping with the foundation view. Those 2 steps are in dotted rectangles because they are optional. In RTC's early releases, only ACDOCA and ACDOCC will be involved, so there is no need to do fields mappings, as the 2 tables share most of the field names. 
  
-Versions can be defined to allow parallel consolidations in the same consolidation environment according to different aspects. For example, actual and plan, US GAAP and IFRS. You can use 2 fields: =Data Category= and =Accounting Principle= to define various version combinations. Each combination can have its specific customizations, like consolidation frequency, and so on.
+Version combinations can be defined to allow parallel consolidations based on the same model. For example, actual and plan, US GAAP and IFRS. You can use 2 fields: =Data Category= and =Version= to define various combinations. Each combination can have its specific customizations, like consolidation frequency, different validation method, and so on.
 
 Based on above definitions, you can run validations to check if all the setting are right, and activate the consolidation environment. Following rules could be validated:
 
@@ -152,9 +152,9 @@ Based on above definitions, you can run validations to check if all the setting 
 3. Fields are correctly mapped to ACDOCC;
 4. All necessary fixed parameters and values are set.
 
-After successfully activation, the consolidation environment can run consolidation tasks. A new  CDS view will be generated which encapsulates the mapping information from the foundation view to consolidation journal table(ACDOCC). This CDS view is called =Consolidation Area View=. It has the same fields and fields sequcence with the consolidation journal table(ACDOCC). Thus permits the values can be correctly saved into target fields without additional mapping logic in HANA scripts.
+After successful activation, the consolidation model can run consolidation tasks. CDS views could be generated for each version combination if "Integration with BPC" is checked. These CDS views are called =Consolidation Area Views= which are created on foundation view by adding additional fixed value columns. If "Integration with BPC" is not checked, then the foundation view will be regarded as the area views.
 
-~If possible, there will also a HANA calculation view be generated based on consolidation journal table(ACDOCC) for the consumption of BPC.~
+~If possible, there will also a HANA calculation view be generated on consolidation area CDS view for the consumption from BPC.~
 
 The =Consolidation Area View= will be the basis for all the consolidation tasks. HRF Vocabulary can also be formed based on it so that rules can be defined. Consolidation journals generated from tasks are then posted to ACDOCC,  which can then be consumed directly by S/4 applications or be accessed by BPC for further consolidation tasks. 
 
@@ -166,40 +166,42 @@ User can either choose do all the consolidation tasks in BPC, or some of tasks (
 
 Details are described in following building blocks:
 
-**** Consolidation Environment Definition UI     :Sam:
-A consolidation environment is the most parent object that contains everything. Here I list few that would be delivered in the initial release:
-1. *Data Stream* defines the consolidation data views, and journal table to persist consolidation result.
-2. *Version* defines the version characteristics combinations, and version specific settings.
-3. *Assignment* assigns FI objects like ledger, CoA, and Fiscal Year Variant.
-4. *Settings* additional settings control how the consolidation environment is used. 
+**** Consolidation Model Definition UI                                  :Sam:
+A consolidation model is the most parent object that contains everything. Here I list few that would be delivered in the initial release:
+1. *Data Stream* defines the consolidation foundation views, and journal tables to persist consolidation result.
+2. *Integration* defines how BPC is integrated to access data in S/4.
+3. *Version* defines the version combinations, and version specific settings.
+4. *Assignment* assigns FI objects like consolidation ledger, CoA, and Fiscal Year Variant.
+5. *Admin* read-only administrative information. 
 
-#+Caption: Consolidation Environment UI Tab 1
+#+Caption: Consolidation Model UI Tab 1
 [[../image/ConsEnvDefinationUI_1.png]]
 
-User can define multiple consolidation environments, with each have 3 different status: =Active=, =Saved=, and =Error=. Only active consolidation environments can run consolidation tasks. 
+User can define multiple consolidation models, with each have 4 different status: =Active=, =Inactive=, =Saved=, and =Error=. Only active consolidation models can be run. 
 
-In the detail screen of a consolidation environment, you can state its dimension. Currently, only 1 dimension is supported. User can select among =Company=, =Profit Center=, and =Cost Center= dimensions. Each dimension has a combined partner unit assigned. If using ACDOCA&ACDOCC, partner dimension is selected default.
+In the detail screen of a consolidation model, you can state its dimension. Currently, only 1 dimension is supported. User can select among =Company=, =Profit Center=, and =Cost Center= dimensions. Each dimension has a combined partner unit assigned. If using ACDOCA&ACDOCC, partner dimension is selected by default.
 
-In the =Data Stream= tab, a CDS view based on ACDOCA is chosen as the consolidation data view. This is the mandatory view that contains all the financial journals. Other views can be added for different consolidation tasks. As in the initial release, only consolidation data view is involved, so the UI is designed as a form just for the simplification. But behind, you should be awarded a consolidation environment could have multiple data views. 
+In the =Data Stream= tab, a CDS view on ACDOCA is chosen as the consolidation foundation view. This is the mandatory view that contains all the actual financial journals. Other views can be added for different consolidation tasks. As in the initial release, only consolidation data view is involved, so the UI is designed as a form just for the simplification. But under the hood, you should be awared a consolidation model could have multiple data foundation views. 
 
-The consolidation journal table currently is fixed as ACDOCC. It is supposed in future use can assign his own journal table to persist consolidation results. Consolidation area view can be generated automatically based on the mapping information between consolidation data view and consolidation journal table. There will be a data mapping screen in future releases, but currently, the foundation view and ACDOCC are supposed already mapped through same field names. The only thing needs to do is complement the fields that are existing in ACDOCC but not in the foundation view. 
+The consolidation journal table currently is fixed as ACDOCC. It is supposed in future use can assign its own journal tables to persist consolidation results. Consolidation area view can be generated automatically based on the mapping information between consolidation data view and consolidation journal table. There will be a data mapping screen in future releases, but currently, the foundation view and ACDOCC are supposed already mapped through the same field names. 
 
-#+Caption: Consolidation Environment UI Tab 2
+#+Caption: Consolidation Model UI Tab 2
 [[../image/ConsEnvDefinationUI_2.png]]
+
+=Integration= tab contains settings on how BPC is integrated with S/4. Currently there are 2 check boxes. If "Integrate with BPC" is checked, then new area views are generated on the foundation view. These area views contains fixed value columns, like "model", "category", "version", and so on. 
+
+#+Caption: Consolidation Environment UI Tab 3
+[[../image/ConsEnvDefinationUI_3.png]]
 
 In the =Version= tab, you define field combination for different version IDs. Currently, only 4 fixed characteristic fields are used to define a version combination. But in future, it is supposed to allow user to define version combination freely. 
 
 Each version combination can be assigned with version specific settings. Those settings affect how some consolidation tasks run for the assigned version only. 
 
-#+Caption: Consolidation Environment UI Tab 3
-[[../image/ConsEnvDefinationUI_3.png]]
-
-The =Assignments= tab allows user to assign financial objects, like: fiscal year variant, Consolidation Chart of Accounts. There could be more those kind of financial objects need to be bound to a consolidation area. 
-
 #+Caption: Consolidation Environment UI Tab 4
 [[../image/ConsEnvDefinationUI_4.png]]
 
-=Settings= tab contains additional settings that globally controls how consolidation run. 
+The =Assignments= tab allows user to assign financial objects, like: fiscal year variant, Consolidation Chart of Accounts. There could be more those kind of financial objects need to be bound to a consolidation area. 
+
 
 #+Caption: Consolidation Environment UI Tab 5
 [[../image/ConsEnvDefinationUI_5.png]]  
