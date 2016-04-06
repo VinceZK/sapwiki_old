@@ -498,7 +498,9 @@
 		  (insert ":PreAction: " (pcase status
 					   ("Reopened" "831")
 					   ("In Progress" "711")
-					   ("Done" "741")) ?\n)
+					   ("Done" "741")
+					   (_ "711")))
+		  (insert ?\n)
 		  (insert ":Priority: " priority ?\n)
 		  (insert ":Estimate: " estimate1 ?\n)
 		  (insert ":END:" ?\n)
