@@ -310,7 +310,7 @@ HRF also provides an easy to implement and configurable SAPUI5 control that expo
 
 The rule maintenance UI should be close to consolidation context, rather than HRF/BRF+ context. There is no reason for a LOB user to learn terms of HRF/BRF+. 
 
-Rules are based on models. Some models are rather static, like currency translation. Others are based on consolidation model and financial statement version which are rather dynamic. The rule maintenance UI should hide as much complexity as possible. 
+Rules are based on models. Some models are rather static, like validation data in ACDOCA/C. Others are based on consolidation model and financial statement version which are rather dynamic. The rule maintenance UI should hide as much complexity as possible. 
 
 Rules are assigned to consolidation tasks, which will be triggered and monitored in consolidation monitor tool. The assignment is indirect through rule templates. Rule template is a concept of HRF. Rules can be created by referencing an existing template, while the template is then assigned to a rule service. When the rule service is called, it will run all the rules that have references of the assigned template. Rule templates will be pre-delivered as contents. And they may have 1:1 mapping with consolidation tasks. 
 

@@ -1,5 +1,5 @@
 #+PAGEID: 1815502588
-#+VERSION: 11
+#+VERSION: 12
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: Writing Wikipage with Emacs
@@ -15,7 +15,7 @@ SAPWIKI is widely used among development teams inside SAP. A lot of Software Des
 
 *** Download Emacs binary
 
-You can copy the folder from [[file:\\cnpvgl000\Restricted\FGI\50_Project\Central_Finance\99_Knowledge\03_Consolidation\]] to your C:\ . Purely green install, and all configuration is done! This is the easiest way to get all stuff ready.
+You can download from [[http://pan.baidu.com/s/1bXks0I][Vincent's Baidu Pan]], extract to your C:\ . Purely green install, and all configuration is done! This is the easiest way to get all stuff ready.
 
 *** Add following environment variables
 HOME = c:\emacs
@@ -32,8 +32,11 @@ Why do this? Because this is my folder structure, and you follow this to avoid r
 You can also create a shortcut on your desktop.
 
 *** Note:
-**** In case you do not have font Monaco installed, you should google it and download it.
-Because Monaco is the best font for developers.
+**** In case you do not have font Monaco installed, you should install it.
+Because Monaco is the best font for developers. 
+1. Click "Monaco.ttf" in c:/emacs
+2. Click the button "Install" in the up-left.
+
 **** If you want spell check, you should install Aspell
 1. Run Aspell-0-50-3-3-Setup.exe in c:/emacs
 2. Run Aspell-0.50-2-3.exe to install English language dictionary
@@ -319,7 +322,7 @@ My only suggestion is when you run Ediff, you should use a big desktop monitor, 
 There are 4 commands used to sync with SAPWiki. They are login, push, pull, and fetch (prefixed with sapwiki-). The 4 commands can be called by typing like *M-x sapwiki-login*. If you are familiar with git, then these commands are quite similar. 
 
 *** sapwiki-login
-You need first login SAPWiki site, then get permitted to do push, pull, and fetch. The login is based on you ID and password. ID can be saved permanently, while password is only recored in emacs' transient memory. Password is not encrypted, so take care by yourself. 
+You need first login SAPWiki site, then get permitted to do push, pull, and fetch. The login is based on you ID and password. ID can be saved permanently, while password is only recorded in emacs' transient memory. Password is not encrypted, so take care by yourself. 
 
 You need to re-type your password if you restart your Emacs application. 
 
