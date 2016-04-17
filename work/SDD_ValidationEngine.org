@@ -47,153 +47,6 @@ Validation Engine (VE in short) is a software component that provides RTC the ab
 4. External consolidation rules can be converted and imported in.
 
 
-**** Totals Data Validation Requirements
-+ Easy to use cockpit quick overview of validation rules (traffic lights for orientation)
-+ simple to use "by highest flexibility"
-+ Drill down / drill through to identify differences
-+ Central view - Central collection of comments and explanations
-+ Sort by entity, by validation rule, by differences (threshold)
-+ Link to templates, adjustment postings, explanations, help functions / jump to documentations, guidelines and rules
-+ Status overview (color coding), flag important items...
-+ Guided workflow,  set "complete" , trigger notes request
-+ Security: internal user and external user (e.g. Auditor could see validation checks / list of validation) Authorization Management
-+ Integration with disclosure management
-+ Learning system: compare with previous year, remove irrelevant information
-
-**** Simple UX
-+ Quick overview, simple to use
-+ Structured according to finance info flow
-+ Grouping in batches/runs
-+ Traffic lights
-+ Change requests easy to realize
-
-**** List with Drill Down/Drill Through
-+ Flexible filter and sort criteria
-+ Ranked view (high important first)
-+ List of explanations given for selected item
-+ Analysis: Group, Company, Profit Center, Account...
-+ Insight to action from cockpit to document
-+ Hierarchical view acc. To company structure
-+ Central collection of comments and explanations
-+ Results visible centrally
-+ Aggregation of notes
-+ Sort by entity, validation, difference
-
-**** Links to Everything Needed 
-+ Jump into documentation of guidelines and rules
-+ Email integration
-+ Link to role repository
-+ Link to templates
-+ Link to explanation entry screen
-+ Direct posting in cons.
-+ Link to validation help function
-+ Drill down to formula and validation/mapping rule
-+ All steps to react on validations from one cockpit
-+ Interface to extended ledger
-+ Link to reopen an entity
-+ Direct connection to correction posting
-+ Link to adjustment posting screen
-
-**** Graphical Status Information
-+ KPI dashboard with alerts
-+ Status overview
-+ Color coding, traffic lights
-+ "Lights" system for explanation flow
-+ Option to flag relevant explanations for further processing
-+ Immediate insight into qualitative level of data
-+ Confirm exceptions / status management
-
-**** Workflow Based Info Collection
-+ Trigger WF for notes request
-+ Results allocated to relevant notes (e.g. find assets...)
-+ "Complete" button when validation has worked
-+ Integrated communication network
-+ Guided Workflow
-+ WF with status overview
-+ Direct feedback possible
-+ Trigger WF for posting in FI
-+ Group reporting could restart WF to ask for additional info
-
-**** Audit Proof
-+ Security external and internal
-+ Edit, enrich, add notes
-+ FI reporting compliant
-+ Integration with disclosure management 
-
-**** Reflecting Responsibilities
-+ Assign and track ownership local and central
-+ Clear areas of access and responsibilities
-+ Clear task allocation
-+ Authorization Management
-
-**** Learning System
-+ Compare with previous year
-+ Learn "irrelevant" information
-
-
-**** Post Validation Requirements
-+ Easy to use for a local accountant in their language
-+ Correction proposals (standard booking) and fill information 
-+ Popup with hints, standard explanations, find similar bookings. This could help to resolve validation errors
-+ Jump directly into documentations, guidelines and rules explanations
-+ Easy template selection
-+ Learning system: compare with previous year, remove irrelevant information, forms for specific business cases
-+ Link to validation rules, guidelines, contact person, accounting manual
-+ Guided workflow, consistency check, Template popup, "in validation" message link
-+ Segment split
-+ Different levels (warning, not required)
-
-**** Simple UX
-+ Reduction of validation errors
-+ Easy to understand, easy to use
-+ Clear, understandable messages
-+ Speaking language of local accountant
-+ Mandatory fields where required
-+ Input correction proposals
-+ Fill information fields automatically wherever possible 
-
-**** Standard Explanations
-+ Popup with hint
-+ Popup with list and direct input with notice
-+ Proposal for template or explanation in repetitive cases
-+ Popup to enter explanations for rollin into cockpit
-+ Historic view: "Find similar bookings"
-+ Option for standard explanation and free input
-
-**** Standard Templates 
-+ Jump into documentation of guidelines and rules
-+ Standard postings/templates
-+ Button for template selection
-+ Machine learning -> input compares with historical data
-+ Given forms for specific business cases
-
-**** Links to  Rules 
-+ Link to validation rule change request
-+ Link to guideline contact person
-+ Link to violated rule definition
-+ "Why can't I book it like this?"
-+ Operating business -> no time consuming effects
-
-**** Workflow/Links
-+ Accounting manual IFRS manual
-+ Second posting tab to add explanations
-+ Consistency check e.g.  deferred tax...
-+ Link to change master data
-+ Triggering rules -> Template popup
-+ In validation message link to template validation tab
-+ Link between entities for IC transactions
-+ Trigger approval WF for exceptions 
-+ For hard validations start WF to solve
-+ Overview used validations for primary postings
-+ Access internal/external auditor
-+ Inputs from cockpit -> Materiality/Pain Points
-+ Segments GKV/UKV
-+ Definition of thresholds for amounts booked -> start WF
-
-**** System Reactions
-+ Different levels (Warning, note required, workflow, error)
-
-
 *** Context
 VE lays in the core of RTC. It provides data validation, data substitution, and rule services for all the consolidation tasks in RTC. Financial consolidations are rather diverse among corporations. Different company has different rules when doing consolidations. VE allows user to define calculation, data mapping, and posting logics before, during, and after a consolidation task.
 
@@ -325,7 +178,7 @@ VE artifacts should be also easily embedded into other applications like existin
 
 It seems also possible for a VE artifact output a report list (or even a hierarchy). Then we should think about which consolidation report need to be exposed using VE. 
 
-**** UI for Validation Log                                            :Chang:
+**** UI for Validation Log                                            :Lynn:
 The display of validation log should be decoupled. Validation log could be displayed centrally in consolidation monitor, or embedded in a specific area of a specific APP. In ABAP, we can reuse Application Log framework which can save, display and filter logs in a unified manner. In Fiori, we should find a suitable UI control(or UI component) to achieve the same thing.   
 
 There are 3 kinds of VE outputs:
@@ -333,7 +186,7 @@ There are 3 kinds of VE outputs:
 2. The list output used for reporting
 3. The simple true/false output used to control process
 
-The validation log UI only deal with the first kind of output. The message or log should be multi-language support, which requires it must integrate with ABAP message framework. 
+The validation log UI only deal with the first kind of output. The message or log should be multi-language support, which requires it must integrate with ABAP message framework. In the initial release, an ABAP report is developed to initiate the running of rules. The ABAP report will have a similar selection screen like EC-CS's correspoinding function (CXV1). 
 
 **** Formula & Script (maybe not necessary)                           :Vince:
 REL provided by HRF is probably not enough for financial consolidation. Additional Formula and script could be needed. Currently, there is no script engine considered, I suppose potential complex logic could be done via ABAP or CDS. 
@@ -349,6 +202,7 @@ The need of formula & script still needs further investigation.
 **** Complex scripts and formula can not be provided by HRF/BRF+
 /IBP/CL_RM_RUELS_UTILITY
 **** How to allow other rule engines to be integrated in
+
 *** Vocabulary Modeling                                                :Zhou:
 **** Financial Statement Version 
 Check the amount of hierarchy nodes is equal or not.
@@ -414,7 +268,8 @@ Output result will be used by documents generation.
 3. If (sum1 <> sum2), posting the difference (sum1 - sum2) to company code "A" and account "xxxxxxxx". 
 
 *** User Interface                                                    :Chang:
-*** Interfaces/Communication Handling                                 :Steve:
+
+*** Interfaces/Communication Handling                                 
 *** Used Components and Frameworks
 | Name | Description                  | Software Component | Implications |
 |------+------------------------------+--------------------+--------------|
@@ -444,6 +299,156 @@ Output result will be used by documents generation.
 
 
 ** Design Details Documentation
+
+*** Totals Data Validation Requirements
++ Easy to use cockpit quick overview of validation rules (traffic lights for orientation)
++ Structured according to finance information flow, grouping in batches/runs
++ Change requests easy to realize
++ simple to use "by highest flexibility"
++ Drill down / drill through to identify differences
++ Central view - Central collection of comments and explanations
++ Sort by entity, by validation rule, by differences (threshold)
++ Link to templates, adjustment postings, explanations, help functions / jump to documentations, guidelines and rules
++ Status overview (color coding), flag important items...
++ Guided workflow,  set "complete" , trigger notes request
++ Security: internal user and external user (e.g. Auditor could see validation checks / list of validation) Authorization Management
++ Integration with disclosure management
++ Learning system: compare with previous year, remove irrelevant information
+
+**** Simple UX
++ Quick overview, simple to use
++ Structured according to finance info flow
++ Grouping in batches/runs
++ Traffic lights
++ Change requests easy to realize
+
+**** List with Drill Down/Drill Through
++ Flexible filter and sort criteria
++ Ranked view (high important first)
++ List of explanations given for selected item
++ Analysis: Group, Company, Profit Center, Account...
++ Insight to action from cockpit to document
++ Hierarchical view acc. To company structure
++ Central collection of comments and explanations
++ Results visible centrally
++ Aggregation of notes
++ Sort by entity, validation, difference
+
+**** Links to Everything Needed 
++ Jump into documentation of guidelines and rules
++ Email integration
++ Link to role repository
++ Link to templates
++ Link to explanation entry screen
++ Direct posting in cons.
++ Link to validation help function
++ Drill down to formula and validation/mapping rule
++ All steps to react on validations from one cockpit
++ Interface to extended ledger
++ Link to reopen an entity
++ Direct connection to correction posting
++ Link to adjustment posting screen
+
+**** Graphical Status Information
++ KPI dashboard with alerts
++ Status overview
++ Color coding, traffic lights
++ "Lights" system for explanation flow
++ Option to flag relevant explanations for further processing
++ Immediate insight into qualitative level of data
++ Confirm exceptions / status management
+
+**** Workflow Based Info Collection
++ Trigger WF for notes request
++ Results allocated to relevant notes (e.g. find assets...)
++ "Complete" button when validation has worked
++ Integrated communication network
++ Guided Workflow
++ WF with status overview
++ Direct feedback possible
++ Trigger WF for posting in FI
++ Group reporting could restart WF to ask for additional info
+
+**** Audit Proof
++ Security external and internal
++ Edit, enrich, add notes
++ FI reporting compliant
++ Integration with disclosure management 
+
+**** Reflecting Responsibilities
++ Assign and track ownership local and central
++ Clear areas of access and responsibilities
++ Clear task allocation
++ Authorization Management
+
+**** Learning System
++ Compare with previous year
++ Learn "irrelevant" information
+
+
+*** Post Validation Requirements
++ Easy to use for a local accountant in their language
++ Correction proposals (standard booking) and fill information 
++ Popup with hints, standard explanations, find similar bookings. This could help to resolve validation errors
++ Jump directly into documentations, guidelines and rules explanations
++ Easy template selection
++ Learning system: compare with previous year, remove irrelevant information, forms for specific business cases
++ Link to validation rules, guidelines, contact person, accounting manual
++ Guided workflow, consistency check, Template popup, "in validation" message link
++ Segment split
++ Different levels (warning, not required)
+
+**** Simple UX
++ Reduction of validation errors
++ Easy to understand, easy to use
++ Clear, understandable messages
++ Speaking language of local accountant
++ Mandatory fields where required
++ Input correction proposals
++ Fill information fields automatically wherever possible 
+
+**** Standard Explanations
++ Popup with hint
++ Popup with list and direct input with notice
++ Proposal for template or explanation in repetitive cases
++ Popup to enter explanations for rollin into cockpit
++ Historic view: "Find similar bookings"
++ Option for standard explanation and free input
+
+**** Standard Templates 
++ Jump into documentation of guidelines and rules
++ Standard postings/templates
++ Button for template selection
++ Machine learning -> input compares with historical data
++ Given forms for specific business cases
+
+**** Links to  Rules 
++ Link to validation rule change request
++ Link to guideline contact person
++ Link to violated rule definition
++ "Why can't I book it like this?"
++ Operating business -> no time consuming effects
+
+**** Workflow/Links
++ Accounting manual IFRS manual
++ Second posting tab to add explanations
++ Consistency check e.g.  deferred tax...
++ Link to change master data
++ Triggering rules -> Template popup
++ In validation message link to template validation tab
++ Link between entities for IC transactions
++ Trigger approval WF for exceptions 
++ For hard validations start WF to solve
++ Overview used validations for primary postings
++ Access internal/external auditor
++ Inputs from cockpit -> Materiality/Pain Points
++ Segments GKV/UKV
++ Definition of thresholds for amounts booked -> start WF
+
+**** System Reactions
++ Different levels (Warning, note required, workflow, error)
+
+
 *** Database Design
 *** Testability and Test Environment
 *** Complex Algorithms and Applied Patterns

@@ -1,0 +1,40 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Totals Data Validation
+** Context
+Totals data includes: 
+1. *Reported financial data*
+2. *Standardized financial data*  
+3. *Consolidated data*
+4. *Additional financial data* 
+
+Totals data validation uses validation rules, which you can define in Customizing. To do this, you establish selection conditions (usually with items and subitems), which you then use in a formula. Then the system tests whether the validation rule is true or false for a given data set. 
+
+We will leverage HRF to realize the totals data validation. As HRF has a fancy rule editor and generates DB procedures to encapsulate rule logic. In our first release, we will re-use the HRF@BRF workbench as the rule maintenance UI, and provide an ABAP report to consume the generated HANA artifacts. Later on, we will consider how to integrate HRF's UI control into our rule maintenance apps, and establish a deep integration with BPC's control framework. 
+
+*** Some examples for totals data validations
++ Total assets = total liabilities
++ Net profit = appropriation of retained earnings
++ Retained earnings on balance sheet = annual net income on income statement
+
+ 
+** Use Case Description
+
+*** Personas
+*Local Accountant*: Do validations on his own reported financial data based on the rules defined by group accountant. He can also define his local rules if possible.
+
+*Group Accountant*: Do validations on all subsidaries' reported financial data. She defines group rules which should be applied to all subsidaries (Each subsidary could be assigned with different rules). She also validates the standardized financial data and the consolidated data.
+
+*** Data Flow and Validations Point (runtime)
+ACDOCA-->CDS View-->HRF Data Objects-->HRF Context-->A Rule-->DB Procedure
+
+*** Rule Authoring Process (design time)
+
+** HRF@BRF
+*** Pre-Delivered Content
+Application, functions, data objects and underlying CDS views
+*** User exists (rules)
+*** RTC and BRF integration
+**** Design time
