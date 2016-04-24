@@ -28,13 +28,53 @@ Assume a recurrence automatically consolidation process is defined. A consolidat
 Occasional pull requests share exactly the same logic as the recurrence approach. There is actually no difference on the technique point of view. The difference form business point of view is that the group accountant has one more option "defer" to deal with them. Detail processes are explained bellow:
 1. When the local accountant decides to re-open the period, he must close it again after additional documents are posted in this period which will then raise a pull request automatically.
 2. The pull request is notified and got by the group accountant, she decides whether it should be included in this consolidation run, or be deferred in next run. Of course, she can also reject it if she thinks it is a minor change.
-3. If "include" is chosen, then the consolidation system pull the data according to the pull request. A delta run is the first choice, but if impossible, then a full run of this period is taken. The pull request is then flagged as "processed", and all the un-processed pull requests before it will be ignored and statued as "de-active". Meanwhile, the timestamp of the successfully processed pull request will be put on to the entity's "time marker" field. 
+3. If "include" is chosen, then the consolidation system pull the data according to the pull request. A delta run is the first choice, but if impossible, then a full run of this period is taken. The pull request is then flagged as "processed", and all the un-processed pull requests before it will be disgarded. Meanwhile, the timestamp of the successfully processed pull request will be put on to the entity's "time marker" field. 
 4. If "defer" is chosen, then the consolidation system will save the status for the pull request. The next time consolidation is run, the data in the pull request will be processed and consolidated into the next period. But user can still trace back to know that this data is belong to the previous period, although it is counted in this period. 
-5. If "reject" is chosen, the local accountant will receive the notification, but this time, he can decide if a resubmit is needed or not. 
+5. If "reject" is chosen, which means the data contains incompliance, the local accountant will then receive the notification, but this time, he can decide if a resubmit is necessary or not. 
 
-The status change of pull requests that belongs to a same local company could have dependency. For example, if there is already a pull request flagged as "defer", then the upcoming pull requests can not be "reject". The group accountant should either choose to defer them again which will de-active the former deferred one; or choose to include them in this run which will then discard the former deferred one too. 
+As said before, once a pull request is processed, then all the unprocessed ones before it will be disgarded. Combined with recurrence run, as it requires each occurence the local accountant must submit his local financial data, which means there will be no pull request could be deferred to *next next* occurence. 
 
-* Other Considerations
-The pull request approach is built on the conclusion that local accountants have the right to decide when and which data should be reported to the group accountants. If no pull request is raised by local accountant, then the group accountant is not allowed to pull the data from local company, even technically, the data is already in the central system. 
+It is also very usuall that the local accountant opens the periods and never closes them. As no pull request is raised, the group accountant can not pull the new data afterwards. But she can be informed, so that external process could be taken. Then, when the local accountant close those opened periods, each period should generate a pull request which points the documents only belongs to that period. All those pull requests will be included in the upcoming occurence. 
+
+* Comparison with On-the-Fly
+The pull request approach is built on the conclusion that local accountants have the right to decide when and which data should be reported to the group accountants. If no pull request is raised by local accountants, then the group accountant is not allowed to pull the data from local company, even technically, the data is already in the central system. 
 
 The pull request is conflict with the on-the-fly consolidation cases. As on-the-fly means it always reads the latest data in the central system. Group accountants access the local data without local accountants' permission. 
+
+* DB Design for Pull Request
+The tables holds the pull request resides in the central system. Each time, the local system raises a pull request, it will be synchoronized to the central system. Of course, the local system should also save a copy of the pull request. We can use 2 tables to describe a pull request:
+1. Pull request head table which contains the head information like the timestamp when the period is closed.
+2. Pull request boundary item table which contains the filtering conditions to boundary the data in ACDOCA. 
+
+#+CAPTION: Pull Request Head Table
+| Field   | Key | Description                      |
+|---------+-----+----------------------------------|
+| MANDT   | X   | SAP Client                       |
+| PRUUID  | X   | Pull Request UUID                |
+| FYEAR   |     | Group Fiscal Year                |
+| FPERI   |     | Group Fiscal Period              |
+| PERIV   |     | Group Fiscal Variant             |
+| BUKRS   |     | Local Company Code               |
+| CLTIME  |     | Peirod Close Time                |
+| STATUS  |     | RAISED/REJECT/PROCESSED/DEFERRED |
+| CREATOR |     | Who creates the Pull Request     |
+| CTIME   |     | Pull Request Generate Time       |
+
+#+CAPTION: Pull Request Boundary Item Table
+| Field  | Key | Description                                                  |
+|--------+-----+--------------------------------------------------------------|
+| MANDT  | X   | SAP Client                                                   |
+| PRUUID | X   | Pull Request UUID                                            |
+| ITEMNO | X   | Boundary Item No.                                            |
+| FLFLD  |     | Filtering Field Name. Fields in ACDOCA, like RACCT, RACNT... |
+| VALFR  |     | Value from                                                   |
+| VALTO  |     | Value to                                                     |
+
+* Group Period Lock/Unlock Request
+The local system synchoronizes its FI documents into the central system, BPC access the data in the central system. The lock/unlock a period means both lock/unlock in the local system and the central system. Because although in most cases, documents are posted in the local system, it is still possible to have documents directly posted in the central system. 
+
+The fiscal year variant could be different between group and local. From the consolidation perspective, the lock/unlock period always means according to the group fiscal variant. But to the local accountant, he may cares more on open/close fiscal year/period based on local fiscal variant. It's involuntary to think to combine local open/close with group lock/unlock. So that no additional effort is introduced to the local accountants. But these attempts would introduce more complexity then simplification, not only on technique realization, but also on the business process. 
+
+So open/close fiscal year period is on 2 levels: local and group. If any of the levels has the year/period close, then a document is not allowed to post. Only both 2 levels is open for the period can allow user do postings. Detail can be seen in the following diagram:
+
+
