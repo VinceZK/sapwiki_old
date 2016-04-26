@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 2
+#+VERSION: 5
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Pull Request for Consolidation
@@ -47,18 +47,21 @@ The tables holds the pull request resides in the central system. Each time, the 
 2. Pull request boundary item table which contains the filtering conditions to boundary the data in ACDOCA. 
 
 #+CAPTION: Pull Request Head Table
-| Field   | Key | Description                      |
-|---------+-----+----------------------------------|
-| MANDT   | X   | SAP Client                       |
-| PRUUID  | X   | Pull Request UUID                |
-| FYEAR   |     | Group Fiscal Year                |
-| FPERI   |     | Group Fiscal Period              |
-| PERIV   |     | Group Fiscal Variant             |
-| BUKRS   |     | Local Company Code               |
-| CLTIME  |     | Peirod Close Time                |
-| STATUS  |     | RAISED/REJECT/PROCESSED/DEFERRED |
-| CREATOR |     | Who creates the Pull Request     |
-| CTIME   |     | Pull Request Generate Time       |
+| Field   | Key | Description                                  |
+|---------+-----+----------------------------------------------|
+| MANDT   | X   | SAP Client                                   |
+| PRUUID  | X   | Pull Request UUID                            |
+| MODEL   |     | Consolidation Model                          |
+| DCATE   |     | BPC Data Category                            |
+| FYEAR   |     | Group Fiscal Year                            |
+| FPERI   |     | Group Fiscal Period                          |
+| PERIV   |     | Group Fiscal Variant                         |
+| COMPANY |     | Company                                      |
+| CLTIME  |     | Peirod Close Time                            |
+| USTATUS |     | User Status: Raise/Reject/Approve/Deffer     |
+| SSTATUS |     | System Status: Ready/Running/Processed/Error |
+| CREATOR |     | Who creates the Pull Request                 |
+| CTIME   |     | Pull Request Generate Time                   |
 
 #+CAPTION: Pull Request Boundary Item Table
 | Field  | Key | Description                                                  |
@@ -70,11 +73,47 @@ The tables holds the pull request resides in the central system. Each time, the 
 | VALFR  |     | Value from                                                   |
 | VALTO  |     | Value to                                                     |
 
-* Group Period Lock/Unlock Request
-The local system synchoronizes its FI documents into the central system, BPC access the data in the central system. The lock/unlock a period means both lock/unlock in the local system and the central system. Because although in most cases, documents are posted in the local system, it is still possible to have documents directly posted in the central system. 
+* Pull Request Process UI
+Once the group accountant gets the pull request notification in BPC's consolidation monitor, she clicks it and a dialog window will pop-up which shows the data in the pull request. She can then decides how to process the pull request.  
 
-The fiscal year variant could be different between group and local. From the consolidation perspective, the lock/unlock period always means according to the group fiscal variant. But to the local accountant, he may cares more on open/close fiscal year/period based on local fiscal variant. It's involuntary to think to combine local open/close with group lock/unlock. So that no additional effort is introduced to the local accountants. But these attempts would introduce more complexity then simplification, not only on technique realization, but also on the business process. 
+The dialog window is realized using an ABAP ALV report (The best way is to use BPC's UI5 framework), it show the data contains in the pull request. And there are also some buttons, like: Validate, Reject, Approve, Defer, and so on. So that she can easliy handle the pull request. 
 
-So open/close fiscal year period is on 2 levels: local and group. If any of the levels has the year/period close, then a document is not allowed to post. Only both 2 levels is open for the period can allow user do postings. Detail can be seen in the following diagram:
+* Group Level Lock/Unlock Posting Period Request
+The local system synchoronizes its FI documents into the central system, BPC access the data in the central system. The lock/unlock a period means both lock/unlock in the local system and the central system. Because although in most cases, documents are posted in the local system,  it is still possible to have documents directly posted in the central system. 
+
+According to different corporation contexts, there could be 3 different senarios regarding with who is the initiator for the Lock/Unlock request, the local accountant or group accountant?
+
+** Lock is Requested by Group Accountant 
+
+[[../image/GroupLevelPeriodLock01.png]]  
+
+In this case, the group accountant can raise a posting period lock request directly in BPC's consolidastion monitor. The lock request is saved in the central system, and send to the local system. Based on configuration, the local system can either do the lock automatically(which means the group accountant has the full authority to do period lock/unlock); Or send a notification to the local accountant, so that he can decide whether to do the Lock.
+
+Once the group level posting period is locked in the lock system, it will also lock the counterpart in the central system. Because in central system, the account numbers may not be the same with those in the local system, necessary mapping should be done. Meanwhile, a pull request will be raised which includes all the changes(new documents line items) belong to this interval. The pull request is saved in central system, and the group accountant will be notified and do the data pulling.   
+
+** Local Accountant Does the Lock
+
+[[../image/GroupLevelPeriodLock02.png]]  
+
+This case, the local accountant has the authority to do group level lock/unlok. The group accountant is only be notified that there is a new pull request should be processed.  
+
+** Local Accountant Request for Unlock 
+
+[[../image/GroupLevelPeriodLock03.png]]  
+
+If group accountant has the full authority to do group level lock/unlock, then the local accountant  must raise a unlock request if he wants to do posting in a closed period. The unlock request is saved in the central system, and the group accountant decides whether to approve or reject it. The the unlock request gets approved, it will unlock the period both in the central system and the local system. 
+
+** Mapping Group Lock/Unlock to Lock Open/Close Posting Period
+In either of the above 3 senarios, mappings are needed as the account numbers and fiscal year variant are are different among BPC, central system, and local system. Each time a lock/unlock request, or a pull request is raised, the local finacial master data should be correctly mapped to the central ones and the group ones, and vice verse. 
+
+These mapping activites could be complicate. Take fiscal year variant as an example, which could be different between group and local. From the consolidation perspective, the lock/unlock period always means according to the group fiscal variant. But to the local accountant, he may cares more on open/close fiscal year/period based on local fiscal variant. It's involuntary to think to combine local open/close with group lock/unlock. So that no additional effort is introduced to the local accountants. But these attempts would introduce more complexity than simplification.
+
+#+CAPTION: Existing Open and Close Posting Periods Maintenance View 
+[[../image/OpenClosePeriodMaintView.png]]  
+
+Above snapshot is taken from the IMG maintenance view for current open/close posting periods. The underlying table is ~T001B~, with the Tcode ~FAGL_EHP4_T001B_COFI~.  If you want to leverage this maintenance view to realize group level posting lock/unlock, you must convert the group fiscal year variant and account numbers into local ones before inserting items into this table. Besides, you should also determine:
+1. Which open posting variant(first column in above table) should be used.
+2. Which account type should be used.
+3. If I close a period, do I have to delete a line and then add a new correct line, or I should modify an existing line?
 
 
