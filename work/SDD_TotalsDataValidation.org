@@ -55,6 +55,17 @@ At first, IT professionals need to do rule context defination. That's mainly reg
 
 Group accountants can define their own rules based on the sample rules that IT professionals created. She can group rules into rule sets which can then be assigned to each consolidation group/unit. Local accountants can define their own rules too, but only effect on his own consolidation unit. Both of them use a same Tcode to run validation on different aspects.  
 
+** Mapping BRF concept to RTC Validations
+| BRF                                  | RTC                                       |
+|--------------------------------------+-------------------------------------------|
+| Application                          | Application Area + Callup Point (Context) |
+| Function(Data Context)               | Validation name                           |
+| Rule Set                             | Step(Prerequisite/Check/Message)          |
+| Variables                            |                                           |
+| Expressions initialize the Variables |                                           |
+| Rules                                |                                           |
+
+
 ** HRF@BRF
 *** Pre-Delivered Content
 Application, functions, data objects and underlying CDS views
