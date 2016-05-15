@@ -1,5 +1,5 @@
 #+PAGEID: 1825545337
-#+VERSION: 20
+#+VERSION: 23
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: IMG Design
@@ -238,15 +238,16 @@ Developer: Wang, Blangero <blangero.wang@sap.com>
 ** (Text Node) Create BW Info-objects and Info-Provider
 You need to create virtual info-objects to mapping the master data HANA views. You then create a real-time cube with the same fields of the FACT HANA calculation view. Then union the Real-time cube with the fact view through a composite provider.
 
-SAP has delivered following BW contents for your reference:
-| BW Objects    | Description                              |
-|---------------+------------------------------------------|
-| /ERP/RTC_RT01 | Real-time cube according to RTC_C_ACDOCA |
-| /ERP/RTC_CP01 | Composite Provider on RTC_C_ACDOCA       |
-| /ERP/RTC_AL01 | Aggregation Level on /ERP/RTC_CP01       |
-| /ERP/RTC_RT02 | Real-time cube according to RTC_C_SCOMPL |
-| /ERP/RTC_CP02 | Composite Provider on RTC_C_SCOMPL       |
-| /ERP/RTC_AL02 | Aggregation Level on /ERP/RTC_CP01       |
+*We wont deliver these BW objects.* 
++SAP has delivered following BW contents for your reference:+
+| BW Objects      | Description                                |
+|-----------------+--------------------------------------------|
+| +/ERP/RTC_RT01+ | +Real-time cube according to RTC_C_ACDOCA+ |
+| +/ERP/RTC_CP01+ | +Composite Provider on RTC_C_ACDOCA+       |
+| +/ERP/RTC_AL01+ | +Aggregation Level on /ERP/RTC_CP01+       |
+| +/ERP/RTC_RT02+ | +Real-time cube according to RTC_C_SCOMPL+ |
+| +/ERP/RTC_CP02+ | +Composite Provider on RTC_C_SCOMPL+       |
+| +/ERP/RTC_AL02+ | +Aggregation Level on /ERP/RTC_CP01+       |
 
 Developer: Wang, Blangero <blangero.wang@sap.com>
 
@@ -254,10 +255,10 @@ Developer: Wang, Blangero <blangero.wang@sap.com>
 If you want to write-back the consolidated results to S/4, then you have to use an ABAP write-back class and a BW virtual provider. 
 
 SAP has delivered following objects for your reference:
-| BW/ABAP Objects              | Description                                                |
+| ABAP Objects                 | Description                                                |
 |------------------------------+------------------------------------------------------------|
 | CL_RTC_ACDOCC_IPROV_WRITABLE | Write-back class to post consolidation journals to  ACDOCC |
-| /ERP/RTC_VP01                | BW Virtual Provider                                        |
+| +/ERP/RTC_VP01+              | +BW Virtual Provider+                                      |
   
 *** Assign Document Types
 You already have document types defined under the model you created. When BPC write-back the consolidted results, the document types are auto-determined by following 4 fields: Flow Type, Audit Trail, Account, and Category. You must define the derivation rules here so that correct document types are chosen for different sets of data. 
@@ -267,6 +268,7 @@ Maintenance view is under development.
 ~It is also possible that BPC enhance their rules framework, so that document type can be determined at BPC's side. We will see if BPC colleagues can finish this feature on time.~
 
 Developer: Summer Xia (summer.xia03@sap.com)
+
 
 * Business Add-ins
 

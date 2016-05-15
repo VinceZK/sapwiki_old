@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 7
+#+VERSION: 11
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Pull Request for Consolidation
@@ -49,22 +49,24 @@ The tables holds the pull request resides in the central system. Each time, the 
 2. Pull request boundary item table which contains the filtering conditions to boundary the data in ACDOCA. 
 
 #+CAPTION: Pull Request Head Table
-| Field   | Key | Description                                    |
-|---------+-----+------------------------------------------------|
-| MANDT   | X   | SAP Client                                     |
-| PRUUID  | X   | Pull Request UUID                              |
-| MODEL   |     | Consolidation Model                            |
-| DCATE   |     | BPC Data Category                              |
-| FYEAR   |     | Group Fiscal Year                              |
-| FPERI   |     | Group Fiscal Period                            |
-| PERIV   |     | Group Fiscal Variant                           |
-| GROUP   |     | Consolidation Group                            |
-| ENTITY  |     | Consolidation Entities: Company, Profit Center |
-| CLTIME  |     | Period Close Timestamp                         |
-| USTATUS |     | User Status: Raise/Reject/Approve/Deffer       |
-| SSTATUS |     | System Status: Ready/Running/Processed/Error   |
-| CREATOR |     | Who creates the Pull Request                   |
-| CTIME   |     | Pull Request Generate Time                     |
+| Field    | Key | Description                                    |
+|----------+-----+------------------------------------------------|
+| MANDT    | X   | SAP Client                                     |
+| PRUUID   | X   | Pull Request UUID                              |
+| MODEL    |     | Consolidation Model                            |
+| DCATE    |     | BPC Data Category                              |
+| REQ_TYPE |     | Pull Request Type: MonthEnd or Adjustment      |
+| FYEAR    |     | Group Fiscal Year                              |
+| FPERI    |     | Group Fiscal Period                            |
+| PERIV    |     | Group Fiscal Variant                           |
+| GROUP    |     | Consolidation Group                            |
+| ENTITY   |     | Consolidation Entities: Company, Profit Center |
+| CLTIME   |     | Period Close Timestamp                         |
+| BELNR    |     | The Submitted Consolidation journal            |
+| USTATUS  |     | User Status: Raise/Reject/Approve/Deffer       |
+| SSTATUS  |     | System Status: Ready/Running/Processed/Error   |
+| CREATOR  |     | Who creates the Pull Request                   |
+| CTIME    |     | Pull Request Generate Time                     |
 
 #+CAPTION: Pull Request Boundary Item Table
 | Field  | Key | Description                                                  |
@@ -85,12 +87,12 @@ The local accountant can raise pull requests when he thinks the data is ready. B
 1. The local accountant login into the central system, and open the pull request raise application.
 2. He chooses which consolidation model and which consolidation version the pull request should be sent to .
 3. The "Fiscal Year/Period" is always the current of the chosen model which has a fiscal year variant be assigned.
-4. "Group" and "entity" are determined by the local accountant's responsible entities automatically. If the local accountant is responsible for multiple entities, then he can only raise pull requests one by one.
-5. "Current Water Mark" is the time when he enters in this application.
+4. "Current Water Mark" is the time when he enters in this application.
+5. He can also select "Company Code" if he is granted authorization. 
 6. When he clicks the button "Get Data", it will fetch the data between "Last Water Mark" and "Current Water Mark" group by "Fiscal Period" from ACDOCA. "Last Water Mark" stands for last successfully processed pull requests by period. But if there are pull requests exists but not processed, then the application will first check if there is new data between the last pull request and this one. If yes, then get the data between this one and the *last successfully processed one*; If no, then pop-up a message to tell the user there is no data changed.
 7. The data showed to the local accountant only contains the changed account and their delta amounts. The already processed amounts will also be showed as a reference. Thus the local accountant can get a clear view of what has been changed in this interval.
 8. He can then click the "Validate" button, which will navigate to the "Report Data Validation" App. It will do validations on the current period data(the consolidate data in ACDOCC) along with the delta ones(The new data in ACDOCA), thus to get a comprehensive validation result.
-9. If no significant error is showed, then he can raise the pull requests. Click the "Raise" button will automatically generate pull requests by period. After successfully send the pull requests, the data table will be refreshed empty if no new data is entering just now. 
+9. If no significant error is showed, then he can raise the pull requests. Click the "Raise" button will automatically generate pull requests group by periods. After successfully sent the pull requests, the data table will be refreshed empty if no new data is entering just now. 
 
 * Process Pull Requests
 Once the group accountant gets the pull request notification in BPC's consolidation monitor, she clicks it and a dialog window will pop-up and show a pull request list. She can then decides how to process the pull requests.  
@@ -141,8 +143,181 @@ Here gives an bird's-eye view of the data flow.
 2. As not all the subsidiaries are involved in the central finance's landscape, those who can only provide  their reported financial data in spreadsheet format can submit via "Flexible Upload". The data will first be saved in a staging table before be counted into consolidation tasks.
 3. Only the local accountants raise the pull requests can group accountants pull the data from ACDOCA or Staging Table into ACDOCC. A pull request is a SQL where string which can be applied on ACDOCA or flexible upload staging table to boundary the data, which forms a "Reported Data View".
 4. Group accountants can run totals validation on the "Reported Data View" and the former periods consolidated results in ACDOCC. If the validation is passed, the reported data is then posted into ACDOCC. Thus the data handover from local accountants to group accountants is finished. And this activity is called "Rollup" in consolidation, which saves the aggregated ACDOCA data into ACDOCC to form a valid data basis for the upcoming consolidation tasks.
-5. A BPC consolidation view is created by union of ACDOCA and ACDOCC. The BPC consolidation engine then pumps the data through the union-ed view. It should carefully filter the data for different consolidation tasks and reports. As the data is overlapped between ACDOCA and ACDOCC, to be in mind, ACDOCC always have a aggregated copy of data in ACDOCA. It is supposed only the current period data is taken from ACDOCA for the On-the-Fly consolidation case. All other cases should get data only from ACDOCC. 
- 
+5. A BPC consolidation view is created by union of ACDOCA and ACDOCC. The BPC consolidation engine then pumps the data through the union-ed view. It should carefully filter the data for different consolidation tasks and reports. As the data is overlapped between ACDOCA and ACDOCC, to be in mind, ACDOCC always have a aggregated copy of data in ACDOCA. It is supposed only the current period data is taken from ACDOCA for the On-the-Fly consolidation case. All other cases should get data only from ACDOCC.
+
+** Example1: Local accountant submits local amount, group accountant do currency translation 
+=Notes:=
+1. "LC" only reflects BPC point of view, it doesn't means in ACDOCA the currency field stores "LC". In ACDOCC, is it allowed to store "LC"?
+2. Exchange rate between local currency and group currency USD is 1:1.
+3. Account number is omitted for simplicity.
+4. Irrelevant columns are hided for different steps. 
+
+*Step 1: Local close*: Data in ACDOCA:  
+| Entity |    Time | Currency | Amount |
+|--------+---------+----------+--------|
+| C100   | 2016.01 | LC       |    100 |
+
+*Step 2: Raise a month-end pull request*: Data is aggregated and posted to ACDOCC under a special category "VALIDATION". The category is only used in BPC for running control for the reported data. 
+| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
+|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
+| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
+
+*Step 3: Validate and approve the month-end pull request*: Document is copied to the "Actual" Category, audit trail is changed to "Input".
+| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
+|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
+| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
+| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |
+
+*Step 4: Consolidation tasks are run in BPC*: Consolidation results are posted to ACDOCC.
+| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
+|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
+| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
+| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |
+| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | CT     |    100 | 0000001 |
+| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 |
+| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 |
+
+*Step 5: Post new adjustment documents in ACDOCA*: The period is re-open after consolidation run. 
+| Entity |    Time | Currency | Amount |
+|--------+---------+----------+--------|
+| C100   | 2016.01 | LC       |    100 |
+| C100   | 2016.01 | LC       |      5 |
+
+*Step 6: Raise an adjustment pull request*: The delta data is posted to ACDOCC under "VALIDATION" category. 
+| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
+|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
+| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
+| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |
+| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | Input  |    100 | 0000001 |
+| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 |
+| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 |
+| 10006 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |      5 | 0000002 |
+
+*Step 7.1: Data is re-validated and approved*: Delete all the consolidation results under the former pull request, post a new document under "Actual" category. Now data is ready for a consolidation re-run, you just iterate back to *step 3*.
+| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq | Del |
+|-------+--------+---------+----------+--------------+--------+--------+--------+---------+-----|
+| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |     |
+| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |     |
+| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | Input  |    100 | 0000001 | X   |
+| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 | X   |
+| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 | X   |
+| 10006 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |      5 | 0000002 |     |
+| 10007 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |      5 | 0000002 |     |
+
+*Step 7.2: Data is re-validated and deferred*: Post a new document with the delta amount to the next period. 
+| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
+|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
+| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
+| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |
+| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | Input  |    100 | 0000001 |
+| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 |
+| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 |
+| 10006 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |      5 | 0000002 |
+| 10007 | C100   | 2016.02 | LC       | Actual       | G_NONE | Input  |      5 | 0000002 |
+
+*Step 7.3: Data is re-validated and rejected*: Delete the document generated by the pull request
+| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq | Del |
+|-------+--------+---------+----------+--------------+--------+--------+--------+---------+-----|
+| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |     |
+| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |     |
+| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | Input  |    100 | 0000001 |     |
+| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 |     |
+| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 |     |
+| 10006 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |      5 | 0000002 | X   |
+
+*The pull request id provides following usages:*
+1. Flags a valid set of consolidation result lines that belongs to the last approved pull request.
+2. Finds the right timestamp when drilling through to the corresponding source journal items in ACDOCA.
+
+** Example2: Local accountant does the currency translation and submit to the group accountant.
+
+*Step 1: Local close*: Data in ACDOCA:  
+| Entity |    Time | Currency | Amount |
+|--------+---------+----------+--------|
+| C100   | 2016.01 | LC       |    100 | 
+
+*Step 2: Raise a month-end pull request*: Data is translated and posted to ACDOCC under category "VALIDATION". Before translation, a roll-up must be done to post aggregated local amount to ACDOCC. As the S/4 currency translation supports multiple currency/amount pairs. We can just store the local currency amount and the translated currency amount in one line. By doing so, it will  benefit in reporting when one tries to put local amount and translated amount side by side.  
+| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
+|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------|
+| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |
+| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |
+
+*Step 3: Validate and approve the month-end pull request*: The documents under "VALIDATION" category will be copied correspondingly to the "Actual" category(20001->20003, 20002->20004). Audit trail are both changed to "Input".
+| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
+|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------|
+| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |
+| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |
+| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |
+| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |
+
+*Step 4: Consolidation tasks are run in BPC*: Consolidation results are posted to ACDOCC.
+| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
+|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------|
+| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |
+| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |
+| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |
+| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |
+| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 |
+| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 |
+
+*Step 5: Post new adjustment documents in ACDOCA*: The period is re-open after consolidation run. 
+| Entity |    Time | Currency | Amount |
+|--------+---------+----------+--------|
+| C100   | 2016.01 | LC       |    100 |
+| C100   | 2016.01 | LC       |      5 | 
+
+*Step 6: Raise an adjustment pull request*: The delta data is posted to ACDOCC under "VALIDATION" category. 
+| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
+|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------|
+| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |
+| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |
+| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |
+| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |
+| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 |
+| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 |
+| 20007 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |          5 | 0000011 |
+| 20008 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |       5 |          5 | 0000012 |
+
+*Step 7.1: Data is re-validated and approved*: Delete all the consolidation results under the former pull request, post 2 new documents(one for local currency, the other is for group currency) under "Actual" category. Now data is ready for a consolidation re-run, you just iterate back to *step 3*.
+| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq | Del |
+|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------+-----|
+| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |     |
+| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |     |
+| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
+| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 | X   |
+| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 | X   |
+| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 | X   |
+| 20007 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |          5 | 0000012 |     |
+| 20008 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |       5 |          5 | 0000012 |     |
+| 20009 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |          5 | 0000012 |     |
+| 20010 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |          5 | 0000012 |     |
+
+*Step 7.2: Data is re-validated and deferred*: Post 2 new documents with the delta amount to the next period. 
+| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq | Del |
+|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------+-----|
+| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |     |
+| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |     |
+| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
+| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
+| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 |     |
+| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 |     |
+| 20007 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |          5 | 0000012 |     |
+| 20008 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |       5 |          5 | 0000012 |     |
+| 20009 | C100   | 2016.02 |       | LC       | Actual       | G_NONE | Input  |         |          5 | 0000012 |     |
+| 20010 | C100   | 2016.02 |       | USD      | Actual       | G_NONE | Input  |         |          5 | 0000012 |     |
+
+*Step 7.3: Data is re-validated and rejected*: Delete the documents generated by the pull request
+| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq | Del |
+|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------+-----|
+| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |     |
+| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |     |
+| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
+| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
+| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 |     |
+| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 |     |
+| 20007 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |          5 | 0000012 | X   |
+| 20008 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |       5 |          5 | 0000012 | X   |
+
 * Group Level Lock/Unlock Posting Period Request
 The local system synchronizes its FI documents into the central system, BPC access the data in the central system. The lock/unlock a period means both lock/unlock in the local system and the central system. Because although in most cases, documents are posted in the local system,  it is still possible to have documents directly posted in the central system. 
 
