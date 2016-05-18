@@ -209,8 +209,8 @@ To achieve this, you should read the meta data of the CDS view. Please refer ABA
 
 You should reuse SAP application log (SLG0&SLG1) to show the check result. You can also refer ABAP class: ZCL_BG_LOG in S4H.
 
-**** Foundation CDS View      :Frank:
-Foundation CDS view is the main source of consolidation data, based on what consolidation tasks are run to produce consolidated results. 
+**** Foundation View                                                  :Frank:
+Foundation view is the main source of consolidation data, based on what consolidation tasks are run to produce consolidated results. 
 
 In the initial releases, the source data is mainly coming from ACDOCA. You need to create a CDS view on ACDOCA and do necessary fields projections and data filtering.  There are also mapping and derivations need to be done at CDS level:
 1. Operational Account --> Group Account

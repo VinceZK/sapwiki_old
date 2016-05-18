@@ -140,14 +140,73 @@ Here gives an bird's-eye view of the data flow.
 [[../image/DataFlowOverview.png]]  
 
 1. Data comes from the local finance systems through Central Finance's real-time data replication. Data streams are substitute, derived, and validated at document level according to rules defined in the central system, and saved in the central journal table ACDOCA.
-2. As not all the subsidiaries are involved in the central finance's landscape, those who can only provide  their reported financial data in spreadsheet format can submit via "Flexible Upload". The data will first be saved in a staging table before be counted into consolidation tasks.
-3. Only the local accountants raise the pull requests can group accountants pull the data from ACDOCA or Staging Table into ACDOCC. A pull request is a SQL where string which can be applied on ACDOCA or flexible upload staging table to boundary the data, which forms a "Reported Data View".
+2. As not all the subsidiaries are involved in the central finance's landscape, those who can only provide  their reported financial data in spreadsheet format can submit via "Flexible Upload". The data will first be saved in a staging area before be counted into consolidation tasks.
+3. Only the local accountants raise the pull requests can group accountants pull the data from ACDOCA or Staging area into ACDOCC. A pull request is a SQL where string which can be applied on ACDOCA or flexible upload staging table to boundary the data, which forms a "Reported Data View".
 4. Group accountants can run totals validation on the "Reported Data View" and the former periods consolidated results in ACDOCC. If the validation is passed, the reported data is then posted into ACDOCC. Thus the data handover from local accountants to group accountants is finished. And this activity is called "Rollup" in consolidation, which saves the aggregated ACDOCA data into ACDOCC to form a valid data basis for the upcoming consolidation tasks.
 5. A BPC consolidation view is created by union of ACDOCA and ACDOCC. The BPC consolidation engine then pumps the data through the union-ed view. It should carefully filter the data for different consolidation tasks and reports. As the data is overlapped between ACDOCA and ACDOCC, to be in mind, ACDOCC always have a aggregated copy of data in ACDOCA. It is supposed only the current period data is taken from ACDOCA for the On-the-Fly consolidation case. All other cases should get data only from ACDOCC.
 
+** First Release 
+In RTC's first release, BPC accesses data directly in ACDOCA. There is no process control or timestamp filterring. Group accountant can aways get the latest data in ACDOCA. There could be following restrictions:
+1. Data consistency cannot be permitted. Because ACDOCA is time vary, running consolidation at a certain time point doesn't mean at later point you can get a consistent view. An audit report will be given to explain the consolidation results and the source data.
+2. Trace-back is not possible.
+3. Currency translation can only be run in BPC. The S/4 currency translation is not possible as data validation still depends on BPC's control. 
+
+Base on above premises, I give following examples to explain detail data flow:
+
+*** Example1: Local accountant submits data through flexible uploading 
+*Step 1: Upload data but not submitted*: Data is saved in ACDOCC, a document number is given. The document status in in "Staging" and "BPC Category" is NULL, which means currently BPC cannot see it. Business transaction type (BTTYPE) is fixed to "FLEXUPL".
+
+=ACDOCC=  
+| DOCNR | Status  | Entity |    Time | Currency | BPC Category | BTTYPE  | Amount |
+|-------+---------+--------+---------+----------+--------------+---------+--------|
+| 10001 | Staging | C100   | 2016.01 | CNY      |              | FLEXUPL |    100 |
+
+*Step 2: Submit the data*: The orignal document status is changed to "posted". When the user submit the data, he must choose the BPC category. For each category, a dedicate document is posted along with a dedicate pull request. The "Currency" field will be saved as "LC" for the easy consumption of BPC. Now, BPC can see the data in the corresponding category. Business transaction type is set to "SUBMIT".
+
+=ACDOCC=
+| DOCNR | Status | Entity |   FTime | Currency | BPC Category | BTTYPE  | Group  | Audit | Amount | PullReq |
+|-------+--------+--------+---------+----------+--------------+---------+--------+-------+--------+---------|
+| 10001 | Posted | C100   | 2016.01 | CNY      |              | FLEXUPL |        |       |    100 |         |
+| 10002 | Posted | C100   | 2016.01 | LC       | Actual1      | SUBMIT  | G_NONE | INPUT |    100 | 0000001 |
+| 10003 | Posted | C100   | 2016.01 | LC       | Actual2      | SUMMIT  | G_NONE | INPUT |    100 | 0000002 |
+
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category | DOCNR |
+|---------+------+--------+---------+----------+-------|
+| 0000001 | C    | C100   | 2016.01 | Actual1  | 10002 |
+| 0000002 | C    | C100   | 2016.01 | Actual2  | 10003 |
+
+*Step 3: Re-upload a new copy and submit*: The former submitted documents in each category will be marked as "deleted". New documents will be posted for each category along with the pull requests. 
+=ACDOCC=
+| DOCNR | Status | Entity |   FTime | Currency | BPC Category | BTTYPE  | Group  | Audit | Amount | PullReq | DEL |
+|-------+--------+--------+---------+----------+--------------+---------+--------+-------+--------+---------+-----|
+| 10001 | Posted | C100   | 2016.01 | CNY      |              | FLEXUPL |        |       |    100 |         |     |
+| 10002 | Posted | C100   | 2016.01 | LC       | Actual1      | SUBMIT  | G_NONE | INPUT |    100 | 0000001 | X   |
+| 10003 | Posted | C100   | 2016.01 | LC       | Actual2      | SUMMIT  | G_NONE | INPUT |    100 | 0000002 | X   |
+| 10004 | Posted | C100   | 2016.01 | CNY      |              | FLEXUPL |        |       |    110 |         |     |
+| 10005 | Posted | C100   | 2016.01 | LC       | Actual1      | SUBMIT  | G_NONE | INPUT |    110 | 0000003 |     |
+| 10006 | Posted | C100   | 2016.01 | LC       | Actual2      | SUMMIT  | G_NONE | INPUT |    110 | 0000004 |     |  
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category | DOCNR |
+|---------+------+--------+---------+----------+-------|
+| 0000001 | C    | C100   | 2016.01 | Actual1  | 10002 |
+| 0000002 | C    | C100   | 2016.01 | Actual2  | 10003 |
+| 0000003 | C    | C100   | 2016.01 | Actual1  | 10005 |
+| 0000004 | C    | C100   | 2016.01 | Actual2  | 10006 |
+
+*** Example2: Local accountant submits data in ACDOCA  
+If local data is in ACDOCA, then data copy to ACDOCC is unnecessary. Only raise a pull request with current timestamp is OK. 
+
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category |     CTimestamp |
+|---------+------+--------+---------+----------+----------------|
+| 0000001 |  A   | C100   | 2016.01 | Actual   | 20160302100020 |
+
+** Second Release
+
 ** Example1: Local accountant submits local amount, group accountant do currency translation 
 =Notes:=
-1. "LC" only reflects BPC point of view, it doesn't means in ACDOCA the currency field stores "LC". In ACDOCC, is it allowed to store "LC"?
+1. "LC" only reflects BPC point of view, it doesn't mean in ACDOCA the currency field stores "LC". In ACDOCC, is it allowed to store "LC"?
 2. Exchange rate between local currency and group currency USD is 1:1.
 3. Account number is omitted for simplicity.
 4. Irrelevant columns are hided for different steps. 
@@ -234,7 +293,7 @@ Here gives an bird's-eye view of the data flow.
 *Step 1: Local close*: Data in ACDOCA:  
 | Entity |    Time | Currency | Amount |
 |--------+---------+----------+--------|
-| C100   | 2016.01 | LC       |    100 | 
+| C100   | 2016.01 | LC       |    100 |
 
 *Step 2: Raise a month-end pull request*: Data is translated and posted to ACDOCC under category "VALIDATION". Before translation, a roll-up must be done to post aggregated local amount to ACDOCC. As the S/4 currency translation supports multiple currency/amount pairs. We can just store the local currency amount and the translated currency amount in one line. By doing so, it will  benefit in reporting when one tries to put local amount and translated amount side by side.  
 | DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
@@ -264,7 +323,7 @@ Here gives an bird's-eye view of the data flow.
 | Entity |    Time | Currency | Amount |
 |--------+---------+----------+--------|
 | C100   | 2016.01 | LC       |    100 |
-| C100   | 2016.01 | LC       |      5 | 
+| C100   | 2016.01 | LC       |      5 |
 
 *Step 6: Raise an adjustment pull request*: The delta data is posted to ACDOCC under "VALIDATION" category. 
 | DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
