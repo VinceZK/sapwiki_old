@@ -148,6 +148,8 @@ Here gives an bird's-eye view of the data flow.
 ** First Release 
 In RTC's first release, pull request will be used as both a notification and timestamp filtering. The status control in the pull request will not be fully appeared. BPC can access the data directly in ACDOCA with timestamp filtering. The timestamp in the pull request which is submitted by the local acccountant reflects the local close time. Before the time, the data is allowed(by local accountants) for consolidation, and after the time, the data should not be counted for consolidation. 
 
+For detials of the modeling for first release, please refer this page: [[wiki-page][https://wiki.wdf.sap.corp/wiki/x/Ds83bQ]]
+
 The first release has following restrictions:
 
 1. Once the local accountant raise the pull request, it is approved automatically, and group accountant can only accept it. There is no embedded control on this process, group accountant must notify the local accountant externally if she doesn't want the data. 
@@ -168,9 +170,9 @@ I give following examples to explain detail data flow:
 *Step 2: Submit the data*: The orignal document status is changed to "posted". A pull request is created and the pull request number is set in the document lines. Now, BPC can see the data because there is a pull request exists which will be joined in the BPC consolidation view.
 
 =ACDOCC=
-| DOCNR | Status | Entity |   FTime | Currency | BPC Category | Group  | FLOW    | Amount | PullReq |
+| DOCNR | Status | Entity |   FTime | Currency | BPC Category | Group  | FLOW  | Amount | PullReq |
 |-------+--------+--------+---------+----------+--------------+--------+-------+--------+---------|
-| 10001 | Posted | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |    100 | 0000001  |
+| 10001 | Posted | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |    100 | 0000001 |
 
 =RTC_PULL_REQ=
 |    UUID | Type | Entity |   FTime | Category | USTATUS  |
@@ -289,6 +291,7 @@ Local accountants can run currency translation in S/4 and then do data validatio
 |---------+------+--------+---------+----------+----------|
 | 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
 | 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
+
 
 ** Second Release
 
