@@ -24,21 +24,111 @@
 
 ** Design
 *** Key Requirements and Design Goals
-BPC need access the real-time data in ACDOCA with timestamp filtering. 
+BPC needs to access the real-time data in ACDOCA with timestamp filtering. 
 
 The requirement comes from the legal consolidation which require strict data process control. Only the data that local accountants sumitted can group accountants run validation and consolidation on them. But if we let BPC access data on ACDOCA directly, group accountants will always access the latest data without a handover control. Meanwhile, as the data in ACDOCA is always changing, it will also cause the data inconsistency during a consolidation process run. 
 
-The solution is to use a pull request to record the time when the local accountant close his period and submit the range of data for consolidation. And BPC access the data in ACDOCA only before the timestamp. 
+The general idea is to use timestamps to snapshot mulitple data statuses on ACDOCA. The timestamp usually stands for the time that local accountants close their periods. BPC now only accesses the snapshotted data in ACDOCA. Thus we achieve the data handover without any data copies. 
+
+If data comes in through flexible uploading, the handover is then potentially executed when the local accountants upload the data into ACDOCC. So timestamp filtering is not necessary for such cases. But it is good to include flexible uploading into the same pull request approach. 
 
 *** Context
 A [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Pull+Request+for+Consolidation][Pull Request]] is raised by a local accountant as a data handover document. It contains information like:mode, category,  entity, fiscal year/period, and close timestamp. The group accountant uses this filter information to pull data from ACDOCA for further validation and consolidation. 
 
 The pull requests are stored in table =RTC_PULL_REQ=, with additional user status and system status control. If a pull request is in status "Raised", group accountant can run validation on the data it points; If a pull request is in status "Approved", BPC consolidation engine can see the data it points; And only if the pull request is in user status "Approved", and consolidation runs successfully(system status equals "Processed"), can consolidation reports run on the data it points. 
 
-Because BPC/BW can not pass filtering parameters, so currently, it is impossible for BPC to using timestamp do any filtering before the consolidation logic. RTC will provide BPC with HANA views that already join with the pull request table. This approach will cause multiple HANA views to be provided for different purpose. BPC now should be able to differeniate them when doing cerntain consolidation tasks. 
+Because BPC/BW can not pass filtering parameters, so currently, it is impossible for BPC to using timestamp do any filtering before the actual consolidation logic. RTC will provide BPC with HANA views that already join with the pull request table. This approach will cause multiple HANA views to be provided for different purpose. BPC now should be able to differeniate them when doing certain consolidation tasks. 
 
-The overall diagram can be seen as this: 
+The design is divided into 2 versions: =1610 Version=, and the =Completed Version=. As you can guess, to achieve both real-time data access and sophistic status/workflow control are rather complicate and time/resource consuming. We design a simplified version for 1610, which is the first release. The 1610 version is simplified by eliminating the status control. Details of the 2 versions and the restrictions can be find in the upcoming sections. 
 
+*** 1610 Version
+In 1610 release, we can't achieve the full picture of the diagram. But we can try to simplified it by removing the status control in the data submition process. That means, once the local accountants submit the data, without any approval, BPC can read the data. 
+
+This simplification has following restrictions:
+1. Once the local accountant raise the pull request, it is approved automatically, group accountant can only accept it. There is no embedded control on this process, group accountant must notify the local accountant externally if she doesn't want the data.
+2. There is no control on local document posting to the consolidated periods. Those "illegal" postings are discarded, or must be resolved by external controls.
+3. Data validation is not integerated, there is no system promise that the submitted data is validate according to the rules. Expensive communication effort are necessary between group accountants and local accountants when such cases happen. 
+4. Delta consolidation is still not possible. Each time the local accountant raises a new pull request, BPC will always do a full re-consolidation based on the new timestamp. 
+5. You cannot defer amounts to the next period.
+6. Data inconsistency could happen when consolidation is running or processes errors.
+
+The simplified diagram looks like this:
+
+#+Caption: HANA Views for BPC in First Release
+[[../image/ConsViews04.png]]
+
+**** Consolidation Result View
+Based on ACDOCC, only expose the consolidation results.
+#+BEGIN_SRC sql
+  select * from ACDOCC
+          where MODEL = 'RTC001'
+            and BPC_CATG = 'Actual'
+            and DELFLG = ''.
+#+END_SRC
+
+**** Legal View C
+Based on ACDOCC, those approved flexible uploaded data of all periods. The view is created on ACDOCC join with the pull request table on pull request number. You should first filter in those latest approved pull requests group by year/periods. 
+#+BEGIN_SRC sql
+  create view I_PULL_REQ_R as 
+    select MODEL, BPC_CATT, FYEAR, FPERI, ENTITY, max(CTIME), PLUUID
+      from RTC_PULL_REQ
+     where USTATUS = 'Approved'
+       and REQ_TYPE = 'C'
+     group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY;
+
+  select * from ACDOCC as C
+           join I_PULL_REQ_R as P
+             on C.MODEL = P.MODEL
+            and C.BPC_CATG = P.BPC_CATG
+            and C.RYEAR = P.FYEAR
+            and C.POPER = P.FPERI
+            and C.RCOMP = P.ENTITY
+            and C.PLUUID = P.PLUUID
+          where P.MODEL = 'RTC001'
+            and P.BPC_CATG = 'Actual'
+            and C.DELFLG = ''.
+#+END_SRC
+
+Once the local accountant submits the data, the pull request's user status will be set to "Approved". 
+
+**** Legal View A
+Based on ACDOCA, those approved flexible uploaded data of all periods. The view is created on ACDOCA join with the pull request table on timestamp. You should first filter in those latest approved pull requests group by year/periods. 
+#+BEGIN_SRC sql
+  create view I_PULL_REQ_AR as 
+    select MODEL, BPC_CATG, FYEAR, FPERI, ENTITY, max(CTIME), CLOSE_TIME
+      from RTC_PULL_REQ
+     where USTATUS = 'Approved'
+       and REQ_TYPE = 'A'
+     group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY, BELNR;
+
+    select * from I_FACDOCA as A
+             join I_PULL_REQ_AR as P
+              and A.RYEAR = P.FYEAR
+              and A.POPER = P.FPERI
+              and A.RCOMP = P.ENTITY
+              and A.TIMESTAMP <= P.CLOSE_TIME
+            where P.MODEL = 'RTC001'
+              and P.BPC_CATG = 'Actual' 
+#+END_SRC
+
+**** Preliminary View C
+All data in ACDOCC with the category "Prelim".
+#+BEGIN_SRC sql
+  select * from ACDOCC
+          where MODEL = 'RTC001'
+            and BPC_CATG = 'Prelim'
+            and DELFLG = ''.
+#+END_SRC
+
+**** Preliminary View A
+All data from the foundation view. Fix category to "Prelim"
+#+BEGIN_SRC sql
+  select * 'Prelim' as BPC_CATG
+                  from I_FACDOCA.
+#+END_SRC
+
+*** Completed Version      :Vincent:
+Still under design.
 #+Caption: HANA Views for BPC
 [[../image/ConsViews03.png]]
 
@@ -196,138 +286,12 @@ latest data in ACDOCA of current period.
           where RYEAR = '2016'
             and POPER = '<this-period>'.
 #+END_SRC
-
-
 *** Foundation View     :Blang:
 The foundation view should be built using HANA calculation view(graphic). 
 
-*** Auto-generation of the 8 HANA Calculation Views      :Steve:
+*** Auto-generation of HANA Calculation Views                         :Steve:
 There is an exiting ABAP API to support generation of HANA calculation view. 
 
 *** Write-back using HANA temp table
 To be planned!
-
-*** First Release
-In 1610 release, we can't achieve the full picture of the diagram. But we can try to simplified it by removing the status control in the data submition process. That means, once the local accountants submit the data, without any approval, BPC can read the data. 
-
-This simplification has following restrictions:
-1. Once the local accountant raise the pull request, it is approved automatically, and group accountant can only accept it. There is no embedded control on this process, group accountant must notify the local accountant externally if she doesn't want the data. 
-2. Delta consolidation is still not possible. Each time the local accountant raise a new pull request, BPC will always do a full re-consolidation based on the new timestamp. 
-3. You can not defer amount to next period.
-4. If consolidation is in "RUNNING" or "ERROR" status, reporting will produce data inconsistency.
-
-The simplified diagram would look like this:
-
-#+Caption: HANA Views for BPC in First Release
-[[../image/ConsViews04.png]]
-
-**** Consolidation Result View
-Based on ACDOCC, only expose the consolidation result of the former periods.
-#+BEGIN_SRC sql
-  select * from ACDOCC
-          where MODEL = 'RTC001'
-            and RYEAR = '2016'
-            and BPC_CATG = 'Actual'
-            and POPER < '<this-period>'
-            and DELFLG = ''.
-#+END_SRC
-**** Legal View C
-Based on ACDOCC, those approved flexible uploaded data of current period. The view is created on ACDOCC join with the pull request table on document number. The pull request table should first filter out these items with user status equals 'Approved'.
-#+BEGIN_SRC sql
-  create view I_PULL_REQ_R as 
-    select MODEL, BPC_CATT, FYEAR, FPERI, ENTITY, max(CTIME), PLUUID
-            from RTC_PULL_REQ
-            where USTATUS = 'Approved'
-              and REQ_TYPE = 'C'
-            group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY;
-
-  select * from ACDOCC as C
-           join I_PULL_REQ_R as P
-             on C.MODEL = P.MODEL
-            and C.BPC_CATG = P.BPC_CATG
-            and C.RYEAR = P.FYEAR
-            and C.POPER = P.FPERI
-            and C.RCOMP = P.ENTITY
-            and C.PLUUID = P.PLUUID
-          where P.MODEL = 'RTC001'
-            and P.RYEAR = '2016'
-            and P.BPC_CATG = 'Actual'
-            and P.POPER = '<this-period>'
-            and C.DELFLG = ''.
-#+END_SRC
-
-Once the local accountant submits the data, the pull request's user status will be changed to "Approved". 
-**** Legal View A
-The pull request table should first filter out these items with user status equals 'Approved'.
-#+BEGIN_SRC sql
-  create view I_PULL_REQ_AR as 
-    select MODEL, BPC_CATG, FYEAR, FPERI, ENTITY, max(CTIME), CLOSE_TIME
-            from RTC_PULL_REQ
-            where USTATUS = 'Approved'
-              and SSTATUS = 'READY'
-              and REQ_TYPE = 'A'
-            group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY, BELNR;
-
-  create view I_PULL_REQ_AF as 
-    select MODEL, BPC_CATG, FYEAR, FPERI, ENTITY, max(CTIME), CLOSE_TIME
-            from RTC_PULL_REQ
-            where USTATUS = 'Approved'
-              and SSTATUS = 'FINISHED'
-              and REQ_TYPE = 'A'
-            group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY, BELNR;
-
-  create view I_PULL_REQ_ARF as
-     select A.MODEL, A.BPC_CATG, A.FYEAR, A.FPERI, A.ENTITY, 
-            A.CLOSE_TIME as NewRaisedTime, B.CLOSE_TIME as LastFinshedTime, 
-           from I_PULL_REQ_AR as A
-           join I_PULL_REQ_AF as B
-             on A.MODEL = B.MODEL
-            and A.BPC_CATG = B.BPC_CATG
-            and A.FYEAR = B.FYEAR
-            and A.FPERI = B.FPERI
-            and A.ENTITY = B.ENTITY;
-
-    select * from I_FACDOCA as A
-           join I_PULL_REQ_AR as P
-            and A.RYEAR = P.FYEAR
-            and A.POPER = P.FPERI
-            and A.RCOMP = P.ENTITY
-            and A.TIMESTAMP <= P.CLOSE_TIME
-          where P.MODEL = 'RTC001'
-            and P.RYEAR = '2016'
-            and P.FPERI = '<this-period>'
-            and P.BPC_CATG = 'Actual' 
-          union 
-  select * from I_FACDOCA as A
-           join I_PULL_REQ_ARF as P
-            and A.RYEAR = P.FYEAR
-            and A.POPER = P.FPERI
-            and A.RCOMP = P.ENTITY
-            and (A.TIMESTAMP > P.LastFinshedTime and A.TIMESTAMP <= P.NewRaisedTime)
-          where P.MODEL = 'RTC001'
-            and P.RYEAR = '2016'
-            and P.FPERI < '<this-period>'
-            and P.BPC_CATG = 'Actual'.
-#+END_SRC
-
-Vince: It seems the defer case can be covered using above SQL! Need more tests!
-
-**** Preliminary View C
-Latest data in ACDOCC if there are flexible uploaded data in this period.
-#+BEGIN_SRC sql
-  select * from ACDOCC
-          where MODEL = 'RTC001'
-            and RYEAR = '2016'
-            and BPC_CATG = 'Actual'
-            and POPER = '<this-period>'
-            and DELFLG = ''.
-#+END_SRC
-
-**** Preliminary View A
-latest data in ACDOCA of current period.
-#+BEGIN_SRC sql
-  select * from I_FACDOCA
-          where RYEAR = '2016'
-            and POPER = '<this-period>'.
-#+END_SRC
 
