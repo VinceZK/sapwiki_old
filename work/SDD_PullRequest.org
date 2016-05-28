@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 11
+#+VERSION: 13
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Pull Request for Consolidation
@@ -191,7 +191,7 @@ Here gives an bird's-eye view of the data flow.
 ** First Release 
 In RTC's first release(1610), pull request will be used as both a notification and timestamp filtering. The status control in the pull request will not be fully appeared. BPC can access the data directly in ACDOCA with timestamp filtering. The timestamp in the pull request which is submitted by the local acccountant reflects the local close time. Before the time, the data is allowed(by local accountants) for consolidation, and after the time, the data should not be counted for consolidation. 
 
-For detials of the modeling for first release, please refer this page: [[wiki-page][https://wiki.wdf.sap.corp/wiki/x/Ds83bQ]]
+For detials of the modeling for first release, please refer this page: 
 
 The first release has following restrictions:
 

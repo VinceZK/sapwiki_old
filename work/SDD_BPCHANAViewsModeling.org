@@ -1,5 +1,5 @@
 #+PAGEID: 1832374030
-#+VERSION: 2
+#+VERSION: 5
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-BPC HANA Views Modeling
@@ -95,20 +95,20 @@ Once the local accountant submits the data, the pull request's user status will 
 Based on ACDOCA, those approved flexible uploaded data of all periods. The view is created on ACDOCA join with the pull request table on timestamp. You should first filter in those latest approved pull requests group by year/periods. 
 #+BEGIN_SRC sql
   create view I_PULL_REQ_AR as 
-    select MODEL, BPC_CATG, FYEAR, FPERI, ENTITY, max(CTIME), CLOSE_TIME
+    select MODEL, BPC_CATG, FYEAR, FPERI, ENTITY, max(CLOSE_TIME)
       from RTC_PULL_REQ
      where USTATUS = 'Approved'
        and REQ_TYPE = 'A'
-     group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY, BELNR;
+     group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY;
 
     select * from I_FACDOCA as A
              join I_PULL_REQ_AR as P
-              and A.RYEAR = P.FYEAR
+               on A.RYEAR = P.FYEAR
               and A.POPER = P.FPERI
               and A.RCOMP = P.ENTITY
               and A.TIMESTAMP <= P.CLOSE_TIME
             where P.MODEL = 'RTC001'
-              and P.BPC_CATG = 'Actual' 
+              and P.BPC_CATG = 'Actual'. 
 #+END_SRC
 
 **** Preliminary View C
