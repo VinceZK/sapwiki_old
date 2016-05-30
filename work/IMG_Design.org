@@ -7,8 +7,14 @@
 * Consolidation Model
 Here you define consolidation related master data and basic customizations.
 
-** (Text Node) Create a Consolidation Foundation View
-You need to create a CDS view in HANA Studio. The CDS view select consolidation raw data from existing tables. Currently, the main journal table is *ACDOCA*. The CDS view project fields from ACDOCA, and do Chart of Accounts mapping, fiscal year and period alignment, and necessary data filtering on company codes/ledgers. SAP also delivers an example consolidation foundation view: *C_RTC_ACDOCA*, you can copy it to your own namespaces and modify it to your own needs. 
+** (Text Node) Create Consolidation Foundation View
+You need to create a HANA calculation view in HANA Studio. The calculation view is mainly based on ACDOCA, and used to
+1. Project consolidastion relevent fields from ACDOCA;
+2. Join group Chart of Accounts;
+3. Do fiscal year variant alignment;
+4. Do necessary data filtering on company code and ledger combinations.
+
+SAP also delivers an example consolidation foundation view: *RTC_C_ACDOCA*, you can copy it to your own namespace and adjust it to your own needs. 
 
 Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
 
@@ -28,20 +34,26 @@ If time permits, RTC should develop a mapping application. You can do mapping li
 | CAGM      | 3003001,3003002 | CORP      |       3003000 |
 | CAGM      | 4004001-4005999 | CORP      |       4004000 |
 
-** Mapping Company Code to Company
+** Define Account Selection
+Not all the operational accounts need to be involved in consolidation. These operational accounts should be filtered out. You can achieve this through defining a special composite selection "&SELECTION001".
 
+~Selections with their name begin with "&" are reserved by SAP for internal usages.~ 
+
+For details on how to define selections, please refer the "Define Selection" section.
+
+** Mapping Company Code to Company
 ** Define Group Fiscal Year Variants
 Reuse existing Fiscal Year Variants IMG nodes: Financial Accounting (New)-->Ledgers-->Fiscal Year and Posting Periods
 
 ** Generate Fiscal Year Calendar
-Accounting team has a program to generate period level or day level granularity fiscal calendar. Maybe it is already existing in the IMG structure somewhere. But anyway we can create this node in our IMG structure. The program is: FINS_GENERATE_FISCAL_PERIOD . 
+~Accounting team has a program to generate period level or day level granularity fiscal calendar. Maybe it is already existing in the IMG structure somewhere. But anyway we can create this node in our IMG structure. The program is: FINS_GENERATE_FISCAL_PERIOD.~ 
 
 Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
 
 ** Define Version Related Fields
-Version related fields are characteristic fields which are combined together to form a consolidation version. A consolidation version reflects a consolidation purpose. From technique point of view, each version related field must be in ACDOCC, and it must be a char type field. 
+Version related fields are characteristic fields which are combined together to form a consolidation version. A consolidation version reflects a consolidation purpose. From technique point of view, each version related field must be in ACDOCC, and it must be a characteristic field. 
 
-You can define your own version related fields by extending ACDOCC with additional char type fields. But SAP standardly delivers following 3 version related fields: 
+Currently, you can define 3 version related fields: 
 1. RTC Data Category
 2. Consolidation Ledger
 3. Variant
@@ -63,19 +75,21 @@ Under the combination of "RTC Data Category" and "Consolidation Ledger", you may
 
 Maintenance View: V_RTC_VERSION
 
-** Define a Consolidation Model.
+** Define Consolidation Model.
 
 Consolidation model combines all related customization together into an integral consolidation context. It mainly contains 2 parts: S/4 RTC side, and BPC side.
 
-You must first generated a consolidation area view in RTC side. Based on the consolidation area view, you create HANA calculation view, and then the BW composite info-provider so that then you can do BPC model definition. More details on how to set BPC consolidation model can be found in section "BPC Integration".
+You must first generate =Consolidation Views= in RTC side. Consolidation views are generated based on the foundation view and the consolidation journal table ACDOCC. There are 2 categories of consolidation views:
+1. Consolidation views for BPC which are HANA calculation views.
+2. Consolidation views for RTC which are CDS views.
 
-After you successfully define your BPC model, you come back here to do following settings:
+With the generated BPC consolidation views, you use a BW composite provider to union them. With this composite provider you can do BPC model definition. More details on how to define BPC consolidation model can be found in section "BPC Integration".
+
+After you successfully define your BPC model, you come back here to do additional settings:
 1. Assign BPC environment and model name.
 2. Define BPC data categories, and mapping them to RTC version fields combinations.
 3. Assign currency translation method if "Currency Translation in S4H" is checked. 
 4. Do checks and validations, if all settings are correct, then you can activate the consolidation model.
-
-SAP delivers a standard model "SCOMPL" for your reference. You can copy and adjust it to your needs.
 
 Developer: Sam Sun (sam.sun03@sap.com)
 
@@ -92,29 +106,31 @@ If "Currency Translation in S4H" is checked, you then assign a currency translat
 *** Define BPC Data Category and Map it to RTC Version Fields Combination
 In the tab-strip "Version", you can add/delete a "BPC Data Category". When you add one, it must be a unique "BPC Data Category". You then choose each version field a value, the value combination should be unique too.
 
-** Define Document type
-Before defining a document type, you must have your model defined. As document type is belong to a model, and cannot be shared among different models. 
+** Define Consolidation Document type
+You define consolidation document type to differentiate types of consolidation documents generated by different consolidation tasks. In a document type, you maintain different number range intervals for different consolidation versions. You can also set whether the document type need to do balance check or not?
+
+Before defining document types, you must first have your model defined. As document types are belong to a model, and cannot be shared among different models. 
 
 Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
-
-*** Maintain Document Types
-A document type categories documents by combining configurations like: balance check or not, manually or automatically, which currency need to be posted, and so on. Besides, you also need to assign 2 main objects to a document type:
-1. You assign number range for each consolidation version under the model.
-2. You assign selected accounts (FS items) for unbalance amount to be recorded.
 
 *** Define Number Ranges
 You define different number range intervals for a given model. 
 
+*** Maintain Document Types
+A document type categories documents by combining configurations like: balance check or not, manually post or automatically post. Besides, you also need to assign 2 main objects to a document type:
+1. You assign number range for each consolidation version under the model.
+2. You assign selected accounts (FS items) for unbalance amount to be recorded.
+
 ** (Text Node) Define Consolidation Group and Unit
 You go to BPC's web console, choose your consolidation environment, goto Administration-->Dimensions, select your group dimension (/ERP/GROUP by default). You maintain your consolidation group hierarchy.
 
-You then goto Consolidation-->Ownership Manager, choose the category, group, and Fiscal year/Period. You can then add your consolidation entities under each group node.
+You then goto Consolidation-->Ownership Manager, choose the category, group, and Fiscal Year/Period. You can then add your consolidation entities under each group node.
 
 The consolidation hierarchy defined in BPC can be accessed in RTC for its currency translation (if "Currency Translation in RTC" is set). Only the hierarchy structure and group currency information is used, other like "Consolidation Method", "Percent Consolidation", "Percent Control", and "Percent Ownership" is only relevant for BPC.  
 
 
 * Currency Translation
-You define translation methods under a consolidation model. You can define multiple translation methods for a model, however, currently you can only have one working translation method for each model. 
+You define translation methods under a consolidation model. You can define multiple translation methods for a model, however, you can only have one working translation method for each model. 
 
 | Developer                          | Responsible Part       |
 |------------------------------------+------------------------|
@@ -122,7 +138,7 @@ You define translation methods under a consolidation model. You can define multi
 | Qian, Marvin <marvin.qian@sap.com> | Translation Algorithms |
 | Mo, Steve <steve.mo@sap.com>       | APIs                   |
 
-** Define SETs
+** Define SETs (Optional)
 You use GS01/GS02/GS03 to Create/Edit/Display a SET.
 
 *** Account SET
@@ -131,11 +147,14 @@ You create a SET for GL accounts.
 *** Subitem SET
 You create a subitem SET. Subitems are characteristic fields in ACDOCA/C which are used to further category accounts. 
 
-
 ** Define Selection
-A =Selection= is a reusable object which defines a filtered data set based on a view or a table. It combines a base view or table and a filter definition which could be either SETs, Select Options, or HRF expression. The output artifact could be a "SQL Where-like" string, a table function, or a CDS view.
+You can use =Selection= to further filter data on a consolidation view. 
 
-The TCODE "RTCSEL" is under development.
+Selection is a model depandent object. You can add filter conditions on the fields of a consolidation view. The filter conditions are then compiled into a SQL where-expression, which can be applied during the running of consolidation tasks. 
+
+The filter conditions could be either based on SETs, or directly input select-options, or the freely entered where-expressions. And you can combine multiple selections into a composite selection to form a more complex filter option.
+
+The Tcode is "RTCSEL".
 
 ** Exchange Rate Indicator
 A mapping with exchange rate type.
@@ -144,11 +163,14 @@ The Tcode "RTCERI" is done.
 
 
 ** Define Currency Translation Methods
-Translation Methods includes translation entries and rounding entries. Based on them, an AMDP class will be generated. 
+A translation method includes translation entries and rounding entries. Based on the defination, an ABAP class contains AMDP methods will be created. At runtime, the system will call the generated AMDP-methods, so that all the translation logics are pushed down to HANA.  
 
+Translation method is model depandent. You can define multiple translation methods for a consolidation model, but only one method is the working one. 
 
-*** Create A Translation Method
-You need to assign a reference exchange rate indicator and a default document type to a translation method.
+In the translation method header, you need to assign a reference exchange rate indicator and a document type to a trans
+
+*** Create Translation Method
+You need to 
 The Tcode "RTCTM" is under development.
 
 *** Add Translation Entries
