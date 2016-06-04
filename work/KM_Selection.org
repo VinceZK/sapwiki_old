@@ -1,0 +1,58 @@
+* RTC_DYN_SELECTION
+| MODEL      | 1 Types | RTC_CON_MODEL     | CHAR |  6 | 0 | Consolidation Model              |
+| STATE      | 1 Types | RTC_STATE         | CHAR |  1 | 0 | Artifact State: Active/Saved     |
+| SELNM      | 1 Types | RTC_SELNM         | CHAR | 20 | 0 | Name of the Selection            |
+| STATE_DISP | 1 Types | RTC_STATE_DISP    | CHAR | 15 | 0 | Display artifact state on the UI |
+| DESCRIPT   | 1 Types | RTC_DESCRIPTION_M | CHAR | 80 | 0 | Description Medium               |
+| SELTY      | 1 Types | RTC_SELTY         | CHAR |  1 | 0 | Type of Selection                |
+| BVIEW      | 1 Types | RTC_BVIEW         | CHAR | 30 | 0 | Selection Base View              |
+| CREATOR    | 1 Types | RTC_CREATOR       | CHAR | 12 | 0 | Create by                        |
+| CDATE      | 1 Types | RTC_DATE          | DATS |  8 | 0 | General Date for RTC             |
+| CTIME      | 1 Types | RTC_TIME          | TIMS |  6 | 0 | General time for RTC             |
+| UPDATOR    | 1 Types | RTC_MODIFYIER     | CHAR | 12 | 0 | Modeify by                       |
+| UDATE      | 1 Types | RTC_DATE          | DATS |  8 | 0 | General Date for RTC             |
+| UTIME      | 1 Types | RTC_TIME          | TIMS |  6 | 0 | General time for RTC             | 
+
+* RTC_S_DYN_FILTER_COL_SET
+| FLDNM    | 1 Types | RTC_FDNAM  | CHAR | 30 | 0 | Filter Column Name                  |
+| SETCLASS | 1 Types | SETCLASS   | CHAR |  4 | 0 | Set class                           |
+| SUBCLASS | 1 Types | SETSUBCLS  | CHAR | 12 | 0 | Organizational Unit as Set Subclass |
+| SETNAME  | 1 Types | SETNAMENEW | CHAR | 24 | 0 | Set Name                            |
+| DESCRIPT | 1 Types | SETTEXT    | CHAR | 40 | 0 | Short description of a set          |
+
+* RTC_S_DYN_FILTER_COL
+| FLDNM      | 1 Types | RTC_FDNAM      | CHAR   | 30 | 0 | Filter Column Name |
+| FILTER_EXP | 1 Types | RTC_FILTER_EXP | STRING |  0 | 0 | Filter Expresion   |
+
+* RTC_S_DYN_SELOPT
+| FLDNM  | 1 Types | RTC_FDNAM   | CHAR |  30 | 0 | Filter Column Name                                    |
+| SIGN   | 1 Types | DDSIGN      | CHAR |   1 | 0 | Type of SIGN component in row type of a Ranges type   |
+| SELOPT | 1 Types | DDOPTION    | CHAR |   2 | 0 | Type of OPTION component in row type of a Ranges type |
+| LOW    | 1 Types | RTC_VALLOW  | CHAR | 100 | 0 | Lower value in a selection                            |
+| HIGH   | 1 Types | RTC_VALHIGH | CHAR | 100 | 0 | Higher value in a selection                           |
+
+* RTC_S_DYN_SGLSEL
+| SGLSEL   | 1 Types | RTC_SGLSEL        | CHAR | 20 | 0 | Single selections in a composite selection |
+| DESCRIPT | 1 Types | RTC_DESCRIPTION_M | CHAR | 80 | 0 | Description Medium                         |
+
+** Data Element 1
+Text
+
+*** Defination
+
+*** Use
+
+*** Dependencies
+
+*** Examples
+
+** Data Element 2
+Text
+
+*** Defination
+
+*** Use
+
+*** Dependencies
+
+*** Examples
