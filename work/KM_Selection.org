@@ -1,58 +1,155 @@
-* RTC_DYN_SELECTION
-| MODEL      | 1 Types | RTC_CON_MODEL     | CHAR |  6 | 0 | Consolidation Model              |
-| STATE      | 1 Types | RTC_STATE         | CHAR |  1 | 0 | Artifact State: Active/Saved     |
-| SELNM      | 1 Types | RTC_SELNM         | CHAR | 20 | 0 | Name of the Selection            |
-| STATE_DISP | 1 Types | RTC_STATE_DISP    | CHAR | 15 | 0 | Display artifact state on the UI |
-| DESCRIPT   | 1 Types | RTC_DESCRIPTION_M | CHAR | 80 | 0 | Description Medium               |
-| SELTY      | 1 Types | RTC_SELTY         | CHAR |  1 | 0 | Type of Selection                |
-| BVIEW      | 1 Types | RTC_BVIEW         | CHAR | 30 | 0 | Selection Base View              |
-| CREATOR    | 1 Types | RTC_CREATOR       | CHAR | 12 | 0 | Create by                        |
-| CDATE      | 1 Types | RTC_DATE          | DATS |  8 | 0 | General Date for RTC             |
-| CTIME      | 1 Types | RTC_TIME          | TIMS |  6 | 0 | General time for RTC             |
-| UPDATOR    | 1 Types | RTC_MODIFYIER     | CHAR | 12 | 0 | Modeify by                       |
-| UDATE      | 1 Types | RTC_DATE          | DATS |  8 | 0 | General Date for RTC             |
-| UTIME      | 1 Types | RTC_TIME          | TIMS |  6 | 0 | General time for RTC             | 
+* Selection
+Selection is a lower techique object that is used to define filter expressions on consolidation views. From techique point of view, a selection contains a base views and filter expressions on the chosen columns. After the activation, it generates a SQL where-string which afterwards can be applied at runtime. 
 
-* RTC_S_DYN_FILTER_COL_SET
-| FLDNM    | 1 Types | RTC_FDNAM  | CHAR | 30 | 0 | Filter Column Name                  |
-| SETCLASS | 1 Types | SETCLASS   | CHAR |  4 | 0 | Set class                           |
-| SUBCLASS | 1 Types | SETSUBCLS  | CHAR | 12 | 0 | Organizational Unit as Set Subclass |
-| SETNAME  | 1 Types | SETNAMENEW | CHAR | 24 | 0 | Set Name                            |
-| DESCRIPT | 1 Types | SETTEXT    | CHAR | 40 | 0 | Short description of a set          |
+The main purpose of selection is to provide an UI for end-users to define their selections on consolidation data without having to ask for helps from SQL experts. Another purpose is that selection adds reusilbilty, which allows you assign them to different consolidation tasks that share the same data selection logic. 
 
-* RTC_S_DYN_FILTER_COL
-| FLDNM      | 1 Types | RTC_FDNAM      | CHAR   | 30 | 0 | Filter Column Name |
-| FILTER_EXP | 1 Types | RTC_FILTER_EXP | STRING |  0 | 0 | Filter Expresion   |
+#+Caption: Selection Main Screen
+[[../image/Selection4SOP.png]]
 
-* RTC_S_DYN_SELOPT
-| FLDNM  | 1 Types | RTC_FDNAM   | CHAR |  30 | 0 | Filter Column Name                                    |
-| SIGN   | 1 Types | DDSIGN      | CHAR |   1 | 0 | Type of SIGN component in row type of a Ranges type   |
-| SELOPT | 1 Types | DDOPTION    | CHAR |   2 | 0 | Type of OPTION component in row type of a Ranges type |
-| LOW    | 1 Types | RTC_VALLOW  | CHAR | 100 | 0 | Lower value in a selection                            |
-| HIGH   | 1 Types | RTC_VALHIGH | CHAR | 100 | 0 | Higher value in a selection                           |
+#+Caption: Complile Filter Expressions for a Filterring Column
+[[../image/Selection4SOPValues.png]]
 
-* RTC_S_DYN_SGLSEL
-| SGLSEL   | 1 Types | RTC_SGLSEL        | CHAR | 20 | 0 | Single selections in a composite selection |
-| DESCRIPT | 1 Types | RTC_DESCRIPTION_M | CHAR | 80 | 0 | Description Medium                         |
-
-** Data Element 1
-Text
+#+Caption: Selection Admin
+[[../image/SelectionAdmin.png]]
+ 
+* Data Elements
+** RTC_CON_MODEL
+Real-Time Consolidation Model
 
 *** Defination
+RTC Model is the top most object in Real-Time Consolidation. All other objects that form the consolidation context, like: Currency Translation Method, Consolidation Document Type, Consolidation Versions, Consolidation Views, and so on are based on a model.  
 
 *** Use
+RTC Model is used to boudle all the definations, customizations, and consolidated reusult into a seprate consolidation context. 
+
+*** Dependencies
+RTC Model is SAP client dependent, but you can only have one client active for Real-Time Consolidation.
+
+*** Examples
+You define one RTC Model: =LECOMP= for legal company consolidation; one RTC Model: =MPRCTR= for managment profit center consolidation. The 2 RTC Models must be in the same client with the S/4HANA Finance's. 
+
+** RTC_SELNM
+Selection Name
+
+*** Defination
+A unique name of a selection.  
+
+*** Use
+A Selection is used to futher boundary the data in a consolidation view of a RTC Model. From technqiue point of view, a selection contains a =Base View= and the filtering expressions on its fields. After activation, a SQL where-string is generated and saved. 
+
+*** Dependencies
+You must have a RTC Model defined. Selection is created under a RTC Model, and cannot be shared among different models. 
+
+*** Examples
+
+** RTC_DESCRIPTION_M
+Medium length description
+
+*** Defination
+Genaric medium length(80 characters long) description.
+
+** RTC_SELTY
+Selection Type
+
+*** Defination
+There are 4 selection types according to how they are constructed: 
+1. Default Selection on directly assigning low and high values.
+2. Selection based on SETs.
+3. Freely entering SQL where-string.
+4. Composite Selection unions above 3 types of selections.
+
+*** Use
+You choose different types of selection according to your needs. If you already have well-defined SETs on your G/L accounts, then you can re-use them by defining SETs-based selections. If you are familar with SQL, then use freely SQL where-string selection which allows you more flexiblity in defining your selections. Composite selection provides the union functionality for your existing selections. 
 
 *** Dependencies
 
 *** Examples
 
-** Data Element 2
-Text
-
+** RTC_BVIEW 
+Base View
 *** Defination
+A consolidation view name for a selection to be defined on. Techniquely, it is a CDS SQL view name.
 
 *** Use
+You can only assign one base view for each selection. Base views are actually consolidation views that belongs to the RTC Model the selection resides. 
 
 *** Dependencies
+The range of the base view is dependent on a RTC Model. You can not assign other views which are not belongs to the RTC Model.
+
+*** Examples
+
+** RTC_FDNAM
+Filter column name
+
+*** Defination
+A column in the base view which is chosen to define filters on.  
+
+*** Use
+You choose a column name from the base view so that you can define fitlers on the column. 
+
+*** Dependencies
+
+
+*** Examples
+
+** RTC_CREATOR
+Created by
+*** Defination
+A SAP user who created a new object.  
+
+** RTC_MODIFYIER
+Updated by
+*** Defination
+A SAP user who updated an existing object.
+
+** RTC_DATE
+General Date
+
+*** Defination
+Genaric Date(to day, like: 2016/01/01).
+
+*** Use
+Used genaricly for object date attributes, like, creating, updating, or activating date.
+
+** RTC_TIME
+General Time
+
+*** Defination
+Genaric Time(to seconds, like: 10:00:01)
+
+*** Use
+Used genaricly for object time attributes, like, creating, updating, or activating time.
+** RTC_VALLOW
+Lower value in a select-option
+*** Defination
+The lower value in a "from-to" filter expression.  
+
+*** Use
+When you define a filter expression for a column, you set the lower value which means filterring the value eqauls or starts from if you have the higher value defined.
+
+*** Dependencies
+Lower value must be smaller than the higher value.
+
+** RTC_VALHIGH
+Higher value in a select-option.
+*** Defination
+The higher value in a "from-to" filter expression. 
+
+*** Use
+When you define a filter expression for a column, you set the higher value only if you have set the lower value. Higher value alone is not reaonable as it defines the end-point ("to") for filterring. 
+
+*** Dependencies
+Higher value must be greater than the lower value.
+
+** RTC_SGLSEL
+Single Type Selection
+*** Defination
+Selections with types other than "Composite Selection". 
+
+*** Use
+Single type selections can be added to a composite selection to form a union set of data selections.
+
+*** Dependencies
+
 
 *** Examples
