@@ -16,16 +16,36 @@ You need to create a HANA calculation view in HANA Studio. The calculation view 
 
 SAP also delivers an example consolidation foundation view: *RTC_C_ACDOCA*, you can copy it to your own namespace and adjust it to your own needs. 
 
+| Attribute             | Value              | Comments                      |
+|-----------------------+--------------------+-------------------------------|
+| ASAP Roadmap ID       | 152                | Design data acquistion        |
+| Mandatory/Optional    | Mandatory activity |                               |
+| Critical/Non-Critical | Critical           | This activity is foundamental |
+
 Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
 
-** Define Group Chart of Accounts
-Reuse existing Chart of Accounts and G/L Accounting master data maintenance. 
+** (Text Node) Define Group Chart of Accounts
+In this Customizaing activity, you must define a group chart of accounts for consolidation.
 
+Please refer the IMG node:
 Financial Accounting (New)-->General Ledger Accounting (New) -->Mater Data-->G/L Accounts
 
-** Mapping Operational Chart of Accounts to Group Chart of Accounts
-When create a local G/L account, assign the corresponding group account number. The underlying DB field is SKA1-BILKT
+| Attribute             | Value              | Comments                      |
+|-----------------------+--------------------+-------------------------------|
+| ASAP Roadmap ID       | 203                | Establish Master Data         |
+| Mandatory/Optional    | Mandatory activity |                               |
+| Critical/Non-Critical | Critical           |                               |
 
+** Mapping Operational Chart of Accounts to Group Chart of Accounts
+In this Customizaing activity, you must map the operational chart of accounts to the consolidation group chart of accounts.
+
+| Attribute             | Value              | Comments                    |
+|-----------------------+--------------------+-----------------------------|
+| ASAP Roadmap ID       | 202                | Establish Company Structure |
+| Mandatory/Optional    | Mandatory activity |                             |
+| Critical/Non-Critical | Critical           |                             |
+
+*** +Cancelled+
 If time permits, RTC should develop a mapping application. You can do mapping like this:
 | Local CoA | Local Account   | Group CoA | Group Account |
 |-----------+-----------------+-----------+---------------|
@@ -35,10 +55,34 @@ If time permits, RTC should develop a mapping application. You can do mapping li
 | CAGM      | 4004001-4005999 | CORP      |       4004000 |
 
 ** Map Company Code to Company
+In this Customizing activity, you map company codes to companies if you want run a company consolidation. 
+
+| Attribute             | Value             | Comments                              |
+|-----------------------+-------------------+---------------------------------------|
+| ASAP Roadmap ID       | 202               | Establish Company Structure           |
+| Mandatory/Optional    | Optional activity | Only needed for company consolidation |
+| Critical/Non-Critical | Non-Critical      |                                       |
+
 ** Define Group Fiscal Year Variants
-Reuse existing Fiscal Year Variants IMG nodes: Financial Accounting (New)-->Ledgers-->Fiscal Year and Posting Periods
+In this Customizing activity, you define a fiscal year variant for your consolidation model. You can of course re-use exiting one if it fulfill your requirement. 
+
+Refer IMG nodes: Financial Accounting (New)-->Ledgers-->Fiscal Year and Posting Periods
+
+| Attribute             | Value             | Comments              |
+|-----------------------+-------------------+-----------------------|
+| ASAP Roadmap ID       | 203               | Establish Master Data |
+| Mandatory/Optional    | Optional activity |                       |
+| Critical/Non-Critical | Critical          |                       |
 
 ** Generate Fiscal Year Calendar
+You generate fiscal year calendar data for the alignment between local fiscal year variant and group fiscal year variant. 
+
+| Attribute             | Value             | Comments                                         |
+|-----------------------+-------------------+--------------------------------------------------|
+| ASAP Roadmap ID       | 203               | Establish Master Data                            |
+| Mandatory/Optional    | Optional activity | Only needed if local and group fsv are different |
+| Critical/Non-Critical | Critical          |                                                  |
+
 ~Accounting team has a program to generate period level or day level granularity fiscal calendar. Maybe it is already existing in the IMG structure somewhere. But anyway we can create this node in our IMG structure. The program is: FINS_GENERATE_FISCAL_PERIOD.~ 
 
 Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
@@ -58,18 +102,38 @@ Used to isolate the consolidation result data set for deferent purpose. Like "Ac
 
 Maintenance View: under development
 
+| Attribute             | Value              | Comments              |
+|-----------------------+--------------------+-----------------------|
+| ASAP Roadmap ID       | 203                | Establish Master Data |
+| Mandatory/Optional    | Mandatory activity |                       |
+| Critical/Non-Critical | Critical           |                       |
+
 *** Consolidation Ledger
+Consolidation Ledger is seperate ledger with G/L accounting ledger.
+
 A consolidation ledger can map to an accounting principle (US GAAP, IFRS, and so on). Ledger is useful when, for example, data in an extend ledger "1L" combined with the data in leading ledger "0L" can form a union data set to fulfill a specific accounting principle. Thus can reduce the data redundancy. 
 
 Maintenance View: under development
+
+
+| Attribute             | Value              | Comments              |
+|-----------------------+--------------------+-----------------------|
+| ASAP Roadmap ID       | 203                | Establish Master Data |
+| Mandatory/Optional    | Mandatory activity |                       |
+| Critical/Non-Critical | Critical           |                       |
 
 *** Variant
 Under the combination of "RTC Data Category" and "Consolidation Ledger", you may want to further differentiate the consolidation result set. For example, "Actual / 1L / 100" for legal disclosure, and "Actual / 1L / 200" for internal management reporting. 
 
 Maintenance View: V_RTC_VERSION
 
-** Define Consolidation Model.
+| Attribute             | Value              | Comments              |
+|-----------------------+--------------------+-----------------------|
+| ASAP Roadmap ID       | 203                | Establish Master Data |
+| Mandatory/Optional    | Mandatory activity |                       |
+| Critical/Non-Critical | Critical           |                       |
 
+** (Text Node) Define Consolidation Model.
 Consolidation model combines all related customization together into an integral consolidation context. It mainly contains 2 parts: S/4 RTC side, and BPC side.
 
 You must first generate =Consolidation Views= in RTC side. Consolidation views are generated based on the foundation view and the consolidation journal table ACDOCC. There are 2 categories of consolidation views:
@@ -84,37 +148,65 @@ After you successfully define your BPC model, you come back here to do additiona
 3. Assign currency translation method if "Currency Translation in S4H" is checked. 
 4. Do checks and validations, if all settings are correct, then you can activate the consolidation model.
 
+| Attribute             | Value              | Comments                       |
+|-----------------------+--------------------+--------------------------------|
+| ASAP Roadmap ID       | 105                | Define functions and processes |
+| Mandatory/Optional    | Mandatory activity |                                |
+| Critical/Non-Critical | Critical           |                                |
+
+~This node and its sub-nodes can be all defined as text nodes.~
+
 Developer: Sam Sun (sam.sun03@sap.com)
 
 *** Create RTC Model
 You enter a model name with 6 char long, and click the button "New". In the pop-up dialog screen, you can assign the foundation view. Click "OK" will generate a consolidation area view for you. You can then use the consolidation area view to define your HANA calculation view and BW composite info-provider.
 
-The Tcode "RTCMODEL" is still under development.
+Tcode "RTCMD".
 
 *** Assign BPC Environment and Model Name
 In the tab-strip "Integration", you can assign a BPC environment name and a model name. The combination must be exist in BPC side. It will then read all the settings at BPC side, like: dimension field, fiscal year variant, chart of accounts, and so on. You just needn't do these settings again in RTC side.  
 
 If "Currency Translation in S4H" is checked, you then assign a currency translation method. 
 
+Tcode "RTCMD".
+
 *** Define BPC Data Category and Map it to RTC Consolidation Version
 BPC Category represents the versions or scenarios based on which data would be tracked. It contains the types of data you are going to track, such as Actual, Budget, and Forecast. You can set up categories to store versions, such as BudgetV1, BudgetV2, and so on.
 
 In the tab-strip "Version", you can add/delete a "BPC Data Category". When you add one, it must be a unique "BPC Data Category". You then choose each version field a value, the value combination should be unique too.
+
+Tcode "RTCMD".
 
 ** Define Consolidation Document type
 You define consolidation document type to differentiate types of consolidation documents generated by different consolidation tasks. In a document type, you maintain different number range intervals for different consolidation versions. You can also set whether the document type need to do balance check or not?
 
 Before defining document types, you must first have your model defined. As document types are belong to a model, and cannot be shared among different models. 
 
+| Attribute             | Value              | Comments                       |
+|-----------------------+--------------------+--------------------------------|
+| ASAP Roadmap ID       | 105                | Define functions and processes |
+| Mandatory/Optional    | Mandatory activity |                                |
+| Critical/Non-Critical | Critical           |                                |
+
 Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
 
 *** Define Number Range Intervals
 You define different number range intervals for a given model. 
 
+Tcode "RTCNR".
+
+| Attribute             | Value              | Comments            |
+|-----------------------+--------------------+---------------------|
+| ASAP Roadmap ID       | 250                | Define Number Range |
+| Mandatory/Optional    | Mandatory activity |                     |
+| Critical/Non-Critical | Critical           |                     |
+
 *** Maintain Document Types
 A document type categories documents by combining configurations like: balance check or not, manually post or automatically post. Besides, you also need to assign 2 main objects to a document type:
 1. You assign number range for each consolidation version under the model.
 2. You assign selected accounts (FS items) for unbalance amount to be recorded.
+
+Tcode "RTCDT".
 
 ** Define Account Selection
 Not all the operational accounts need to be involved in consolidation. These operational accounts should be filtered out. You can achieve this through defining a special composite selection "&SELECTION001".
@@ -123,6 +215,14 @@ Not all the operational accounts need to be involved in consolidation. These ope
 
 For details on how to define selections, please refer the "Define Selection" section.
 
+Tcode: "RTCSEL"
+
+| Attribute             | Value             | Comments                |
+|-----------------------+-------------------+-------------------------|
+| ASAP Roadmap ID       | 152               | Define data acquisition |
+| Mandatory/Optional    | Optional activity |                         |
+| Critical/Non-Critical | Non-Critical      |                         |
+
 ** (Text Node) Define Consolidation Group and Unit
 You go to BPC's web console, choose your consolidation environment, goto Administration-->Dimensions, select your group dimension (/ERP/GROUP by default). You maintain your consolidation group hierarchy.
 
@@ -130,15 +230,28 @@ You then goto Consolidation-->Ownership Manager, choose the category, group, and
 
 The consolidation hierarchy defined in BPC can be accessed in RTC for its currency translation (if "Currency Translation in RTC" is set). Only the hierarchy structure and group currency information is used, other like "Consolidation Method", "Percent Consolidation", "Percent Control", and "Percent Ownership" is only relevant for BPC.  
 
+| Attribute             | Value              | Comments                    |
+|-----------------------+--------------------+-----------------------------|
+| ASAP Roadmap ID       | 202                | Establish Company Structure |
+| Mandatory/Optional    | Mandatory activity |                             |
+| Critical/Non-Critical | Critical           |                             |
+
 
 * Currency Translation
 You define translation methods under a consolidation model. You can define multiple translation methods for a model, however, you can only have one working translation method for each model. 
 
-| Developer                          | Responsible Part       |
-|------------------------------------+------------------------|
-| Chang Liu (chang.liu03@sap.com)    | Customization UI       |
-| Qian, Marvin <marvin.qian@sap.com> | Translation Algorithms |
-| Mo, Steve <steve.mo@sap.com>       | APIs                   |
+| Attribute             | Value             | Comments                        |
+|-----------------------+-------------------+---------------------------------|
+| ASAP Roadmap ID       | 105               | Define Functions        |
+| Mandatory/Optional    | Optional activity | Only needed if CT is in S/4HANA |
+| Critical/Non-Critical | Critical          |                                 |
+
+| Developer                            | Responsible Part       |
+|--------------------------------------+------------------------|
+| Chang Liu <chang.liu03@sap.com>      | Customization UI       |
+| Qian, Marvin <marvin.qian@sap.com>   | Translation Algorithms |
+| Mo, Steve <steve.mo@sap.com>         | APIs                   |
+| Zhang, Vinent<vincent.zhang@sap.com> | Selection              |
 
 ** Define Selection
 You can use =Selection= to further filter data on a consolidation view. 
@@ -149,17 +262,29 @@ The filter conditions could be either based on SETs, or directly input select-op
 
 The Tcode is "RTCSEL".
 
-*** Define SETs (Optional)
-You use GS01/GS02/GS03 to Create/Edit/Display a SET.
+| Attribute             | Value              | Comments                          |
+|-----------------------+--------------------+-----------------------------------|
+| ASAP Roadmap ID       | 152                | Define data acquisition           |
+| Mandatory/Optional    | Mandatory activity | You must define selections for CT |
+| Critical/Non-Critical | Non-Critical       |                                   |
 
-**** Account SET
-You create a SET for GL accounts.
+*** (Text Node)Reuse SETs 
+If you already have your G/L accounting and subitem SETs, then you can re-use SETs as selection. Create selections with type "1" (based on SETs).
 
-**** Subitem SET
-You create a subitem SET. Subitems are characteristic fields in ACDOCA/C which are used to further category accounts. 
+| Attribute             | Value             | Comments                          |
+|-----------------------+-------------------+-----------------------------------|
+| ASAP Roadmap ID       | 152               | Define data acquisition           |
+| Mandatory/Optional    | Optional activity | You must define selections for CT |
+| Critical/Non-Critical | Non-Critical      |                                   |
 
 ** Exchange Rate Type 
 You maintain exchange rate type. 
+
+| Attribute             | Value              | Comments              |
+|-----------------------+--------------------+-----------------------|
+| ASAP Roadmap ID       | 203                | Establish Master Data |
+| Mandatory/Optional    | Mandatory activity |                       |
+| Critical/Non-Critical | Critical           |                       |
 
 ** Define Currency Translation Methods
 A translation method includes translation entries and rounding entries. Based on the defination, an ABAP class contains AMDP methods will be created. At runtime, the system will call the generated AMDP-methods, so that all the translation logics are pushed down to HANA.  
@@ -176,13 +301,24 @@ For the differential amounts, you can assign a differential account and its subi
 
 If rounding needs to be processed, you can add rounding entries in the "Rounding" tab. Unlike translation entries, rounding entries has sequence depandancy. During runtime, the rounding entries are excuted up to down.
 
+| Attribute             | Value              | Comments              |
+|-----------------------+--------------------+-----------------------|
+| ASAP Roadmap ID       | 204                | Establish Functions   |
+| Mandatory/Optional    | Mandatory activity | Main CT customization |
+| Critical/Non-Critical | Non-Critical       |                       |
+
 ** Define Translation Key
 A translation key is mapping to a translation algorithm. Here user can define his own translation algorithm using AMDP method, and assign it with a translation key in its own namespace. 
 
-SAP delivers 8 standard translation keys. 
+SAP delivers 8 standard translation keys in a seperate namespace. 
 
 A maintenance view of the mapping between translation key and the algorithm should be maintained.
 
+| Attribute             | Value             | Comments           |
+|-----------------------+-------------------+--------------------|
+| ASAP Roadmap ID       | 151               | Define enhancement |
+| Mandatory/Optional    | Optional activity |                    |
+| Critical/Non-Critical | Non-Critical      |                    |
 
 * BPC Integration
 Here describe the details steps you should do for the integration with BPC. 
@@ -195,10 +331,23 @@ Only one write back channel existing in these Aggregation Level, it can be Real-
 
 In order to form an info-Provider, a set of predefined info-Object should be ready. And for BPC special attribute mapping use, standard operational dimension info-Objects are not enough for BPC integration, so comes the [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Masterdata+Attributes+Extension+for+Consolidation][Master data Attributes Extension for Consolidation]]
 
+| Attribute             | Value              | Comments                      |
+|-----------------------+--------------------+-------------------------------|
+| ASAP Roadmap ID       | 105                | Define function and processes |
+| Mandatory/Optional    | Mandatory activity |                               |
+| Critical/Non-Critical | Critical           |                               |
+
 Develper: Wu, William <william.wu02@sap.com>
 
 ** BPC Extent Property Maintenance
 Since several ENTITY/ACCOUNT Master data need to be extended for BPC use, You need to maintain the following attributes for the BPC integration beside the original operational master data customization/ maintenance :
+
+| Attribute             | Value             | Comments              |
+|-----------------------+-------------------+-----------------------|
+| ASAP Roadmap ID       | 203               | Establish Master Data |
+| Mandatory/Optional    | Optional activity |                       |
+| Critical/Non-Critical | Critical          |                       |
+~All the sub-nodes share the same attributes~
 
 Developer: Wang, Blangero <blangero.wang@sap.com>
 
@@ -233,22 +382,36 @@ You must have you G/L accounts created using FSP0.
 Maintenance View: V_RTC_EXT_SKA1
 
 
-** (Text Node) Create HANA Calculation Views
-You create a FACT HANA calculation view based the consolidation area view that are generated during RTC modeling. You should also create master data HANA views to expose you master data. 
+** (Text Node) Create Master Data HANA Calculation Views
+In this Customizing activity, you create SAP HANA calculation views for master data
 
 By default, SAP has delivered following standard master data HANA calculation views for your reference. They are all under HANA package: sap.erp.sfin.rtc
 
 Developer: Wang, Blangero <blangero.wang@sap.com>
 
-| Calc View             | Description                                           |
-|-----------------------+-------------------------------------------------------|
-| RTC_BUSINESSAREA_T880 | Attribute View of Business Area                       |
-| RTC_COSTCENTER_CSKS   | Attribute View of Cost Center                         |
-| RTC_PROFITCENTER_CEPC | Attribute View of Profit Center                       |
-| RTC_SEGMENT_SEGM      | Attribute View of Segment                             |
+| Calc View             | Description                     |
+|-----------------------+---------------------------------|
+| RTC_BUSINESSAREA_T880 | Attribute View of Business Area |
+| RTC_COSTCENTER_CSKS   | Attribute View of Cost Center   |
+| RTC_PROFITCENTER_CEPC | Attribute View of Profit Center |
+| RTC_SEGMENT_SEGM      | Attribute View of Segment       |
+
+| Attribute             | Value              | Comments                |
+|-----------------------+--------------------+-------------------------|
+| ASAP Roadmap ID       | 152                | Design Data acquisition |
+| Mandatory/Optional    | Mandatory activity |                         |
+| Critical/Non-Critical | Critical           |                         |
 
 ** (Text Node) Create BW Info-objects and Info-Provider
-You need to create virtual info-objects to mapping the master data HANA views. You then create a compoiste provider and a virtual provider  with the same fields of the fact HANA calculation view. Then union the Real-time cube with the fact view through a composite provider.
+In this Customizing activity, you create virtual InfoObjects to map to the master data SAP HANA calculation views. You then create a composite provider to union the fact SAP HANA calculation views generated by RTC modeling tool. 
+
+You also create a virtual infoProvider on the result consolidation view. On this virtual infoProvider, you also assign a write-back class so that BPC can write-back the consoldiation reuslt to ACDOCC. 
+
+| Attribute             | Value              | Comments                |
+|-----------------------+--------------------+-------------------------|
+| ASAP Roadmap ID       | 152                | Design Data acquisition |
+| Mandatory/Optional    | Mandatory activity |                         |
+| Critical/Non-Critical | Critical           |                         |
 
 *We wont deliver these BW objects.* 
 +SAP has delivered following BW contents for your reference:+
@@ -271,7 +434,13 @@ SAP has delivered following objects for your reference:
 |------------------------------+------------------------------------------------------------|
 | CL_RTC_ACDOCC_IPROV_WRITABLE | Write-back class to post consolidation journals to  ACDOCC |
 | +/ERP/RTC_VP01+              | +BW Virtual Provider+                                      |
-  
+
+| Attribute             | Value              | Comments         |
+|-----------------------+--------------------+------------------|
+| ASAP Roadmap ID       | 151                | Design Interface |
+| Mandatory/Optional    | Mandatory activity |                  |
+| Critical/Non-Critical | Critical           |                  |
+ 
 *** Assign Document Types
 You already have document types defined under the model you created. When BPC write-back the consolidted results, the document types are auto-determined by following 4 fields: Flow Type, Audit Trail, Account, and Category. You must define the derivation rules here so that correct document types are chosen for different sets of data. 
 
@@ -281,8 +450,13 @@ Maintenance view is under development.
 
 Developer: Summer Xia (summer.xia03@sap.com)
 
+| Attribute             | Value              | Comments            |
+|-----------------------+--------------------+---------------------|
+| ASAP Roadmap ID       | 204                | Establish Functions |
+| Mandatory/Optional    | Mandatory activity |                     |
+| Critical/Non-Critical | Critical           |                     |
 
-* Business Add-ins
+* +Business Add-ins+
 
 ** BAdi for Core Posing API
 The "Core posting API" is developed using AMDP(ABAP Managed DB Procedure). All the up-level applications will call the core posting API to save data into ACDOCC. You can define your BAdi implementation for core posting API if you have extend fields of ACDOCC and you want additional logic to be applied on this new fields.  
