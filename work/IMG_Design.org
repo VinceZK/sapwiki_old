@@ -122,7 +122,7 @@ Maintenance View: under development
 | Mandatory/Optional    | Mandatory activity |                       |
 | Critical/Non-Critical | Critical           |                       |
 
-*** Variant
+d*** Variant
 Under the combination of "RTC Data Category" and "Consolidation Ledger", you may want to further differentiate the consolidation result set. For example, "Actual / 1L / 100" for legal disclosure, and "Actual / 1L / 200" for internal management reporting. 
 
 Maintenance View: V_RTC_VERSION
@@ -339,7 +339,7 @@ In order to form an info-Provider, a set of predefined info-Object should be rea
 
 Develper: Wu, William <william.wu02@sap.com>
 
-** BPC Extent Property Maintenance
+** BPC Extended Property Maintenance
 Since several ENTITY/ACCOUNT Master data need to be extended for BPC use, You need to maintain the following attributes for the BPC integration beside the original operational master data customization/ maintenance :
 
 | Attribute             | Value             | Comments              |
@@ -378,8 +378,14 @@ Maintenance View: V_RTC_EXT_TGSBK
 
 *** Extend GL Account Properties for BPC:
 You must have you G/L accounts created using FSP0.
-
+e
 Maintenance View: V_RTC_EXT_SKA1
+
+*** Extend Transaction Type for BPC:
+Transaction type is mapped to BPC's flow type. So some properties should be mapped.
+
+*** Extend IBPF's Data Category for BPC:
+IBPF already has its data category maintenance view. As it is the same concept for data category in planning and consolidation, it is good to have the IBPC's data category extended for the additional consolidation properties. 
 
 
 ** (Text Node) Create Master Data HANA Calculation Views
