@@ -1,5 +1,5 @@
 #+PAGEID: 1825545337
-#+VERSION: 23
+#+VERSION: 25
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: IMG Design
@@ -30,11 +30,11 @@ In this Customizaing activity, you must define a group chart of accounts for con
 Please refer the IMG node:
 Financial Accounting (New)-->General Ledger Accounting (New) -->Mater Data-->G/L Accounts
 
-| Attribute             | Value              | Comments                      |
-|-----------------------+--------------------+-------------------------------|
-| ASAP Roadmap ID       | 203                | Establish Master Data         |
-| Mandatory/Optional    | Mandatory activity |                               |
-| Critical/Non-Critical | Critical           |                               |
+| Attribute             | Value              | Comments              |
+|-----------------------+--------------------+-----------------------|
+| ASAP Roadmap ID       | 203                | Establish Master Data |
+| Mandatory/Optional    | Mandatory activity |                       |
+| Critical/Non-Critical | Critical           |                       |
 
 ** Mapping Operational Chart of Accounts to Group Chart of Accounts
 In this Customizaing activity, you must map the operational chart of accounts to the consolidation group chart of accounts.
@@ -242,7 +242,7 @@ You define translation methods under a consolidation model. You can define multi
 
 | Attribute             | Value             | Comments                        |
 |-----------------------+-------------------+---------------------------------|
-| ASAP Roadmap ID       | 105               | Define Functions        |
+| ASAP Roadmap ID       | 105               | Define Functions                |
 | Mandatory/Optional    | Optional activity | Only needed if CT is in S/4HANA |
 | Critical/Non-Critical | Critical          |                                 |
 
@@ -319,6 +319,7 @@ A maintenance view of the mapping between translation key and the algorithm shou
 | ASAP Roadmap ID       | 151               | Define enhancement |
 | Mandatory/Optional    | Optional activity |                    |
 | Critical/Non-Critical | Non-Critical      |                    |
+
 
 * BPC Integration
 Here describe the details steps you should do for the integration with BPC. 
@@ -468,3 +469,10 @@ Developer: Summer Xia (summer.xia03@sap.com)
 The "Core posting API" is developed using AMDP(ABAP Managed DB Procedure). All the up-level applications will call the core posting API to save data into ACDOCC. You can define your BAdi implementation for core posting API if you have extend fields of ACDOCC and you want additional logic to be applied on this new fields.  
 
 Developer: Chen, Lynn <lynn.chen02@sap.com>
+
+
+* Remarks
+
+Maintain IMG: T-code SIMGH
+
+IMG Structure: Real-Time Consolidation 

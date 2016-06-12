@@ -1,3 +1,8 @@
+#+PAGEID: 1821717599
+#+VERSION: 13
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: KM-Selection
 * Selection
 Selection is a lower techique object that is used to define filter expressions on consolidation views. From techique point of view, a selection contains a base views and filter expressions on the chosen columns. After the activation, it generates a SQL where-string which afterwards can be applied at runtime. 
 
@@ -8,6 +13,9 @@ The main purpose of selection is to provide an UI for end-users to define their 
 
 #+Caption: Complile Filter Expressions for a Filterring Column
 [[../image/Selection4SOPValues.png]]
+
+#+Caption: Generated SQL Where String
+[[../image/SelectionWhereString.png]]
 
 #+Caption: Selection Admin
 [[../image/SelectionAdmin.png]]

@@ -1,16 +1,18 @@
-#+PAGEID: 1825545337
-#+VERSION: 1
+#+PAGEID: 1835072049
+#+VERSION: 3
 #+STARTUP: align
 #+OPTIONS: toc:0
 #+TITLE: 1610 Deliverables
 #+TODO: TODO | OPEN DONE
 
-DONE: Development is almost done, testing is in the process
-TODO: Development is not started yet.
-OPEN: Development is continuing. 
-[#A]: First Pirority
-[#B]: Second Pirority
-[#C]: Third Pirority
+| Legend  | Description                                           |
+|---------+-------------------------------------------------------|
+| *DONE*  | Development is almost done, testing is in the process |
+| *TODO*: | Development is not started  yet.                      |
+| *OPEN*: | Development is continuing.                            |
+| *[#A]*: | First Pirority                                        |
+| *[#B]*: | Second Pirority                                       |
+| *[#C]*: | Third Pirority                                        |
 
 * Consolidation Model
 Deliverables related to consolidation modeling, define consolidation views, and master data maintenance.
