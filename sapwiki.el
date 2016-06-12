@@ -1095,8 +1095,21 @@ of contents as a string, or nil if it is empty."
                           (concat
                            (and numberedp
                                 (format
-                                 "<span>%s</span> "
+                                 "<span>%s</span>"
                                  (mapconcat #'number-to-string numbers ".")))
+			   (and todo
+				(case todo-type
+				  ('done
+				    (format
+				 "<span style=\"color:#85981C\">%s</span>" todo))
+				  ('todo
+				   (format
+				    "<span style=\"background:red\">%s</span>" todo))))
+			   (case priority
+			     (65  "<span style=\"color:dimgray; font-style:italic\">[#A]</span>")
+			     (66  "<span style=\"color:dimgray; font-style:italic\">[#B]</span>")
+			     (67  "<span style=\"color:dimgray; font-style:italic\">[#A]</span>")
+			     ('otherwise ""))
                            full-text)
                           level)
 
@@ -1109,8 +1122,9 @@ of contents as a string, or nil if it is empty."
   (let ((todo (dk-sapwiki--todo todo info))
 	(priority (dk-sapwiki--priority priority info))
 	(tags (dk-sapwiki--tags tags info)))
-    (concat todo (and todo " ")
-	    priority (and priority " ")
+    ;; (concat todo (and todo " ")
+    ;; 	    priority (and priority " ")
+    (concat
 	    text
 	    (and tags "&#xa0;&#xa0;&#xa0;") tags)))
 
