@@ -1,0 +1,24 @@
+Table1: Dimension Header
+| Field name | Key | Data Type | Descr.                                    |
+|------------+-----+-----------+-------------------------------------------|
+| MANDT      | X   |           |                                           |
+| DIM        | X   | CHAR3     | Dimension ID                              |
+| DESCRIPT   |     | CHAR80    | Dimension Description(language dependent) |
+
+Table2: Dimension Assignment Fields
+| Field name | Key | Data Type | Descr.                                                                |
+|------------+-----+-----------+-----------------------------------------------------------------------|
+| MANDT      | X   |           |                                                                       |
+| DIM        | X   | CHAR3     | Dimension ID                                                          |
+| FLDSEQ     | X   | CHAR3     | Field Sequence: Represent the business objects hierarchy relationship |
+| ASFLD      |     | RTC_FDNAM | Account Assignment Field                                              |
+| PASFLD     |     | RTC_FDNAM | Partner Account Assignment Field                                      | 
+
+Example in Maintenance View:
+| DIM | FLDSEQ | ASFLD  | PASFLD |
+|-----+--------+--------+--------|
+| 100 |    001 | KOKRS  | KOKRS  |
+| 100 |    002 | PRCTR  | PPRCTR |
+| 100 |    003 | RBUKRS | RBUKRS |
+
+The above example demonstrates a dimension definition. It contains 3 account assignment fields, and they have orders which reflects KOKRS(controlling area) is the super object of PRCTR(profit center). Each assignment field has its partner assignment field which is allowed to have the same field name. If in "PASFLD" is left empty, it will be automatically filled with the value of "ASFLD".  

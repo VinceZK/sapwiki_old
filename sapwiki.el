@@ -1095,24 +1095,10 @@ of contents as a string, or nil if it is empty."
                           (concat
                            (and numberedp
                                 (format
-                                 "<span>%s</span>"
+                                 "<span style=\"color:black; margin-right:10px\">%s</span>"
                                  (mapconcat #'number-to-string numbers ".")))
-			   (and todo
-				(case todo-type
-				  ('done
-				    (format
-				 "<span style=\"color:#85981C\">%s</span>" todo))
-				  ('todo
-				   (format
-				    "<span style=\"background:red\">%s</span>" todo))))
-			   (case priority
-			     (65  "<span style=\"color:dimgray; font-style:italic\">[#A]</span>")
-			     (66  "<span style=\"color:dimgray; font-style:italic\">[#B]</span>")
-			     (67  "<span style=\"color:dimgray; font-style:italic\">[#A]</span>")
-			     ('otherwise ""))
                            full-text)
                           level)
-
                   (if (eq (org-element-type first-content) 'section) contents
                     (concat (dk-sapwiki-section first-content "" info) contents))
                   ))))))
@@ -1120,40 +1106,47 @@ of contents as a string, or nil if it is empty."
 (defun dk-sapwiki-format-headline-function
   (todo todo-type priority text tags info)
   (let ((todo (dk-sapwiki--todo todo info))
-	(priority (dk-sapwiki--priority priority info))
-	(tags (dk-sapwiki--tags tags info)))
-    ;; (concat todo (and todo " ")
-    ;; 	    priority (and priority " ")
-    (concat
+  	(priority (dk-sapwiki--priority priority info))
+  	(tags (dk-sapwiki--tags tags info)))
+    (concat todo
+    	    priority
 	    text
-	    (and tags "&#xa0;&#xa0;&#xa0;") tags)))
+	    (and tags
+		 (format
+		  "<span style=\"color:#006400; margin-left:80px\">%s</span>"
+		  tags)))))
 
+;;;; TODO
 (defun dk-sapwiki--todo (todo info)
   "Format TODO keywords into HTML."
   (when todo
-    (format "<span class=\"%s %s%s\">%s</span>"
-	    (if (member todo org-done-keywords) "done" "todo")
-	    (plist-get info :html-todo-kwd-class-prefix)
-	    (org-html-fix-class-name todo)
-	    todo)))
+    (if (member todo org-done-keywords)
+	(format "<span style=\"color:#85981C; margin-right:10px\">%s</span>" todo)
+      (format "<span style=\"background:red; margin-right:10px\">%s</span>" todo))))
 
 ;;;; Priority
-
 (defun dk-sapwiki--priority (priority info)
   "Format a priority into HTML.
 PRIORITY is the character code of the priority or nil.  INFO is
 a plist containing export options."
-  (and priority (format "<span>[%c]</span>" priority)))
+  (case priority
+    (65  "<span style=\"color:gray; font-style:italic; margin-right:10px\">[#A]</span>")
+    (66  "<span style=\"color:gray; font-style:italic; margin-right:10px\">[#B]</span>")
+    (67  "<span style=\"color:gray; font-style:italic; margin-right:10px\">[#C]</span>")
+    ('otherwise "")))
+  ;; (and priority
+  ;;      (format
+  ;; 	"<span style=\"color:dimgray; font-style:italic; margin-right:10px\">%s</span>"
+  ;; 	priority)))
 
 ;;;; Tags
-
 (defun dk-sapwiki--tags (tags info)
   "Format TAGS into HTML.
 INFO is a plist containing export options."
   (when tags
     (mapconcat
      (lambda (tag)
-       (format "<span class=\"tag\">%s</span>"
+       (format ":%s"
 	       tag))
      tags "&#xa0;")))
 
