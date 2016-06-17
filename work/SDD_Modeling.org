@@ -207,22 +207,26 @@ There are also mapping and derivations need to be done at foundation view level:
 
 Text fields should be avoided to join here. And field names should keep unchanged. The foundation CDS view should also avoid to use parameters as HANA calculation view can not consume parameterized CDS view. 
 
-**** Modeling Validation Method                                        :Lynn:
-As described above, modeling validation happens before consolidation view generation and model activation. There wold be no less that than following rules should be checked:
+**** Modeling Validation Method                                        :Steve:
+As described above, modeling validation happens before consolidation view generation and model activation. There would be no less that than following rules should be checked:
 
 *These rules are before consolidation views generation:*
 1. If all mandatory fields are projected in the foundation view?
-2. If the CoA, Fiscal Year Variant, and some other master data exists?
-3. If all involved local accounts are mapped to group accounts?
-4. If all involved company codes are mapped to companies? (For other dimension,like profit center, cost-center, there would be a mapping table planed).
-5. If all fields defined in foundation view have counterparts in ACDOCC?
+2. If the CoA, Fiscal Year Variant, and some other master data exist?
+3. 
+4. 
+5. If all involved company codes are mapped to companies? (For other dimension,like profit center, cost-center, there would be a mapping table planed).
+6. If all fields defined in foundation view have counterparts in ACDOCC?
 
 *These rules are before model activation:*
 1. If entity definition is consistent between RTC and BPC?
 2. If CoA and Fiscal Variant definition are consistent between RTC and BPC?
 3. If document types for BPC write-back is defined?
-4. If BPC categories and consolidation versions are correctly mapped?
-5. If other master data dimensions are consistent? ~In case using physical info-objects, there is no permit that the master data is consistent between BPC and S/4. In RTC's documentation, we should suggest user using virtual info-objects whenever possible.~
+4. If all involved local accounts are mapped to group accounts?
+5. If BPC categories and consolidation versions are correctly mapped?
+6. If other master data dimensions are consistent? 
+
+~In case using physical info-objects, there is no permit that the master data is consistent between BPC and S/4. In RTC's documentation, we should suggest user using virtual info-objects whenever possible.~
 
 To achieve this, you should read the meta data of the HANA Calculation View. Need API information here.
 

@@ -188,12 +188,10 @@ Here gives an bird's-eye view of the data flow.
 7. There are mulitple BPC consolidation views created based on ACDOCA and ACDOCC. How many views and how they would be created depand on different use cases. But those views can be generally categorized into 3 categories: 1)Real-time data for priliminary consolidations, 2)Reported data fro legal consolidations, 3)Consolidated results and adjustments. Those views are unioned under a composite provider, and will be accessed as a whole by both BPC consolidation engine and reporting. You should carefully filter the data for different consolidation tasks and reports, as the data is overlapped among the views.
 8. It is possible for the local accountant to run currency translation in S/4(then it is not necessary to run currency translation in BPC again). In this way, BPC only needs to access data in ACDOCC. And BPC cannot run consolidation until the currency translation is done by local accountants and the translated results are posted into ACDOCC.
 
-** First Release 
+** First Release
 In RTC's first release(1610), pull request will be used as both a notification and timestamp filtering. The status control in the pull request will not be fully appeared. BPC can access the data directly in ACDOCA with timestamp filtering. The timestamp in the pull request which is submitted by the local acccountant reflects the local close time. Before the time, the data is allowed(by local accountants) for consolidation, and after the time, the data should not be counted for consolidation. 
 
-For detials of the modeling for first release, please refer this page: 
-
-The first release has following restrictions:
+This approach has following restrictions:
 
 1. Once the local accountant raise the pull request, it is approved automatically, and group accountant can only accept it. There is no embedded control on this process, group accountant must notify the local accountant externally if she doesn't want the data. 
 2. Delta consolidation is still not possible. Each time the local accountant raise a new pull request, BPC will always do a full re-consolidation based on the new timestamp. 
@@ -336,7 +334,7 @@ Local accountants can run currency translation in S/4 and then do data validatio
 | 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
 
 
-** Future Releases
+** Future Release
 *** Example1: Local accountant submits local amount, group accountant do currency translation 
 =Notes:=
 1. "LC" only reflects BPC point of view, it doesn't mean in ACDOCA the currency field stores "LC". In ACDOCC, is it allowed to store "LC"?

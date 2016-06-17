@@ -41,7 +41,7 @@ Because BPC/BW can not pass filtering parameters, so currently, it is impossible
 
 The design is divided into 2 versions: =1610 Version=, and the =Completed Version=. As you can guess, to achieve both real-time data access and sophistic status/workflow control are rather complicate and time/resource consuming. We design a simplified version for 1610, which is the first release. The 1610 version is simplified by eliminating the status control. Details of the 2 versions and the restrictions can be find in the upcoming sections. 
 
-*** 1610 Version
+*** 1610 Release
 In 1610 release, we can't achieve the full picture of the diagram. But we can try to simplified it by removing the status control in the data submition process. That means, once the local accountants submit the data, without any approval, BPC can read the data. 
 
 This simplification has following restrictions:
@@ -52,9 +52,14 @@ This simplification has following restrictions:
 5. You cannot defer amounts to the next period.
 6. Data inconsistency could happen when consolidation is running or processes errors.
 
+There are 2 different senarios in 1610: 1) Currency Translation in BPC; 2) Currency Translation in S/HANA. Details will be discussed in the following 2 sections. 
+
+*** CT in BPC
+If CT happens in BPC, BPC should be able to access data in both ACDOCA and ACDOCC. Then, 5 HANA calculation views will be generated to cover the "Final" and "Preliminary" consolidations. 
+
 The simplified diagram looks like this:
 
-#+Caption: HANA Views for BPC in First Release
+#+Caption: HANA Views for BPC (CT in BPC)
 [[../image/ConsViews04.png]]
 
 **** Consolidation Result View
@@ -62,12 +67,12 @@ Based on ACDOCC, only expose the consolidation results.
 #+BEGIN_SRC sql
   select * from ACDOCC
           where MODEL = 'RTC001'
-            and BPC_CATG = 'Actual'
+            and BTTYPE = 'RTBP'
             and DELFLG = ''.
 #+END_SRC
 
-**** Legal View C
-Based on ACDOCC, those approved flexible uploaded data of all periods. The view is created on ACDOCC join with the pull request table on pull request number. You should first filter in those latest approved pull requests group by year/periods. 
+**** Final View C
+Based on ACDOCC, those submitted flexible upload data of all periods. The view is created on ACDOCC join with the pull request table on pull request number. You should first filter in those latest approved pull requests group by year/periods. 
 #+BEGIN_SRC sql
   create view I_PULL_REQ_R as 
     select MODEL, BPC_CATT, FYEAR, FPERI, ENTITY, max(CTIME), PLUUID
@@ -85,14 +90,14 @@ Based on ACDOCC, those approved flexible uploaded data of all periods. The view 
             and C.RCOMP = P.ENTITY
             and C.PLUUID = P.PLUUID
           where P.MODEL = 'RTC001'
-            and P.BPC_CATG = 'Actual'
+            and P.BPC_CATG = 'FINAL'
             and C.DELFLG = ''.
 #+END_SRC
 
 Once the local accountant submits the data, the pull request's user status will be set to "Approved". 
 
-**** Legal View A
-Based on ACDOCA, those approved flexible uploaded data of all periods. The view is created on ACDOCA join with the pull request table on timestamp. You should first filter in those latest approved pull requests group by year/periods. 
+**** Final View A
+Based on ACDOCA, those submitted flexible uploaded data of all periods. The view is created on ACDOCA join with the pull request table on timestamp. You should first filter in those latest approved pull requests group by year/periods. 
 #+BEGIN_SRC sql
   create view I_PULL_REQ_AR as 
     select MODEL, BPC_CATG, FYEAR, FPERI, ENTITY, max(CLOSE_TIME)
@@ -108,7 +113,7 @@ Based on ACDOCA, those approved flexible uploaded data of all periods. The view 
               and A.RCOMP = P.ENTITY
               and A.TIMESTAMP <= P.CLOSE_TIME
             where P.MODEL = 'RTC001'
-              and P.BPC_CATG = 'Actual'. 
+              and P.BPC_CATG = 'FINAL'. 
 #+END_SRC
 
 **** Preliminary View C
@@ -116,7 +121,7 @@ All data in ACDOCC with the category "Prelim".
 #+BEGIN_SRC sql
   select * from ACDOCC
           where MODEL = 'RTC001'
-            and BPC_CATG = 'Prelim'
+            and BTTYPE = 'RTFU'
             and DELFLG = ''.
 #+END_SRC
 
@@ -125,6 +130,59 @@ All data from the foundation view. Fix category to "Prelim"
 #+BEGIN_SRC sql
   select * 'Prelim' as BPC_CATG
                   from I_FACDOCA.
+#+END_SRC
+
+
+*** CT in S/4HANA
+If CT happens in S/4HANA, BPC should only access data in ACDOCC. Then, 3 HANA calculation views will be generated. 
+
+#+Caption: HANA Views for BPC (CT in S/4HANA)
+[[../image/ConsViews05.png]]
+
+**** Consolidation Result View
+Expose the consolidation results.
+#+BEGIN_SRC sql
+  select * from ACDOCC
+          where MODEL = 'RTC001'
+            and BTTYPE = 'RTBP'
+            and DELFLG = ''.
+#+END_SRC
+
+**** Final View C
+Contains all submitted data comes from CT month-end run. 
+
+If local data comes from ACDOCA, CT run will save both the local amount and translated amount in ACDOCC. If local data comes from ACDOCC(flexible upload), CT run will save the translated amount in ACDOCC. The view should contains both data which has pull request submitted. 
+
+#+BEGIN_SRC sql
+  create view I_PULL_REQ_R as 
+    select MODEL, BPC_CATT, FYEAR, FPERI, ENTITY, max(CTIME), PLUUID
+      from RTC_PULL_REQ
+     where USTATUS = 'Approved'
+       and REQ_TYPE = 'C'
+     group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY;
+
+  select * from ACDOCC as C
+           join I_PULL_REQ_R as P
+             on C.M = P.MODEL
+            and C.BPC_CATG = P.BPC_CATG
+            and C.RYEAR = P.FYEAR
+            and C.POPER = P.FPERI
+            and C.RCOMP = P.ENTITY
+            and C.PLUUID = P.PLUUID
+          where P.MODEL = 'RTC001'
+            and P.BPC_CATG = 'FINAL'
+            and C.DELFLG = ''.
+#+END_SRC
+
+Once the local accountant submits the data, the pull request's user status will be set to "Approved". 
+
+**** Preliminary View C
+All data in ACDOCC with the category "PRELIM".
+#+BEGIN_SRC sql
+  select * from ACDOCC
+          where MODEL = 'RTC001'
+            and BPC_CATG = 'PRELIM'
+            and DELFLG = ''.
 #+END_SRC
 
 *** Completed Version      :Vincent:
