@@ -151,7 +151,7 @@ Before generating consolidation views, there could be quite a lot of validations
 5. If all fields defined in foundation view have counterparts in ACDOCC?
 
 There are quite a lot of consolidation views generated automatically. These views are for different consolidation and validation tasks. In general, these views are categorized into 2 sets: HANA calculation views for BPC's consumption, and CDS views for RTC's own consumption. 
-The BPC consolidation views will be union-ed under a composite provider, together with a dummy virtual provider only for write-back. User could still need to prepare info-objects(virtual or physical) for the dimensions in the composite provider. 
+The BPC consolidation views will be union-ed under a composite provider, together with a virtual provider for write-back(The cons. reuslt view is assigned to the virtual provider). User could still need to prepare info-objects(virtual or physical) for the dimensions in the composite provider. 
 
 You can then open BPC modeling workbench to define BPC environment and model. After that, you switch back to RTC's modeling tool to assign the name of BPC environment and model. Finally you can check and activate the Real-time Consolidation Model. Besides the check rules before generating consolidation views, following additional rules will be checked before the activating:
 1. If entity definition is consistent between RTC and BPC?
@@ -213,10 +213,8 @@ As described above, modeling validation happens before consolidation view genera
 *These rules are before consolidation views generation:*
 1. If all mandatory fields are projected in the foundation view?
 2. If the CoA, Fiscal Year Variant, and some other master data exist?
-3. 
-4. 
-5. If all involved company codes are mapped to companies? (For other dimension,like profit center, cost-center, there would be a mapping table planed).
-6. If all fields defined in foundation view have counterparts in ACDOCC?
+3. If all involved company codes are mapped to companies? (For other dimension,like profit center, cost-center, there would be a mapping table planed).
+4. If all fields defined in foundation view have counterparts in ACDOCC?
 
 *These rules are before model activation:*
 1. If entity definition is consistent between RTC and BPC?
