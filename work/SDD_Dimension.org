@@ -1,3 +1,16 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Entity
+** Consolidation Entity
+Consolidation entity is the smallest element in a corporate group structure that can be used as a basis of complete consolidation.
+
+A consolidation entity can be such things as a company, business areas within a company, or profit centers within a company. What an entity is made up of depends on the consolidation dimension difination. Internal accounting transactions that are to be eliminated by consolidation are processed between entities. In an accounting transaction, an entity can be the triggering entity or the partner entity.
+
+In Real-time Consolidation, we will re-use the existing master data as much as possible. In ACDOCA, there are accounting assingment fields 
+
+** Dimension
 Table1: Dimension Header
 | Field name | Key | Data Type | Descr.                                    |
 |------------+-----+-----------+-------------------------------------------|
@@ -22,3 +35,5 @@ Example in Maintenance View:
 | 100 |    003 | RBUKRS | RBUKRS |
 
 The above example demonstrates a dimension definition. It contains 3 account assignment fields, and they have orders which reflects KOKRS(controlling area) is the super object of PRCTR(profit center). Each assignment field has its partner assignment field which is allowed to have the same field name. If in "PASFLD" is left empty, it will be automatically filled with the value of "ASFLD".  
+
+** Entity Mapping
