@@ -174,22 +174,20 @@ The RTC Modeling Tool is used to define a Real-time Consolidation model object, 
 
 For how to read BPC model's meta data, please refer the class: CL_RSBPCO_APPL_ADAPTER
 
-**** Version, Ledger, Category Master Data Maintenance UI        :Lynn:
+**** Category, Ledger, and Variant Master Data Maintenance UI          :Lynn:
 *Version* in consolidation means different copies of consolidated results for different purposes under a same consolidation area. So that although there are some differences among these versions, but they share most of the common master data and settings. For example, based on the same actual financial data, chart of accounts, and organizational structure, you can do consolidation for US GAAP, or IFRS.
 
 But "Version" has a board meanings, for example, a program has multiple versions. Consolidation versions stand for a combination of different characteristic fields, like: Actual/GAAP/Legal, Plan/IFRS/Management. How many characteristic fields are involved to form a version combination can be freely defined by customers. There comes confusion between version-related fields and version itself. 
 
-For example, the last field in the tab2 mock UI names ~Version~ too. But actually, it stands for the VERSN field in COEP. Add this field is only for the data integration with CO. The right 4 fields combination is called a consolidation version which is assigned with a version ID of 001. They all call ~version~ in different context. 
+For example, the last field in the tab2 mock UI names ~Version~ too. But actually, it stands for the VERSN field in COEP. Add this field is only for the data integration with CO. The right 3 fields combination is called a consolidation version which is assigned with a version ID of 001. They all call ~version~ in different context. 
 
 You develop a customization table for version ID definition. Refer EC-CS' table: TF200 and TF201. 
 
 ~There are still some uncertainties about BCS' version combination. Actually, version ID and version combination are 2 redundant information.~   
 
-*Ledger* in consolidation is combined with =Accounting Principle=. You can just regard them as the same thing at concept level. So =Ledger= is also a version-related field used in version combination. You develop a customization table to allow user store different ledgers and ledger level settings. You can refer EC-CS' ledger customization.
+*Ledger* in consolidation is combined with =Accounting Principle=. You can just regard them as the same thing at concept level. So =Ledger= is also a version-related field used in version combination. You develop a customization table to allow user store different ledgers and ledger level settings. Each consolidation ledger can be mapped to multiple opertional ledgers. 
 
 *Category* is used to specify the consolidation purpose for, take an example, plan or actual. Try to reuse IBPF's existing category maintenance view: FCOMV_CATEGORY
-
-*Valuation* missing information. Need Ying's verification.
  
 Version is the most complicate configurations in consolidation. You can refer EC-CS and BCS to see how they realize the consolidation version. Regarding with RTC, in its initial release, we should only pick the essential parts of them. 
 
@@ -198,14 +196,14 @@ Foundation view is the main source of consolidation data, based on what consolid
 
 In the initial releases, the source data is mainly coming from ACDOCA. You need to create a HANA calculation view on ACDOCA and do necessary fields projections and data filtering. ~The reason why using HANA calculation view not CDS view for the foundation view definition is because BPC only supports HANA calculation view. You can even not use HANA calculation view on CDS view.~
 
-There are also mapping and derivations need to be done at foundation view level:
+There are also mappings and derivations need to be done at foundation view level:
 1. Operational Account --> Group Account
-2. Company Code --> Company
+2. Dimension Fields Assignment, like: Company Code --> Company
 3. Fiscal Year Period Alignment. [[http://help.sap.com/saphelp_470/helpdata/en/dc/f18b884efb11d39a350000e8a5999a/content.htm?frameset=/en/58/8e6a3c32853960e10000000a11402f/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=86][Check in KM]]
 
-~We need an additional ABAP program to generate fiscal calendar data by day level. The program will take the fiscal year variant as input parameter, and then generates day level granularity fiscal calendar data into a specific table.~ 
+~We need an additional ABAP program to generate fiscal calendar data on day level. The program will take the fiscal year variant as input parameter, and then generates day level granularity fiscal calendar data into a specific table.~ 
 
-Text fields should be avoided to join here. And field names should keep unchanged. The foundation CDS view should also avoid to use parameters as HANA calculation view can not consume parameterized CDS view. 
+Text fields should be avoided to join here. And field names should keep unchanged. The foundation CDS view should also avoid to use parameters as BPC can not consume parameterized calc views. 
 
 **** Modeling Validation Method                                        :Steve:
 As described above, modeling validation happens before consolidation view generation and model activation. There would be no less that than following rules should be checked:
@@ -240,18 +238,18 @@ Consolidation views are generated based on the foundation view and ACDOCC. There
 
 The reason to use 2 different DB view technologies is to harmonize the BW and the S/4HANA. The situation is that BW doesn't support CDS; And S/4HANA only supports CDS. As the 2 branches share the same foundation view, which is made by HANA calculation view. To consume HANA calculation view, the only supported approach is to use AMDP table function to access it. Then based on the table function, CDS views can be created.  
 
-For generating CDS view, there are existing APIs to allow ABAP generates CDS views. Transportation is also utilized in the set of APIs which allow the generated CDS views can be transported from DEV to QA, and to Product system.
+For generating CDS view, there are existing APIs to allow ABAP generates CDS views.
 
 The demo ABAP program is: WB_DDLS_API_EXAMPLE_PROG
 
 More details can be found in: https://wiki.wdf.sap.corp/wiki/display/TIPABAPVB/CDS+DDL+API+Description
 
-For generating HANA Calculation Views.... Ask Marvin and Steve.
+The generated artifacts(HANA Calculation Views, CDS views, and AMDP methods) are not transported. Only model data can be transported from DEV to QA, and PRD systems. It is at the target systems these artifacts can be regereated in local namespaces.
 
-**** Selection on Accounts        :Vincent:
-Not all the operational accounts need to be involved in a consolidation. There should be a place to allow user to define which account numbers should be involved for certain company codes. 
+**** Selection on Accounts                                          :Vincent:
+Not all the operational accounts need to be involved in a consolidation. There should be a place to allow user to define which oerptional account numbers should be involved in cerntain chart of accounts. 
 
-This can be achieved using the general object: =Selection=. A special composite selection is reserved with the name "SELECTION001". Under the composite selection, user can add multiple selections to compile his accounts selection.
+This can be achieved using the general object: =Selection=. A special composite selection is reserved with the name "SELECTION001". Under the composite selection, user can add multiple single selections to compile his accounts selection.
 
 When generate consolidation views in the RTC Modeling Tool, the above selection will be added into all the views. Then only the choose accounts is filterred in. 
   
@@ -278,7 +276,7 @@ You can create a consolidation model in the initial screen by entering a model n
 
 When you create a model, the second screen 200 will pop up to let you enter the consolidation foundation view. It is a HANA calculation view on ACDOCA which has realized fields projection, data filtering, CoA mapping and fiscal year period alignment. You must first enter the HANA package where the foundation view resides. To be in mind, the HANA DB user "SAP<SID>" must have the read/write access to the HANA package. As later on, it will generate HANA Calculation views into the package. 
 
-You must assign a consolidation Chart of Account, a Group Fiscal Year Variant, a Consolidation Entity dimension and its partner unit. Besides 2 BPC categories must be defined, one is for the final consolidation, and the other is for the preliminary consolidation run. If the entered category name doesn't exist, it will create the category with the given name. 
+You must assign a consolidation Chart of Account, a Group Fiscal Year Variant, a Consolidation Dimension. Besides 2 BPC categories must be assigned, one is for the final consolidation, and the other is for the preliminary consolidation run. 
 
 For some special fields like partner entity, and transaction type(flow type), BPC doesn't allow empty values. You must give a default value for the empty ones. 
 
@@ -312,13 +310,24 @@ In the =Integration= tab, you define more details settings for the integration w
 
 Version is used to execute parallel consolidations according to different aspects. You can define multiple versions for a consolidation model. The consolidation result then will be saved with version information tagged. Each version is defined as a combination of one or multiple version fields, and almost every char type field in ACDOCC can be used as a version field. But in BPC side, there is only one dimension with the role "data category" has the similar usage. You should create a mapping between =BPC Category= to the S/4 version combinations. 
 
-In this tab screen, you can add a new version by first assigning a unique =BPC Category= value, and then assign a value combination of =Consolidation Ledger=, =RTC Category=, and =Version=. The above three version fields are default assigned. In future release, you can define your own version fields combination as you like. Also, by default, the first 2 lines with =BPC Category= value equals "Actual" and "Prelim" are mandatory. You can not delete them, and you must assign a valid value combination for it.  
+In this tab screen, you can add a new version by first assigning a unique =BPC Category= value, and then assign a value combination of =Consolidation Ledger=, =RTC Category=, and =Variant=. The above three version fields are default assigned. In future release, you can define your own version fields combination as you like. Also, by default, the first 2 lines with =BPC Category= value equals "FINAL" and "PRELIM" are mandatory. You *cannot* delete them, and you must assign a valid value combination for it.  
+
+You can create a new BPC category for the  consolidation model. The master head table for BPC category is =FCOMC_CATEGORY= which belongs to the IBPF team. We share the categroy master data for future planning and consolidation integration. If you add a new BPC category, it will insert a new entry into table =FCOMC_CATEGORY=;
+
+In the popup dialog when you click "NEW", you give an unqiue name of the BPC category, and a decription. You must also choose a category type "Preliminary" or "Final". If you choose the "Preliminary", then the "Source Category" attribute of the added category is assigned with mandatory "PRELIM" category; If you choose "Final", then the "Source Category" attribute is set to "FINAL".
 
 **** Assignment Tab
 #+Caption: Real-time Consolidation Modeling Tool: Assignment
 [[../image/RTCModelingToolUI05.png]]
 
-If BPC environment and model are not correctly set, you will only see 4 empty gray fields. Because these 4 fields: =Consolidation Entity=, =Partner Unit=, =Fiscal Year Variant=, and =Cons. Chart of Accounts= are derived from the corresponding settings in BPC's model(if you check "Integration with BPC"). Except =Partner Unit=, all other three are mandatory. If any of the three is missing, you can't activate the model.
+In the assginment tabe, there are 4 assignment fields: =Consolidation Dimension=, =Fiscal Year Variant=, =Cons. Chart of Accounts=, and =Default Transaction Type=. You can change them, but once these fields are changed, you need to re-generate consolidation views and re-activate the model. 
+
+The assignment fields are very important fields for a consolidation model. If any of them are inconsistent with foundation views and BPC model, you just cannot activate the model. Details about the 4 fields are explained bellow:
+
+1. *Consolidation Dimension*: A 3 characters long ID that indicates which fields in ACDOCA will be regarded as conslidation entity realtion and its partner entity relation. For details please refer SDD:
+2. *Fiscal Year Variant*: The group fiscal year variant used for consolidation. It will be appeared in SQL where expressions in every consolidation view.
+3. *Cons Chart of Accounts*: The group chart of accounts which is used to map opertional accounts to group accounts.  Appeared in every Consolidation views' where expression.
+4. *Default Transaction Type*: Transaction type will be mapped to BPC flow type. As not every line in ACDOCA has values in transaction type which it is mandatory for BPC to have a flow type value. For those document lines with null transaction type value, a default value is given. 
 
 **** Admin Tab
 #+Caption: Real-time Consolidation Modeling Tool: Admin
