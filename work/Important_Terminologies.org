@@ -1,0 +1,118 @@
+#+PAGEID: 1837309638
+#+VERSION: 2
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: Important Terminologies
+** Real-Time Consolidation Model
+Real-Time Consolidation Model is the top most object in Real-Time Consolidation. It is used to bundle all the definitions, customizations, and consolidated result into a separate consolidation context.
+
+BPC use the naming "Model" as there is no concept conflicts in its context. In S/4HANA's context, "Model" would be too wide. 
+
+*** Naming Alternatives
+1. Real-Time Consolidation Model
+2. *Consolidation Model*   +4
+3. RTC Model
+4. Model   +2
+
+*** Ciaran's Comments (KM)
+I suggest using "consolidation model" for the full proper term, and "model" as an accepted short version of it. There is no SAPterm definition for the BPC "model", strangely, although the word crops up throughout BPC.
+
+** Consolidation Version
+Consolidation versions reflect different consolidation purpose in the same model.  For example: "CL/Actual/100" means the consolidation ledger is "CL", source data is "Actual", and variant is "100". "CL/Actual/200" may share the same consolidation ledger and source data, but with different currency translation logic. 
+
+The corresponding BPC concept is "Data Category". There is one-one map between BPC's data category and consolidation version. 
+
+*** Naming Alternatives
+1. Consolidation Version
+2. Version          +1
+3. *Data Category*    +3
+4. BPC Date Category
+5. *Consolidation Category*   +3
+
+*** Ciaran's Comments
+Personally, I think "consolidation version" is more meaningful and understandable than "data category", but if  BPC's data category is exactly equivalent we should probably stick to the BPC term. 
+NOTE: in SAPterm, the BPC term that is defined is "category", with this definition: "A grouping. This can be a grouping of versions or types of data, objects, or products."
+
+One additional point. You state that "data category" in BPC and "version" in RTC are the same, but in RTC Customizing you define 3 things that together make up the version - the data category (Actual, Plan, etc.), the ledger, and the variant.
+
+So the RTC version is made up of the data category plus ledger and variant. In BPC, does the data category concept also include ledger and variant?
+- If it does, and if we are going to call a "version" a "data category" instead, we will need to change the term "data category" in RTC Customizing to something else.
+- If it doesn't, then it is not the case that version and data category are the same concepts.
+
+*** Roy's Comments (PO)
+First of all, in BPC, there's no dimension with a fixed named as 'Category'.We only have a dimension type named 'Category'. And the corresponding dimension name and description are flexible to be defined by customers.In context of RTC, we will reuse the infoobject delivered by S/4HANA or the IBPF team. So for the business users, they will see the name and description for that infoobject.
+
+Category in BPC is used to differentiate different data regions. Normally the members would be defined like 'Actual', 'Budget' or 'Forecast'. And in S/4HANA, there's no direct corresponding fields for it. Right now, there're 3 fields in S/4HANA combined together to be mapped to one BPC dimension 'Category' during the data read. So I will prefer to use 'Consolidation Category' for that. Furthermore we'd like to enhance the RTC in the future for better simulation capability. We may want to deliver some 'private version' capabilities for simulation. In this case, we can reserve the terminology 'version' in the future.
+
+** Consolidation Entity
+BPC use the naming "Entity",  EC-CS uses the name "Unit". 
+
+*** Naming Alternatives
+1. *Entity*    +4
+2. Unit
+
+** Fiscal Year & Fiscal Period
+Distinguished with calendar data, fiscal year and fiscal period has different time definition. In the UI level, we need a uniform label for  this 2 fields
+
+*** Naming Alternatives
+1. Fiscal Year/Period    +1
+2. *Fiscal Year Period*    +3
+3. Fiscal Period  +2
+4. Period
+
+*** Ciaran's Comments
+Are we talking about two distinct fields, or is this the same field being used (on some screens to mean a fiscal year, on some a fiscal period of less than a year [eg. a quarter])?
+
+If two different fields then they should have different labels ("Fiscal Year" and "Fiscal Period").
+
+If just one field I prefer "Fiscal Period" (which can mean both a shorter period and a period of one year).
+
+*** Roy's Comments
+For the 'Fiscal year and period', I will prefer 'Fiscal Year Period'. The reason is now for BPC, we only support to use one single infoobject for time, which is now the 0FISCPER. And the description for that infoobject is 'Fiscal year period' now.
+
+** Local Currency & Consolidation Currency
+Local Currency will be translated and unfied to Consolidation Currency. So that afterwards consolidation and elimination can be run in the same currency unit. 
+
+*** Naming Alternatives
+1. Source Currency & Target Currency
+2. *Local Currency & Group Currency*     +4
+3. Report Currency & Consolidation Currency
+
+** Currency Translation
+US uses "Currency Translation", European uses "Currency Conversion".  It's good to apply with BPC's naming.
+ 
+*** Naming Alternatives
+1. *Currency Translation*      +4
+2. Currency Conversion
+
+** Local Financial Data Submit Request
+Data submit request is raised by local accountants to group accountants as a data handover record. A timestamp is recorded in each request so that wen BPC access the data in ACDOCA, it can filter in the data before that timestamp. 
+
+"Pull Request" means local accountants request the  group accountant to pull the data in ACDOCA that he thinks it is ready for consolidation. 
+
+"Submit Request" is more business oriented. But it sometimes produce confusion. "Submit" is not an adjective for the request, but  means the submitted financial data. So you will say: "Submit a submit request" or "Raise a submit request". 
+ 
+*** Naming Alternatives
+1. *Pull Request*   +3
+2. Submit Request    +2
+3. Submitted Request
+4. Submission Request   +1
+
+*** Ciaran's Comments
+In BPC, the SAPterm entry for "submit" contains this note (with important part underlined):
+
+*Source*
+
+"Submit' is used as a sample status code in the BPC documentation.
+
+*Comment*
+
+From version 5 (context 46D) through 7.5 (context 620), BPC used submit as 'to submit data to the database'.
+Update 10-26-10: As of version 10 context 724, we do not use 'submit' any longer in relation to sending data to the database or sending electronic messages. Users now 'save' data to the database.
+'Submit' should be used only in relation to waiting for approval for something, as in 'submit for approval'. For instance, there is a work status code 'Submitted' in BPC. This means that data is waiting for approval from the owner/manager of the data before some other action occurs with the data.
+
+*** Roy's Comments
+If we're talking about the user interface, I will say this will be used by both local accountant and group accountant. It would be one important feature as part of the collaboration between local and group accountant. To me, the word 'Pull' would be too technical for business users. I will prefer to use 'Submit Request'. Assuming the local accountant submit the request as a sign off for the local entity's data, then the group accountant will need to 'Check submit data' when they see the notification.
+
+*** Vivi's Comments
+"Pull Request" is more technical I know, but it's also a very technical usage  during the process.
