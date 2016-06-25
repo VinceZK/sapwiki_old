@@ -1,5 +1,5 @@
 #+PAGEID: 1825545337
-#+VERSION: 27
+#+VERSION: 28
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: IMG Design
@@ -67,7 +67,11 @@ SAP delivers 6 default dimensions, they are:
 |       500 | Cost Center     | (KOKRS,RCNTR):(KOKRS,SCNTR)  |
 |       600 | Profit Center   | (KOKRS,PRCTR):(KORRS,PPRCTR) |
 
-You can define your own dimnsions in customer namespace(Not startwith '1'). You should make sure the assignment fields should exist in both ACDOCA and ACDOCC. 
+You can define your own dimnsions in customer namespace(Start with Y, Z, 9). You should make sure the assignment fields should exist in both ACDOCA and ACDOCC. 
+
+*TCode*: RTCCMD
+
+*Maintenance View*: VC_RTC_MODEL_DIM
 
 | Attribute             | Value             | Comments                                   |
 |-----------------------+-------------------+--------------------------------------------|
@@ -93,16 +97,18 @@ In this Customizing activity, you define consolidation entities. An entity could
 | Mandatory/Optional    | Mandatory activity |                             |
 | Critical/Non-Critical | Critical           |                             |
 
-*** Generate Consolidation Entities
-You can use report "RTC_PUMP_ENTITIES" to generate consolidation entities based on existing master data. Select one consolidation dimension and press execute, the report will create all entities for you. You can only use this report to generate entites based on SAP delivered consolidation dimensions. 
-
 *** Manually Create Consolidation Entities
-You can manually create consolidation entities in this maintenance view. You must first choose a Consolidation dimension, and then maintain your entities. 
+You can manually create consolidation entities in this maintenance view. You must first choose a Consolidation dimension, and then maintain your entities. You can also maintain BPC requried attributes for the entity. 
 
-SAP recormands you first use "RTC_PUMP_ENTITIES" to generate your entities, then use this Maintenance view to adjust. 
+SAP recormands you first use "RTC_AUTO_PUMP_ENTITIES" to generate your entities, then use this Maintenance view to adjust. 
 
-*** Maintain BPC Required Properties
-Each entity has properties which are required by BPC. You can maintain them after you have created your entities. 
+*TCode*: RTCENT
+
+*Maintenance View*: VC_RTC_MODEL_DIM
+
+*** (Text Node)Generate Consolidation Entities
+You can use report "RTC_AUTO_PUMP_ENTITIES" to generate consolidation entities based on existing master data. Select one consolidation dimension and press execute, the report will create all entities for you. You can only use this report to generate entites based on SAP delivered consolidation dimensions. 
+Run report "RTC_AUTO_PUMP_ENTITIES" using SA38. 
 
 ** (Text Node) Define Group Fiscal Year Variants
 In this Customizing activity, you define a fiscal year variant for your consolidation model. You can of course re-use exiting one if it fulfill your requirement. 
@@ -124,6 +130,8 @@ You generate fiscal year calendar data for the alignment between local fiscal ye
 | Mandatory/Optional    | Optional activity | Only needed if local and group fsv are different |
 | Critical/Non-Critical | Critical          |                                                  |
 
+Run report FINS_GENERATE_FISCAL_PERIOD using SA38. You use this report to maintain a fiscal calendar based on the fiscal year variant configuration. The report determines for a fiscal year variant the fiscal calendar data, such as the fiscal year, period and quarters with start and end dates for a calendar date. Those fiscal calendar data are used in analytical applications, such as the Trial Balance app, or in other Fiori apps that integrate the date picker component to let users choose the last fiscal year, period or quarter.
+
 ~Accounting team has a program to generate period level or day level granularity fiscal calendar. Maybe it is already existing in the IMG structure somewhere. But anyway we can create this node in our IMG structure. The program is: FINS_GENERATE_FISCAL_PERIOD.~ 
 
 Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
@@ -141,7 +149,9 @@ Developer: Chen, Lynn <lynn.chen02@sap.com>
 *** RTC Data Category
 Used to isolate the consolidation result data set for deferent purpose. Like "Actual", "Plan", "Simulation".
 
-Maintenance View: under development
+*TCode*: RTCCAT
+
+*Maintenance View*: V_RTC_DCATEG
 
 | Attribute             | Value              | Comments              |
 |-----------------------+--------------------+-----------------------|
@@ -154,8 +164,9 @@ Consolidation Ledger is seperate ledger with G/L accounting ledger.
 
 A consolidation ledger can map to one or more operational ledgers. 
 
-TCODE: RTCLM
+*TCode*: RTCLM
 
+*Maintenance View*: VC_RTC_LEDGER
 
 | Attribute             | Value              | Comments              |
 |-----------------------+--------------------+-----------------------|
@@ -166,7 +177,9 @@ TCODE: RTCLM
 *** Variant
 Under the combination of "RTC Data Category" and "Consolidation Ledger", you may want to further differentiate the consolidation result set. For example, "Actual / 1L / 100" for legal disclosure, and "Actual / 1L / 200" for internal management reporting. 
 
-Maintenance View: V_RTC_VERSION
+*TCode*: RTCVER
+
+*Maintenance View*: V_RTC_VERSION
 
 | Attribute             | Value              | Comments              |
 |-----------------------+--------------------+-----------------------|
@@ -174,7 +187,7 @@ Maintenance View: V_RTC_VERSION
 | Mandatory/Optional    | Mandatory activity |                       |
 | Critical/Non-Critical | Critical           |                       |
 
-** (Text Node) Define Consolidation Model.
+** Define Consolidation Model.
 Consolidation model combines all related customization together into an integral consolidation context. It mainly contains 2 parts: S/4 RTC side, and BPC side.
 
 You must first generate =Consolidation Views= in RTC side. Consolidation views are generated based on the foundation view and the consolidation journal table ACDOCC. There are 2 categories of consolidation views:
@@ -189,6 +202,10 @@ After you successfully define your BPC model, you come back here to do additiona
 3. Assign currency translation method if "Currency Translation in S4H" is checked. 
 4. Do checks and validations, if all settings are correct, then you can activate the consolidation model.
 
+*TCode*: RTCMD
+
+*SOBJ*: RTCA
+
 | Attribute             | Value              | Comments                       |
 |-----------------------+--------------------+--------------------------------|
 | ASAP Roadmap ID       | 105                | Define functions and processes |
@@ -199,24 +216,11 @@ After you successfully define your BPC model, you come back here to do additiona
 
 Developer: Sam Sun (sam.sun03@sap.com)
 
-*** Create RTC Model
-You enter a model name with 6 char long, and click the button "New". In the pop-up dialog screen, you can assign the foundation view. Click "OK" will generate a consolidation area view for you. You can then use the consolidation area view to define your HANA calculation view and BW composite info-provider.
-
-Tcode "RTCMD".
-
-*** Assign BPC Environment and Model Name
-In the tab-strip "Integration", you can assign a BPC environment name and a model name. The combination must be exist in BPC side. It will then read all the settings at BPC side, like: dimension field, fiscal year variant, chart of accounts, and so on. You just needn't do these settings again in RTC side.  
-
-If "Currency Translation in S4H" is checked, you then assign a currency translation method. 
-
-Tcode "RTCMD".
-
-*** Define BPC Data Category and Map it to RTC Consolidation Version
-BPC Category represents the versions or scenarios based on which data would be tracked. It contains the types of data you are going to track, such as Actual, Budget, and Forecast. You can set up categories to store versions, such as BudgetV1, BudgetV2, and so on.
-
-In the tab-strip "Version", you can add/delete a "BPC Data Category". When you add one, it must be a unique "BPC Data Category". You then choose each version field a value, the value combination should be unique too.
-
-Tcode "RTCMD".
+*** Procedures
+1. You enter a model name with 6 char long, and click the button "New". In the pop-up dialog screen, you can assign the foundation view. Click "OK" will generate a consolidation area view for you. You can then use the consolidation area view to define your HANA calculation view and BW composite info-provider.
+2. In the tab-strip "Integration", you can assign a BPC environment name and a model name. The combination must be exist in BPC side. It will then read all the settings at BPC side, like: dimension field, fiscal year variant, chart of accounts, and so on. You just needn't do these settings again in RTC side.  If "Currency Translation in S4H" is checked, you then assign a currency translation method. 
+3. BPC Category represents the versions or scenarios based on which data would be tracked. It contains the types of data you are going to track, such as Actual, Budget, and Forecast. You can set up categories to store versions, such as BudgetV1, BudgetV2, and so on.
+4. In the tab-strip "Version", you can add/delete a "BPC Data Category". When you add one, it must be a unique "BPC Data Category". You then choose each version field a value, the value combination should be unique too.
 
 ** Define Consolidation Document type
 You define consolidation document type to differentiate types of consolidation documents generated by different consolidation tasks. In a document type, you maintain different number range intervals for different consolidation versions. You can also set whether the document type need to do balance check or not?
@@ -234,7 +238,7 @@ Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
 *** Define Number Range Intervals
 You define different number range intervals for a given model. 
 
-Tcode "RTCNR".
+*TCode*: RTCNR
 
 | Attribute             | Value              | Comments            |
 |-----------------------+--------------------+---------------------|
@@ -247,7 +251,9 @@ A document type categories documents by combining configurations like: balance c
 1. You assign number range for each consolidation version under the model.
 2. You assign selected accounts (FS items) for unbalance amount to be recorded.
 
-Tcode "RTCDT".
+*TCode*: RTCDT
+
+*SOBJ*: RTCA
 
 ** Define Account Selection
 Not all the operational accounts need to be involved in consolidation. These operational accounts should be filtered out. You can achieve this through defining a special composite selection "&SELECTION001".
@@ -256,7 +262,9 @@ Not all the operational accounts need to be involved in consolidation. These ope
 
 For details on how to define selections, please refer the "Define Selection" section.
 
-Tcode: "RTCSEL"
+*TCode*: RTCSEL
+
+*SOBJ*:  RTCA
 
 | Attribute             | Value             | Comments                |
 |-----------------------+-------------------+-------------------------|
@@ -301,7 +309,9 @@ Selection is a model depandent object. You can add filter conditions on the fiel
 
 The filter conditions could be either based on SETs, or directly input select-options, or the freely entered where-expressions. And you can combine multiple selections into a composite selection to form a more complex filter option.
 
-The Tcode is "RTCSEL".
+*TCode*: RTCSEL
+
+*SOBJ*:  RTCA
 
 | Attribute             | Value              | Comments                          |
 |-----------------------+--------------------+-----------------------------------|
@@ -318,14 +328,21 @@ If you already have your G/L accounting and subitem SETs, then you can re-use SE
 | Mandatory/Optional    | Optional activity | You must define selections for CT |
 | Critical/Non-Critical | Non-Critical      |                                   |
 
-** Exchange Rate Type 
-You maintain exchange rate type. 
+** Exchange Rate Indicater
+You maintain an exchange rate indicater and map it an exchange rate type. 
 
 | Attribute             | Value              | Comments              |
 |-----------------------+--------------------+-----------------------|
 | ASAP Roadmap ID       | 203                | Establish Master Data |
 | Mandatory/Optional    | Mandatory activity |                       |
 | Critical/Non-Critical | Critical           |                       |
+
+*TCode*: RTCER
+
+*SOBJ*:  RTCA
+
+*** Check Exchange Rate Type
+~Copy Node: SAP Netweaver-->General settings-->Currencies-->Check Exhange Rate Types~
 
 ** Define Currency Translation Methods
 A translation method includes translation entries and rounding entries. Based on the defination, an ABAP class contains AMDP methods will be created. At runtime, the system will call the generated AMDP-methods, so that all the translation logics are pushed down to HANA.  
@@ -342,6 +359,10 @@ For the differential amounts, you can assign a differential account and its subi
 
 If rounding needs to be processed, you can add rounding entries in the "Rounding" tab. Unlike translation entries, rounding entries has sequence depandancy. During runtime, the rounding entries are excuted up to down.
 
+*TCode*: RTCTM
+
+*SOBJ*:  RTCA
+
 | Attribute             | Value              | Comments              |
 |-----------------------+--------------------+-----------------------|
 | ASAP Roadmap ID       | 204                | Establish Functions   |
@@ -354,6 +375,10 @@ A translation key is mapping to a translation algorithm. Here user can define hi
 SAP delivers 8 standard translation keys in a seperate namespace. 
 
 A maintenance view of the mapping between translation key and the algorithm should be maintained.
+
+*TCode*: RTCCTK
+
+*Maintenance View*: V_RTC_CT_CTRKY 
 
 | Attribute             | Value             | Comments           |
 |-----------------------+-------------------+--------------------|
@@ -420,15 +445,24 @@ Maintenance View: V_RTC_EXT_TGSBK
 
 *** Extend GL Account Properties for BPC:
 You must have you G/L accounts created using FSP0.
-e
-Maintenance View: V_RTC_EXT_SKA1
+
+*TCode*: RTCGLA
+
+*Maintenance View*: V_RTC_EXT_SKA1
 
 *** Extend Transaction Type for BPC:
 Transaction type is mapped to BPC's flow type. So some properties should be mapped.
 
+*TCode*: RTCTTP
+
+*Maintenance View*: V_RTC_EXT_T856
+
 *** Extend IBPF's Data Category for BPC:
 IBPF already has its data category maintenance view. As it is the same concept for data category in planning and consolidation, it is good to have the IBPC's data category extended for the additional consolidation properties. 
 
+*TCode*: RTCBCT
+
+*Maintenance View*: FCOMV_CATEGORY_C
 
 ** (Text Node) Create Master Data HANA Calculation Views
 In this Customizing activity, you create SAP HANA calculation views for master data
@@ -497,6 +531,10 @@ Maintenance view is under development.
 ~It is also possible that BPC enhance their rules framework, so that document type can be determined at BPC's side. We will see if BPC colleagues can finish this feature on time.~
 
 Developer: Summer Xia (summer.xia03@sap.com)
+
+*TCode*: RTCWB
+
+*Maintenance View*: V_RTC_MODWB
 
 | Attribute             | Value              | Comments            |
 |-----------------------+--------------------+---------------------|
