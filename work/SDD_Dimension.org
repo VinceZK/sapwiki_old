@@ -6,34 +6,80 @@
 ** Consolidation Entity
 Consolidation entity is the smallest element in a corporate group structure that can be used as a basis of complete consolidation.
 
-A consolidation entity can be such things as a company, business areas within a company, or profit centers within a company. What an entity is made up of depends on the consolidation dimension difination. Internal accounting transactions that are to be eliminated by consolidation are processed between entities. In an accounting transaction, an entity can be the triggering entity or the partner entity.
+A consolidation entity can be such things as a company, business areas within a company, or profit centers within a company. Internal accounting transactions that are to be eliminated by consolidation are processed between entities. In an accounting transaction, an entity can be the triggering entity or the partner entity.
 
-In Real-time Consolidation, we will re-use the existing master data as much as possible. In ACDOCA, there are accounting assingment fields 
+In ACDOCA/C, there are account assingment fields which is constantly used as consolidation entities. These fields are
+in an include segment =ACDOC_SI_GL_ACCAS=. Account assignment stands for a coroporate element in which accounts can be assigned to. Each assignment field may have a partner countpart. They are aways appeared as pairs. For some field like cost center, they have a compound field "controlling area". Then their partner countpart should have both a partner cost center and a partner compound controlling area. 
+   
+#+CAPTION: Account Assignment Fields and Their Patner Countparts
+| AS Field | Partner AS Field | Description     |
+|----------+------------------+-----------------|
+| RCOMP    | RASSC            | Company         |
+| SEGMENT  | PSEGMENT         | Segment         |
+| RBUSA    | SBUSA            | Business Area   |
+| RFAREA   | SFAREA           | Functional Area |
+| RCNTR    | SCNTR            | Cost Center     |
+| PRCTR    | PPRCTR           | Profit Center   |
 
 ** Dimension
-Table1: Dimension Header
+What a consolidation entity is made up of is defined in (Consolidation) dimension. A dimension defines which field(s) in ACDOCA/C is(are) as consolidation entities. For example, dimension "100" is defined as account assignment field is "RCOMP", and partner field is "RASSC". During runtime, consolidation procedure will read this meta defination and do caggregations and eliminations on these 2 fields. 
+
+#+CAPTION: Dimension Header
 | Field name | Key | Data Type | Descr.                                    |
 |------------+-----+-----------+-------------------------------------------|
 | MANDT      | X   |           |                                           |
 | DIM        | X   | CHAR3     | Dimension ID                              |
 | DESCRIPT   |     | CHAR80    | Dimension Description(language dependent) |
 
-Table2: Dimension Assignment Fields
-| Field name | Key | Data Type | Descr.                                                                |
-|------------+-----+-----------+-----------------------------------------------------------------------|
-| MANDT      | X   |           |                                                                       |
-| DIM        | X   | CHAR3     | Dimension ID                                                          |
-| FLDSEQ     | X   | CHAR3     | Field Sequence: Represent the business objects hierarchy relationship |
-| ASFLD      |     | RTC_FDNAM | Account Assignment Field                                              |
-| PASFLD     |     | RTC_FDNAM | Partner Account Assignment Field                                      | 
+#+CAPTION: Dimension Assignment Fields
+| Field name | Key | Data Type | Descr.                                                           |
+|------------+-----+-----------+------------------------------------------------------------------|
+| MANDT      | X   |           |                                                                  |
+| DIM        | X   | CHAR3     | Dimension ID                                                     |
+| FLDSEQ     | X   | CHAR3     | Field sequence represents the subordinates of structure elements |
+| ASFLD      |     | RTC_FDNAM | Account Assignment Field                                         |
+| PASFLD     |     | RTC_FDNAM | Partner Account Assignment Field                                 |
 
-Example in Maintenance View:
+#+CAPTION: Example in Maintenance View:
 | DIM | FLDSEQ | ASFLD  | PASFLD |
 |-----+--------+--------+--------|
-| 100 |    001 | KOKRS  | KOKRS  |
-| 100 |    002 | PRCTR  | PPRCTR |
-| 100 |    003 | RBUKRS | RBUKRS |
+| 500 |    001 | KOKRS  | KOKRS  |
+| 500 |    002 | PRCTR  | PPRCTR |
 
-The above example demonstrates a dimension definition. It contains 3 account assignment fields, and they have orders which reflects KOKRS(controlling area) is the super object of PRCTR(profit center). Each assignment field has its partner assignment field which is allowed to have the same field name. If in "PASFLD" is left empty, it will be automatically filled with the value of "ASFLD".  
+Dimension is defined through a maintenance view. The above example demonstrates a dimension definition. It contains 2 account assignment fields. The field sequence reflects KOKRS(controlling area) suordinates PRCTR(profit center). Each assignment field has its partner assignment field(PASFLD) which can be the same as the ASFLD. 
 
 ** Entity Mapping
+The entity mapping table =RTC_ENTITY_M= is designed to map consolidation entity master data to existing accounting master data. On one hand, we should reduce master data redundancy by eliminating unnecessary data copies; On the other hand, we need a dedicate consolidation entity master data object to holds additional semantic information and control parameters. =RTC_ENTITY_M= is such a relationship table that connects consolidation entity and accounting master data.  
+
+#+CAPTION: Entity Mapping Table
+| Field name | Key | Data Type       | Descr.                                   |
+|------------+-----+-----------------+------------------------------------------|
+| MANDT      | X   | MANDT           | Client                                   |
+| DIM        | X   | RTC_DIM         | Dimension                                |
+| ENTITY     | X   | RTC_ENTITY      | Consolidation Entity                     |
+| RBUKRS     |     | BUKRS           | Company Codes                            |
+| RCOMP      |     | RCOMP_D         | Company                                  |
+| KOKRS      |     | KOKRS           | Controlling Area                         |
+| RCNTR      |     | RCNTR           | Cost Center                              |
+| PRCTR      |     | PRCTR           | Profit Center                            |
+| RFAREA     |     | FKBER           | Function Area                            |
+| RBUSA      |     | RBUSA           | Business Area                            |
+| SEGMENT    |     | FB_SEGMENT      | Segment                                  |
+| FLEXUP     |     | RTC_FLEXUP      | Reported Data comes from flexible upload |
+| CTRLL      |     | RTC_CTRL_LVL    | BPC Control Level                        |
+| CCNLC      |     | RTC_CTRL_CURR_N | BPC Control Local Currency               |
+| DIMLS      |     | RTC_DIMLIST     | BPC DIMLIST Dimension Property           |
+| RELIM      |     | RTC_ELIM        | BPC ELIM Entity Dimension Property       |
+| ENJNR      |     | RTC_ENABLEJNR   | BPC Enable Journal                       |
+| FXTYP      |     | RTC_FX_TYPE     | BPC Fix Type                             |
+| NAME       |     | RTC_ENTITY_NAME | RTC Entity Name                          |
+
+Dimension is part of the key of the =RTC_ENTITY_M=, as it determins which fields should be filled so that it can be correclty linked with existing accounting master data.
+
+The table can be filled manually or automatically. =RTC_AUTO_PUMP_ENTITIES= is used to pump exsiting accounting data into the table. You only need to enter one of the SAP delivered dimension, and the program knows how to get the source data and pump them into the table. For user defined dimensions, customers need to develop the pump program themselves.
+
+If the dimension only contains one field, then the entity key is the same as the value of the field. If the dimension contains more than one field, the entity key is the concatenate string of the fields' value and seperated with '/'. During runtime, =RTC_ENTITY_M= is used to join existing tables to get full picture of the master data. The table is also used to join ACDOCA/C so that all the interfaces(UI and API) can process the same entity semantic to reduce the programing complexity. 
+
+Consolidation required control parameters are also added in =RTC_ENTITY_M=. Currently BPC required attributes are added. In order to integrate with BPC, you need to join the =RTC_ENTITY_M= into the HANA calc views which are afterwards assigned to virtual info-objects. 
+
+There is also a RTC required field =FLEXUP= which is used to indicate whether an entity's report data is in ACDOCA or uploaded through flexible uploading. 
