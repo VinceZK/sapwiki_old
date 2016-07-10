@@ -1,0 +1,91 @@
+
+#+CAPTION: Exchange Rates
+| Period | Exchange Rate | Ref. Exchange Rate |
+|--------+---------------+--------------------|
+|    000 |           1.7 |                1.6 |
+|    001 |           1.7 |                2.0 |
+|    002 |           1.5 |                1.6 |
+
+#+CAPTION: Intermediate Table1
+| Period | FS Item |  LC |  TC |  RC |
+|--------+---------+-----+-----+-----|
+|    002 |  123456 | 200 | 300 | 320 |
+
+#+CAPTION: Intermediate Table2
+| Period | FS Item | T.I. |   LC |   GC |
+|--------+---------+------+------+------|
+|    000 |  123456 |    0 | 1100 | 1760 |
+|    000 |  123456 |    1 |    0 |  110 |
+|    001 |  123456 |    0 |  100 |  200 |
+|    001 |  123456 |    1 |    0 |  -30 |
+|    001 |  123456 |    2 |    0 |  440 |
+|    001 |  123456 |    3 |    0 | -440 |
+|    002 |  123456 |    0 |  200 |  320 |
+|    002 |  123456 |    1 |    0 |  -20 |
+|    002 |  123456 |    2 |    0 |  -40 |
+|    002 |  123456 |    3 |    0 |   40 |
+
+#+Begin_src sql
+--Translate Current Period Local Amount
+insert into Table1
+  select PERIOD,
+         FS_ITEM,
+         LC,
+         CURRENCY_CONVERSION(LC, 1.5) as 'TC',
+         CURRENCY_CONVERSION(LC, 1.6) as 'RC'
+    from FOUNDATION_VIEW
+   where PERIOD = '002';
+
+--Get Translated Results of Prior Periods
+insert into Table2
+  select PERIOD,
+         FS_ITEM,
+         TRANSL_IND,
+         LC,
+         GC
+    from ACDOCC
+   where PERIOD < '002'; 
+
+--Calcuate and Insert T.I.0 Lines of Current Period
+insert into Table2
+  select PERIOD,
+         FS_ITEM,
+         '0' as TRANSL_IND,
+         LC,
+         RC as GC
+    from Table1
+   where PERIOD = '002';
+
+--Calcuate and Insert T.I.1 Lines of Current Period
+insert into Table2
+  select PERIOD,
+         FS_ITEM,
+         '1' as TRANSL_IND,
+         LC,
+         (TC - RC) as GC
+    from Table1
+   where PERIOD = '002';
+
+--Calcuate and Insert T.I.2 Lines of Current Period
+insert into Table2
+  select '002' as PERIOD,
+         FS_ITEM,
+         '2' as TRANSL_IND,
+         '0' as LC,
+         (SUM(CURRENCY_CONVERSION(LC, 1.6)) - sum(RC)) as GC
+    from Table2
+   where PERIOD <= '002'
+     and TRANSL_IND = '0'
+group by PERIOD, FS_ITEM, TRANSL_IND, LC;
+
+--Calcuate and Insert T.I.3 Lines of Current Period
+insert into Table2
+  select PERIOD,
+         FS_ITEM,
+         '3' as TRANSL_IND,
+         '0' as LC,
+         (0 -  GC) as GC,
+    from Table2
+   where PERIOD = '002'
+     and TRANSL_IND = '2';
+#+end_src  
