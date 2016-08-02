@@ -23,7 +23,16 @@
 |    002 |  123456 |    0 |  200 |  320 |
 |    002 |  123456 |    1 |    0 |  -20 |
 |    002 |  123456 |    2 |    0 |  -40 |
-|    002 |  123456 |    3 |    0 |   40 |
+|    002 |  123456 |    3 |    0 | -200 |
+ 
+(1100 + 100) * 1.6 - 1760 - 200 = -40
+(1100 + 100) * 1.5 - (1770 + 110)  - (200 + (-30)) - (-40) = -200
+
+Carry forword to 000 of next year.
+| Period | FS Item | T.I. |   LC |   GC |
+|--------+---------+------+------+------|
+|    000 |  123456 |    0 | 1400 | 2360 |
+|    000 |  123456 |    1 |    0 | -580 |
 
 #+Begin_src sql
 --Translate Current Period Local Amount
@@ -72,20 +81,25 @@ insert into Table2
          FS_ITEM,
          '2' as TRANSL_IND,
          '0' as LC,
-         (SUM(CURRENCY_CONVERSION(LC, 1.6)) - sum(RC)) as GC
+         (sum(CURRENCY_CONVERSION(LC, 1.6)) - sum(GC)) as GC
     from Table2
-   where PERIOD <= '002'
+   where PERIOD < '002'
      and TRANSL_IND = '0'
 group by PERIOD, FS_ITEM, TRANSL_IND, LC;
 
 --Calcuate and Insert T.I.3 Lines of Current Period
 insert into Table2
-  select PERIOD,
-         FS_ITEM,
+  select A.PERIOD,
+         A.FS_ITEM,
          '3' as TRANSL_IND,
          '0' as LC,
-         (0 -  GC) as GC,
-    from Table2
-   where PERIOD = '002'
-     and TRANSL_IND = '2';
+         (sum(CURRENCY_CONVERSION(A.LC, 1.5)) -  sum(A.GC)) - B.GC as GC,
+    from Table2 as A
+    left join Table2 as B
+      on A.PERIOD = B.PERIOD
+     and A.FS_ITEM = B.FS_ITEM
+   where A.PERIOD < '002'
+     and A.TRANSL_IND <= '1'
+     and B.TRANSL_IND = '2'
+group by A.PERIOD, A.FS_ITEM, TRANSL_IND, LC;
 #+end_src  

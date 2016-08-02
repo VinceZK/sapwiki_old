@@ -1,0 +1,70 @@
+#+PAGEID: 1842908029
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SIT Feedback
+* People
+Brian Turner from Delloite Seattle
+David Hutton from Delloite Seattle
+Jeroen from Philip
+Lukas Kim & Bala Thiagu from Delloite Seattle
+Gerrit Lotz from SAP consulting
+Andreas Guelle & Stefan Schuette from Atios
+Tanja Ritter from SAP consulting
+Alexandra Foehner from Earnest Young
+* Issues
+** Integral Modeling
+Currently, modeling takes in 3 places: SAPGUI(S/4), HANA Stuido, and BPC Web client. It is claimed modeling should be made in an integral place. Either BPC Web client, or a new modeling tool should be developed. 
+*** Generate info-objects
+*** Generate composite provider
+*** Generate virtual provider
+** Generic UI Criticized
+UI is generally criticized mainly on not web-lized. 
+1. SAPGUI regress
+2. Different UIs end-2-end
+
+The underlying requirement is not WEB or SAPGUI, but we lack of a good design  and integral UI. 
+*** RTCDSR UI
+*** RTCTM UI
+Too much space left for nothing
+*** Period Field 2 vs 3.
+The period field length is inconsistent in UIs. Not very sure on which UIs.
+*** Process/Step Oriented
+*** Flexible Upload
+It is very important. Current SAPGUI based is not kinda decent. The target users may not even accounts to use it. 
+** Multiple Group Chart of Accounts
+Accounting only supports one operational CoA maps to one Group CoA. If you want 1:n relationship between opertional CoA to Group CoA, you have to define addtional mapping tables. Those could either be enhanced by accounting team, or new developed by ourselves. 
+
+T004(Directory of Charts of Accounts) cannot be used for this purpose, as it only support 1:1 mapping between operational CoA and group CoA.
+
+SKA1(G/L Account Master) cannot be used for this purpose for the same reason. 
+
+A new mapping tables should be given.
+| Op CoA | Op Acct | G CoA | G Acct |
+|--------+---------+-------+--------|
+| CACN   | 1001001 | RTC1  |   1001 |
+** Missing Functions Expected
+*** IPI: Interunit Profit/loss in Inventory
+*** COI: Consolidation of Investment
+*** Matrix Consolidation
+** Validation at Source
+** When CT happens in S/4, then journals posted in BPC with local currency could not be translated
+** When CT happens in BPC, then journals related to the same transaction cannot be corelated
+If a journal is first posted in BPC with local currency, then translated into group currency. So the 2 documents will be generated in ACDOCC. However, we can not connect the 2 documents into one transaction.
+** The message during currency translation should be more clear.
+When investment data is mis-match, for example, the local amount is not balance, it should clearly tell the user which amount is wrong.
+** CT still replicates local amount data
+This is actually because BPC want a dedicate LC data set.
+** Additional Finacial Data need to be replicated among different categories.
+This introduces redudant inputs of investment data.
+
+* Check before Release
+** TODO SE43 remove some unwanted items :Ying:
+** TODO Role Structurlize    :Frank:
+** TODO SU22 improvement
+** TODO IMG Review    :Ying:Zhang:
+* Administrator Guide
+Real-Time Consolidation is part of S4CORE component, you do not need do additional installation if you have your SAP S4HANA 1610 installed. You do not have to install BPC either, as it requires the embedded BPC in the same instance, which is installed along with SAP S4HANA.
+	
+To use Real-Time Consolidation, you must finish some configurations
+

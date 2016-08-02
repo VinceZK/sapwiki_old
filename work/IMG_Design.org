@@ -1,5 +1,5 @@
 #+PAGEID: 1825545337
-#+VERSION: 28
+#+VERSION: 29
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: IMG Design
@@ -8,13 +8,13 @@
 Here you define consolidation related master data and basic customizations.
 
 ** (Text Node) Create Consolidation Foundation View
-You need to create a HANA calculation view in HANA Studio. The calculation view is mainly based on ACDOCA, and used to
+You need to create a HANA calculation view in HANA Studio. The calculation view is based on ACDOCA, and is mainly used to
 1. Project consolidastion relevent fields from ACDOCA;
-2. Join group Chart of Accounts;
-3. Do fiscal year variant alignment;
+2. +Join group Chart of Accounts;+
+3. +Do fiscal year variant alignment;+
 4. Do necessary data filtering on company code and ledger combinations.
 
-SAP also delivers an example consolidation foundation view: *RTC_C_ACDOCA*, you can copy it to your own namespace and adjust it to your own needs. 
+SAP also delivers an example consolidation foundation view: *RTC_C_FOUNDATION*, you can copy it to your own namespace and adjust it to your own needs. 
 
 | Attribute             | Value              | Comments                      |
 |-----------------------+--------------------+-------------------------------|
@@ -24,8 +24,9 @@ SAP also delivers an example consolidation foundation view: *RTC_C_ACDOCA*, you 
 
 Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
 
-** (Text Node) Define Group Chart of Accounts
-In this Customizaing activity, you must define a group chart of accounts for consolidation.
+** Fiancial Accounting Prepartion
+*** (Text Node) Define Group Chart of Accounts
+In this Customizing activity, you must define a group chart of accounts for consolidation.
 
 Please refer the IMG node:
 Financial Accounting (New)-->General Ledger Accounting (New) -->Mater Data-->G/L Accounts
@@ -36,8 +37,8 @@ Financial Accounting (New)-->General Ledger Accounting (New) -->Mater Data-->G/L
 | Mandatory/Optional    | Mandatory activity |                       |
 | Critical/Non-Critical | Critical           |                       |
 
-** (Text Node) Mapping Operational Chart of Accounts to Group Chart of Accounts
-In this Customizaing activity, you must map the operational chart of accounts to the consolidation group chart of accounts.
+*** Assign Group Chart of Accts to (Transaction) Chart of Accts
+Please fully refer: Enterprise Controlling-->Consolidation-->Integration:Preparation for Consolidation-->Preparation in the Sender System-->Preparations Related to All Consolidation Types-->Transaction Accounts: Assignment of Group Accounts-->Assign Group Chart of Accts of (Transation) Chart of Accts.
 
 | Attribute             | Value              | Comments                    |
 |-----------------------+--------------------+-----------------------------|
@@ -45,72 +46,7 @@ In this Customizaing activity, you must map the operational chart of accounts to
 | Mandatory/Optional    | Mandatory activity |                             |
 | Critical/Non-Critical | Critical           |                             |
 
-*** +Cancelled+
-If time permits, RTC should develop a mapping application. You can do mapping like this:
-| Local CoA | Local Account   | Group CoA | Group Account |
-|-----------+-----------------+-----------+---------------|
-| CACN      | 1001*           | CORP      |       1002000 |
-| CAJP      | 2004001         | CORP      |       2004100 |
-| CAGM      | 3003001,3003002 | CORP      |       3003000 |
-| CAGM      | 4004001-4005999 | CORP      |       4004000 |
-
-** Define Consolidation Dimension                                       :New: 
-In this Customizing activity, you define consolidation dimensions. A consolidation dimension defines on which account assignment field(or fields) in ACDOCA you want to do consolidation. For example, Dimension =100= is for company consolidation. It has one account assignment field =RCOMP= and one partner account assignment field =RASSC=. 
-
-SAP delivers 6 default dimensions, they are:
-| Dimension | Description     | (Partner)Assignment Field(s) |
-|-----------+-----------------+------------------------------|
-|       100 | Company         | RCOMP:RASSC                  |
-|       200 | Segment         | SEGMENT:PSEGMENT             |
-|       300 | Business Area   | RBUSA:SBUSA                  |
-|       400 | Functional Area | RFAREA:SFAREA                |
-|       500 | Cost Center     | (KOKRS,RCNTR):(KOKRS,SCNTR)  |
-|       600 | Profit Center   | (KOKRS,PRCTR):(KORRS,PPRCTR) |
-
-You can define your own dimnsions in customer namespace(Start with Y, Z, 9). You should make sure the assignment fields should exist in both ACDOCA and ACDOCC. 
-
-*TCode*: RTCCMD
-
-*Maintenance View*: VC_RTC_MODEL_DIM
-
-| Attribute             | Value             | Comments                                   |
-|-----------------------+-------------------+--------------------------------------------|
-| ASAP Roadmap ID       | 203               | Establish Master Data                      |
-| Mandatory/Optional    | Optional activity | Default dimensions cover most of the cases |
-| Critical/Non-Critical | Critical          |                                            |
-
-** (Text Node) Map Company Code to Company
-In this Customizing activity, you map company codes to companies if you want run a company consolidation. 
-
-| Attribute             | Value             | Comments                              |
-|-----------------------+-------------------+---------------------------------------|
-| ASAP Roadmap ID       | 202               | Establish Company Structure           |
-| Mandatory/Optional    | Optional activity | Only needed for company consolidation |
-| Critical/Non-Critical | Non-Critical      |                                       |
-
-** Create Consolidation Entity                                          :New:
-In this Customizing activity, you define consolidation entities. An entity could be a company, a profit center, or a cost center. The meta of Consolidation entity is defined by consoldiation dimension.
-
-| Attribute             | Value              | Comments                    |
-|-----------------------+--------------------+-----------------------------|
-| ASAP Roadmap ID       | 202                | Establish Company Structure |
-| Mandatory/Optional    | Mandatory activity |                             |
-| Critical/Non-Critical | Critical           |                             |
-
-*** Manually Create Consolidation Entities
-You can manually create consolidation entities in this maintenance view. You must first choose a Consolidation dimension, and then maintain your entities. You can also maintain BPC requried attributes for the entity. 
-
-SAP recormands you first use "RTC_AUTO_PUMP_ENTITIES" to generate your entities, then use this Maintenance view to adjust. 
-
-*TCode*: RTCENT
-
-*Maintenance View*: VC_RTC_MODEL_DIM
-
-*** (Text Node)Generate Consolidation Entities
-You can use report "RTC_AUTO_PUMP_ENTITIES" to generate consolidation entities based on existing master data. Select one consolidation dimension and press execute, the report will create all entities for you. You can only use this report to generate entites based on SAP delivered consolidation dimensions. 
-Run report "RTC_AUTO_PUMP_ENTITIES" using SA38. 
-
-** (Text Node) Define Group Fiscal Year Variants
+*** (Text Node) Define Group Fiscal Year Variants
 In this Customizing activity, you define a fiscal year variant for your consolidation model. You can of course re-use exiting one if it fulfill your requirement. 
 
 Refer IMG nodes: Financial Accounting (New)-->Ledgers-->Fiscal Year and Posting Periods
@@ -121,7 +57,7 @@ Refer IMG nodes: Financial Accounting (New)-->Ledgers-->Fiscal Year and Posting 
 | Mandatory/Optional    | Optional activity |                       |
 | Critical/Non-Critical | Critical          |                       |
 
-** (Text Node) Generate Fiscal Year Calendar
+*** (Text Node) Generate Fiscal Year Calendar
 You generate fiscal year calendar data for the alignment between local fiscal year variant and group fiscal year variant. 
 
 | Attribute             | Value             | Comments                                         |
@@ -135,6 +71,70 @@ Run report FINS_GENERATE_FISCAL_PERIOD using SA38. You use this report to mainta
 ~Accounting team has a program to generate period level or day level granularity fiscal calendar. Maybe it is already existing in the IMG structure somewhere. But anyway we can create this node in our IMG structure. The program is: FINS_GENERATE_FISCAL_PERIOD.~ 
 
 Developer: Zhou, Kaiyuan <kaiyuan.zhou@sap.com>
+
+** Define Consolidation Dimension                                       
+In this Customizing activity, you define consolidation dimensions. A consolidation dimension defines on which account assignment field(or fields) in ACDOCA you want to do consolidation. For example, Dimension =100= is for company consolidation. It has one account assignment field =RCOMP= and one partner account assignment field =RASSC=. 
+
+SAP delivers 6 default dimensions, they are:
+| Dimension | Description | (Partner)Assignment Field(s)              |
+|-----------+-------------+-------------------------------------------|
+|       100 | Company     | RCOMP:RASSC                               |
+|       500 | Cost Center | (KOKRS,RCNTR,RBUKRS):(KOKRS,SCNTR,PBUKRS) |
+
+You can define your own dimnsions in customer namespace(Start with Y, Z, 9). You should make sure the assignment fields should exist in both ACDOCA and ACDOCC. 
+
+*TCode*: RTCCMD
+
+*Maintenance View*: VC_RTC_MODEL_DIM
+
+| Attribute             | Value             | Comments                                   |
+|-----------------------+-------------------+--------------------------------------------|
+| ASAP Roadmap ID       | 203               | Establish Master Data                      |
+| Mandatory/Optional    | Optional activity | Default dimensions cover most of the cases |
+| Critical/Non-Critical | Critical          |                                            |
+
+** +(Text Node) Map Company Code to Company+
+In this Customizing activity, you map company codes to companies if you want run a company consolidation. 
+
+| Attribute             | Value             | Comments                              |
+|-----------------------+-------------------+---------------------------------------|
+| ASAP Roadmap ID       | 202               | Establish Company Structure           |
+| Mandatory/Optional    | Optional activity | Only needed for company consolidation |
+| Critical/Non-Critical | Non-Critical      |                                       |
+
+** Create Consolidation Entity                                         
+In this Customizing activity, you define consolidation entities. An entity could be a company, a profit center, or a cost center. The meta of Consolidation entity is defined in the consoldiation dimension.
+
+| Attribute             | Value              | Comments                    |
+|-----------------------+--------------------+-----------------------------|
+| ASAP Roadmap ID       | 202                | Establish Company Structure |
+| Mandatory/Optional    | Mandatory activity |                             |
+| Critical/Non-Critical | Critical           |                             |
+
+*** Manually Create Consolidation Entities
+You can manually create consolidation entities in this maintenance view. You must first choose a Consolidation dimension, and then maintain your entities. You should also maintain BPC requried attributes for each entity. 
+
+You can write an ABAP report to generate entities automatically based on your existing master data. 
+SAP recormands you first use "RTC_AUTO_PUMP_ENTITIES" to generate your entities, then use this Maintenance view to do adjustments. 
+
+*TCode*: RTCENT
+
+*Maintenance View*: VC_RTC_MODEL_DIM
+
+*** (Text Node)Generate Consolidation Entities Automatically
+=Use=
+You can use report "RTC_AUTO_PUMP_ENTITIES" to generate consolidation entities based on existing master data. Select one consolidation dimension and press execute, the report will create all entities based on your existing master data. 
+
+=Prerequiste=
+You have your corresponding master data defined, like company, profit center, cost center, and so on. 
+
+=Activity=
+1. Run report "RTC_AUTO_PUMP_ENTITIES" using SA38. 
+2. Select a pre-delivered dimension (100 or 500)
+3. Press Execute 
+
+=Notes=
+*You can only use this report to generate entites based on SAP pre-delivered consolidation dimensions.* For your self-defined dimensions, it is good to write an ABAP report to do your entities auto-generation. You can refer ABAP report "RTC_AUTO_PUMP_ENTITIES".
 
 ** Define Version Related Fields
 Version related fields are characteristic fields which are combined together to form a consolidation version. A consolidation version reflects a consolidation purpose. From technique point of view, each version related field must be in ACDOCC, and it must be a characteristic field. 
@@ -188,6 +188,7 @@ Under the combination of "RTC Data Category" and "Consolidation Ledger", you may
 | Critical/Non-Critical | Critical           |                       |
 
 ** Define Consolidation Model.
+=Use=
 Consolidation model combines all related customization together into an integral consolidation context. It mainly contains 2 parts: S/4 RTC side, and BPC side.
 
 You must first generate =Consolidation Views= in RTC side. Consolidation views are generated based on the foundation view and the consolidation journal table ACDOCC. There are 2 categories of consolidation views:
@@ -216,11 +217,33 @@ After you successfully define your BPC model, you come back here to do additiona
 
 Developer: Sam Sun (sam.sun03@sap.com)
 
-*** Procedures
+=Activities=
 1. You enter a model name with 6 char long, and click the button "New". In the pop-up dialog screen, you can assign the foundation view. Click "OK" will generate a consolidation area view for you. You can then use the consolidation area view to define your HANA calculation view and BW composite info-provider.
 2. In the tab-strip "Integration", you can assign a BPC environment name and a model name. The combination must be exist in BPC side. It will then read all the settings at BPC side, like: dimension field, fiscal year variant, chart of accounts, and so on. You just needn't do these settings again in RTC side.  If "Currency Translation in S4H" is checked, you then assign a currency translation method. 
 3. BPC Category represents the versions or scenarios based on which data would be tracked. It contains the types of data you are going to track, such as Actual, Budget, and Forecast. You can set up categories to store versions, such as BudgetV1, BudgetV2, and so on.
 4. In the tab-strip "Version", you can add/delete a "BPC Data Category". When you add one, it must be a unique "BPC Data Category". You then choose each version field a value, the value combination should be unique too.
+
+** Define Account Selection
+Not all the operational accounts need to be involved in consolidation. These operational accounts should be filtered out. You can achieve this through defining G/L Account Selection("&SELECTION001").
+
+The G/L Account Selection is generated at the first time you enter it. You can change it, activate it, but not delete it. You include multiple single selections into G/L Account Selection to form the filtering logic of different chart of accounts. Each single selection is connected with operator 'or'. 
+
+=Example=
+You want account numbers "1000000"~"9000000" in chart of account "CACN" to be involved in consolidation, you also want account numbers "100000"~"999999" in chart of account "CAUS" to be involved in consolidation. Then you define 2 single selections for "CACN" and "CAUS", and add them into the G/L Account Selection. 
+
+~Selections with their name begin with "&" are reserved by SAP for internal usages. You can not create/delete selections begin with "&". But you change/activate them.~ 
+
+For details on how to define selections, please refer the "Define Selection" section.
+
+*TCode*: RTCAS
+
+*SOBJ*:  RTCA
+
+| Attribute             | Value             | Comments                |
+|-----------------------+-------------------+-------------------------|
+| ASAP Roadmap ID       | 152               | Define data acquisition |
+| Mandatory/Optional    | Optional activity |                         |
+| Critical/Non-Critical | Non-Critical      |                         |
 
 ** Define Consolidation Document type
 You define consolidation document type to differentiate types of consolidation documents generated by different consolidation tasks. In a document type, you maintain different number range intervals for different consolidation versions. You can also set whether the document type need to do balance check or not?
@@ -255,24 +278,7 @@ A document type categories documents by combining configurations like: balance c
 
 *SOBJ*: RTCA
 
-** Define Account Selection
-Not all the operational accounts need to be involved in consolidation. These operational accounts should be filtered out. You can achieve this through defining a special composite selection "&SELECTION001".
-
-~Selections with their name begin with "&" are reserved by SAP for internal usages.~ 
-
-For details on how to define selections, please refer the "Define Selection" section.
-
-*TCode*: RTCSEL
-
-*SOBJ*:  RTCA
-
-| Attribute             | Value             | Comments                |
-|-----------------------+-------------------+-------------------------|
-| ASAP Roadmap ID       | 152               | Define data acquisition |
-| Mandatory/Optional    | Optional activity |                         |
-| Critical/Non-Critical | Non-Critical      |                         |
-
-** (Text Node) Define Consolidation Group and Unit
+** (Text Node) Define Consolidation Group
 You go to BPC's web console, choose your consolidation environment, goto Administration-->Dimensions, select your group dimension (/ERP/GROUP by default). You maintain your consolidation group hierarchy.
 
 You then goto Consolidation-->Ownership Manager, choose the category, group, and Fiscal Year/Period. You can then add your consolidation entities under each group node.
@@ -465,7 +471,7 @@ IBPF already has its data category maintenance view. As it is the same concept f
 *Maintenance View*: FCOMV_CATEGORY_C
 
 ** (Text Node) Create Master Data HANA Calculation Views
-In this Customizing activity, you create SAP HANA calculation views for master data
+In this Customizing activity, you create SAP HANA calculation views and BW info-objects for master data
 
 By default, SAP has delivered following standard master data HANA calculation views for your reference. They are all under HANA package: sap.erp.sfin.rtc
 
@@ -484,10 +490,58 @@ Developer: Wang, Blangero <blangero.wang@sap.com>
 | Mandatory/Optional    | Mandatory activity |                         |
 | Critical/Non-Critical | Critical           |                         |
 
-** (Text Node) Create BW Info-objects and Info-Provider
-In this Customizing activity, you create virtual InfoObjects to map to the master data SAP HANA calculation views. You then create a composite provider to union the fact SAP HANA calculation views generated by RTC modeling tool. 
+You create virtual InfoObjects to map to the master data SAP HANA calculation views. You then create a composite provider to union the fact SAP HANA calculation views generated by RTC modeling tool. 
 
 You also create a virtual infoProvider on the result consolidation view. On this virtual infoProvider, you also assign a write-back class so that BPC can write-back the consoldiation reuslt to ACDOCC. 
+
+Following BW info-objects are delivered by SAP as they are either mandatory dimensions for BPC or necessary attributes. You can active them to use. 
+| Tech.name      | Description                 |
+|----------------+-----------------------------|
+| /ERP/DIMLIST   | BPC Dimlist                 |
+| /ERP/ENA_JNR   | BPC EnableJNR               |
+| /ERP/CTRL_CNL  | BPC Control currency not LC |
+| /ERP/CTRL_LVL  | BPC Control level           |
+| /ERP/ELIM      | BPC Elim                    |
+| /ERP/FX_TYPE   | BPC Fx type                 |
+| /ERP/GLAGR     | BPC Account Type            |
+| /ERP/ELIMACC   | BPC ElimAcc                 |
+| /ERP/TYPELIM   | BPC TypeElim                |
+| /ERP/EX_RATE1  | BPC Exchange Rate Type      |
+| /ERP/FXDIFFOL  | BPC Fx Difference Only      |
+| /ERP/FXSCATG   | BPC Fx Source Category      |
+| /ERP/DSUBMIT   | BPC Data Submit             |
+| /ERP/OPECATG   | BPC Opening Category        |
+| /ERP/OPEPER    | BPC Opening Period          |
+| /ERP/OPEYEAR   | BPC Opening Year            |
+| /ERP/OWNCATG   | BPC Own Category            |
+| /ERP/OWNPER    | BPC Own Period              |
+| /ERP/OWNYEAR   | BPC Own Year                |
+| /ERP/RATECATG  | BPC Rate Category           |
+| /ERP/RATEPER   | BPC Rate Period             |
+| /ERP/RATEYEAR  | BPC Rate Year               |
+| /ERP/FLOWTP    | BPC Flow Type               |
+| /ERP/CPOPEN    | BPC Copy Opening            |
+| /ERP/DSTYPE    | BPC DS Type                 |
+| /ERP/ISCONS    | BPC Is Consolidated         |
+| /ERP/ISCONV    | BPC Is Converted            |
+| /ERP/OPENDS    | BPC Opening Datasource      |
+| /ERP/DSSTAGE   | BPC Datasource Stage        |
+| /ERP/ICORGI    | BPC IC ORIGIN               |
+| /ERP/CONSTP    | BPC Consolidate Type        |
+| /ERP/CURRTP    | BPC Currency Type           |
+| /ERP/PARGROUP  | BPC Parent Group            |
+| /ERP/STOREGCUR | BPC Store Group Currency    |
+| /ERP/DSLVL     | BPC Datasource Level        |
+| /ERP/STAGEOL   | BPC Stage Only              |
+| /ERP/STENTITY  | BPC Store Entity            |
+| /ERP/REPORTIN  | BPC Reporting               |
+| /ERP/MD        | BPC MD                      |
+| /ERP/FLOW      | RTC FLOW                    |
+| /ERP/AUDIT     | RTC Audit                   |
+| /ERP/GROUP     | RTC Group                   |
+| /ERP/ECOMP     | RTC Entity Company          |
+| /ERP/ICOMP     | RTC InterCompany Company    |
+| /ERP/BPCCURR   | RTC Currency                |
 
 | Attribute             | Value              | Comments                |
 |-----------------------+--------------------+-------------------------|
@@ -495,21 +549,10 @@ You also create a virtual infoProvider on the result consolidation view. On this
 | Mandatory/Optional    | Mandatory activity |                         |
 | Critical/Non-Critical | Critical           |                         |
 
-*We wont deliver these BW objects.* 
-+SAP has delivered following BW contents for your reference:+
-| BW Objects      | Description                                |
-|-----------------+--------------------------------------------|
-| +/ERP/RTC_RT01+ | +Real-time cube according to RTC_C_ACDOCA+ |
-| +/ERP/RTC_CP01+ | +Composite Provider on RTC_C_ACDOCA+       |
-| +/ERP/RTC_AL01+ | +Aggregation Level on /ERP/RTC_CP01+       |
-| +/ERP/RTC_RT02+ | +Real-time cube according to RTC_C_SCOMPL+ |
-| +/ERP/RTC_CP02+ | +Composite Provider on RTC_C_SCOMPL+       |
-| +/ERP/RTC_AL02+ | +Aggregation Level on /ERP/RTC_CP01+       |
-
 Developer: Wang, Blangero <blangero.wang@sap.com>
 
 ** (Text Node) Write-back to S/4
-If you want to write-back the consolidated results to S/4, then you have to use an ABAP write-back class and a BW virtual provider. 
+If you want to write-back the consolidated results to S/4, then you have to use an ABAP write-back class and a BW virtual provider.
 
 SAP has delivered following objects for your reference:
 | ABAP Objects                 | Description                                                |
