@@ -30,6 +30,7 @@
 | AMDP Guide                 | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
 | ABAP Persistence Service   | <2016-05-06 Fri> | [[http://help.sap.com/saphelp_nwpi71/helpdata/en/f5/a36828bc6911d4b2e80050dadfb92b/content.htm?frameset=/en/ab/9d0a3ad259cd58e10000000a11402f/frameset.htm&current_toc=/en/43/5550a1f8a75f6be10000000a1553f6/plain.htm&node_id=649&show_children=false][online help]]   | The Persistence Service lets the ABAP programmer work with relational database data in an object-oriented way. |
 
+
 ** Design
 *** Key Requirements and Design Goals
 Currency Translation of RTC should fully leverage HANA technology, so that a distinguished performance boost can be gain. It targets on translating financial statements from one currency to another currency. The translation algorithm can be customized or enhanced in an easy and understandable way. 
