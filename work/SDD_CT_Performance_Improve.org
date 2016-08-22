@@ -1,4 +1,18 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-CT Using Global Temporary Table
 
+** References
+|                                 |                  |             | <30>                           |
+| Document Title                  | Date             | Link        | Comments                       |
+|---------------------------------+------------------+-------------+--------------------------------|
+| Create Global Temporary Table   | <2016-08-20 Sat> | [[https://help.sap.com/saphelp_hanaplatform/helpdata/en/20/d58a5f75191014b2fe92141b7df228/content.htm#loio20d58a5f75191014b2fe92141b7df228__sql_create_table_1create_table_global_temporary_option][online help]] | How to create global temporary table, and the options can be used. |
+| Temporal Translation Difference | <2016-08-20 Sat> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/8f/6d9c3bcc5b2c40e10000000a114084/content.htm?frameset=/en/b4/f4733bb3f4792ee10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=120][online help]] | Traslation indicator must be used to record temporal translation |
+| Curreny Translation Key         | <2016-08-20 Sat> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/8d/8b723ba5519058e10000000a114084/content.htm?frameset=/en/b4/f4733bb3f4792ee10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=117][online help]] | Introduce different translation Key |
+
+** Translation Using Global Temporary Tables
 #+CAPTION: Exchange Rates
 | Period | Exchange Rate | Ref. Exchange Rate |
 |--------+---------------+--------------------|
@@ -7,11 +21,11 @@
 |    002 |           1.5 |                1.6 |
 
 #+CAPTION: Intermediate Table1
-| Period | FS Item |  LC |  TC |  RC |
+| Period | FS Item |  LC |  GC |  RC |
 |--------+---------+-----+-----+-----|
 |    002 |  123456 | 200 | 300 | 320 |
 
-#+CAPTION: Intermediate Table2
+#+CAPTION: Intermediate Table2 
 | Period | FS Item | T.I. |   LC |   GC |
 |--------+---------+------+------+------|
 |    000 |  123456 |    0 | 1100 | 1760 |
@@ -24,36 +38,72 @@
 |    002 |  123456 |    1 |    0 |  -20 |
 |    002 |  123456 |    2 |    0 |  -40 |
 |    002 |  123456 |    3 |    0 | -200 |
- 
-(1100 + 100) * 1.6 - 1760 - 200 = -40
-(1100 + 100) * 1.5 - (1770 + 110)  - (200 + (-30)) - (-40) = -200
 
-Carry forword to 000 of next year.
+Table2 is a Global Temporary Table which is created during transalation method activating for each translation entry.
+
+T.I.2(002) = (1100 + 100) * 1.6 - 1760 - 200 = -40;
+
+T.I.3(002) = (1100 + 100) * 1.5 - (1760 + 110)  - (200 + (-30)) - (-40) = -200;
+
+This results in the following values:
+- 0 + 1 + 2 + 3: specific value
+- 0 + 2: reference value
+- 1 + 3: currency translation difference
+- 2 + 3: temporal translation difference
+
+Carry forward to 000 of next year.
 | Period | FS Item | T.I. |   LC |   GC |
 |--------+---------+------+------+------|
-|    000 |  123456 |    0 | 1400 | 2360 |
+|    000 |  123456 |    0 | 1400 | 2680 |
 |    000 |  123456 |    1 |    0 | -580 |
 
-#+Begin_src sql
---Translate Current Period Local Amount
-insert into Table1
-  select PERIOD,
-         FS_ITEM,
-         LC,
-         CURRENCY_CONVERSION(LC, 1.5) as 'TC',
-         CURRENCY_CONVERSION(LC, 1.6) as 'RC'
-    from FOUNDATION_VIEW
-   where PERIOD = '002';
+f(0,2) = 1760 + 200 + 440 + 320 + (-40) = 2680;
 
+f(1,3) = 110 + (-30) + (-440) + (-20) + (-200) = -580;
+
+The separated display of the temporal translation differences is reset for the balance carried forward, that means
+- the totals records with translation indicator 2 go into the totals records with translation indicator 0.
+- the totals records with translation indicator 3 go into the totals records with translation indicator 1.
+
+Assume account 123456 is an asset account like cash, and the differential items are configured like this:
+#+CAPTION: Differential Items Configuration
+| Credit | Desc.         |  Debit | Desc.         |
+|--------+---------------+--------+---------------|
+| 200010 | Other Revenue | 300010 | Other Expense |
+
+
+According to =Table2=, it will automatically generate following differential line items into =Table2= to keep the B/S still balance.
+| Period | FS Item | T.I. | LC |   GC |
+|--------+---------+------+----+------|
+|    000 |  200010 |    1 |  0 | -110 |
+|    001 |  300010 |    1 |  0 |   30 |
+|    001 |  200010 |    2 |  0 | -440 |
+|    001 |  300010 |    3 |  0 |  440 |
+|    002 |  300010 |    1 |  0 |   20 |
+|    002 |  300010 |    2 |  0 |   40 |
+|    002 |  300010 |    3 |  0 |  200 |
+
+*** Psudeo SQL
+#+Begin_src sql
 --Get Translated Results of Prior Periods
 insert into Table2
   select PERIOD,
          FS_ITEM,
          TRANSL_IND,
-         LC,
-         GC
+         sum(LC) as 'LC',
+         sum(GC) as 'GC'
     from ACDOCC
    where PERIOD < '002'; 
+
+--Translate Current Period Local Amount
+var Table1 = 
+  select PERIOD,
+         FS_ITEM,
+         LC,
+         CURRENCY_CONVERSION(LC, 1.5) as 'GC',
+         CURRENCY_CONVERSION(LC, 1.6) as 'RC'
+    from FOUNDATION_VIEW
+   where PERIOD = '002';
 
 --Calcuate and Insert T.I.0 Lines of Current Period
 insert into Table2
@@ -71,7 +121,7 @@ insert into Table2
          FS_ITEM,
          '1' as TRANSL_IND,
          LC,
-         (TC - RC) as GC
+         (GC - RC) as GC
     from Table1
    where PERIOD = '002';
 
@@ -102,4 +152,233 @@ insert into Table2
      and A.TRANSL_IND <= '1'
      and B.TRANSL_IND = '2'
 group by A.PERIOD, A.FS_ITEM, TRANSL_IND, LC;
+
+--Process differential amounts to keep balance
+insert into Table2
+  select PERIOD,
+         (case when GC > 0
+                '200010'
+               when GC < 0
+                '300010'
+          end) as FS_ITEM,
+         TRANSL_IND,
+         '0' as LC,
+         (0 -GC) as GC,
+    from Table2
+   where PERIOD = '002'
+     and TRANSL_IND > '0';
 #+end_src  
+
+** Currency Translation Key (Algorithm)
+Currency translation key maps to a dedicate algorithm which apply different translation logic. Say, you want to translate cumulative balances for stockholders' equity, but periodic balances for retained earnings. In consolidation, we usally have following translation algorithms.
+
+#+CAPTION: Exchange Rates
+| Period | Exchange Rate | Ref. Exchange Rate |
+|--------+---------------+--------------------|
+|    000 |           1.7 |                1.6 |
+|    001 |           1.7 |                2.0 |
+|    002 |           1.5 |                1.6 |
+
+*** Cumulative Translation
+Use Year-To-Date cumulated value multiply the exchange rate of the current period.
+#+CAPTION: Intermediate Table1
+| Period | FS_ITEM |   LC |   GC |   RC |
+|--------+---------+------+------+------|
+|    000 |  123456 | 1100 | 1870 | 1760 |
+|    001 |  123456 |  100 |  170 |  640 |
+|    002 |  123456 |  200 |   60 | -160 |
+
+- GC(001) = (1100 + 100) * 1.7 - 1870 = 170;
+- RC(001) = (1100 + 100) * 2.0 - 1760 = 640;
+- GC(002) = (1100 + 100 + 200) * 1.5 - (1870 + 170) = 60;
+- RC(002) = (1100 + 100 + 200) * 1.6 - (1760 + 640) = -160;
+
+Now suppose we run currency translation on period 002, which means we already have results of period 000 and 001 in ACDOCC like this:
+| Period | FS Item | T.I. |   LC |   GC |
+|--------+---------+------+------+------|
+|    000 |  123456 |    0 | 1100 | 1760 |
+|    000 |  123456 |    1 |    0 |  110 |
+|    001 |  123456 |    0 |  100 |  640 |
+|    001 |  123456 |    1 |    0 | -470 |
+|    001 |  123456 |    2 |    0 |  440 |
+|    001 |  123456 |    3 |    0 | -440 |
+
+- T.I.2(001) = 1100 * 2.0 - 1760 = 440;
+- T.I.3(001) = 1100 * 1.7 - (1760 + 110) - 440 = -440; 
+ 
+#+Begin_src sql
+--Get Translated Results of Prior Periods
+insert into Table2
+  select PERIOD,
+         FS_ITEM,
+         TRANSL_IND,
+         sum(LC) as 'LC',
+         sum(GC) as 'GC'
+    from ACDOCC
+   where PERIOD < '002'; 
+
+--Get summary of prior periods group amount 
+var T_GC = 
+  select FS_ITEM,
+         sum(LC) as 'LC',
+         sum(GC) as 'GC',
+    from Table2
+   where TRANSL_IND <= '1'
+group by FS_ITEM;
+
+--Get summary of prior periods reference amount
+var T_RC = 
+  select FS_ITEM,
+         sum(LC) as 'LC',
+         sum(RC) as 'RC',
+    from Table2
+   where TRANSL_IND = '0'
+group by FS_ITEM;
+
+--Translate Current Period Local Amount
+var Table1 = 
+  select PERIOD,
+         FS_ITEM,
+         A.LC,
+         (CURRENCY_CONVERSION((A.LC+B.LC), 1.5) - B.GC) as 'GC',
+         (CURRENCY_CONVERSION((A.LC+C.LC), 1.6) - C.RC) as 'RC'
+    from FOUNDATION_VIEW as A
+    join T_GC as B
+      on A.FS_ITEM = B.FS_ITEM
+    join T_RC as C
+      on A.FS_ITEM = C.FS_ITEM
+   where PERIOD = '002';
+#+end_src
+
+*** Periodic Translation
+User periodic value multipy the exchange rate of the current period. 
+
+#+Begin_src sql
+--Translate Current Period Local Amount
+var Table1 = 
+  select PERIOD,
+         FS_ITEM,
+         LC,
+         CURRENCY_CONVERSION(LC, 1.5) as 'GC',
+         CURRENCY_CONVERSION(LC, 1.6) as 'RC'
+    from FOUNDATION_VIEW
+   where PERIOD = '002';
+#+end_src
+
+*** Periodic, average rate for reductions
++ If value increases: multiplied by the current rate;
++ If value decreases: multiplied by the average rate for the prior periods of the fiscal year.
+
+#+CAPTION: Intermediate Table1
+| Period | FS_ITEM |   LC |   GC |   RC |
+|--------+---------+------+------+------|
+|    000 |  123456 | 1100 | 1870 | 1760 |
+|    001 |  123456 |  100 |  170 |  200 |
+|    002 |  123456 | -200 | -340 | -320 |
+
+- GC(001) = 100 * 1.7 = 170;
+- RC(001) = 100 * 2.0 = 200;
+- GC(002) = -200 * (1870 + 170)/(1100 + 100) = -340;
+- RC(002) = -200 * 1.6 = -320;
+
+#+Begin_src sql
+--Get Translated Results of Prior Periods
+insert into Table2
+  select PERIOD,
+         FS_ITEM,
+         TRANSL_IND,
+         sum(LC) as 'LC',
+         sum(GC) as 'GC'
+    from ACDOCC
+   where PERIOD < '002'; 
+
+--Get average rate of prior periods
+var T_RATE = 
+  select FS_ITEM,
+         (sum(GC) / sum(LC)) as 'RATE'
+    from Table2
+   where TRANSL_IND <= '1'
+group by FS_ITEM;
+
+--Translate Current Period Local Amount
+var Table1 = 
+  select PERIOD,
+         FS_ITEM,
+         LC,
+         (case when LC < 0
+               CURRENCY_CONVERSION(LC, B.RATE)
+              when LC > 0
+               CURRENCY_CONVERSION(LC, 1.5)
+         end case) as 'GC'
+         CURRENCY_CONVERSION(LC, 1.6) as 'RC'
+    from FOUNDATION_VIEW as A
+    join T_RATE as B
+      on A.FS_ITEM = B.FS_ITEM
+   where PERIOD = '002';
+#+end_src
+
+*** Target key figure is not modified
+If the values were already translated(recorded in GC), the system does not modify the values, but the system performs a reference translation and records a translation difference.
+
+#+CAPTION: Intermediate Table1
+| Period | FS_ITEM |   LC |   GC |   RC |
+|--------+---------+------+------+------|
+|    000 |  123456 | 1870 | 1870 | 1760 |
+|    001 |  123456 |  170 |  170 |  200 |
+|    002 |  123456 |  300 |  300 |  320 |
+
+#+Begin_src sql
+--Translate Current Period Local Amount
+var Table1 = 
+  select PERIOD,
+         FS_ITEM,
+         LC,
+         LC as 'GC',
+         CURRENCY_CONVERSION(LC, 1.6) as 'RC'
+    from FOUNDATION_VIEW
+   where PERIOD = '002';
+#+end_src
+
+** Deduction for Translation on BPC Data
+Assume local data comes from ACDOCA, the exchange rate is 2.0.
+
+1. Run CT in S4, 2 documents are genereated in ACDOCC. 
+|     Doc NR | FS Item | BTTYPE | CK  | T.I. | Amount | DEL |
+|------------+---------+--------+-----+------+--------+-----|
+| 1000000000 |  123456 | RTCT   | LC  |    0 |    100 |     |
+| 1000000001 |  123456 | RTCT   | USD |    0 |    200 |     |
+
+2. Upload data using AO form with target local amount equals 300. A new document is posted with amount 300 and the business transaction type equals RTBP. Because AO form can only see data in result view which is now empty, so the delta amount is still 300. 
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | DEL |
+|------------+---------+--------+-----+--------+-----|
+| 1000000000 |  123456 | RTCT   | LC  |    100 |     |
+| 1000000001 |  123456 | RTCT   | USD |    200 |     |
+| 1000000002 |  123456 | RTBP   | LC  |    300 |     |
+
+3.1 Run CT in S4. Based on current logic, the former RTCT documents will be marked as deleted. 
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | DEL |
+|------------+---------+--------+-----+--------+-----|
+| 1000000000 |  123456 | RTCT   | LC  |    100 | X   |
+| 1000000001 |  123456 | RTCT   | USD |    200 | X   |
+| 1000000002 |  123456 | RTBP   | LC  |    300 |     |
+
+3.2 Run CT in S4. Roll-up LC amount from ACDOCA only
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | DEL |
+|------------+---------+--------+-----+--------+-----|
+| 1000000000 |  123456 | RTCT   | LC  |    100 | X   |
+| 1000000001 |  123456 | RTCT   | USD |    200 | X   |
+| 1000000002 |  123456 | RTBP   | LC  |    300 |     |
+| 1000000003 |  123456 | RTCT   | LC  |    100 |     |
+
+3.3 Run CT in S4. The group amount is cacluated based on local amount 300 + 100.
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | DEL |
+|------------+---------+--------+-----+--------+-----|
+| 1000000000 |  123456 | RTCT   | LC  |    100 | X   |
+| 1000000001 |  123456 | RTCT   | USD |    200 | X   |
+| 1000000002 |  123456 | RTBP   | LC  |    300 |     |
+| 1000000003 |  123456 | RTCT   | LC  |    100 |     |
+| 1000000004 |  123456 | RTCT   | USD |    800 |     |
+
+Then BPC will see local amount 500, with group amount 600. That is totally wrong. What if I only roll-up amount in ACDOCA, leave RTBP as is? Seems working OK.
+
+
