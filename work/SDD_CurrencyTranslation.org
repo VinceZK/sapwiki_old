@@ -1,5 +1,5 @@
 #+PAGEID: 1818041661
-#+VERSION: 8
+#+VERSION: 12
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Currency Translation
@@ -64,38 +64,67 @@ Financial data reported by consolidation units is usually collected in the Conso
 
 Currency Translation of RTC should push the main translation algorithm into HANA, so that performance can be guaranteed when running on huge amount of data. Besides, CT of RTC should be in a simple and clear philosophy that further enhancement and hack would be possible. The overall design diagram can be described like this:
 
+The whole component can be divided into 2 parts: one is customization, which includes some configuration UIs that allow users easily define their translation parameters; The other is the runtime program flow, which is realized mainly using AMDP. The green boxes are main execution points(API) which can be invoked by upper applications. 
+
 #+Caption: Currency Translation Overview
 [[../image/CurrencyTranslation.png]]  
 
-The whole component can be divided into 2 parts: one is customization, which includes some configuration UIs that allow users easily define their translation parameters; The other is the runtime program flow, which is realized mainly using AMDP and CDS. All yellow blocks are involved in this development, and all white ones stands for already existing objects.
+As HANA SQLscript supports little dynamic programming. The only way to realize currency translation through customization is to dynamically generate ADMP methods. How these artifacts are generated can be found in following diagram.
 
-As HANA SQLscript supports little dynamic programming. The only way to realize currency translation through customization is to dynamically generate CDS views and ADMP methods. How these artifacts are generated can be found in following diagram.
-
-#+Caption: Fields Mapping and Data Flow
+#+Caption: Translation Method AMDP Class
 [[../image/FieldsMappingAndDataFlowDuringCT.png]]
 
-*Selection* has 2 types:
-1) Generate a CDS view;
-2) Without a CDS view. 
+**** Translation Method
+A Translation Method is a collection of Translation Entries, Rounding Entries, and other settings, which are used to determine different exchange rates and algorithms for translating FS items, and how translation differences are posted. Translation Methods are model depandent. You can define multiple Translation Methods under a model, however, for each consolidation entity you specify a single Translation Method.  
 
-Type 1 will generate a CDS view based on Cons Area CDS view by adding filtering on "RACCT" and other characteristic fields called subitems. Type 2 does not generate a CDS view but only saves filtering information. 
+Each Translation Method will generate an ABAP class which contains AMDP methods when it is activated. Those AMDP methods encapsulte translation logic and the corresponding master data to be a consistent state. The upper level applications invoke the AMDP methods to execute the translation process that are all pushed down to HANA layer. 
 
-Besides, selection will also add columns that do not appear in the Cons Area View but exist in ACDOCC. We call this operation "dis-projection", as it is an anti-opertion of "prejection". The complemented columns are given null or fixed values.
+**** Translation Entry
+A Translation Entry contains an Exchange Rate Indicator(Type), a selection of FS items or G/L Accounts, a translation key that maps to a tranlsation algorithm, Source/Target Amount Fields, and a pair of differential items with subitems. 
 
-~If Cons Area View is not created on ACDOCA, then the selection view also do the mapping work. Because any source data will be extracted, consolidated and saved to ACDOCC or other consolidation result table.~  
+You use a Translation Entry to answer following questions: 
+1. What FS items?
+2. What exchange rate is used?
+3. What translation algorithm is used, cumulative or period?
+4. Translate which source amount field and to which target field?
+5. Which account objects and subitems will be used to record the translation difference?  
+
+You boundle multiple Translation Entries in a Translation Method so that it covers all the FS items in the group chart of accounts. Each translation entry deal with different selection of accounts(or subitems) so that there is no overlaps among each other. For those not included accounts will be translated using the reference exchange rate.
+
+**** Rounding Entry
+After currency translation, there could be inaccuracies involved in rounding. Rounding Entries are used to check and round your data so that your financial statements are still balance. 
+
+There are 3 rounding algorithms that I can give your following examples to map with:
+1. Balance sheet total = 0 (checks if the assets are equal to liabilities and equity)
+2. Total revenue + expense = annual net income
+3. Amortization entries in the balance sheet + amortization entries in the income statement = 0
+
+So you can assign 1 or 2 FS item Selections to a Rounding Entry, after aggregate the amounts based on the rounding algorithm you choose, you then record the rounding difference into the Differential Items. 
+
+You can assign multiple rounding entries into a currency translation methods. Each entry will be compiled into an AMDP method. At runtime, there rounding entry AMDP methods are excuted sequentially. 
+
+**** Exchange Rate Indicator
+A Rate Indicator defines which exchange rate type is used for each translation entry. A rate indicator maps to a rate type in table =TCURV=. 
  
-*Translation Entry* is a customization object, which combines a selection view(type 1 selection), an exchange rate indicator, a translation key which points a tranlsation algorithm, and a pair of differential items with their subitems. 
+**** Selection
+A Selection is used to add filter conditions on the fields of the consolidation view. The filter conditions are then compiled into a SQL WHERE clause, which can be applied during the running of currency transaltion. 
 
-*Translation Method* boundles one or more translation entries and rounding entries. It then can be assigned to a cons unit. Currency translation is run by units.
+**** Translation Key
+A Translation Key is a 2 characters long ID which is assigned to an AMDP method. The detail translation logic is implemented using SQL scripts in the AMDP method which is so-called translation algorithm. The translation algorithm AMDP methods have a well-defined signature so that they can be applied in any translation context. 
 
-*Translation Method Class* is an AMDP class which is generated based on the customization of translation method. Before generation the codes, a check will be done. It first check if there are overlaps among the selections that are assigned to translation entries. Then it generates the AMDP class with following AMDP methods:
+**** Source/Target Key Figure 
+Currency translation is a function with input of a source amount and output a target translated amount. So you must allow user to set a source key figure as inputs, and a target key figure to store the translated amount. The source and target key figure must be exist as currency amount fields in the model's consolidation view.
+
+**** Differential Items
+The difference produced by translation entries will be recorded to the FS items and subitems that are configured as differential items. It is quite tricky in setting differential items. For example, if you post translation difference that occur in the balance sheet within the balance sheet, the balance sheet remains balanced. But if you post the balance-sheet translation differences to income statement items, both the balance sheet and the income statement are out of balance.
+
+**** Translation Method AMDP Class
+Translation Method Class is an AMDP class which is generated based on the customization of translation method. Before generation the codes, a check will be done. It first check if there are overlaps among the selections that are assigned to translation entries. Then it generates the AMDP class with following AMDP methods:
 1. A main run method which invokes all the transaltion entry method;
 2. Translation entry methods which correspond to each translation entry. In the translation entry method, it will the corresponding translation algorithm method, and then call the differential rows processing method. The output should be an ACDOCC-like internal table;
 3. Differential rows processing methods which correspond to transaltion entries. It will genereate new rows with FS item and subitem configured in the differential items section.
 4. The rounding methods are not decribed in the above diagram. But they definately exist. They correspond to rounding entries. Each rounding method could add rounding differential rows.
 5. The posting method should be inherited from the super class as it is always fix. It checks if there is translated reuslt exists in the temp table, if not, call the main run method; Then it pass the translated results to the core posting interface. 
-
-*ON-the-Fly CDS View* is created based on the result of the main run. As the main run returns a table so it is a table function and could be mapped to a CDS view. The CDS view is then be associated with other mater data CDS view which can form a analytical CDS view for currency translation test run. 
 
 *** Major Building Blocks
 Details of each building blocks of currency translation are explained:

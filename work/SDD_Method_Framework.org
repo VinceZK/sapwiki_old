@@ -1,0 +1,24 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Method Framework
+** Design
+*** Context
+A consolidation campaign can be divided as the execution sequence of a bunch of consolidation tasks. Each consolidation task is assigned with a consolidation method which has multiple steps. Steps can either be run sequentially or parallely. A step can be genaricly defined as follows:
+1. Do selections on the data
+2. Do aggregations, translations, and comparisions
+3. Post the difference to an account object
+
+Take currency translation as an example. You define a currency translation method that contains multiple translation entries which are corresponding to steps that can be executed parallely. You define a translation entry like this:
+1. A selection on FS items and their subitems. A source currency amount field and the target amount field are also choosen as the calculation scalar. 
+2. A translation key and rate indicator which are used to determine translation logic and using which exchange rate(or coeffiency in mathmetics).
+3. Differential items(and subitems) to record difference if it has.
+
+To be more abstract, a step is a function that has a defined set as an input, and an output of a result set to be persisted. Based on this idea, we can design a method framework that can cover all the consolidation use cases. The benfits are:
+1. A unified development pattern
+2. A unified method invoke machanism for the future consolidation monitor and task framework.
+3. A more genaric method for rule-based consolidation.
+
+*** Building Blocks
+

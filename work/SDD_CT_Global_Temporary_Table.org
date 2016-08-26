@@ -1,5 +1,5 @@
-#+PAGEID: 
-#+VERSION: 1
+#+PAGEID: 1846180014
+#+VERSION: 3
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-CT Using Global Temporary Table
@@ -340,13 +340,19 @@ var Table1 =
 #+end_src
 
 ** Deduction for Translation on BPC Data
+It is expected that local financial data can be collected in multiple ways other than data submit request or flexible upload. AO form, planning functions, and BPC journals can also be regarded as usual ways in BPC context. The challenge puts on Currency Translation in S4 is how to figure out those data collected through BPC channels. 
+
+In following 3 senarios, I try to deduce the data flow to see if the CT in S4 also runs OK for those data (with Buisness Transaction Type equals 'RTBP'). The result seems good, but by providing multiple channels will lose control on data collection. Meanwhile, it will also produce complexity when processing data trace-back. 
+
+I only see one use case which I think is very real. That is when a user posts journals in BPC with local currency, it should be On-the-fly translated to group currency amounts. We achieve this by embeding currency translation logic in write-back class.    
+*** Repetition Currency Translation
 Assume local data comes from ACDOCA, the exchange rate is 2.0.
 
 1. Run CT in S4, 2 documents are genereated in ACDOCC. 
-|     Doc NR | FS Item | BTTYPE | CK  | T.I. | Amount | DEL |
-|------------+---------+--------+-----+------+--------+-----|
-| 1000000000 |  123456 | RTCT   | LC  |    0 |    100 |     |
-| 1000000001 |  123456 | RTCT   | USD |    0 |    200 |     |
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | DEL |
+|------------+---------+--------+-----+--------+-----|
+| 1000000000 |  123456 | RTCT   | LC  |    100 |     |
+| 1000000001 |  123456 | RTCT   | USD |    200 |     |
 
 2. Upload data using AO form with target local amount equals 300. A new document is posted with amount 300 and the business transaction type equals RTBP. Because AO form can only see data in result view which is now empty, so the delta amount is still 300. 
 |     Doc NR | FS Item | BTTYPE | CK  | Amount | DEL |
@@ -355,14 +361,14 @@ Assume local data comes from ACDOCA, the exchange rate is 2.0.
 | 1000000001 |  123456 | RTCT   | USD |    200 |     |
 | 1000000002 |  123456 | RTBP   | LC  |    300 |     |
 
-3.1 Run CT in S4. Based on current logic, the former RTCT documents will be marked as deleted. 
+3.1 Run CT in S4. Based on current logic, the former RTCT documents will be marked as deleted. The 2 document numbers should be recorded in the task audit log.
 |     Doc NR | FS Item | BTTYPE | CK  | Amount | DEL |
 |------------+---------+--------+-----+--------+-----|
 | 1000000000 |  123456 | RTCT   | LC  |    100 | X   |
 | 1000000001 |  123456 | RTCT   | USD |    200 | X   |
 | 1000000002 |  123456 | RTBP   | LC  |    300 |     |
 
-3.2 Run CT in S4. Roll-up LC amount from ACDOCA only
+3.2 Run CT in S4. Roll-up LC amount from ACDOCA only.
 |     Doc NR | FS Item | BTTYPE | CK  | Amount | DEL |
 |------------+---------+--------+-----+--------+-----|
 | 1000000000 |  123456 | RTCT   | LC  |    100 | X   |
@@ -370,7 +376,7 @@ Assume local data comes from ACDOCA, the exchange rate is 2.0.
 | 1000000002 |  123456 | RTBP   | LC  |    300 |     |
 | 1000000003 |  123456 | RTCT   | LC  |    100 |     |
 
-3.3 Run CT in S4. The group amount is cacluated based on local amount 300 + 100.
+3.3 Run CT in S4. The source amount now must be the sum of 300 and 100.
 |     Doc NR | FS Item | BTTYPE | CK  | Amount | DEL |
 |------------+---------+--------+-----+--------+-----|
 | 1000000000 |  123456 | RTCT   | LC  |    100 | X   |
@@ -379,6 +385,89 @@ Assume local data comes from ACDOCA, the exchange rate is 2.0.
 | 1000000003 |  123456 | RTCT   | LC  |    100 |     |
 | 1000000004 |  123456 | RTCT   | USD |    800 |     |
 
-Then BPC will see local amount 500, with group amount 600. That is totally wrong. What if I only roll-up amount in ACDOCA, leave RTBP as is? Seems working OK.
+The result in ACDOCC is correct in total view. But there could be some issues when performing trace-back. 
 
+It is quite same if data is coming from flexible upload.
 
+*** Delta Currency Translation
+Assume local data comes from ACDOCA, the exchange rate is 2.0.
+
+1. Raise a data submit request at time 20160823114101
+| Pull Req ID |     close time |
+|-------------+----------------|
+|   000000001 | 20160823114101 |
+
+2. Run CT in S4, 2 documents are genereated in ACDOCC. 
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | Pull Req ID |
+|------------+---------+--------+-----+--------+-------------|
+| 1000000000 |  123456 | RTCT   | LC  |    100 |   000000001 |
+| 1000000001 |  123456 | RTCT   | USD |    200 |             |
+
+3. Post new FI docs in ACDOCA, and raise another submit request
+| Pull Req ID |     Close Time |
+|-------------+----------------|
+|   000000001 | 20160823114101 |
+|   000000002 | 20160823142010 |
+
+4. Run CT in S4, The amount is picked only between the timestamps of lastest and last data submit requests. 2 documents with delta amount are posted in ACDOCC.
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | Pull Req ID |
+|------------+---------+--------+-----+--------+-------------|
+| 1000000000 |  123456 | RTCT   | LC  |    100 |   000000001 |
+| 1000000001 |  123456 | RTCT   | USD |    200 |             |
+| 1000000002 |  123456 | RTCT   | LC  |     50 |   000000002 |
+| 1000000003 |  123456 | RTCT   | USD |    100 |             |
+
+5. Upload data using AO form with target local amount equals 300. A new document is posted with amount 300 and the business transaction type equals RTBP.
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | Pull Req ID |
+|------------+---------+--------+-----+--------+-------------|
+| 1000000000 |  123456 | RTCT   | LC  |    100 |   000000001 |
+| 1000000001 |  123456 | RTCT   | USD |    200 |             |
+| 1000000002 |  123456 | RTCT   | LC  |     50 |   000000002 |
+| 1000000003 |  123456 | RTCT   | USD |    100 |             |
+| 1000000004 |  123456 | RTBP   | LC  |    300 |             |
+
+6. Run CT in S4, only involve the delta amount 300. The program first find the latest pull request is 0000000002 and it is already processed. Then it finds a new amount with BTTYPE = RTBP and CK = LC, so it run translation only on amount 300. The translated result 600 is posted in a new document. 
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | Pull Req ID |    Ref Doc |
+|------------+---------+--------+-----+--------+-------------+------------|
+| 1000000000 |  123456 | RTCT   | LC  |    100 |   000000001 |            |
+| 1000000001 |  123456 | RTCT   | USD |    200 |             | 1000000000 |
+| 1000000002 |  123456 | RTCT   | LC  |     50 |   000000002 |            |
+| 1000000003 |  123456 | RTCT   | USD |    100 |             | 1000000002 |
+| 1000000004 |  123456 | RTBP   | LC  |    300 |             |            |
+| 1000000005 |  123456 | RTCT   | USD |    600 |             | 1000000004 |
+
+7. Upload data using AO form with target local amount equals 400. A new document is posted with amount 100 and the business transaction type equals RTBP.
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | Pull Req ID |    Ref Doc |
+|------------+---------+--------+-----+--------+-------------+------------|
+| 1000000000 |  123456 | RTCT   | LC  |    100 |   000000001 |            |
+| 1000000001 |  123456 | RTCT   | USD |    200 |             | 1000000000 |
+| 1000000002 |  123456 | RTCT   | LC  |     50 |   000000002 |            |
+| 1000000003 |  123456 | RTCT   | USD |    100 |             | 1000000002 |
+| 1000000004 |  123456 | RTBP   | LC  |    300 |             |            |
+| 1000000005 |  123456 | RTCT   | USD |    600 |             | 1000000004 |
+| 1000000006 |  123456 | RTBP   | LC  |    100 |             |            |
+
+8. Run CT in S4, only involve the delta amount 100. The program first find the latest pull request is 0000000002 and it is already processed. Then it finds a new amount with BTTYPE = RTBP and CK = LC and the doc number 1000000006 hasn't been referred. So it run translation only on amount 100. The translated result 200 is posted in a new document. 
+|     Doc NR | FS Item | BTTYPE | CK  | Amount | Pull Req ID |    Ref Doc |
+|------------+---------+--------+-----+--------+-------------+------------|
+| 1000000000 |  123456 | RTCT   | LC  |    100 |   000000001 |            |
+| 1000000001 |  123456 | RTCT   | USD |    200 |             | 1000000000 |
+| 1000000002 |  123456 | RTCT   | LC  |     50 |   000000002 |            |
+| 1000000003 |  123456 | RTCT   | USD |    100 |             | 1000000002 |
+| 1000000004 |  123456 | RTBP   | LC  |    300 |             |            |
+| 1000000005 |  123456 | RTCT   | USD |    600 |             | 1000000004 |
+| 1000000006 |  123456 | RTBP   | LC  |    100 |             |            |
+| 1000000007 |  123456 | RTCT   | USD |    200 |             | 1000000006 |
+
+Delta translation works OK. Trace-back is possible through reference document numbers. 
+
+*** On-the-Fly Currency Translation
+The translation happens before the LC amount enters into ACDOCC. Currency translation logic is embedded in the write-back class. Additional lines with different group currency key are derived automatically and posted with the local amount together in one document. 
+|     Doc NR | FS Item | BTTYPE | CK  | Amount |
+|------------+---------+--------+-----+--------|
+| 1000000000 |  123456 | RTBP   | LC  |    100 |
+| 1000000000 |  123456 | RTBP   | USD |    200 |
+| 1000000001 |  123456 | RTBP   | LC  |     50 |
+| 1000000001 |  123456 | RTBP   | USD |    100 |
+
+It will be very useful in the journal post cases. As the local amount and group amount are correlated naturely in one document. 

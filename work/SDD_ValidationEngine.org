@@ -29,6 +29,7 @@
 | BRF+ Online Help            | <2015-12-21 Mon> | [[http://help.sap.com/saphelp_dsm10/helpdata/en/9a/6b67ce7c26446483af079719edf679/frameset.htm][online help]] | This help doc gets all you need to working with BRF+, but lack the API Reference. |
 | HRF in BRF+ Overview        | <2015-12-23 Wed> | [[\\cnpvgl000\Restricted\FGI\50_Project\Central_Finance\99_Knowledge\03_Consolidation\HRF\HowToUseHRFinBRFplus.docx][Share file]]  | A step-by-step guide on how to modeling HRF objects in BRF+ enviroment |
 | HRF vs BRF+                 | <2015-12-24 Thu> | [[https://scn.sap.com/community/public-sector/blog/2015/12/03/hrf-vs-brfplus-for-public-sector][HRF vs BRF+]] | A good comparison btw hrf and brf+ in practise |
+| Attachment Service          | <2016-08-23 Tue> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1630385412][sapwiki]]     | Attachment Service Team wikipage |
 
 
 
@@ -38,7 +39,8 @@ Validation Engine (VE in short) is a software component that provides RTC the ab
 
 **** Following Design Goals *MUST* be Met:
 1. High performance, some rules can be even validated during reporting (aka on-the-fly).
-2. VE can fulfill most of the financial consolidation requirements. Sophisticate logics can be achieved through scripting and/or programming. 
+2. VE can fulfill most of the financial consolidation requirements. Sophisticate logics can be achieved through scripting and/or programming.
+3. Support Notes/Comments 
    
 **** Following Design Goals *SHOULD* be Met:
 1. The rule description language should be intuitive and easy for LOB users to handle.  
@@ -187,6 +189,9 @@ There are 3 kinds of VE outputs:
 3. The simple true/false output used to control process
 
 The validation log UI only deal with the first kind of output. The message or log should be multi-language support, which requires it must integrate with ABAP message framework. In the initial release, an ABAP report is developed to initiate the running of rules. The ABAP report will have a similar selection screen like EC-CS's correspoinding function (CXV1). 
+
+**** Notes/Comments                                                   :Vince:
+
 
 **** Formula & Script (maybe not necessary)                           :Vince:
 REL provided by HRF is probably not enough for financial consolidation. Additional Formula and script could be needed. Currently, there is no script engine considered, I suppose potential complex logic could be done via ABAP or CDS. 
