@@ -1,4 +1,4 @@
-#+PAGEID: 
+#+PAGEID: 1847329341
 #+VERSION: 1
 #+STARTUP: align
 #+OPTIONS: toc:1
@@ -14,6 +14,11 @@ Take currency translation as an example. You define a currency translation metho
 1. A selection on FS items and their subitems. A source currency amount field and the target amount field are also choosen as the calculation scalar. 
 2. A translation key and rate indicator which are used to determine translation logic and using which exchange rate(or coeffiency in mathmetics).
 3. Differential items(and subitems) to record difference if it has.
+#+Caption: CT Method Customization
+[[../image/CTMethodCust.png]]
+
+#+Caption: Rounding Method Customization
+[[../image/RoundingMethod.png]]
 
 To be more abstract, a step is a function that has a defined set as an input, and an output of a result set to be persisted. Based on this idea, we can design a method framework that can cover all the consolidation use cases. The benfits are:
 1. A unified development pattern
@@ -22,3 +27,17 @@ To be more abstract, a step is a function that has a defined set as an input, an
 
 *** Building Blocks
 
+#+Caption: Method Framework
+[[../image/MethodFramework.png]]
+
+#+Caption: Data Submit Cockpit 01
+[[../image/DataSubmitCockpit01.png]]
+
+#+Caption: Data Submit Cockpit 02
+[[../image/DataSubmitCockpit02.png]]
+
+#+Caption: Data Submit Cockpit 03
+[[../image/DataSubmitCockpit03.png]]
+
+#+Caption: Data Collection Method
+[[../image/DataCollectionMethod.png]]
