@@ -1,0 +1,88 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Consolidation Version
+
+** General Information
+
+*** References
+|                |                  |             | <30>                           |
+| Document Title | Date             | Link        | Comments                       |
+|----------------+------------------+-------------+--------------------------------|
+| G/L Accounting | <2016-08-30 Tue> | [[http://help.sap.com/saphelp_sfin100/helpdata/en/96/177752a9d07154e10000000a44176d/content.htm][online help]] | Know what's the use of ledger and how achieve  parallel accounting. |
+| BCS Version    | <2016-08-30 Tue> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/a5/f3783b88ee9933e10000000a114084/content.htm?frameset=/en/a3/6d723b784b1400e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=32&show_children=false][online help]] | BCS Version concept: Version, Version Combinations, and Special Versions. |
+| BPC Category   | <2016-08-30 Tue> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/4c/33574835c520d4e10000000a4218http://help.sap.com/saphelp_bopacnw101/helpdata/en/4c/33574835c520d4e10000000a42189b/content.htm?frameset=/en/4c/3378c335c520d4e10000000a42189b/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=1099b/content.htm?frameset=/en/4c/3378c335c520d4e10000000a42189b/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=109][online help]] | BPC Category dimension and its properites. |
+
+** Design 
+
+*** Context
+Consolidation Version is used to execute parallel consolidations according to different aspects under the same model. It's a similar concept to G/L Accounting's ledger which can achieve parallel accounting using different ledgers. The difference is that accounting ledgers are designed for OLTP transactions while consolidation versions are for OLAP applications. 
+
+In G/L accounting, you update amounts or insert journals in different ledgers(books) simultaneously. In other words, the real-time writing data into multiple ledgers parallel and then do reporting in the fixed context. In consolidation, you use different versions to share consolidation rules, master data, and transaction data under the same model. Howerver, you can still produce different financial statements from various aspects. In other words, the real-time reporting data from a share set of rules and data. 
+
+In Real-Time Consolidation context, as most transaction data comes from ACDOCA. So if you use multiple consolidation models to achieve different consolidation purposes, it is still acceptable in the sense that it won't produce lots of data redundancy. But you still need to redefine a lot of consolidation rules as they cannot be shared among models. Besides, you don't want upload additional financial data multiple times for each model as they would very possiblely be shared among models, which is also the same for the local reported data from flexible upload.
+
+Existing consolidation solutions all have similar concepts or counterparts. Here I give BPC and BCS(EC-CS is similar) design.   
+
+**** BPC Category Dimension
+BPC uses category dimension to achieve the same goals. During modeling, user can define a dimension his infoProvider as the category dimension. This dimension represents the versions or scenarios based on which data would be tracked. Required properites are defined on this dimension which controls how data be shared among different categories.
+
+#+Caption: Required Properties for Category Dimension
+|                    | <50>                                               |
+| Property Name      | Description                                        |
+|--------------------+----------------------------------------------------|
+| YEAR               | Used to assign a YEAR to the category, to be used with the EPMRetrieveData and EPMMemberOffset functions in reporting. For more information, see the SAP BusinessObjects EPM solutions, add-in for Microsoft Office help. |
+| CATEGORY_FOR_OPE   | Category of source data to use when performing carry forward (CopyOpening). |
+| FX_DIFFERENCE_ONLY | Specifies whether the translation result is calculated normally (blank or N) or if only the translation difference with the source category is computed ( Y). |
+| FX_SOURCE_CATEGORY | Category of source data to be used when running currency translation on a simulation category. |
+| OPENING_PERIOD     | Period number of source data to use when performing carry forward (CopyOpening). This can be absolute (for example, 12 for December) or relative (for example, -1 for prior period). |
+| OPENING_YEAR       | Year offset of source data to use when running carry forward (CopyOpening). This is relative (for example, -1 for prior period). |
+| OWN_CATEGORY       | Category of source ownership data to be used when running consolidation on a simulation category |
+| OWN_YEAR           | Period number of source ownership data to be used when running consolidation on a simulation category. This can be absolute (for example, 12 for December) or relative (for example, -1 for prior period). |
+| OWN_PERIOD         | Year offset of source ownership data to be used when running consolidation on a simulation category. This is relative (for example, -1 for prior year). |
+| RATE_CATEGORY      | Category of source exchange rate data to use when running currency translation on a simulation category |
+| RATE_PERIOD        | Period number of source exchange rate data to use when running currency translation on a simulation category. This can be absolute (for example, 12 for December) or relative (for example, -1 for prior period). |
+| RATE_YEAR          | Year offset of source exchange rate data to be used when running currency translation on a simulation category. This is relative (for example, -1 for prior year). |
+| STARTMNTH          | Starting month.                                    |
+
+**** BCS Version Combinations and Special Version
+Unlike BPC's one dimension approach, BCS can combine serveral dimensions into a version combination. User can either define one dimension as the consolidation version, or mulitple dimensions that are combined together as the consolidation version. 
+
+For example, there are following 2 dimensions and their values:
+- Data Category: Actual and Plan
+- Accounting Principles: U.S. GAAP and German HGB
+Then you use both accounting principles for planning, but you use only U.S. GAAP for creating consolidated statements with actual data. Therefore, you select the following three combinations:
+- Actual / U.S. GAAP
+- Plan / U.S. GAAP
+_ Plan / German HGB
+
+The benfits compare with BPC's approach is that you can not-only share data, but aslo share rules among different versions. You see properties on BPC's category dimension are all related to control how to share data from other categories. Somehow, BPC doesn't need to share consolidation rules, as rules (planning functions rather than user defined rules) are defined upon all dimensions and be shared by nature. And it's that nature limits BPC run consolidation on higher data granularity and lose tracing-back ability.     
+
+When using multiple dimensions (or fields), you can define rules to dynamiclly assign consolidation rules or data among these fields. BCS introduce the so-called "Special Version", which is a 3 characters long identifier. The Special Version acts as a medium between consolidation version and consolidation rules or data. Pre-defined special version types are given to which you can assign a dedicate special version to each type under a consolidation version.     
+
+Still take the 2 version fields =Data Category= and =Accounting Principles= as an example, and you have following permitted combinations:
+- Actual / U.S. GAAP
+- Plan / U.S. GAAP
+- Plan / IAS
+- Plan / German HGB
+
+You want to use the value 200 in all =Plan= versions as the special version =Data Collection= except for the combination "Plan / U.S. GAAP", which uses the value 210.
+1. Create a rule for special version =Data Collection= as follows: Plan / All Values -> 200
+2. Overwrite the calculated value of 200 with value 210 for the version combination Plan / U.S. GAAP for special version =Data Collection=.
+
+*** Key Requirements and Goals
+We will choose the =Version Cominbation= approach as Real-Time Consolidation operates on more detail granularity data and achieve document concept on consolidation journals. While at the same time, we still need to map to BPC's category dimension so that BPC can still consume the S4DATA through our interfaces.  
+
+Following design goals are compiled:
+1. User can define multiple versions under a model.
+2. Each version can be assigned with consolidation rules, master data, and transaction data.
+3. Different versions can share some consolidation rules, master data, and transaction data.
+4. Different versions can produce isolated consolidation statements. 
+
+*** Building Blocks
+Unlike BCS, we don't have to allow user freely define version fields, we can fix the version fieldsas following three: Data Category, Accounting Principle, and Variant.
+
+**** Data Category
+
+
