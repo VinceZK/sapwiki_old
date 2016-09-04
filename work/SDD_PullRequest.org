@@ -41,42 +41,254 @@ The pull request approach is built on the conclusion that local accountants have
 The pull request is somehow conflict with the on-the-fly consolidation in business duties. As on-the-fly means it always reads the latest data in the central system. Group accountants access the local data without local accountants' permission. _But that doesn't mean pull request can't co-exist with On-the-Fly_. 
 
 We use pull request approach to process the legal period end consolidation statements, which requires more on data precise, security, and clear duties. Each period, a consolidated result will be generated. The On-the-Fly consolidation statements always runs on the latest data basis which only extract current period data in ACDOCA, combines with the last periods' consolidated results in ACDOCC, will form a full consolidated picture at anytime.
+   
+** Overall Data Flow
+Here gives an bird's-eye view of the data flow.
+
+#+CAPTION: Data Flow of S/4 Consolidation 
+[[../image/DataFlowOverview.png]]  
+
+1. Data comes from the local finance systems through Central Finance's real-time data replication. Data streams could be validated at document level according to rules defined in the central system, and saved in the central journal table ACDOCA.
+2. As not all the subsidiaries are involved in the central finance's landscape, those who can only provide their financial data in spreadsheets can submit via "Flexible Upload". The data will first be saved in a staging area before be counted into consolidation tasks.
+3. Only if the local accountant raises a pull request can the group accountant pull the data from ACDOCA or Staging area into ACDOCC. You can regard a pull request as a SQL where-expression which can be applied on ACDOCA or ACDOCC(staging area) to boundary the data. As data in ACDOCA is time-vary, so a timestamp is used for filter-in data before it. Thus a snapshot is taken which forms a "Reported Data View".
+4. A pull request can be raised after the local accountants close their fiscal year/period. At that point, now new document will be posted in the period. For those who submit data through flexible uploading, the pull requests is creatd along with uploading activity. 
+5. Both loal and group accountants can run totals validation on the "Reported Data View". When run totals validation, it also requires the consolidated results of the former periods, and the adjustments that posted by group accountantsare also in ACDOCC.
+6. If the validation is passed, the actual consolidation tasks can be run. Till now, the data handover from the local accountants to the group accountants is finished. If the validation is not passed, adjustments should be done by the local accountant, who needs to re-open the period and post adjustment documents, or upload a new version through flexible uploading. He should then raise a pull request again so that the group accountant is notified and run validation on the adjustd data.
+7. There are mulitple BPC consolidation views created based on ACDOCA and ACDOCC. How many views and how they would be created depand on different use cases. But those views can be generally categorized into 3 categories: 1)Real-time data for priliminary consolidations, 2)Reported data fro legal consolidations, 3)Consolidated results and adjustments. Those views are unioned under a composite provider, and will be accessed as a whole by both BPC consolidation engine and reporting. You should carefully filter the data for different consolidation tasks and reports, as the data is overlapped among the views.
+8. It is possible for the local accountant to run currency translation in S/4(then it is not necessary to run currency translation in BPC again). In this way, BPC only needs to access data in ACDOCC. And BPC cannot run consolidation until the currency translation is done by local accountants and the translated results are posted into ACDOCC.
+
+
 
 * DB Design for Pull Request
-Pull requests are raised and saved in the central system. Each time, if local accountant want submit his reported financial data, he must raise a pull request. The group accountant will then be notified, and can use the information in the pull request to pull data from ACDOCA/C.
+Pull requests are raised and saved in the central system. Each time, if the local accountant wants to submit his reported financial data, he must raise a pull request. The group accountant will then be notified, and can use the information in the pull request to pull data from ACDOCA/C.
 
-We can use 2 tables to describe a pull request:
-1. Pull request head table which contains the head information like the timestamp when the period is closed.
-2. Pull request boundary item table which contains the filtering conditions to boundary the data in ACDOCA. 
+** Pull Request Table Design
+The pull request table is actually hold filter information that is used to filter in data which is relevant for the consolidation. The mandatory filter dimension is timestamp which is used to point out the lines in ACDOCA. Besides, you can also filter at other dimensions, usually the account dimension, so that you can submit data by packages. 
 
-#+CAPTION: Pull Request Head Table
-| Field    | Key | Description                                    |
-|----------+-----+------------------------------------------------|
-| MANDT    | X   | SAP Client                                     |
-| PRUUID   | X   | Pull Request UUID                              |
-| MODEL    |     | Consolidation Model                            |
-| DCATE    |     | BPC Data Category                              |
-| REQ_TYPE |     | Pull Request Type: MonthEnd or Adjustment      |
-| FYEAR    |     | Group Fiscal Year                              |
-| FPERI    |     | Group Fiscal Period                            |
-| PERIV    |     | Group Fiscal Variant                           |
-| GROUP    |     | Consolidation Group                            |
-| ENTITY   |     | Consolidation Entities: Company, Profit Center |
-| CLTIME   |     | Period Close Timestamp                         |
-| USTATUS  |     | User Status: Raise/Reject/Approve/Deffer       |
-| SSTATUS  |     | System Status: Ready/Running/Processed/Error   |
-| CREATOR  |     | Who creates the Pull Request                   |
-| CTIME    |     | Pull Request Generate Time                     |
+#+CAPTION: Pull Request Table
+| Field   | Key | Description                                               |
+|---------+-----+-----------------------------------------------------------|
+| MANDT   | X   | SAP Client                                                |
+| PRUUID  | X   | Pull Request UUID                                         |
+| MODEL   |     | Consolidation Model                                       |
+| BCATE   |     | BPC Data Category                                         |
+| CONSV   |     | Consolidation Version                                     |
+| PTYPE   |     | Pull Request Type: Collective/MonthEnd/Adjustment         |
+| FYEAR   |     | Fiscal Year                                               |
+| FPERI   |     | Fiscal Period                                             |
+| ENTITY  |     | Consolidation Entities: Company, Profit Center            |
+| CLTIME  |     | Period Close Timestamp                                    |
+| DCMETH  |     | Data Collection Method                                    |
+| DENTRY  |     | Data Entry ID                                             |
+| USTAT   |     | User Status: Initial/Rejected/Deferred/Submitted/Approved |
+| SSTAT   |     | System Status: Ready/Running/Processed/Error              |
+| CREATOR |     | Who creates the Pull Request                              |
+| CTIME   |     | Pull Request create time                                  |
+| UPDATOR |     | Who is the last user update it                            |
+| UTIME   |     | The last update time                                      |
 
-#+CAPTION: Pull Request Boundary Item Table
-| Field  | Key | Description                                                  |
-|--------+-----+--------------------------------------------------------------|
-| MANDT  | X   | SAP Client                                                   |
-| PRUUID | X   | Pull Request UUID                                            |
-| ITEMNO | X   | Boundary Item No.                                            |
-| FLFLD  |     | Filtering Field Name. Fields in ACDOCA, like RACCT, RACNT... |
-| VALFR  |     | Value from                                                   |
-| VALTO  |     | Value to                                                     |
+1. Pull request is client depandent(=MANDT=).
+2. There is a unique ID(=PRUUID=) for each pull request in UUID format.
+3. Pull request is also grouped by consolidation model(=MODEL=) and versions(=CONSV=). In case integrated with BPC, =BCATE= is used to store the BPC category.
+4. There are 3 types(=PTYPE=) of pull request: 1) "Collective" means the pull request contains sub-packages; 2) "MonthEnd" means a regular mandatory pull request for each period; 3) "Adjustment" is for adjustment on the MonthEnd data.
+5. Pull request is also grouped by fiscal year(=FYEAR=), period(=FPERI=), and entity(=ENTITY=).
+6. Each pull request must have a timestamp(=CLTIME=) assigned which stands for the period close time. And it is that timestamp which is used to filter in lines in ACDOCA who have timestamp value before it.
+7. A Data Collection Method must be assigned to a pull request so that it can maps the data package meta data defination. For pull requests with type "MonthEnd" and "Adjustment", a data entry ID is also needed, through which it can find a selection which contains additional filter information.
+8. User status(=USTAT=) are statuses from user perspective. It is used to control the data submit process and the data visibility. For details please refer ~Pull Request Status and Pseudo SQL~. 
+9. System status(=SSTAT=) are statuses from system perspective. For example, when a pull request is approved, the data is ready for consolidation tasks. But if system errors happen during tasks' run, then the system status is set to "Error". And when the tasks are in "Running" status, you cannot submit further requests.
+10. Audit information like who(=CREATOR= and =UPDATOR=) and when(=CTIME= and =UTIME=) create it or update it is also attached.
+
+** Data Collection Method and Pull Request 
+Data Collection Method is defined as the meta data to control how Pull Requests are generated. You can regard Pull Requests are instances of a Data Collection Method. For example, I define a Data Collection Method as following:
+
+#+CAPTION: Method Header
+| Model  | Method | Type | Desc.                       | EMode      | Validation Method |
+|--------+--------+------+-----------------------------+------------+-------------------|
+| RTCCTB | DC001  | DC   | Data collection from ACDOCA | Sequential | DV100             |
+
+#+CAPTION: Method Steps
+| Model  | Method | Step ID | Desc.            | Sequence | Selection | Validation Method |
+|--------+--------+---------+------------------+----------+-----------+-------------------|
+| RTCCTB | DC001  |     001 | AP/AR            |        1 | $AP_AR    | DV110             |
+| RTCCTB | DC001  |     002 | Assets           |        2 | $ASSET    | DV120             |
+| RTCCTB | DC001  |     003 | Equity&Liability |        3 | $EQU_LIAB | DV130             |
+| RTCCTB | DC001  |     004 | Profit&Loss      |        4 | $P_L      | DV140             |
+
+All data collection methods are in sequential execution mode, but actually the sequence is not strictly applied during runtime, it only affects the display order in the UI. The method "DC001" has 4 steps with each a selection is given to boundary the data to be submitted. From business perspective, each step is corresponding to a data entry that represents a sub-package. The 4 data entries together will cover the complete set of the local data. Each data entry can aslo be assigned with a Data Validation Method. The validation method is run only to validate the data entry, not the entire package. Only the validation method in the method level(=DV100=) is passed can consolidation tasks be run. 
+
+Now that we have the data collection method defination, we can deduce how local and group accountants play with it.
+
+*** The group accountant opens the current period for data collection
+The group accountant can start the data collection for a period, usually, close to the month end. The activity can either be manually or automatically by a recurrence backgroup job. Once opened, a pull request with type "Collective" is inserted for each entity. Meanwhile, for each required data entry, a MonthEnd pull request is also generated.
+
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status  | CLTIME | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+---------+--------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial |        | DC001  |        |
+| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial |        | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial |        | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial |        | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial |        | DC001  |    004 |
+
+*** The local accountant submits data by packages
+Once the period is opened, the local accountant can see the package in the data submit cockpit. He now first submits the AP/AR data. The AP/AR data is first validated by validation method "DV110", and then submitted by changing the status  of pull request =0000002= to "Submitted" and record the timestamp to =CLTIME=. 
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial   |                     | DC001  |        |
+| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial   |                     | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial   |                     | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial   |                     | DC001  |    004 |
+
+*** The group accountant check the validation result
+Till now, only AP/AR data is submit, consolidation tasks cannot be run. But the group accountant can check the validation result along with the sub-package. To be in mind, BPC cannot see any data of this period for the entity. The validation is actually run in S4HANA side by invoking the validation method "DV110". Although it is the same method and produce the same result as the local accountant, but the group accountant can check the comments and attachments, and to decide whether the amount is accepted or not along with those non-amount explanations. 
+
+~The results produced by a validation method can be overwriten with comments or attachments. For example, if rule1 is not passed, then the local accountant can write some comments and it will turn rule1 from red light to green light, so that he can still submit the data.~
+
+If she decides to accept the data, then the pull request status will be changed to "Approved", otherwise "Rejected". To be in mind, MonthEnd pull request cannot be deferred. Once a data entry is approved, it is locked to forbid submit request on it again.
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status   | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial  |                     | DC001  |        |
+| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    004 |
+
+**** What happens if a MonthEnd pull request is rejected?
+Once a MonthEnd pull request is rejected, it cannot be changed status again, and left as is. A new MonthEnd pull request is created with status "Initial".
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status   | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial  |                     | DC001  |        |
+| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    001 |
+
+But if it is not a required MonthEnd request, then there is no new pull request is created. 
+
+*** The local accountant submits all the data packages
+With serveral roundtrips, finally, all the data is submitted and approved.
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial   |                     | DC001  |        |
+| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/26 11:30:40 | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 11:40:32 | DC001  |    004 |
+| 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 15:36:00 | DC001  |    002 |
+| 0000007 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/27 09:50:11 | DC001  |    003 |
+
+Now that all the data entries are approved, the collective pull request can either be submitted by local accountant and ask for approval, or directly approved by the group accountant. In either case, the validation method "DV100" will run. As this method is run on the complete set of the data, and may produce additional errors. 
+
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Submitted | 2016/01/28 14:00:05 | DC001  |        |
+
+Once the collective pull request is in "Submitted" status, the data can be seen by the group accountant in BPC. She can run BPC controls in addition with validation method "DV100".
+
+*** The group accountant decides whether to approve/reject the collective pull request
+Now data is transparent to BPC, the group accountant runs validation method "DV100", and then post some standardized journals, and run BPC controls. Based on the results, she decides:
+
+*Option1: Approve it*. She thinks the local data is OK for consolidation, so the collective pull request is changed to "Approved", then consolidation tasks can run on it. 
+ | PullReq | Model  | BCATE | Type |  Period | Entity | Status   | CLTIME              | DCMETH | DENTRY |
+ |---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
+ | 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Approved | 2016/01/28 14:00:05 | DC001  |        |
+
+*Option2: Reject it*. She thinks the local data is not ready for consolidation, so the collective pull request is changed to "Rejected". She then decides which data entries should be re-opened to allow local accountant submit adjustment requests. In this case, data entry =001= is re-opened. The the local accountant submits a adjustment pull request.  
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Rejected  | 2016/01/28 14:00:05 | DC001  |        |
+| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/26 11:30:40 | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 11:40:32 | DC001  |    004 |
+| 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 15:36:00 | DC001  |    002 |
+| 0000007 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/27 09:50:11 | DC001  |    003 |
+| 0000008 | RTCCTB | FINAL | A    | 2016.01 | C100   | Submitted | 2016/01/28 15:43:07 | DC001  |    001 |
+ 
+Now the validation method "DV110" runs on the data that the new timestamp points to. After approved by the group accountant again, a new collective pull request is automatically inserted and submitted. Then the loop forms,it is back to the stage of former step. And she must also re-run all the consolidation tasks.
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Rejected  | 2016/01/28 14:00:05 | DC001  |        |
+| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/26 11:30:40 | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 11:40:32 | DC001  |    004 |
+| 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 15:36:00 | DC001  |    002 |
+| 0000007 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/27 09:50:11 | DC001  |    003 |
+| 0000008 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/28 15:43:07 | DC001  |    001 |
+| 0000009 | RTCCTB | FINAL | C    | 2016.01 | C100   | Submitted | 2016/01/28 16:08:34 | DC001  |        |
+
+*** The local accountant wants to submit a new adjustment request
+Although data entry can be locked to forbid further data submits, but it cannot stop data entering into ACDOCA. Howerver, the Data Submit Cockpit can censor if there are new lines entering into ACDOCA after the package is approved. If yes, then the local accountant has to ask for a re-open of the data entry. To the group accountant, she has to decide whether these new changes should be counted in this consolidation run, or defer to the next period. 
+
+If she chooses to approve the adjustment to this period, then everything is same as the case of rejecting collective request. Or she choose to defer this adjustment to next period, then the table looks like:
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Rejected  | 2016/01/28 14:00:05 | DC001  |        |
+| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/26 11:30:40 | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 11:40:32 | DC001  |    004 |
+| 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 15:36:00 | DC001  |    002 |
+| 0000007 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/27 09:50:11 | DC001  |    003 |
+| 0000008 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/28 15:43:07 | DC001  |    001 |
+| 0000009 | RTCCTB | FINAL | C    | 2016.01 | C100   | Approved  | 2016/01/28 16:08:34 | DC001  |        |
+| 0000010 | RTCCTB | FINAL | A    | 2016.01 | C100   | Deferred  | 2016/01/29 10:23:12 | DC001  |    004 |
+
+The new request is changed to "Deferred" status, everything keeps same in the pull request table. But behind, the changed amount is copied to ACDOCC, and the period is changed to the next. 
+  
+** Pull Request Status and Pseudo SQL
+The status of pull requests not only controls the data submit process, but also controls the data visibility by BPC. BPC can only see the data pointed by pull requests which have status "Submitted" or "Approved". In other words, status code must larger equal than "30". So for those pull requests with status "Initial" or "Rejected" or "Deferred", BPC won't see the data they point to. 
+| User Status | Code |
+|-------------+------|
+| Initial     |   00 |
+| Rejected    |   10 |
+| Deferred    |   20 |
+| Submitted   |   30 |
+| Approved    |   40 |
+
+#+CAPTION: Pseudo SQL that controls visibility
+#+BEGIN_SRC sql
+-- BPC Result View
+  create view V_PULL_REQ_C as 
+       select MODEL, BCATE, FYEAR, FPERI, ENTITY, max(CLTIME)
+         from RTC_PULL_REQ
+        where USTATUS >= 30
+          and PTYPE = 'C'
+     group by MODEL, BCATE, FYEAR, FPERI, ENTITY;
+
+  create view C_RTC_FINAL_VIEWA as
+       select * from C_FOUNDATION_VIEW as A
+         join I_PULL_REQ_C as B
+           on A.RYEAR = B.FYEAR
+          and A.POPER = B.FPERI
+          and A.RCOMP = B.ENTITY
+          and A.TIMESTAMP <= B.CLOSE_TIME
+        where B.MODEL = 'RTCCTB'
+          and B.BPC_CATG = 'FINAL'
+          and B.PTYPE = 'C';
+
+-- Local Validation View for each Validation Method
+  create view V_PULL_REQ_MA as 
+       select MODEL, BCATE, FYEAR, FPERI, ENTITY, max(CLTIME)
+         from RTC_PULL_REQ
+        where USTATUS >= 30
+          and (PTYPE = 'M' or PTYPE = 'A')
+     group by MODEL, BCATE, FYEAR, FPERI, ENTITY;
+
+       select * from /RTCART/RTCCTB01 as A
+         join I_PULL_REQ_AR as B
+           on A.RYEAR = B.FYEAR
+          and A.POPER = B.FPERI
+          and A.RCOMP = B.ENTITY
+          and A.TIMESTAMP <= B.CLTIME
+        where B.MODEL = 'RTCCTB'
+          and B.BCATE = 'FINAL'
+          and B.FYEAR = '2016'
+          and B.FPERI = '01'
+          and B.ENTITY = 'C100'
+          and (<selection_where_string>);                      
+#+END_SRC
 
 There is also a business lock table for the group accountant lock certain periods to forbid local accountants raise pull requests in the periods. The lock table should look like this:
 #+CAPTION: Pull Request Lock Table
@@ -94,7 +306,9 @@ There is also a business lock table for the group accountant lock certain period
 
 If the corresponding item is not exist in the table, it means the entity in that period is not locked. The lock data is generated the first time a lock is added for an entity and its certain period.
 
-* Raise Pull Requests 
+
+* TODO Data Submit Request Cockpit
+** Raise Pull Requests 
 The local accountant can raise pull requests when he feels the data is ready. Before submitting the data, he can run a local validation. Then the request is raised to the group accountant. The following screen mock-up explains detail on it. 
 
 #+CAPTION: Pull Request Raise Screen 
@@ -112,21 +326,21 @@ The local accountant can raise pull requests when he feels the data is ready. Be
 10. If validation is passed, he can raise the pull request. Click the "Raise" button will generate a pull request *only for the current period*. ~The former periods which have the changes should be fixed using other means. In 1610 release we won't deal with the amount.~ If the period of the entity is locked, then he cannot raise the pull request, and an error message will be given. 
 11. After successfully sent the pull request, the data table will be refreshed empty if no new data change is happening. 
 
-** Raise Pull Requests in Flexible Uploading     :Summer:
+*** Raise Pull Requests in Flexible Uploading                      :Summer:
 If the local accountant submits the data through flexible uploading, then the reported data is in ACDOCC. He can still use the same application to raise a pull request. The difference is that data in ACDOCC won't use timestamp for filtering. 
 
 In the flexible uploading APP, the local accountant can upload the data and raise a pull request directly. The uploaded data will generate a doucment. And once he click "Raise" button, a pull request is created and its UUID is set in every row of the document. Then the pull request UUID is used to pull the correct data from ACDOCC. The pull request for ACDOCC has a specific type "C".
 
 The local accountant can, however, still use "Raise Pull Request" APP to do the same thing. The benefit that using this APP is he can see changes between this copy and the last copy. 
 
-** Raise Pull Requests in Currency Translation   :Marvin:
+*** Raise Pull Requests in Currency Translation                    :Marvin:
 The local accountant can submit the translated data to the group accountant. He can run currency transalation in the central system and do validations on the transalted results. If data comes from ACDOCA, the CT post_run will read it and translated it into ACDOCC. The document numbers generated will be recorded in the CT audit table. The local accountant can then raise a pull request directly in the CT APP. The pull reqeust ID is then set to all the documents' lines related. 
 
 If the data need to be translated is from flexible uploading, then the local accountant can still use the same CT APP to do the same stuff: translating and submiting. To the end-user, it is transparent. No matter the data is from ACDOCA or ACDOCC. He can navigate to the CT APP directly from the Flexible Upload APP. 
 
 Whether local accountants should submit translated result or not is determined by the settings in the model. If the model is set that currency translation should be done in S/4HANA, then local accountants should only submit the translated results, and vice-versa. It is not possible for a model that supports some entities submit translated results, others submit non-translated. And also keep in mind, once currency translation is run in S/4HANA, BPC only needs to access data in ACDOCC. So, from the group accountants' perspective, she can never access the real-time data in ACDOCA.     
 
-* Process Pull Requests
+** Process Pull Requests
 In the 1610 release, the pull request produces 2 effects:
 1. Notify BPC for the new coming data;
 2. Filter data before the timestap by join with the underlying HANA views. 
@@ -134,7 +348,7 @@ In the 1610 release, the pull request produces 2 effects:
 Once the pull request is raised, the filtering information will be copied into a BPC table. The BPC Consolidation Monitor can use this information to control the task status for each entity. For example, if a new pull request comes in, the status will be set to "To Be Reviewed". If group accountant clicks a task in "To be Reviewed" status, a dialog pupup will show which contains a link to an ABAP report that shows changed data. And the "Execute" button to re-run the task. 
 How pull request is used to filter out the data please refer to the SDD: [[https://wiki.wdf.sap.corp/wiki/x/Ds83bQ][BPC HANA Views Modeling]].
 
-** This part will be frozen in 1610
+*** This part will be frozen in 1610
 Once the group accountant gets the pull request notification in BPC's consolidation monitor, she clicks it and a dialog window will pop-up and show a pull request list. She can then decide how to process the pull requests.  
 
 ~The dialog window is realized using an ABAP ALV report. The best way is to use BPC's UI5 framework.~
@@ -172,23 +386,11 @@ The detail view contains the pull requests that belong to an entity, or "Group/E
 2. If validation errors happen, then the pull request can only be rejected. Approval and Deferral can just not be executed.
 3. Once the group accountant choose "Approve", the user status will be changed to "Approve" immediately, a notification will be sent to the local accountant, and the system status will be set to "Ready", which means it is ready to run consolidation tasks.
 4. If the "Defer" button is clicked, user status will be set to "Defer", the system status will be left with empty. This pull request will then be counted in next occurrence run.
-   
-* Overall Data Flow
-Here gives an bird's-eye view of the data flow.
 
-#+CAPTION: Data Flow of S/4 Consolidation 
-[[../image/DataFlowOverview.png]]  
 
-1. Data comes from the local finance systems through Central Finance's real-time data replication. Data streams could be validated at document level according to rules defined in the central system, and saved in the central journal table ACDOCA.
-2. As not all the subsidiaries are involved in the central finance's landscape, those who can only provide their financial data in spreadsheets can submit via "Flexible Upload". The data will first be saved in a staging area before be counted into consolidation tasks.
-3. Only if the local accountant raises a pull request can the group accountant pull the data from ACDOCA or Staging area into ACDOCC. You can regard a pull request as a SQL where-expression which can be applied on ACDOCA or ACDOCC(staging area) to boundary the data. As data in ACDOCA is time-vary, so a timestamp is used for filter-in data before it. Thus a snapshot is taken which forms a "Reported Data View".
-4. A pull request can be raised after the local accountants close their fiscal year/period. At that point, now new document will be posted in the period. For those who submit data through flexible uploading, the pull requests is creatd along with uploading activity. 
-5. Both loal and group accountants can run totals validation on the "Reported Data View". When run totals validation, it also requires the consolidated results of the former periods, and the adjustments that posted by group accountantsare also in ACDOCC.
-6. If the validation is passed, the actual consolidation tasks can be run. Till now, the data handover from the local accountants to the group accountants is finished. If the validation is not passed, adjustments should be done by the local accountant, who needs to re-open the period and post adjustment documents, or upload a new version through flexible uploading. He should then raise a pull request again so that the group accountant is notified and run validation on the adjustd data.
-7. There are mulitple BPC consolidation views created based on ACDOCA and ACDOCC. How many views and how they would be created depand on different use cases. But those views can be generally categorized into 3 categories: 1)Real-time data for priliminary consolidations, 2)Reported data fro legal consolidations, 3)Consolidated results and adjustments. Those views are unioned under a composite provider, and will be accessed as a whole by both BPC consolidation engine and reporting. You should carefully filter the data for different consolidation tasks and reports, as the data is overlapped among the views.
-8. It is possible for the local accountant to run currency translation in S/4(then it is not necessary to run currency translation in BPC again). In this way, BPC only needs to access data in ACDOCC. And BPC cannot run consolidation until the currency translation is done by local accountants and the translated results are posted into ACDOCC.
+* Deduction
 
-** First Release
+** 1610 Without Defer
 In RTC's first release(1610), pull request will be used as both a notification and timestamp filtering. The status control in the pull request will not be fully appeared. BPC can access the data directly in ACDOCA with timestamp filtering. The timestamp in the pull request which is submitted by the local acccountant reflects the local close time. Before the time, the data is allowed(by local accountants) for consolidation, and after the time, the data should not be counted for consolidation. 
 
 This approach has following restrictions:
@@ -200,7 +402,7 @@ This approach has following restrictions:
 
 I give following examples to explain detail data flow:
 
-*** Example1: Local accountant submits data through flexible uploading 
+*** Scenario1: Local accountant submits data through flexible uploading 
 *Step 1: Upload data but not submitted*: Data is saved in ACDOCC, a document number is given. The document status in in "Staging". When the user submit the data, he must choose the value of BPC category. The currency key of "CONS_SL" is set to "LC" for easy consumption for BPC. The actual currency key will be saved in HCURK. Currently, there is no pull request created, so BPC won't see the data.
 
 =ACDOCC=  
@@ -233,7 +435,7 @@ I give following examples to explain detail data flow:
 | 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
 | 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
 
-*** Example2: Local accountant submits data in ACDOCA  
+*** Scenario2: Local accountant submits data in ACDOCA  
 If local data is in ACDOCA, then data copy to ACDOCC is unnecessary. Only raise a pull request with current timestamp is OK. The pull request is then used to join with the foundation view to get the filterred data before the recored timestamp. 
 
 =RTC_PULL_REQ=
@@ -241,7 +443,7 @@ If local data is in ACDOCA, then data copy to ACDOCC is unnecessary. Only raise 
 |---------+------+--------+---------+----------+----------------+----------|
 | 0000001 | A    | C100   | 2016.01 | Actual   | 20160302100020 | APPROVED |
 
-*** Example3: Local accountants run currency translation in S/4, data comes from ACDOCA 
+*** Scenario3: Local accountants run currency translation in S/4, data comes from ACDOCA 
 Local accountants can run currency translation in S/4 and then do data validations. The translated results will be saved in ACDOCC. BPC cannot see the translated results until he raises a pull request. In this case, BPC only gets data from ACDOCC rather than ACDOCA.
 
 *Step 1: Local close*: Data in ACDOCA:  
@@ -287,7 +489,7 @@ Local accountants can run currency translation in S/4 and then do data validatio
 | 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
 | 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
 
-*** Example4: Local accountants run currency translation in S/4, data comes from flexible upload 
+*** Scenario4: Local accountants run currency translation in S/4, data comes from flexible upload 
 
 *Step 1: Upload local data*: Data must be in posted status, or currency translation can not run on it.
 =ACDOCC=  
@@ -334,179 +536,265 @@ Local accountants can run currency translation in S/4 and then do data validatio
 | 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
 
 
-** Future Release
-*** Example1: Local accountant submits local amount, group accountant do currency translation 
+** 1709 With Defer
 =Notes:=
-1. "LC" only reflects BPC point of view, it doesn't mean in ACDOCA the currency field stores "LC". In ACDOCC, is it allowed to store "LC"?
-2. Exchange rate between local currency and group currency USD is 1:1.
-3. Account number is omitted for simplicity.
-4. Irrelevant columns are hided for different steps. 
+1. The data collection method has no sub-packages, the pull request type is "Collective".
+2. We assume local validation is supported in 1709. 
+3. Exchange rate between local currency and group currency USD is 1:1.
+4. Account number is omitted for simplicity.
+5. Irrelevant columns are hided for different steps. 
+6. "LC" only reflects BPC point of view.
 
+The corresponding pseudo sql can be found in 
+
+*** Scenario1: Local data comes from ACDOCA
 *Step 1: Local close*: Data in ACDOCA:  
-| Entity |    Time | Currency | Amount |
-|--------+---------+----------+--------|
-| C100   | 2016.01 | LC       |    100 |
+| Entity |  Period | Amount | Currency | Timestamp           |
+|--------+---------+--------+----------+---------------------|
+| C100   | 2016.01 |    100 | LC       | 2016/01/29 10:30:00 |
 
-*Step 2: Raise a month-end pull request*: Data is aggregated and posted to ACDOCC under a special category "VALIDATION". The category is only used in BPC for running control for the reported data. 
-| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
-|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
-| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
+*Step 2: Raise a month-end pull request*: Before raising is actually happening, data validation automatically runs directly on ACDOCA. Only after passing the validation, a pull request is inserted. 
+| PullReq | Status    | Entity |  Period | Timestamp           |
+|---------+-----------+--------+---------+---------------------|
+| 0000001 | Submitted | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
-*Step 3: Validate and approve the month-end pull request*: Document is copied to the "Actual" Category, audit trail is changed to "Input".
-| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
-|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
-| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
-| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |
+*Step 3: Approve month-end pull request*: Once a pull request is submitted, the group accountant can see the corresponding data in BPC. She can run validation again to confirm the data is OK. The rule could be same as the local accountant's before submit, or she can run additional validation rules. If the result is OK, then the status of the pull request is changed to "Approved".
 
-*Step 4: Consolidation tasks are run in BPC*: Consolidation results are posted to ACDOCC.
-| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
-|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
-| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
-| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |
-| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | CT     |    100 | 0000001 |
-| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 |
-| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 |
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Approved | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
-*Step 5: Post new adjustment documents in ACDOCA*: The period is re-open after consolidation run. 
-| Entity |    Time | Currency | Amount |
-|--------+---------+----------+--------|
-| C100   | 2016.01 | LC       |    100 |
-| C100   | 2016.01 | LC       |      5 |
+If the validation is not passed, then the status of pull request is change to "Rejected". Which requires the local accountant post adjustment documents in ACDOCA, and resubmit the MonthEnd pull request again. 
 
-*Step 6: Raise an adjustment pull request*: The delta data is posted to ACDOCC under "VALIDATION" category. 
-| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
-|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
-| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
-| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |
-| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | Input  |    100 | 0000001 |
-| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 |
-| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 |
-| 10006 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |      5 | 0000002 |
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Rejected | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
-*Step 7.1: Data is re-validated and approved*: Delete all the consolidation results under the former pull request, post a new document under "Actual" category. Now data is ready for a consolidation re-run, you just iterate back to *step 3*.
-| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq | Del |
-|-------+--------+---------+----------+--------------+--------+--------+--------+---------+-----|
-| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |     |
-| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |     |
-| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | Input  |    100 | 0000001 | X   |
-| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 | X   |
-| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 | X   |
-| 10006 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |      5 | 0000002 |     |
-| 10007 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |      5 | 0000002 |     |
+*Step 4: Run consolidation tasks in BPC*: Consolidation results are posted to ACDOCC.
 
-*Step 7.2: Data is re-validated and deferred*: Post a new document with the delta amount to the next period. 
-| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq |
-|-------+--------+---------+----------+--------------+--------+--------+--------+---------|
-| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |
-| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |
-| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | Input  |    100 | 0000001 |
-| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 |
-| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 |
-| 10006 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |      5 | 0000002 |
-| 10007 | C100   | 2016.02 | LC       | Actual       | G_NONE | Input  |      5 | 0000002 |
+| DOCNR | Entity |    Time | BPC Category | Amount | Currency |
+|-------+--------+---------+--------------+--------+----------|
+| 10001 | C100   | 2016.01 | FINAL        |    100 | USD      |
 
-*Step 7.3: Data is re-validated and rejected*: Delete the document generated by the pull request
-| DOCNR | Entity |    Time | Currency | BPC Category | Group  | Audit  | Amount | PullReq | Del |
-|-------+--------+---------+----------+--------------+--------+--------+--------+---------+-----|
-| 10001 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |    100 | 0000001 |     |
-| 10002 | C100   | 2016.01 | LC       | Actual       | G_NONE | Input  |    100 | 0000001 |     |
-| 10003 | C100   | 2016.01 | USD      | Actual       | G_NONE | Input  |    100 | 0000001 |     |
-| 10004 | C100   | 2016.01 | USD      | Actual       | G_1    | CT     |    100 | 0000001 |     |
-| 10005 | C100   | 2016.01 | USD      | Actual       | G_1    | Elim   |    -20 | 0000001 |     |
-| 10006 | C100   | 2016.01 | LC       | VALIDATION   | G_NONE | SUBMIT |      5 | 0000002 | X   |
+*Step 5: Post a new adjustment document in ACDOCA*: The period is re-open after consolidation run. 
+| Entity |    Time | Amount | Currency | Timestamp           |
+|--------+---------+--------+----------+---------------------|
+| C100   | 2016.01 |    100 | LC       | 2016/01/29 10:30:00 |
+| C100   | 2016.01 |      5 | LC       | 2016/01/30 11:20:00 |
+
+*Step 6: Raise an adjustment pull request*: Data validation happens on the total data of period 2016.01, rather than the delta data. If passing the validation, a new pull request is inserted.
+
+| PullReq | Status    | Entity |  Period | Timestamp           |
+|---------+-----------+--------+---------+---------------------|
+| 0000001 | Approved  | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | Submitted | C100   | 2016.01 | 2016/01/30 11:20:00 |
+
+*Step 7: Check the new submitted data:* Here, the group accountant can decide whether this delta amount need to be counted into this period, or defer to next period, or just reject it and ask the local accountant submit again. 
+
+If data is validated and approved, she can run consolidation tasks again. BPC re-runs all the consolidation tasks based on the complete data set, rather than only the new submited delta part. But it posts only delta result to ACDOCC. 
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | Approved | C100   | 2016.01 | 2016/01/30 11:20:00 |
+
+| DOCNR | Entity |  Period | BPC Category | Amount | Currency |
+|-------+--------+---------+--------------+--------+----------|
+| 10001 | C100   | 2016.01 | FINAL        |    100 | USD      |
+| 10002 | C100   | 2016.01 | FINAL        |      5 | USD      |
+
+If data is validated and deferred, the pull request's status is changed to "Deferred". Meanwhile, a new document is posted into ACDOCC which rullup the delta amount and has its period value changes to next period and the currency is still in local. Then, in the next period, the amount will be counted into consolidation. 
+
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | Deferred | C100   | 2016.01 | 2016/01/30 11:20:00 |
+
+| DOCNR | Entity |  Period | BPC Category | Amount | Currency | PullReq |
+|-------+--------+---------+--------------+--------+----------+---------|
+| 10001 | C100   | 2016.01 | FINAL        |    100 | USD      |         |
+| 10002 | C100   | 2016.02 | FINAL        |      5 | LC       | 0000002 |
+
+If data is validated and rejected, the pull request's status is change to "Rejected". Once rejected, BPC won't see the changed data again, it only can see the data which the latest "Submitted" or "Approved" pull request points. 
+
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | Rejected | C100   | 2016.01 | 2016/01/30 11:20:00 |
 
 *The pull request id provides following usages:*
 1. Flags a valid set of consolidation result lines that belongs to the last approved pull request.
 2. Finds the right timestamp when drilling through to the corresponding source journal items in ACDOCA.
 
-*** Example2: Local accountant does the currency translation and submit to the group accountant.
+*** Scenario2: Local data comes from ACDOCC
+*Step 1: Flexible Upload*: Data is posted into ACDOCC using a special document type which allows to change the amounts after posting.  
+| DOCNR | DTYPE | Entity |  Period | Amount | Currency |
+|-------+-------+--------+---------+--------+----------|
+| 10001 | FU    | C100   | 2016.01 |    100 | LC       | 
 
-*Step 1: Local close*: Data in ACDOCA:  
-| Entity |    Time | Currency | Amount |
-|--------+---------+----------+--------|
-| C100   | 2016.01 | LC       |    100 |
+*Step 2: Submit Data*: Local accountant submits a pull request, the uploaded data is copied to a new document.
 
-*Step 2: Raise a month-end pull request*: Data is translated and posted to ACDOCC under category "VALIDATION". Before translation, a roll-up must be done to post aggregated local amount to ACDOCC. As the S/4 currency translation supports multiple currency/amount pairs. We can just store the local currency amount and the translated currency amount in one line. By doing so, it will  benefit in reporting when one tries to put local amount and translated amount side by side.  
-| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
-|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------|
-| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |
-| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |
+| PullReq | PTYPE | Status    | Entity |  Period | Timestamp           |
+|---------+-------+-----------+--------+---------+---------------------|
+| 0000001 | M     | Submitted | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
-*Step 3: Validate and approve the month-end pull request*: The documents under "VALIDATION" category will be copied correspondingly to the "Actual" category(20001->20003, 20002->20004). Audit trail are both changed to "Input".
-| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
-|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------|
-| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |
-| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |
-| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |
-| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |
+| DOCNR | DTYPE | Entity |  Period | Amount | Currency | Timestamp           |
+|-------+-------+--------+---------+--------+----------+---------------------|
+| 10001 | FU    | C100   | 2016.01 |    100 | LC       |                     |
+| 20001 | SC    | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
 
-*Step 4: Consolidation tasks are run in BPC*: Consolidation results are posted to ACDOCC.
-| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
-|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------|
-| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |
-| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |
-| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |
-| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |
-| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 |
-| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 |
+*Step 3: Validate and check the submitted data*: The group accountant can now see the data. She decides to approve or reject it. 
 
-*Step 5: Post new adjustment documents in ACDOCA*: The period is re-open after consolidation run. 
-| Entity |    Time | Currency | Amount |
-|--------+---------+----------+--------|
-| C100   | 2016.01 | LC       |    100 |
-| C100   | 2016.01 | LC       |      5 |
+If the data is approved. The pull request's status will be set to "Approved", otherwise, "Rejected". Because it is a MonthEnd request, she cannot defer it. Now suppose the data is rejected.
 
-*Step 6: Raise an adjustment pull request*: The delta data is posted to ACDOCC under "VALIDATION" category. 
-| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq |
-|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------|
-| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |
-| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |
-| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |
-| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |
-| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 |
-| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 |
-| 20007 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |          5 | 0000011 |
-| 20008 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |       5 |          5 | 0000012 |
+| PullReq | PTYPE | Status   | Entity |  Period | Timestamp           |
+|---------+-------+----------+--------+---------+---------------------|
+| 0000001 | M     | Rejected | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
-*Step 7.1: Data is re-validated and approved*: Delete all the consolidation results under the former pull request, post 2 new documents(one for local currency, the other is for group currency) under "Actual" category. Now data is ready for a consolidation re-run, you just iterate back to *step 3*.
-| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq | Del |
-|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------+-----|
-| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |     |
-| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |     |
-| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
-| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 | X   |
-| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 | X   |
-| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 | X   |
-| 20007 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |          5 | 0000012 |     |
-| 20008 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |       5 |          5 | 0000012 |     |
-| 20009 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |          5 | 0000012 |     |
-| 20010 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |          5 | 0000012 |     |
+*Step 4: Change amount and re-submit*: The local accountant is notified the data is not approved. He changes the amount from 100 to 105, and re-submits a MonthEnd pull request. Only the delta amount 5 is posted to ACDOCC as a new document. 
+| DOCNR | DTYPE | Entity |  Period | Amount | Currency | Timestamp           |
+|-------+-------+--------+---------+--------+----------+---------------------|
+| 10001 | FU    | C100   | 2016.01 |    105 | LC       |                     |
+| 20001 | SC    | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
+| 20002 | SC    | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
 
-*Step 7.2: Data is re-validated and deferred*: Post 2 new documents with the delta amount to the next period. 
-| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq | Del |
-|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------+-----|
-| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |     |
-| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |     |
-| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
-| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
-| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 |     |
-| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 |     |
-| 20007 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |          5 | 0000012 |     |
-| 20008 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |       5 |          5 | 0000012 |     |
-| 20009 | C100   | 2016.02 |       | LC       | Actual       | G_NONE | Input  |         |          5 | 0000012 |     |
-| 20010 | C100   | 2016.02 |       | USD      | Actual       | G_NONE | Input  |         |          5 | 0000012 |     |
+| PullReq | PTYPE | Status    | Entity |  Period | Timestamp           |
+|---------+-------+-----------+--------+---------+---------------------|
+| 0000001 | M     | Rejected  | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| 0000002 | M     | Submitted | C100   | 2016.01 | 2016/01/30 14:00:00 |
 
-*Step 7.3: Data is re-validated and rejected*: Delete the documents generated by the pull request
-| DOCNR | Entity |    Time | LCurr | ConsCurr | BPC Category | Group  | Audit  | LAmount | ConsAmount | PullReq | Del |
-|-------+--------+---------+-------+----------+--------------+--------+--------+---------+------------+---------+-----|
-| 20001 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |        100 | 0000011 |     |
-| 20002 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |     100 |        100 | 0000011 |     |
-| 20003 | C100   | 2016.01 |       | LC       | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
-| 20004 | C100   | 2016.01 |       | USD      | Actual       | G_NONE | Input  |         |        100 | 0000011 |     |
-| 20005 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Input  |         |        100 | 0000011 |     |
-| 20006 | C100   | 2016.01 |       | USD      | Actual       | G_1    | Elim   |         |        -20 | 0000011 |     |
-| 20007 | C100   | 2016.01 |       | LC       | VALIDATION   | G_NONE | SUBMIT |         |          5 | 0000012 | X   |
-| 20008 | C100   | 2016.01 | LC    | USD      | VALIDATION   | G_NONE | SUBMIT |       5 |          5 | 0000012 | X   |
+*Step 5: Submit an adjustment request and defer*: Now the MonthEnd request is approved, the local accountant wants to submit an adjustment. The group accountant decides to defer this adjustment to next period. 
+| PullReq | PTYPE | Status   | Entity |  Period | Timestamp           |
+|---------+-------+----------+--------+---------+---------------------|
+| 0000001 | M     | Rejected | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| 0000002 | M     | Approved | C100   | 2016.01 | 2016/01/30 14:00:00 |
+| 0000003 | A     | Deferred | C100   | 2016.01 | 2016/01/31 09:49:13 |
+
+| DOCNR | DTYPE | Entity |  Period | Amount | Currency | Timestamp           |
+|-------+-------+--------+---------+--------+----------+---------------------|
+| 10001 | FU    | C100   | 2016.01 |    115 | LC       |                     |
+| 20001 | SC    | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
+| 20002 | SC    | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
+| 20003 | SC    | C100   | 2016.02 |     10 | LC       | 2016/01/31 09:49:13 |
+
+*** Scenario3: CT in S4, data comes from ACDOCA
+*It is under the assumption that delta translation is supported.* 
+
+*Step 1: Local close*: Data is translated and submitted. 
+#+CAPTION: Data in ACDOCA 
+| Entity |  Period | Amount | Currency | Timestamp           |
+|--------+---------+--------+----------+---------------------|
+| C100   | 2016.01 |    100 | LC       | 2016/01/28 20:10:32 |
+
+#+CAPTION: Data in ACDOCC 
+| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID |
+|--------+---------+-----------+--------+-----------+--------+---------------------+---------|
+| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
+
+#+CAPTION: Pull Request
+| PullReq | Status    | Entity |  Period | Timestamp           |
+|---------+-----------+--------+---------+---------------------|
+| 0000001 | Submitted | C100   | 2016.01 | 2016/01/29 10:30:00 |
+
+*Step 2: Approve MonthEnd pull request*: The group accountant decides to approve or reject the request. If it is approved, only need to change the status of the pull request. 
+#+CAPTION: Pull Request
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
+
+If "Rejected". Besides setting the status, the translated results will be deleted.
+#+CAPTION: Pull Request
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+
+#+CAPTION: Data in ACDOCC 
+| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
+|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
+| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
+
+*Step 3: Post adjustments and re-submit*: In case the MonthEnd request is rejected, the local accountant has to post adjustment documents in ACDOCA, and re-submit a MonthEnd request. 
+#+CAPTION: Data in ACDOCA 
+| Entity |  Period | Amount | Currency | Timestamp           |
+|--------+---------+--------+----------+---------------------|
+| C100   | 2016.01 |    100 | LC       | 2016/01/28 20:10:32 |
+| C100   | 2016.01 |      5 | LC       | 2016/01/29 11:10:12 |
+
+#+CAPTION: Data in ACDOCC 
+| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
+|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
+| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
+| C100   | 2016.01 |       105 | EUR    |       105 | USD    | 2016/01/29 11:27:01 | 0000002 |     |
+
+#+CAPTION: Pull Request
+| PullReq | Status    | Entity |  Period | Timestamp           |
+|---------+-----------+--------+---------+---------------------|
+| 0000001 | Rejected  | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | Submitted | C100   | 2016.01 | 2016/01/29 11:27:01 |
+
+*Step 4: Submit an adjustment request*: The local accountant find a new amount and wants to submit it as an adjustment. An adjustment pull request is inserted and a delta CT document is posted.
+#+CAPTION: Data in ACDOCA 
+| Entity |  Period | Amount | Currency | Timestamp           |
+|--------+---------+--------+----------+---------------------|
+| C100   | 2016.01 |    100 | LC       | 2016/01/28 20:10:32 |
+| C100   | 2016.01 |      5 | LC       | 2016/01/29 11:10:12 |
+| C100   | 2016.01 |     10 | LC       | 2016/01/30 09:23:24 |
+
+#+CAPTION: Data in ACDOCC 
+| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
+|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
+| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
+| C100   | 2016.01 |       105 | EUR    |       105 | USD    | 2016/01/29 11:27:01 | 0000002 |     |
+| C100   | 2016.01 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 |     |
+
+#+CAPTION: Pull Request
+| PullReq | Status    | Entity |  Period | Timestamp           |
+|---------+-----------+--------+---------+---------------------|
+| 0000001 | Rejected  | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | Approved  | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | Submitted | C100   | 2016.01 | 2016/01/30 09:39:45 |
+
+*Step 5: Approve/Reject/Defer the adjustment request:* Here, the group accountant can decide whether this delta amount need to be counted into this period, or defer to next period, or just reject it and ask the local accountant submit again. 
+
+If approved, only change the pull request status. 
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | Approved | C100   | 2016.01 | 2016/01/30 09:39:45 |
+
+If rejected, besides change the status, the corresponding translated document is marked as deleted.
+#+CAPTION: Data in ACDOCC 
+| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
+|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
+| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
+| C100   | 2016.01 |       105 | EUR    |       105 | USD    | 2016/01/29 11:27:01 | 0000002 |     |
+| C100   | 2016.01 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 | X   |
+
+#+CAPTION: Pull Request
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | Rejected | C100   | 2016.01 | 2016/01/30 09:39:45 |
+
+If deferred, the pull request's status is changed to "Deferred" and the corresponding translated document is marked as deleted. Meanwhile, a new document is posted into ACDOCC which rullup the delta amount and has its period value changes to next period and the currency is still in local. Then, in the next period, the amount will be re-translated. 
+#+CAPTION: Data in ACDOCC 
+| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
+|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
+| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
+| C100   | 2016.01 |       105 | EUR    |       105 | USD    | 2016/01/29 11:27:01 | 0000002 |     |
+| C100   | 2016.01 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 | X   |
+| C100   | 2016.02 |        10 | EUR    |        10 | LC     | 2016/01/30 10:02:31 | 0000003 |     |
+
+#+CAPTION: Pull Request
+| PullReq | Status   | Entity |  Period | Timestamp           |
+|---------+----------+--------+---------+---------------------|
+| 0000001 | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | Deferred | C100   | 2016.01 | 2016/01/30 09:39:45 |
+
+*** Scenario4: CT in S4, data comes from ACDOCC
+
 
 * Group Level Lock/Unlock Posting Period Request
 The local system synchronizes its FI documents into the central system, BPC access the data in the central system. The lock/unlock a period means both lock/unlock in the local system and the central system. Because although in most cases, documents are posted in the local system,  it is still possible to have documents directly posted in the central system. 
