@@ -1,5 +1,5 @@
 #+PAGEID: 1847350028
-#+VERSION: 2
+#+VERSION: 4
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Consolidation Version
@@ -47,9 +47,9 @@ BPC uses category dimension to achieve the same goals. During modeling, user can
 | STARTMNTH          | Starting month.                                    |
 
 **** BCS Version Combinations and Special Version
-Unlike BPC's one dimension approach, BCS can combine several dimensions into a version combination. User can either define one dimension as the consolidation version, or multiple dimensions that are combined together as the consolidation version. 
+Unlike BPC's one dimension approach, BCS can combine several dimensions into a version combination. User can either define one dimension as the consolidation version, or multiple dimensions that are combined together as a consolidation version. 
 
-For example, there are following 2 dimensions and their values:
+For example, there are 2 dimensions and the values:
 - Data Category: Actual and Plan
 - Accounting Principles: U.S. GAAP and German HGB
 Then you use both accounting principles for planning, but you use only U.S. GAAP for creating consolidated statements with actual data. Therefore, you select the following three combinations:
@@ -57,9 +57,9 @@ Then you use both accounting principles for planning, but you use only U.S. GAAP
 - Plan / U.S. GAAP
 - Plan / German HGB
 
-The benefits compare with BPC's approach is that you can not-only share data, but also share rules among different versions. You see properties on BPC's category dimension are all related to control how to share data from other categories. Somehow, BPC doesn't need to share consolidation rules, as rules (planning functions rather than user defined rules) are defined upon all dimensions and be shared by nature. And it's that nature limits BPC run consolidation on higher data granularity and lose tracing-back ability.     
+The benefit compares with BPC's approach is that you can not-only share data, but also share rules among different versions. You see properties on BPC's category dimension are all related to control how to share data among different categories. Somehow, BPC doesn't need to share consolidation rules, as rules (planning functions rather than user defined rules) are defined upon all dimensions and be shared by nature. And it's that nature limits BPC lose some tracing-back abilities.
 
-When using multiple dimensions (or fields), you can define rules to dynamically assign consolidation rules or data among these fields. BCS introduce the so-called "Special Version", which is a 3 characters long identifier. The Special Version acts as a medium between consolidation version and consolidation rules or data. Pre-defined special version types are given to which you can assign a dedicate special version to each type under a consolidation version.     
+When using multiple dimensions (or fields), you can define rules to dynamically assign consolidation rules or data among these fields. BCS introduces the so-called "Special Version", which is a 3 characters long identifier. The Special Version acts as a medium between consolidation version and consolidation rules or data. Pre-defined special version types are given so that you can assign a dedicate special version to each type under a consolidation version.     
 
 Still take the 2 version fields =Data Category= and =Accounting Principles= as an example, and you have following permitted combinations:
 - Actual / U.S. GAAP
@@ -67,12 +67,12 @@ Still take the 2 version fields =Data Category= and =Accounting Principles= as a
 - Plan / IAS
 - Plan / German HGB
 
-You want to use the value 200 in all =Plan= versions as the special version =Data Collection= except for the combination "Plan / U.S. GAAP", which uses the value 210.
-1. Create a rule for special version =Data Collection= as follows: Plan / All Values -> 200
-2. Overwrite the calculated value of 200 with value 210 for the version combination Plan / U.S. GAAP for special version =Data Collection=.
+You want to use the Special Version value =200= in all =Plan= versions as the special version =Data Collection= except for the combination "Plan / U.S. GAAP", which uses the Special Version value =210=.
+1. Create a rule for special version type =Data Collection= as follows: Plan / All Values -> 200
+2. Overwrite the calculated value of =200= with value =210= for the version combination Plan / U.S. GAAP for special version type =Data Collection=.
 
 *** Key Requirements and Goals
-We will choose the =Version Combination= approach as Real-Time Consolidation operates on more detail granularity data and achieve document concept on consolidation journals. While at the same time, we still need to map to BPC's category dimension so that BPC can still consume the S4DATA through our interfaces.  
+We will choose the =Version Combination= approach as Real-Time Consolidation operates on more detail data granularity and achieves document concept on consolidation journals. While at the same time, we still need to map to BPC's category dimension so that BPC can still consume the S4 DATA through our interfaces.  
 
 Following design goals are compiled:
 1. User can define multiple versions under a model.

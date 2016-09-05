@@ -151,6 +151,30 @@ The right area displays a list of validation results that belong to the node you
 Application, functions, data objects and underlying CDS views
 
 *** Examples of RTC rules in HRF
+**** Check cost center based on a line item in ACDOCC
+
+=Prerequisite=:
+If company code = "F001" and account = "1001010" (expense)
+
+=Check=:
+Cost center is in a range between "xxxx" and "xxxx".
+
+*Realization:*
+
+Actual Rule in HRF Decision Table (Rule Name: DocumentPosting): 
+| CompanyCode | GroupAccount | CostCenter                                   | Output |
+|-------------+--------------+----------------------------------------------+--------|
+| 'F001'      | '0003051090' | is not between 'SFUT000200' and 'SFUT000243' | 'E'    |
+|             |              |                                              | 'S'    |
+
+*Test Cases:*
+| Expectation | CCode | Group Account |    Doc No. | Item No. | Cost Center |
+|-------------+-------+---------------+------------+----------+-------------|
+| should fail | F001  |    0003051090 | 1900004211 |   000002 | 0000001101  |
+| should pass | F001  |    0003051090 | 0100009825 |   000002 | SFUT000243  |
+| should pass | F001  |    0003051090 | 0100009821 |   000002 | SFUT000242  |
+| Should pass | F001  |    0003082090 | 1900004205 |   000006 | 0000001102  |
+
 **** Actual vs Plan: ACDOCC/ACDOCA/COEP
 ~ERP is realized using User Exit~
 

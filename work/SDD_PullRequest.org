@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 13
+#+VERSION: 15
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Pull Request for Consolidation
@@ -161,7 +161,8 @@ Once a MonthEnd pull request is rejected, it cannot be changed status again, and
 | 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected | 2016/01/25 15:20:00 | DC001  |    001 |
 | 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    002 |
 | 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    003 |
-| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    001 |
+| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    004 |
+| 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    001 |
 
 But if it is not a required MonthEnd request, then there is no new pull request is created. 
 
@@ -311,8 +312,14 @@ If the corresponding item is not exist in the table, it means the entity in that
 ** Raise Pull Requests 
 The local accountant can raise pull requests when he feels the data is ready. Before submitting the data, he can run a local validation. Then the request is raised to the group accountant. The following screen mock-up explains detail on it. 
 
-#+CAPTION: Pull Request Raise Screen 
-[[../image/RaisePullRequest.png]]  
+#+CAPTION: Data Submit Cockpit Main Screen
+[[../image/DataSubmitCockpit01.png]]
+
+#+CAPTION: Data Submit Cockpit Data Entry Screen
+[[../image/DataSubmitCockpit02.png]]  
+
+#+CAPTION: Data Submit Cockpit History Submitted Requests
+[[../image/DataSubmitCockpit03.png]]  
 
 1. The local accountant login into the central system, and open the pull request raise application.
 2. He chooses which consolidation model and which data category the pull request should be sent to .
@@ -629,7 +636,7 @@ If data is validated and rejected, the pull request's status is change to "Rejec
 *Step 1: Flexible Upload*: Data is posted into ACDOCC using a special document type which allows to change the amounts after posting.  
 | DOCNR | DTYPE | Entity |  Period | Amount | Currency |
 |-------+-------+--------+---------+--------+----------|
-| 10001 | FU    | C100   | 2016.01 |    100 | LC       | 
+| 10001 | FU    | C100   | 2016.01 |    100 | LC       |
 
 *Step 2: Submit Data*: Local accountant submits a pull request, the uploaded data is copied to a new document.
 
@@ -833,5 +840,7 @@ Above snapshot is taken from the IMG maintenance view for current open/close pos
 1. Which open posting variant(first column in above table) should be used.
 2. Which account type should be used.
 3. If I close a period, do I have to delete a line and then add a new correct line, or I should modify an existing line?
+
+
 
 
