@@ -151,6 +151,115 @@ The right area displays a list of validation results that belong to the node you
 Application, functions, data objects and underlying CDS views
 
 *** Examples of RTC rules in HRF
+#+CAPTION: Base CDS View for Rule Defination
+#+BEGIN_SRC sql
+@AbapCatalog.sqlViewName: '/RTCART/MOS02200' @VDM.viewType: #CONSUMPTION @ClientDependent: false
+define view /RTCART/P_VMOS02200
+  as select from    /RTCART/P_FMOS02200 as a
+    inner join      rtc_entity_m        as b on  a.RCLNT = b.mandt
+                                             and b.dim   = '100'
+                                             and a.RCOMP = b.rcomp
+    left outer join rtc_entity_m        as c on  a.RCLNT = c.mandt
+                                             and c.dim   = '100'
+                                             and a.RASSC = b.rcomp
+{
+  'MOS022'                                                                   as MODEL,
+ a.RYEAR,
+  a.POPER,
+  b.entity,
+  case c.entity when '' then 'NONE' else ( COALESCE( c.entity, 'NONE') ) end as PENTITY,
+  a.RACCT,
+ @Semantics.quantity.unitOfMeasure: 'RHCUR'
+  a.HSL,
+  @Semantics.quantity.unitOfMeasure: 'RKCUR'
+  a.KSL,
+  @Semantics.amount.currencyCode: 'RUNIT'
+  a.MSL,
+  @Semantics.quantity.unitOfMeasure: 'RWCUR'
+  a.WSL,
+  @Semantics.currencyCode
+  a.RHCUR,
+  @Semantics.currencyCode
+  a.RKCUR,
+  @Semantics.unitOfMeasure
+  a.RUNIT,
+  @Semantics.currencyCode
+  a.RWCUR,
+  a.RCLNT,
+ a.TIMESTAMP
+}
+
+#+END_SRC
+
+=Parameters=
+1. MODEL: Consolidation Model Name
+2. CONS_VER: Consolidation Version
+3. ENTITY: Entity
+4. RYEAR: Fiscal Year
+5. POPER: Fiscal Period
+
+=Output=
+1. MSGTY: Message Type
+2. MSGID: Message ID
+3. MSGNO: Message Number
+4. MSGV1: Placeholder 1
+5. MSGV2: Placeholder 2
+6. MSGV3: Placeholder 3
+7. MSGV4: Placeholder 4
+
+**** Asset = Liability + Equity
+
+=Prerequisite=
+
+True
+
+=Check=
+1. Sum of local amount for all asset accounts as =Assets=:  ( Sum of Amount(HSL) Where Account(RACCT) is between "1000" and "2000" )
+2. Sum of local amount for all Liability accounts as =Liabilities=: ( Sum of Amount(HSL) Where Account(RACCT) between "2000" and "3000" )
+3. Sum of local amount for all Equity accounts as =Equities=: ( Sum of Amount(HSL) Where Account(RACCT) between "3000" and "4000" )
+4. Create an alias =BALANCE_CHECK= with expression: =Assets= = =Liabilities= + =Equities=
+5. Check if =BALANCE_CHECK= is true or false
+
+=Descision Table=
+| BALANCE_CHECK | MSGTY | MSGID         | MSGNO | MSGV1 | MSGV2 | MSGV3 | MSGV4 |
+|---------------+-------+---------------+-------+-------+-------+-------+-------|
+| true          | 'S'   | MSG_CLASS_XXX |   000 | XXX   | XXX   |       |       |
+| false         | 'E'   | MSG_CLASS_XXX |   001 | XXXX  | X     |       |       |
+
+
+**** Partner information exists for all intercompany account receivable accounts
+
+=Prerequisite=
+
+True
+
+=Check=
+1. Define an alias =PARTNER_CHECK= as 
+IF Account(RACCT) is between "5000" and "6000" THEN PENTITY is not equal to ''
+
+=Descision Table=
+| BALANCE_CHECK | MSGTY | MSGID         | MSGNO | MSGV1 | MSGV2 | MSGV3 | MSGV4 |
+|---------------+-------+---------------+-------+-------+-------+-------+-------|
+| true          | 'S'   | MSG_CLASS_XXX |   003 | XXX   | XXX   |       |       |
+| false         | 'E'   | MSG_CLASS_XXX |   004 | XXXX  | X     |       |       |
+
+
+**** If the deviation of account 4101001 for fully consolidated partner units as a total is bigger than $2 million and bigger than 25% of the prior period, then error. 
+=Prerequisite=
+
+If Account is '4101001'
+
+=Check=
+1. Sum of the amount for all fully consolidated partner units as =ThisConsAmount=: Sum of amount where account = '4101001' and period = <current period> and consolidated = true.
+2. Sum of the amount for all fully consolidated partner units as =PriorConsAmount=: Sum of amount where account = '4101001' and period = <current period -1> and consolidated = true.
+3. Create an alias =DEVIATION_CHECK= as =ThisConsAmount= < 2,000,000 and =ThisConsAmount= > =PriorConsAmount= * (1 + 25%)
+
+=Descision Table=
+| DEVIATION_CHECK | MSGTY | MSGID         | MSGNO | MSGV1 | MSGV2 | MSGV3 | MSGV4 |
+|-----------------+-------+---------------+-------+-------+-------+-------+-------|
+| true            | 'S'   | MSG_CLASS_XXX |   005 | XXX   | XXX   |       |       |
+| false           | 'E'   | MSG_CLASS_XXX |   006 | XXXX  | X     |       |       |
+
 **** Check cost center based on a line item in ACDOCC
 
 =Prerequisite=:
@@ -174,6 +283,7 @@ Actual Rule in HRF Decision Table (Rule Name: DocumentPosting):
 | should pass | F001  |    0003051090 | 0100009825 |   000002 | SFUT000243  |
 | should pass | F001  |    0003051090 | 0100009821 |   000002 | SFUT000242  |
 | Should pass | F001  |    0003082090 | 1900004205 |   000006 | 0000001102  |
+
 
 **** Actual vs Plan: ACDOCC/ACDOCA/COEP
 ~ERP is realized using User Exit~

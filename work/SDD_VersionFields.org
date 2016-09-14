@@ -1,10 +1,10 @@
 #+PAGEID: 1847350028
-#+VERSION: 4
+#+VERSION: 7
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Consolidation Version
 
-** General Information
+** General Inf ormation
 
 *** References
 |                |                  |             | <30>                           |
@@ -103,6 +103,7 @@ BPC Category has a 1 on 1 mapping to a version combination. It doesn't exist in 
 
 ** Detail Design
 Suppose we have 2 consolidation versions defined:
+
 #+CAPTION: BPC Category and Version Combination Table: RTC_VERSION_CAT
 | BPC Category | Data Category | Acct. Principle | Variant |
 |--------------+---------------+-----------------+---------|
@@ -153,7 +154,7 @@ After the local accountant submits his local data again, the group accountant fi
 | RTCCTB | Actual |        |         | 2016009 | COMPA  | 15,000 | CNY  |     |
 | RTCCTB | Actual | C1     |     200 | 2016009 | COMPA  | 90,000 | USD  |     |
 
-#+CAPTION: Pseduo SQL to simulate data consumption of Prelimianry Category
+#+CAPTION: Pseudo SQL to simulate data consumption of Preliminary Category
 #+BEGIN_SRC sql
 select * from ACDOCC as A
     left join RTC_ACCTP as B
@@ -217,3 +218,188 @@ Exchange Rate Indicator is maintained under Data Category. You can achieve diffe
 | RTCCTS | Plan   |   3 | 2003 |
 
 For the same translation method, in different consolidation versions, you can have different exchange rates. 
+
+** Sample Case
+There 2 companies under 1 group:
+| Group | Company                                                     |
+|-------+-------------------------------------------------------------|
+| C000  |                                                             |
+|       | C100(USD) 100% owned, parent, data from UJE                 |
+|       | C200(EUR) 100% owned, subsidiary, data from Flexible Upload | 
+
+Both companies should report 3 sets of financial data: Local GAAP, US GAAP and IFRS. Therefore the ledger settings in accounting for C100 is
+1. 0L: Leading ledger for local GAAP
+2. 1L: Appendix ledger for additional US GAAP
+3. 2L: Appendix ledger for additional adjustment for IFRS
+
+Both companies should upload their planning data for local GAAP for internal management analysis purpose
+
+Company C100 needs to provide investment history data, company C200 needs to provide equity history data, all three accounting principles use the same set of history data.
+
+Both Company need to upload additional information (input as account balance plus additional breakdown) for all the 3 principles. i.e. AR provision data, however data is different for three Principles
+
+Both Companies need preliminary and final consolidation. 
+
+*** Configuration
+
+**** Data Category
+Defines what is the source data. You can also assign reference category for additional financial data so that it can be reused among categories. 
+#+Caption: Data Category Main Table
+| Model  | Category | Description                | Investor/Investee Cate |
+|--------+----------+----------------------------+------------------------|
+| RTCCTS | Actual1  | Actual Data for Local GAAP |                        |
+| RTCCTS | Actual2  | Actual Data for US GAAP    | Actual1                |
+| RTCCTS | Actual3  | Actual Data for IFRS       | Actual1                |
+| RTCCTS | Plan     | Plan Data for Local GAAP   | Actual1                |
+
+#+Caption: Data Category and Operational Ledger Assignment
+| Category | Selection                                          |
+|----------+----------------------------------------------------|
+| Actual1  | BUKRS >= 1000 and LEDGER = '0L'                    |
+| Actual2  | BUKRS >= 1000 and (LEDGER = '0L' or LEDGER = '1L') |
+| Actual3  | BUKRS >= 1000 and (LEDGER = '0L' or LEDGER = '2L') |
+
+**** Account Principle
+Defines what's the consolidation logic and how to post consolidation result.
+#+Caption: Account Principle Main Table
+| Model  | Acct. Principle | Description |
+|--------+-----------------+-------------|
+| RTCCTS | LGAAP           | Local GAAP  |
+| RTCCTS | UGAAP           | US GAAP     |
+| RTCCTS | IFRS            | IFRS        |
+
+#+Caption: Account Principle and Consolidation Ledger Assignment
+| Model  | Acct. Principle | Cons Ledger |
+|--------+-----------------+-------------|
+| RTCCTS | LGAAP           | C1          |
+| RTCCTS | UGAAP           | C2          |
+| RTCCTS | IFRS            | C3          |
+
+**** Variant 
+Further differentiate consolidation versions for the same Data Category and Account Principle combination. And also determines whether the local data requires submit control or not.
+#+Caption: Variant Main Table
+| Model  | Variant | Description | Submit? |
+|--------+---------+-------------+---------|
+| RTCCTS |     100 | Final       | Yes     |
+| RTCCTS |     200 | Preliminary | No      |
+
+**** BPC Category
+Used as the BPC category dimension to differentiate purpose of consolidation.
+#+Caption: BPC Category Main Table
+| BPC Category | Description                     | Extended Attributes |
+|--------------+---------------------------------+---------------------|
+| FINAL1       | Final cons for Local GAAP       | xxx                 |
+| PRELIM1      | Preliminary cons for Local GAAP | xxx                 |
+| FINAL2       | Final cons for US GAAP          | xx                  |
+| PRELIM2      | Preliminary cons for US GAAP    | xx                  |
+| FINAL3       | Final cons for IFRS             | xx                  |
+| PRELIM3      | Preliminary cons for IFRS       | xx                  |
+| PLAN         | Plan cons for Local GAAP        | xx                  |
+
+**** Consolidation Version
+Consolidation version is defined by combining Date Category, Account Principle, and Variant. You can also map each combination to a BPC category. 
+#+Caption: Mapping btw BPC Category and Version Combinations
+| BPC Cate | Data Cate | Acct Princ | Variant | Description                     |
+|----------+-----------+------------+---------+---------------------------------|
+| FINAL1   | Actual1   | LGAAP      |     100 | Final cons for Local GAAP       |
+| PRELIM1  | Actual1   | LGAAP      |     200 | Preliminary cons for Local GAAP |
+| FINAL2   | Actual2   | USGAAP     |     100 | Final cons for US GAAP          |
+| PRELIM2  | Actual2   | USGAAP     |     200 | Preliminary cons for US GAAP    |
+| FINAL3   | Actual3   | IFRS       |     100 | Final cons for IFRS             |
+| PRELIM3  | Actual3   | IFRS       |     200 | Preliminary cons for IFRS       |
+| PLAN     | PLAN      | LGAAP      |     200 | Plan cons for Local GAAP        |
+
+
+*** Prepare the Local Data
+For C100, 3 consolidation views need be generated as following:
+#+CAPTION: Pseudo SQL for consolidation views generated for each category
+#+BEGIN_SRC sql
+-- Consolidation view for category Actual1
+create view '/RTCART/RTCCTSC1' as 
+     select * from ACDOCA
+             where BUKRS >= 1000 and LEDGER = '0L';
+
+-- Consolidation view for category Actual2
+create view '/RTCART/RTCCTSC2' as 
+     select * from ACDOCA
+             where BUKRS >= 1000 and (LEDGER = '0L' or LEDGER = '1L');
+
+-- Consolidation view for category Actual3
+create view '/RTCART/RTCCTSC3' as 
+     select * from ACDOCA
+             where BUKRS >= 1000 and (LEDGER = '0L' or LEDGER = '2L');
+#+END_SRC
+
+For C200, data should be prepared outside and uploaded into ACDOCC as following:
+#+CAPTION: Data in ACDOCC through Flexible Upload
+| Model  | D.Cate  | Ledger | Variant |  Period | Entity | Amount | Curr |
+|--------+---------+--------+---------+---------+--------+--------+------|
+| RTCCTS | Actual1 |        |         | 2016008 | C200   | 10,000 | CNY  |
+| RTCCTS | Actual2 |        |         | 2016008 | C200   | 11,000 | CNY  |
+| RTCCTS | Actual3 |        |         | 2016008 | C200   | 12,000 | CNY  |
+
+Investment and Equity historic data is provided for company C100 and C200. Because category "Actual2", "Actual3" and "Plan" all have investor/inverstee data category referring to "Actual1", all version combinations will share the same copy of that data.
+#+CAPTION: ADF-Invertor/Investee Historic Data
+| Model  | D.Cate  |  Period | Investor | Investee  | Amount |
+|--------+---------+---------+----------+-----------+--------|
+| RTCCTS | Actual1 | 2016008 | C100     | C200      |    100 |
+
+Additional information like AR provisions and other balance breakdown are all uploaded *separately* into ACDOCC under each data category. Then, the 3 Principles are using different sets of those additional information.
+#+CAPTION: Data in ACDOCC for additional breakdown information 
+| Model  | D.Cate  | Ledger | Variant |  Period | Entity | Account | Bank | Amount | Curr |
+|--------+---------+--------+---------+---------+--------+---------+------+--------+------|
+| RTCCTS | Actual1 |        |         | 2016008 | C100   |    1001 | ICBC | 1,000  | CNY  |
+| RTCCTS | Actual2 |        |         | 2016008 | C100   |    1001 | UCBC | 2,000  | CNY  |
+| RTCCTS | Actual3 |        |         | 2016008 | C100   |    1001 | IMBC | 3,000  | CNY  |
+| RTCCTS | Actual1 |        |         | 2016008 | C200   |    1001 | ICBC | 4,000  | CNY  |
+| RTCCTS | Actual2 |        |         | 2016008 | C200   |    1001 | UCBC | 5,000  | CNY  |
+| RTCCTS | Actual3 |        |         | 2016008 | C200   |    1001 | IMBC | 6,000  | CNY  |
+
+Upload planning data into "Plan" category. 
+#+CAPTION: Data in ACDOCC for Planning
+| Model  | D.Cate | Ledger | Variant |  Period | Entity | Amount  | Curr |
+|--------+--------+--------+---------+---------+--------+---------+------|
+| RTCCTS | Plan   |        |         | 2016008 | C100   | 100,000 | CNY  |
+| RTCCTS | Plan   |        |         | 2016008 | C200   | 110,000 | CNY  |
+
+*** Run Currency Translation in S4
+For company *C100*, I give following CT methods for period 2016.08
+| Model  | Acct. Principle |  Period | CT Method |
+|--------+-----------------+---------+-----------|
+| RTCCTS | LGAAP           | 2016.08 | CTM01     |
+| RTCCTS | USGAAP          | 2016.08 | CTM02     |
+| RTCCTS | IFRS            | 2016.08 | CTM03     |
+
+For company *C200*, I give following CT methods for period 2016.08
+| Model  | Acct. Principle |  Period | CT Method |
+|--------+-----------------+---------+-----------|
+| RTCCTS | LGAAP           | 2016.08 | CTM02     |
+| RTCCTS | USGAAP          | 2016.08 | CTM02     |
+| RTCCTS | IFRS            | 2016.08 | CTM04     |
+
+Assume the exchange rate of CNY:JPY = 1:6
+
+**** Run CT for C100
+When I run RTCCT under version *Actual1/LGAAP* for company *C100*, it will call CT method *CTM01* and generate following results in ACDOCA: 
+| Model  | D.Cate  | Ledger | Variant |  Period | Entity | LC CNY | GC JPY |
+|--------+---------+--------+---------+---------+--------+--------+--------|
+| RTCCTS | Actual1 | C1     |         | 2016008 | C100   | 8,000  | 48,000 |
+Both "FINAL1" and "PRELIM1" will read the same translated results. 
+
+Then next time, if I run RTCCT under *Actual1/LGAAP/200* for company *C100*, it will delete the former result and post a new one.
+| Model  | D.Cate  | Ledger | Variant |  Period | Entity | LC CNY | GC JPY | DEL |
+|--------+---------+--------+---------+---------+--------+--------+--------+-----|
+| RTCCTS | Actual1 | C1     |         | 2016008 | C100   | 8,000  | 48,000 | X   |
+| RTCCTS | Actual1 | C1     |     200 | 2016008 | C100   | 8,000  | 48,000 |     |
+Then BPC can only read "PRELIM1" data. If we set the Variant of the former result to 100 rather then delete them, then BPC can still read "FINAL1". Need further consideration. Also to be considered is in delta translation cases. 
+
+After running CT in all versions, it will generate following results in ACDOCC.
+| Model  | D.Cate  | Ledger | Variant |  Period | Entity | LC CNY  | GC JPY  |
+|--------+---------+--------+---------+---------+--------+---------+---------|
+| RTCCTS | Actual1 | C1     |         | 2016008 | C100   | 8,000   | 48,000  |
+| RTCCTS | Actual2 | C2     |         | 2016008 | C100   | 9,000   | 54,100  |
+| RTCCTS | Actual3 | C3     |         | 2016008 | C100   | 10,000  | 62,000  |
+| RTCCTS | PLAN    | C1     |         | 2016008 | C100   | 100,000 | 600,000 |
+
+**** Run CT for C200
+It is just the same for *C200* comparing with *C100*. Details on how investor/investee history data is used during CT can be deduced by Marvin. But logically, it is possible to realize 4 consolidation versions (or 3 Principles) share the same ADF data. 

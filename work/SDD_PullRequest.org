@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 15
+#+VERSION: 18
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Pull Request for Consolidation
@@ -308,18 +308,24 @@ There is also a business lock table for the group accountant lock certain period
 If the corresponding item is not exist in the table, it means the entity in that period is not locked. The lock data is generated the first time a lock is added for an entity and its certain period.
 
 
-* TODO Data Submit Request Cockpit
-** Raise Pull Requests 
-The local accountant can raise pull requests when he feels the data is ready. Before submitting the data, he can run a local validation. Then the request is raised to the group accountant. The following screen mock-up explains detail on it. 
+* Data Submit Cockpit
+The Data Submit Cockpit is the central place for both local accountants and group accountants to collect data, validate data, and submit data for consolidation tasks. 
 
 #+CAPTION: Data Submit Cockpit Main Screen
 [[../image/DataSubmitCockpit01.png]]
 
+There are 3 areas: The permanent parameters in the upper area, the package list group by periods in the left area, and the package detail area in the right area. 
+
+1. Permanent parameters are mandatory filtering parameters that are used to determine the package list. Only after all the parameters are entered, can the package list be displayed.
+2. 
 #+CAPTION: Data Submit Cockpit Data Entry Screen
 [[../image/DataSubmitCockpit02.png]]  
 
 #+CAPTION: Data Submit Cockpit History Submitted Requests
 [[../image/DataSubmitCockpit03.png]]  
+
+** Local Accountants Raise Pull Requests 
+The local accountant can raise pull requests when he feels the data is ready. Before submitting the data, he can run a local validation. Then the request is raised to the group accountant. The following screen mock-up explains detail on it. 
 
 1. The local accountant login into the central system, and open the pull request raise application.
 2. He chooses which consolidation model and which data category the pull request should be sent to .
@@ -346,8 +352,7 @@ The local accountant can submit the translated data to the group accountant. He 
 If the data need to be translated is from flexible uploading, then the local accountant can still use the same CT APP to do the same stuff: translating and submiting. To the end-user, it is transparent. No matter the data is from ACDOCA or ACDOCC. He can navigate to the CT APP directly from the Flexible Upload APP. 
 
 Whether local accountants should submit translated result or not is determined by the settings in the model. If the model is set that currency translation should be done in S/4HANA, then local accountants should only submit the translated results, and vice-versa. It is not possible for a model that supports some entities submit translated results, others submit non-translated. And also keep in mind, once currency translation is run in S/4HANA, BPC only needs to access data in ACDOCC. So, from the group accountants' perspective, she can never access the real-time data in ACDOCA.     
-
-** Process Pull Requests
+** Group Accountants Check Pull Requests
 In the 1610 release, the pull request produces 2 effects:
 1. Notify BPC for the new coming data;
 2. Filter data before the timestap by join with the underlying HANA views. 
