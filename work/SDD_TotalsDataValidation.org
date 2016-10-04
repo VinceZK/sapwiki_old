@@ -1,5 +1,5 @@
 #+PAGEID: 1828633219
-#+VERSION: 5
+#+VERSION: 7
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Totals Validation
@@ -147,9 +147,6 @@ The right area displays a list of validation results that belong to the node you
 
 
 ** HRF@BRF
-*** Pre-Delivered Content
-Application, functions, data objects and underlying CDS views
-
 *** Examples of RTC rules in HRF
 #+CAPTION: Base CDS View for Rule Defination
 #+BEGIN_SRC sql
@@ -230,36 +227,40 @@ True
 **** Partner information exists for all intercompany account receivable accounts
 
 =Prerequisite=
-
-True
+IF Account(RACCT) is between "5000" and "6000"
 
 =Check=
 1. Define an alias =PARTNER_CHECK= as 
-IF Account(RACCT) is between "5000" and "6000" THEN PENTITY is not equal to ''
+PENTITY is not equal to ''
 
 =Descision Table=
-| BALANCE_CHECK | MSGTY | MSGID         | MSGNO | MSGV1 | MSGV2 | MSGV3 | MSGV4 |
-|---------------+-------+---------------+-------+-------+-------+-------+-------|
-| true          | 'S'   | MSG_CLASS_XXX |   003 | XXX   | XXX   |       |       |
-| false         | 'E'   | MSG_CLASS_XXX |   004 | XXXX  | X     |       |       |
+| Prerequisite | PARTNER_CHECK | MSGTY | MSGID         | MSGNO | MSGV1 | MSGV2 | MSGV3 | MSGV4 |
+|--------------+---------------+-------+---------------+-------+-------+-------+-------+-------|
+| True         | false         | 'E'   | MSG_CLASS_XXX |   004 | XXXX  | X     |       |       |
 
 
-**** If the deviation of account 4101001 for fully consolidated partner units as a total is bigger than $2 million and bigger than 25% of the prior period, then error. 
+**** If the deviation of account 4101001 for fully consolidated partner units as a total is bigger than $2 million and bigger than 25% of the prior period, then explain. 
 =Prerequisite=
 
-If Account is '4101001'
+If Account is equal to '1714001'
 
 =Check=
-1. Sum of the amount for all fully consolidated partner units as =ThisConsAmount=: Sum of amount where account = '4101001' and period = <current period> and consolidated = true.
-2. Sum of the amount for all fully consolidated partner units as =PriorConsAmount=: Sum of amount where account = '4101001' and period = <current period -1> and consolidated = true.
-3. Create an alias =DEVIATION_CHECK= as =ThisConsAmount= < 2,000,000 and =ThisConsAmount= > =PriorConsAmount= * (1 + 25%)
+1. Create an alias =RP= as: Sum of local_amount where account = '1714001' and period = <current period> and fully_consolidated = true.
+2. Create an alias =RP-1= as: Sum of amount where account = '1714001' and period < <current period -1> and fully_consolidated = true.
+3. Create an alias =DEVIATION= as: 
+
+| =RP=              | =RP-1=            |                  Deviation |
+|-------------------+-------------------+----------------------------|
+| is equal to 0     | is equal to 0     |                          0 |
+| is not equal to 0 | is equal to 0     |                        100 |
+|                   | is not equal to 0 | ROUND( =RP= / =RP-1= )*100 |
+4. Create an alias =DEVIATION_CHECK= as: if =RP= is greater than 2,000,000 and =DEVIATION= is greater than 25%
 
 =Descision Table=
-| DEVIATION_CHECK | MSGTY | MSGID         | MSGNO | MSGV1 | MSGV2 | MSGV3 | MSGV4 |
-|-----------------+-------+---------------+-------+-------+-------+-------+-------|
-| true            | 'S'   | MSG_CLASS_XXX |   005 | XXX   | XXX   |       |       |
-| false           | 'E'   | MSG_CLASS_XXX |   006 | XXXX  | X     |       |       |
-
+| Prerequisite | DEVIATION_CHECK | MSGTY | MSGID         | MSGNO | MSGV1 | MSGV2 | MSGV3 | MSGV4 |
+|--------------+-----------------+-------+---------------+-------+-------+-------+-------+-------|
+| true         | true            | 'E'   | MSG_CLASS_XXX |   005 | XXX   | XXX   |       |       |
+  
 **** Check cost center based on a line item in ACDOCC
 
 =Prerequisite=:

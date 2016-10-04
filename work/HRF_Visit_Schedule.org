@@ -1,0 +1,117 @@
+#+PAGEID: 1848499427
+#+VERSION: 6
+#+STARTUP: align
+#+OPTIONS: toc:0
+#+TITLE: Schedule for HRF's Visit
+* Welcome and Overview of Data Validation in RTC                :Ying:Vincent:
+| Time             | Duration | Audiences                       |
+|------------------+----------+---------------------------------|
+| <2016-09-26 Mon> | 2 hours  | POs, Archs, and Key developers. |
+
+1. Welcome and Introduction
+2. High level backlog review
+3. Planned scope and timelines for release 1709
+4. Architecture Overview                                          
+   1. The position of data validation in Real-Time Consolidation
+   2. Overall Design.
+
+* HRF General Introduction and UI controls                            :Ronen:
+|                  |          | <30>                           |
+| Time             | Duration | Audiences                      |
+|------------------+----------+--------------------------------|
+| <2016-09-26 Mon> | 2 hours  | The audiences are all team members who want to get a general idea of what is HRF and what's the relationship with BRF+. |
+
+1. HRF overall introduction: team, initial purposes, history, use cases, and so on.
+2. Decison Table and Text Rules
+3. How to embedded these 2 controls into own (Fiori)applications
+4. Exposed ODATA services
+5. New features and planned features
+
+* Achievements from PoC                                                :Steve:
+|                  |          | <30>                           |
+| Time             | Duration | Audiences                      |
+|------------------+----------+--------------------------------|
+| <2016-09-27 Tue> | 2 hour   | The audiences are POs(optional), Archs, and Key developers. |
+
+1. Scenario overview and PoC goals
+2. Rules implemented in PoC: Demo would be appreciate
+3. UI Mock-ups and End-2-End process review. ~I'd rather this part is presented by Steve in more detail, as he is the developer who design it. In backlog review part, we only go over high level requirements from PO. This is also because the whole idea is still under development.~
+4. Found issues and functional gaps
+5. Discussion
+
+* Introduction on BPC's Current Validation Solution: Controls          :Manu:
+|                  |          | <30>                           |
+| Time             | Duration | Audiences                      |
+|------------------+----------+--------------------------------|
+| <2016-09-27 Tue> | 2 hour   | The audiences are POs, Archs, key developers and team members who are interested. Demo would be appreciate. |
+
+1. BPC Control general introduction and Demo
+2. BPC requirements from HRF
+3. Investigation and proposal on how BPC would like to use HRF in its native HANA approach
+4. Discussion. 
+
+* HRF High Level Backlogs & Plan                                :Ronen:Yaron:
+|                  |          | <30>                           |
+| Time             | Duration | Audiences                      |
+|------------------+----------+--------------------------------|
+| <2016-09-27 Tue> | 2 hours  | The audiences are POs, Archs, and Key developers. |
+
+1. High level backlog review
+   1. Current releases and future backlog
+   2. Specific topics to cover: resusable expressions, function parameters
+   3. Native vs. New integration with BRF+: Features and limitations.
+2. Architecture and Road-map serves the backlog
+3. Q&A
+
+* RTC Architecture in More Details                                  :Vincent:
+|                  |          | <30>                           |
+| Time             | Duration | Audiences                      |
+|------------------+----------+--------------------------------|
+| <2016-09-28 Wed> | 2 hours  | The audiences are POs(optional), archs, and Key developers. |
+
+1. Consolidation Model and the generated consolidation views
+2. Validation Method and the framework
+3. Data Collection and the Pull Request
+4. Integration with BPC's Control
+5. Consolidation Validation real use cases: BASF's Plausibility controls and content analysis
+6. Development landscape introduction
+
+* HRF Architecture in More Details                              :Ronen:Yaron:
+|                  |          | <30>                           |
+| Time             | Duration | Audiences                      |
+|------------------+----------+--------------------------------|
+| <2016-09-28 Wed> | 1 hour   | The audiences are POs(optional), archs, and Key developers. |
+
+1. Architecture landscape overview (UI5, xs(C/A), ABAP)
+2. Development landscape introduction (How a new feature will be available from HRF's dev systemto RTC's dev system)
+3. How rule expressions are compiled to SQL scripts 
+4. Tips and Tricks on defining rules regarding with runtime performance and front-end UI tools
+
+* Q&A and Preparation for the conculsion                                :All:
+|                  |          | <30>                           |
+| Time             | Duration | Audiences                      |
+|------------------+----------+--------------------------------|
+| <2016-09-28 Wed> | 2 hours  | The audiences are POs(optional), archs, and Key developers. |
+
+1. Q&A session for collected questions
+2. Prepare for the conculsion and followups.
+
+* Conclusion                                                            :All:
+|                  |          | <30>                           |
+| Time             | Duration | Audiences                      |
+|------------------+----------+--------------------------------|
+| <2016-09-29 Thu> | 2 hours  | The audiences are POs, archs, and Key developers. The final meeting is to make a conclusion for the former sessions. |
+The conclusion meeting will happen in the morning, which can left more slots in afternoon for followup topics. 
+
+1. Discuss current gaps and issues
+2. Conclude minimal viable scopes 
+3. Coordinate short term and long term plan
+
+* Reserved Slot for Follow-up topics
+|                  |          | <30>                           |
+| Time             | Duration | Audiences                      |
+|------------------+----------+--------------------------------|
+| <2016-09-29 Thu> | 4 hours  | The audiences are POs, archs, and Key developers. The final meeting is to make a conclusion for the former sessions. |
+
+Also used to get some sumarization and prepartion for followup activites. 
+
