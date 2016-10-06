@@ -1,0 +1,265 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Translation Difference
+** Business Case
+It is common that different companies under a group report their local data in different local currencies. These currencies should be translated into the group currency during consolidation. Differences would be generated due to different aspects of the balance sheet and income statement have to be translated with different exchange rates. For example, we usually apply following exchange rates: Average Rates, Current Rates, Spot Rates, and Historic Rates to different accounts. 
+
+Due to this reason, the balance sheet and income statement could be imbalance after currency translation. Therefore, we need to post differences to differential items or subitems to make them balance again. The translation differences need to be disclosed during reporting. There are 2 different approaches in dealing with translation differences. One is Temporal Translation Differences(aka Translation Indicator or TI), which is used in EC-CS and SEM-BCS; the other is Currency Translation Adjustment(aka CTA), which is used in BPC and FC.
+
+In this SDD, I try to describe the 2 approaches in much more detail, compare them, and figure out the better one for Real-Time Consolidation.
+
+** Temporal Translation Differences(TI)
+
+TI uses Specific Exchange Rate and Reference Exchange Rate to calculate 4 translated values indicated by 4 translation indicators. To be in mind, there could be multiple Specific Exchange Rates be assigned to different account groups, but only one Reference Exchange for all accounts. For the simplicity, we use following abbreviations to describe the detail translation logic:
++ RER stands for the Reference Exchange Rate of current period;
++ SER stands for the Specific Exchange Rate of current period;
++ LC(current) stands for local currency value of current period;
++ LC(priors) stands for local currency value of all prior periods, therefore, sum of LC where period < current period;
++ CURR_CONVERT(~value~, ~rate~) is a function used to get the translated value by input 2 parameters: source value and exchange rate;
++ TI(~x~) is a function returns the translated value by one or multiple translation indicators ~x~.
++ RV(priors) stands for Reference Value of all prior periods, therefore: sum of TI(0) where period < current period;
++ SV(priors) stands for Specific Value of all prior periods, therefore: sum of TI(0,1,2,3) where period < current period;
+#+CAPTION: TI Formulas
+| Transl.ind. | Period Value in Group Currency                     |
+|-------------+----------------------------------------------------|
+|           0 | CURR_CONVERT(LC(current), RER)                     |
+|           1 | CURR_CONVERT(LC(current), SER) - TI(0)             |
+|           2 | CURR_CONVERT(LC(priors), RER) - RV(priors)         |
+|           3 | CURR_CONVERT(LC(priors), SER) - SV(priors) - TI(2) |
+
+The business meanings of the underlying combinations of the 4 difference values can be described as bellow:
+- sum of TI(0,1,2,3): YTD value with specific rate of current period;
+- sum of TI(0,2): YTD value with reference rate of current period;
+- sum of TI(1,3): YTD currency translation difference;
+- sum of TI(2,3): YTD temporal translation difference due to the fluctuation of reference rate.
+
+When running balance carry forward, the separated display of translation difference is reset:
+- the totals records with translation indicator 2 go into the totals records with translation indicator 0;
+- the totals records with translation indicator 3 go into the totals records with translation indicator 1.
+
+** Currency Translation Adjustment(CTA)
+
+CTA usually uses 3 exchange rates, they are: Opening Rate(OR), Average Rate(AR), and Closing Rate(CR). It is recommended that you use the previous CR as the OR of this period so that the consolidated data is consistent. Usually, OR is not used to recalculate the opening group value, because it is exactly the closing group value of previous period. OR is only used in the initial consolidation when you provide the first report data of an entity into the consolidation system. 
+
+To be in mind, only one group of OR, AR, and CR is used during translation for each period. There are other exchange rates like History Rate(HR), Spot Rate(SR) and so on, they can either be provided directly, or be derived. CTA uses the closing rate method, all the accounts are translated using the CR. If accounts need to be translated using other exchange rates(like AR), the differences between the selected rate and CR will be recorded in the CTA flow(F80). The general translation rules by accounts can be described as this:   
+- The closing balances of balance sheet accounts are converted using the closing rate, except for equity and consolidated investments kept at their historical value;
+- The income statement is converted using the average rate for the period;
+- The cash flow statement is based on balance sheet variations which are converted at the average rate for the period.
+
+CTA is flow-based, three flows are involved during translation:
+- F10: Opening flow;
+- F15: Movement flow;
+- F80: CTA flow;
+- F81: CTA flow for difference between movement flow and closing flow;
+- F82: CTA flow for difference between opening flow and closing flow;
+- F99: Closing flow;
+
+#+CAPTION: CTA Formulas
+| Flow | Period Value in Group Currency                             |
+|------+------------------------------------------------------------|
+| F00  | First Consolidation?CURR_CONVERT(LC(priors),OR):GC(priors) |
+| F15  | CURR_CONVERT(LC(current),AR)                               |
+| F81  | CURR_CONVERT(LC(current),CR) - F15                         |
+| F82  | CURR_CONVERT(LC(priors),CR) - F00                          |
+| F80  | F81 + F82                                                  |
+| F99  | F15 + F80                                                  |
+
+F00, F80, and F99 are not persisted if they can be calculated on the fly. F00 of this period is the F99 of last period, except in the first consolidation and carry forward, F00 will be persisted. Carry forward only needs to convert F99 of the last year to F00 of next year. If CTA(F80) is split by opening differences(F81) and movement differences(F81), then F80 needn't be persisted. 
+
+** Example
+*** Exchange Rate Setting
+We have 2 rate tables defined separately for TI and CTA. The Reference Exchange Rate in TI is equivalent to the Closing Rate in CTA. And the Specific Exchange Rate in TI is equivalent to the Average Rate of CTA. The Opening Rate of each period is assumed to be equal to the Closing Rate of its previous period. 
+ 
+#+CAPTION: Exchange Rates for TI 
+| Period | Spec.Exchange Rate | Ref. Exchange Rate |
+|--------+--------------------+--------------------|
+|    000 |                1.7 |                1.6 |
+|    001 |                1.7 |                2.0 |
+|    002 |                1.5 |                1.6 |
+
+#+CAPTION: Exchange Rates for CTA
+| Period | Opening Rate | Average Rate | Closing Rate |
+|--------+--------------+--------------+--------------|
+|    000 |              |          1.7 |          1.6 |
+|    001 |          1.6 |          1.7 |          2.0 |
+|    002 |          2.0 |          1.5 |          1.6 |
+
+*** Translated Results
+Suppose we are in period 002, and the occurred local amount for FS item 123456 in period 002 is 200. 
+#+CAPTION: Local Amount in Period 002
+| Period | FS Item |  LC |
+|--------+---------+-----|
+|    002 |  123456 | 200 |
+
+We first translate using the TI approach, there should exist following lines in the consolidation journal table: 
+#+CAPTION: TI Translation Result
+| Period |  FS Item | T.I. |   LC |     GC |
+|--------+----------+------+------+--------|
+|    000 |   123456 |    0 | 1100 |   1760 |
+|    000 |   123456 |    1 |    0 |    110 |
+|  /000/ | /200010/ |  /1/ |  /0/ | /-110/ |
+|    001 |   123456 |    0 |  100 |    200 |
+|    001 |   123456 |    1 |    0 |    -30 |
+|    001 |   123456 |    2 |    0 |    440 |
+|    001 |   123456 |    3 |    0 |   -440 |
+|  /001/ | /300010/ |  /1/ |  /0/ |   /30/ |
+|  /001/ | /200010/ |  /2/ |  /0/ | /-440/ |
+|  /001/ | /300010/ |  /3/ |  /0/ |  /440/ |
+|    002 |   123456 |    0 |  200 |    320 |
+|    002 |   123456 |    1 |    0 |    -20 |
+|    002 |   123456 |    2 |    0 |   -480 |
+|    002 |   123456 |    3 |    0 |    240 |
+|  /002/ | /300010/ |  /1/ |  /0/ |   /20/ |
+|  /002/ | /300010/ |  /2/ |  /0/ |  /480/ |
+|  /002/ | /300010/ |  /3/ |  /0/ | /-240/ |
+
+Differences(in italic) are recorded to differential items so that balance sheet and income statement keep in balance. *Note*: How differential items are posted needs further investigation. I am not very sure if TI.1, TI.2, TI.3 should be all posted with each a reverse amount?
+
+We then translate using CTA approach. CTA is flow based, so we define =F15= as the movement flow, and =F80= as the CTA flow. The close flow(=F99=) for each period can be calculated by summing the amount of all other flows *to* this period. And the opening flow(=F15=) for each period can be calculated by summing the amount of all other flows *before* this period, or equivalent, it is the close flow of its previous period. Period 000 is carry-forwarded from last fiscal year, and it is the beginning of all the open flows. We then have following translated result in the consolidation journal table. 
+#+CAPTION: CTA Translation Result
+| Period | FS Item | Flow |   LC |   GC |
+|--------+---------+------+------+------|
+|    000 |  123456 | F00  | 1100 | 1760 |
+|    001 |  123456 | F15  |  100 |  170 |
+|    001 |  123456 | F80  |    0 |  470 |
+|    002 |  123456 | F15  |  200 |  300 |
+|    002 |  123456 | F80  |    0 | -460 |
+
+The detail translation logics are explained:
+
+The opening flow of period 001 is 1760, it is the carry forward value from last year and saved in period 000. The closing flow of period 001 is calculated by adding 1760 + 170 + 470, which equals 2400, and it is the opening flow amount of period 002.
+
+F80 is calculated by formula: (CURR_CONVERT(LC(current),CR) - F15) + (CURR_CONVERT(LC(priors),CR) - F00). For example:
+
+- F80 for period 001 = 100 * 2.0 - 100 * 1.7 + 1100 * 2.0 - 1760 = 470;
+- F80 for period 002 = 200 * 1.6 - 200 * 1.5 + 1200 * 1.6 - (1760 + 170 + 470) = -460;
+
+** Comparing TI with CTA
+TI uses a Reference Exchange Rate to calculate the differences, the differences are then posted to differential items and subitems. CTA uses Closing Rate Method, all the local values are translated to group values using the same closing rate(keep balance), the differences are posted to a specific flow(CTA flow). 
+
+So generally, *TI and CTA cannot be mutually convertible*. But in certain cases, TI can be somehow mapped to CTA with restrictions, if special settings are made during CT methods definition.
+
+First, you must regard Reference Exchange Rate in TI as the Closing Rate in CTA. Therefore, you have following rate mappings in mind:
+#+CAPTION: Exchange Rate Mapping
+| TI Rate                 | CTA Rate                                         |
+|-------------------------+--------------------------------------------------|
+| Reference Exchange Rate | Closing Rate                                     |
+| Specific Exchange Rates | Average Rate, History Rate, Spot Rate, and so on |
+
+Secondly, for each translation entry, you must define differential items contain 2 fields: FS Item and Flow. Both fields are left with empty. FS Item will take the original one. Flow is automatically determined based on predefined breakdown rules. 
+#+CAPTION: Differential Items Configuration
+| Fields  | Credit | Debit |
+|---------+--------+-------|
+| FS Item |        |       |
+| Flow    |        |       |
+
+Based on these mappings, you may find the main difference between TI and CTA:
+
+*TI records translation differences onto differential items and subitems, while CTA records onto a flow under the same item.* 
+
+I should say TI is more generic and flexible than CTA, but CTA is simpler and tailored for consolidation usages. CT in Real-Time consolidation chooses the TI approach, as it is appealed to ERP users who may run currency translation in cases other than consolidation. Besides, another advantage of TI is that you can define Specific Exchange Rates freely, while CTA uses predefined rates that user can hardly extended. 
+
+** Mapping TI to CTA
+For the reason of BPC's consumption, the translated result in S/4 should be converted from TI-based to CTA-based. In other words, the TI results should be complemented with flow information. It is better to do the conversion during CT posting. To support this, in each translation entry, there should be 3 additional configuration fields:
+1. Movement Flow;
+2. CTA Flow for Average Rate;
+3. CTA Flow for Opening Rate;
+
+These 3 additional fields only appear when the model is set to "Integrated with BPC". And there should be also default values setting on CT method header level. In case there is no flow given on translation entry level, then the default flow values on head level apply.
+
+Base on the settings in previous chapter and this chapter, we run the CT method and will generate following result:
+#+CAPTION: Map TI Result to CTA Result
+| Period |  FS Item | T.I. | Flow  |   LC |     GC |
+|--------+----------+------+-------+------+--------|
+|    000 |   123456 |    0 | F00   | 1100 |   1760 |
+|    000 |   123456 |    1 | F00   |    0 |    110 |
+|  /000/ | /123456/ |  /1/ | /F00/ |  /0/ | /-110/ |
+|    001 |   123456 |    0 | F15   |  100 |    200 |
+|    001 |   123456 |    1 | F15   |    0 |    -30 |
+|    001 |   123456 |    2 | F82   |    0 |    440 |
+|    001 |   123456 |    3 | F82   |    0 |   -440 |
+|  /001/ | /123456/ |  /1/ | /F81/ |  /0/ |   /30/ |
+|  /001/ | /123456/ |  /2/ |       |  /0/ | /-440/ |
+|  /001/ | /123456/ |  /3/ | /F82/ |  /0/ |  /440/ |
+|    002 |   123456 |    0 | F15   |  200 |    320 |
+|    002 |   123456 |    1 | F15   |    0 |    -20 |
+|    002 |   123456 |    2 | F82   |    0 |   -480 |
+|    002 |   123456 |    3 | F82   |    0 |    240 |
+|  /002/ | /123456/ |  /1/ | /F81/ |  /0/ |   /20/ |
+|  /002/ | /123456/ |  /2/ |       |  /0/ |  /480/ |
+|  /002/ | /123456/ |  /3/ | /F82/ |  /0/ | /-240/ |
+|    003 |   123456 |    0 | F15   |  100 |    180 |
+|    003 |   123456 |    1 | F15   |    0 |    -10 |
+|    003 |   123456 |    2 | F82   |    0 |    280 |
+|  /003/ | /123456/ |  /1/ | /F81/ |  /0/ |   /10/ |
+|  /003/ | /123456/ |  /2/ |       |  /0/ | /-280/ |
+
+The "Flow" column is added to indicates the mapping from TI to CTA flows. The italic lines are differential item lines to keep balance. Detail mapping rules can be described in bellow table:
+| Flow                             | lines                                       |
+|----------------------------------+---------------------------------------------|
+| Opening Flow (=F00=)             | all lines of period 000(from carry forward) |
+| Movement Flow (=F15=)            | TI.0 and TI.1                               |
+| CTA Flow for Average Rate(=F81=) | /TI.1/                                      |
+| CTA Flow for Opening Rate(=F82=) | TI.2, TI.3 and /TI.3/                       |
+/TI.2/ lines are left with blank flow value, as it can not mapped to any CTA flows.
+ 
+*** More Deductions
+The exchange rates that are used to calculate the above results:
+#+CAPTION: Exchange Rates
+| Period | Open Rate | Average Rate = Spec. Ex Rate | Close Rate = Ref. Ex Rate |
+|--------+-----------+------------------------------+---------------------------|
+|    000 |           |                          1.6 |                       1.7 |
+|    001 |       1.7 |                          2.0 |                       1.7 |
+|    002 |       1.7 |                          1.6 |                       1.5 |
+|    003 |       1.5 |                          1.8 |                       1.7 |
+
+Remove TI column and aggregated 
+#+CAPTION: CTA Result
+| Period | FS Item | Flow |   LC |   GC |
+|--------+---------+------+------+------|
+|    000 |  123456 | F00  | 1100 | 1760 |
+|    001 |  123456 | F15  |  100 |  170 |
+|    001 |  123456 | F81  |    0 |   30 |
+|    001 |  123456 | F82  |    0 |  440 |
+|    002 |  123456 | F15  |  200 |  300 |
+|    002 |  123456 | F81  |    0 |   20 |
+|    002 |  123456 | F82  |    0 | -480 |
+|    003 |  123456 | F15  |  100 |  170 |
+|    003 |  123456 | F81  |    0 |   10 |
+|    003 |  123456 | F82  |    0 |  280 |
+
+#+CAPTION: CTA Result in Flow
+| Period | FS Items |  F00 | F15 | F81 |  F82 |  F99 |
+|--------+----------+------+-----+-----+------+------|
+|    000 |   123456 |      |     |     |      | 1760 |
+|    001 |   123456 | 1760 | 170 |  30 |  440 | 2400 |
+|    002 |   123456 | 2400 | 300 |  20 | -480 | 2240 |
+|    003 |   123456 | 2240 | 170 |  10 |  280 | 2700 |
+- F00 = F99(Period - 1);
+- F99 = F00 + F15 + F81 + F82;
+
+When reporting, the temporal translation differences can be disclosed as this:
+#+CAPTION: Reporting by Flow
+| Period | FS Item | Closing Bal. Prior Period | Temporal Trans. Diffs | Open Bal. | Movement | CTA | Close Bal. |
+|--------+---------+---------------------------+-----------------------+-----------+----------+-----+------------|
+|    001 |  123456 |                      1760 |                   440 |      2200 |      170 |  30 |       2400 |
+|    002 |  123456 |                      2400 |                  -480 |      1920 |      300 |  20 |       2240 |
+|    003 |  123456 |                      2240 |                   280 |      2520 |      170 |  10 |       2700 |
+- Closing Bal. Prior Period = F99(Period - 1);
+- Temporal Trans. Diffs = F82;
+- Open Bal. = Closing Bal. Prior Period + Temporal Trans. Diffs;
+- Movement = F15(Period);
+- CTA = F81(Period);
+- Close Bal. = Open Bal. + Movement + CTA;
+
+The carry-forward will sum all the LC and GC to next year with flows set to =F00=:
+#+CAPTION: Carry Forward to Next Year
+| PERIOD | FS Item | Flow |   LC |   GC |
+|--------+---------+------+------+------|
+|    000 |  123456 | F00  | 1500 | 2700 |
+
+
+
+

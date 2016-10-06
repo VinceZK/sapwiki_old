@@ -36,14 +36,14 @@
 |    001 |  123456 |    3 |    0 | -440 |
 |    002 |  123456 |    0 |  200 |  320 |
 |    002 |  123456 |    1 |    0 |  -20 |
-|    002 |  123456 |    2 |    0 |  -40 |
-|    002 |  123456 |    3 |    0 | -200 |
+|    002 |  123456 |    2 |    0 | -480 |
+|    002 |  123456 |    3 |    0 |  240 |
 
 Table2 is a Global Temporary Table which is created during transalation method activating for each translation entry.
 
-T.I.2(002) = (1100 + 100) * 1.6 - 1760 - 200 = -40;
+T.I.2(002) = (1100 + 100) * 1.6 - 1760 - 200 - 440 = -480;
 
-T.I.3(002) = (1100 + 100) * 1.5 - (1760 + 110)  - (200 + (-30)) - (-40) = -200;
+T.I.3(002) = (1100 + 100) * 1.5 - (1760 + 110)  - (200 + (-30) + 440 +(-440)) - (-480) = 240;
 
 This results in the following values:
 - 0 + 1 + 2 + 3: specific value
@@ -54,12 +54,12 @@ This results in the following values:
 Carry forward to 000 of next year.
 | Period | FS Item | T.I. |   LC |   GC |
 |--------+---------+------+------+------|
-|    000 |  123456 |    0 | 1400 | 2680 |
-|    000 |  123456 |    1 |    0 | -580 |
+|    000 |  123456 |    0 | 1400 | 2240 |
+|    000 |  123456 |    1 |    0 | -140 |
 
-f(0,2) = 1760 + 200 + 440 + 320 + (-40) = 2680;
+f(0,2) = 1760 + 200 + 440 + 320 + (-480) = 2240;
 
-f(1,3) = 110 + (-30) + (-440) + (-20) + (-200) = -580;
+f(1,3) = 110 + (-30) + (-440) + (-20) + 240 = -140;
 
 The separated display of the temporal translation differences is reset for the balance carried forward, that means
 - the totals records with translation indicator 2 go into the totals records with translation indicator 0.
@@ -80,8 +80,8 @@ According to =Table2=, it will automatically generate following differential lin
 |    001 |  200010 |    2 |  0 | -440 |
 |    001 |  300010 |    3 |  0 |  440 |
 |    002 |  300010 |    1 |  0 |   20 |
-|    002 |  300010 |    2 |  0 |   40 |
-|    002 |  300010 |    3 |  0 |  200 |
+|    002 |  300010 |    2 |  0 |  480 |
+|    002 |  300010 |    3 |  0 | -240 |
 
 *** Psudeo SQL
 #+Begin_src sql
@@ -131,27 +131,32 @@ insert into Table2
          FS_ITEM,
          '2' as TRANSL_IND,
          '0' as LC,
-         (sum(CURRENCY_CONVERSION(LC, 1.6)) - sum(GC)) as GC
+         (CURRENCY_CONVERSION(sum(LC), 1.6) - sum(GC)) as GC
     from Table2
    where PERIOD < '002'
-     and TRANSL_IND = '0'
+     and (TRANSL_IND = '0' or TRANSL_IND = '2')
 group by PERIOD, FS_ITEM, TRANSL_IND, LC;
 
 --Calcuate and Insert T.I.3 Lines of Current Period
+var Table3 = 
+  select '002' as PERIOD,
+         FS_ITEM,
+         '3' as TRANSL_IND,
+         '0' as LC,
+         (CURRENCY_CONVERSION(sum(A.LC), 1.5) -  sum(A.GC)) as GC
+    from Table2
+   where PERIOD < '002'
+group by PERIOD, FS_ITEM, TRANSL_IND, LC;
+
 insert into Table2
   select A.PERIOD,
          A.FS_ITEM,
-         '3' as TRANSL_IND,
-         '0' as LC,
-         (sum(CURRENCY_CONVERSION(A.LC, 1.5)) -  sum(A.GC)) - B.GC as GC,
-    from Table2 as A
-    left join Table2 as B
-      on A.PERIOD = B.PERIOD
-     and A.FS_ITEM = B.FS_ITEM
-   where A.PERIOD < '002'
-     and A.TRANSL_IND <= '1'
-     and B.TRANSL_IND = '2'
-group by A.PERIOD, A.FS_ITEM, TRANSL_IND, LC;
+         A.TRANSL_IND,
+         A.LC,
+         (A.GC - B.GC) as GC
+    from Table3 as A
+    join (select PERIOD, FS_ITEM, GC from Table2 where PERIOD = '002' and TRANSL_IND = '2') as B
+      on A.FS_ITEM = B.FS_ITEM;
 
 --Process differential amounts to keep balance
 insert into Table2
