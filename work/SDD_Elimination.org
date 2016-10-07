@@ -1,0 +1,132 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Elimination
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name                |
+|-----------------------+---------------------|
+| Author(s)             | Vincent Zhang       |
+| Architect             | Vincent Zhang       |
+| Product Owner         | Shi Ying, Carol Pan |
+| Information Developer |                     |
+| Quality Responsible   | Yao Cen             |
+| Developers            | Marvin Qian         |
+
+*** References
+|                    |                  |             | <30>                           |
+| Document Title     | Date             | Link        | Comments                       |
+|--------------------+------------------+-------------+--------------------------------|
+| BPC US Elimination | <2016-10-07 Fri> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/EN/9a/cb23d5c32047fbbeb625dbcaccb42a/content.htm?frameset=/EN/c1/f9f0830a51409f90490ebe5de1584d/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=181][online help]] | The help doc describes the US elimination rules in BPC. |
+| BCS Elimination    | <2016-10-07 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/f3/b06f3bb4983863e10000000a11402f/content.htm?frameset=/en/a3/6d723b784b1400e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=134&show_children=false][online help]] | The help doc describes detail on how BCS run elimination and reconciliation. |
+| EC-CS Elimination  | <2016-10-07 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/5c/c1bcd4445f11d189f00000e81ddfac/content.htm?frameset=/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=125&show_children=false][online help]] | The help doc describes detail on the Inter-Unit Elimination in ECCS |
+
+** Existing Elimination Solutions and UIs
+*** BPC Inter-company Booking & US Elimination
+
+**** Inter-company Booking
+#+Caption: Inter-company Booking
+[[../image/Reconciliation_BPC.png]] 
+
+Intercompany booking records the declarations and reported balances by other entities against a particular entity. This allows business users within each reporting entity to run a report that matches all of its declarations and reported balances against the balances of the rest of the entities, without having to assign to each owner read-access for other entities. Bookings that make the Intercompany declarations match can be automatically generated, and details can be posted to the consolidation model.
+
+You use the Intercompany Booking business rule table to define the posting rules the system uses in generating the entries to match the Intercompany balances and declarations.
+
+The values entered in the following properties determine default elimination logic:
+| Dimension    | Property  | Content                                                 |
+|--------------+-----------+---------------------------------------------------------|
+| Account      | ELIMACC   | A valid account in this dimension                       |
+| Entity       | ELIM      | Y or blank                                              |
+| Intercompany | ENTITY    | The entity ID corresponding to this intercompany member |
+| Currency     | REPORTING | Y or blank                                              |
+
+The default elimination logic does the following:
+1. Scans all base level, non-elimination entities, which are entities with the property ELIM <> Y.
+2. In case the model has a currency dimension, restricts its action to all reporting currencies, which are currencies that have the property REPORTING=Y. Data in local currency cannot be eliminated because it is in different currencies.
+3. Eliminates all values of the accounts to be eliminated, which are accounts that have the property ELIMACC<>blank, into the desired plug account, which is the account specified by the ELIMACC property.
+4. The elimination is performed in the elimination entity below the first common parent.The common parent is determined as follows:
+   + The system identifies the two entities for which a common parent must be found. The first entity is the current entity member. The second entity is the entity corresponding to the current Intercompany member. This entity is obtained by reading the content of the property ENTITY of the current Intercompany member.
+   + The system searches in a selected entity hierarchy for the first member that has both entities as descendants. This is the common parent.
+   + Then the system searches in the immediate descendants of the common parent for a valid elimination entity (an entity that has the property ELIM=Y). This is the entity in which the system stores the results of the elimination.
+
+The default elimination logic searches in the first hierarchy of the entity dimension. This can be modified to have the elimination performed in all hierarchies existing in the entity dimension. If no common parent is found, no elimination occurs. If no elimination entity is found below the first common parent, the next common parent is searched.
+
+**** US Elimination
+#+Caption: US Elimination Header
+[[../image/Elimination01_BPC.png]]  
+
+#+Caption: US Elimination Detail
+[[../image/Elimination02_BPC.png]]  
+
+When reporting the financial results of a group of entities, you may want to see the results for the group net all Intercompany activity within the group. Therefore, the system identifies Intercompany activities and balances and posts entries so these activities and balances are fully eliminated when looking at the overall results for the group. US eliminations functionality addresses the posting of Intercompany eliminations in scenarios where a full legal consolidation model is not required, such as within a standard financial model. When utilizing a legal consolidation model, Intercompany eliminations are normally handled as part of an eliminations and adjustments function.
+
+Intercompany elimination entries should be reflected only in groups in which both the entity and the partner entity are part of the group. To address this, US eliminations uses a concept known as posting at first common parent.
+
+US eliminations are normally used in financial models as opposed to legal consolidation models.
+
+The US eliminations business rules define the audit members to eliminate. For each of these audit members you then define the corresponding destination audit member under which the system should post the elimination postings.
+
+The values entered in the following properties determine default elimination logic:
+| Dimension    | Property  | Content                                                                                         |
+|--------------+-----------+-------------------------------------------------------------------------------------------------|
+| Account      | ELIMACC   | A valid account against which the actual Intercompany account to be eliminated should be offset |
+| Entity       | ELIM      | Y or blank                                                                                      |
+| Intercompany | ENTITY    | The entity ID corresponding to this Intercompany member                                         |
+| Currency     | REPORTING | Y or blank                                                                                      |
+
+The default elimination logic does the following:
+1. Scans all base level non-elimination entities (entities having the property ELIM <> Y).
+2. In case the model has a currency dimension, restricts its action to all reporting currencies only (currencies having the property REPORTING=Y). Data in local currency cannot be eliminated because it is in different currencies.
+3. Eliminates all values of the accounts to be eliminated (accounts having property ELIMACC<>blank) into the desired plug account (the account specified by the ELIMACC property itself).
+4. The elimination is posted to the elimination entity immediately below the first common parent. The common parent is derived as follows:
+   + For a particular record the system identifies the two entities for which a common parent must be found. The first entity is the current entity member and the second entity is the entity corresponding to the current Intercompany member. This entity is obtained reading the content of the property ENTITY of the current Intercompany member.
+   + The system searches in a selected entity hierarchy for the first member that has both entities as descendants. This is the common parent.
+   + Then the system searches in the immediate descendants of the common parent for a valid elimination entity (an entity having the property ELIM=Y). This is the entity where the results of the elimination are stored.
+The default elimination logic does its searches in the first organizational structure (hierarchy) of the entity dimension. This can be modified to have the elimination performed in all hierarchies existing in the entity dimension. If no common parent is found, no elimination occurs. If no elimination entity is found below the first common parent, the next common parent is searched.
+
+**** Other Business Rules
+#+Caption: Currency Translation 
+[[../image/CT_BPC.png]]  
+
+#+Caption: Account-Based Calculation
+[[../image/Reclassification_BPC.png]]  
+
+#+Caption: Carry Forward
+[[../image/CarryForward_BPC.png]]  
+
+*** SEM-BCS IU Elimination & Reconciliation
+
+#+Caption: Elimination Method General Tab
+[[../image/Elimination01_BCS.png]]
+
+#+Caption: Elimination Method Selection Tab
+[[../image/Elimination02_BCS.png]]  
+
+#+Caption: Elimination Method Differences Tab
+[[../image/Elimination03_BCS.png]] 
+
+#+Caption: Elimination Method Limits Tab
+[[../image/Elimination04_BCS.png]] 
+
+*** EC-CS Inter-Unit Elimination
+
+#+Caption: Elimination Method 01
+[[../image/Elimination01_ECCS.png]]
+
+#+Caption: Elimination Method 02
+[[../image/Elimination02_ECCS.png]]  
+
+#+Caption: Elimination Method 03
+[[../image/Elimination03_ECCS.png]] 
+
+#+Caption: Elimination Method 04
+[[../image/Elimination04_ECCS.png]] 
+
+#+Caption: Elimination Method 05
+[[../image/Elimination05_ECCS.png]] 
+
+#+Caption: Elimination Method 06
+[[../image/Elimination06_ECCS.png]] 
+
+*** FC Elimination
