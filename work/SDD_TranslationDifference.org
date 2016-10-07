@@ -48,7 +48,7 @@ To be in mind, only one group of OR, AR, and CR is used during translation for e
 - The income statement is converted using the average rate for the period;
 - The cash flow statement is based on balance sheet variations which are converted at the average rate for the period.
 
-CTA is flow-based, three flows are involved during translation:
+CTA is flow-based, following flows are involved during translation:
 - F10: Opening flow;
 - F15: Movement flow;
 - F80: CTA flow;
@@ -159,7 +159,7 @@ Based on these mappings, you may find the main difference between TI and CTA:
 
 *TI records translation differences onto differential items and subitems, while CTA records onto a flow under the same item.* 
 
-I should say TI is more generic and flexible than CTA, but CTA is simpler and tailored for consolidation usages. CT in Real-Time consolidation chooses the TI approach, as it is appealed to ERP users who may run currency translation in cases other than consolidation. Besides, another advantage of TI is that you can define Specific Exchange Rates freely, while CTA uses predefined rates that user can hardly extended. 
+I should say TI is more generic and flexible than CTA, but CTA is simpler and tailored for consolidation usages. CT in Real-Time consolidation chooses the TI approach, as it is appealed to ERP users who may run currency translation in cases other than consolidation. Besides, another advantage of TI is that you can define Specific Exchange Rates freely, while CTA uses predefined rates that user can hardly extend. 
 
 ** Mapping TI to CTA
 For the reason of BPC's consumption, the translated result in S/4 should be converted from TI-based to CTA-based. In other words, the TI results should be complemented with flow information. It is better to do the conversion during CT posting. To support this, in each translation entry, there should be 3 additional configuration fields:
