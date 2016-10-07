@@ -64,7 +64,7 @@ CTA is flow-based, following flows are involved during translation:
 | F81  | CURR_CONVERT(LC(current),CR) - F15                         |
 | F82  | CURR_CONVERT(LC(priors),CR) - F00                          |
 | F80  | F81 + F82                                                  |
-| F99  | F00 + F15 + F80                                                |
+| F99  | F00 + F15 + F80                                            |
 
 F00, F80, and F99 are not persisted if they can be calculated on the fly. F00 of this period is the F99 of last period, except in the first consolidation and carry forward, F00 will be persisted. Carry forward only needs to convert F99 of the last year to F00 of next year. If CTA(F80) is split by opening differences(F81) and movement differences(F81), then F80 needn't be persisted. 
 
@@ -113,7 +113,7 @@ We first translate using the TI approach, there should exist following lines in 
 |    002 |   123456 |    3 |    0 |    240 |
 |  /002/ | /300010/ |  /1/ |  /0/ |   /20/ |
 |  /002/ | /300010/ |  /2/ |  /0/ |  /480/ |
-|  /002/ | /300010/ |  /3/ |  /0/ | /-240/ |
+|  /002/ | /200010/ |  /3/ |  /0/ | /-240/ |
 
 Differences(in italic) are recorded to differential items so that balance sheet and income statement keep in balance. *Note*: How differential items are posted needs further investigation. I am not very sure if TI.1, TI.2, TI.3 should be all posted with each a reverse amount?
 
