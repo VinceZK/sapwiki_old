@@ -241,3 +241,18 @@ The default elimination logic does its searches in the first organizational stru
 [[../image/Elimination06_ECCS.png]] 
 
 *** FC Elimination
+
+#+Caption: Reconciliation Rule Scope Defination 
+[[../image/Reconciliation01_FC.png]]
+
+#+Caption: Reconciliation Rule Detial Defination
+[[../image/Reconciliation02_FC.png]]  
+
+#+Caption: Elimination Selection Defination
+[[../image/Elimination01_FC.png]] 
+
+#+Caption: Elimination Rule Scope Defination
+[[../image/Elimination02_FC.png]] 
+
+#+Caption: Elimination Rule Detail Defination
+[[../image/Elimination03_FC.png]] 
