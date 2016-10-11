@@ -15,14 +15,125 @@
 | Developers            | Marvin Qian         |
 
 *** References
-|                    |                  |             | <30>                           |
-| Document Title     | Date             | Link        | Comments                       |
-|--------------------+------------------+-------------+--------------------------------|
-| BPC US Elimination | <2016-10-07 Fri> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/EN/9a/cb23d5c32047fbbeb625dbcaccb42a/content.htm?frameset=/EN/c1/f9f0830a51409f90490ebe5de1584d/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=181][online help]] | The help doc describes the US elimination rules in BPC. |
-| BCS Elimination    | <2016-10-07 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/f3/b06f3bb4983863e10000000a11402f/content.htm?frameset=/en/a3/6d723b784b1400e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=134&show_children=false][online help]] | The help doc describes detail on how BCS run elimination and reconciliation. |
-| EC-CS Elimination  | <2016-10-07 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/5c/c1bcd4445f11d189f00000e81ddfac/content.htm?frameset=/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=125&show_children=false][online help]] | The help doc describes detail on the Inter-Unit Elimination in ECCS |
+|                     |                  |              | <30>                           |
+| Document Title      | Date             | Link         | Comments                       |
+|---------------------+------------------+--------------+--------------------------------|
+| BPC US Elimination  | <2016-10-07 Fri> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/EN/9a/cb23d5c32047fbbeb625dbcaccb42a/content.htm?frameset=/EN/c1/f9f0830a51409f90490ebe5de1584d/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=181][online help]]  | The help doc describes the US elimination rules in BPC. |
+| BCS Elimination     | <2016-10-07 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/f3/b06f3bb4983863e10000000a11402f/content.htm?frameset=/en/a3/6d723b784b1400e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=134&show_children=false][online help]]  | The help doc describes detail on how BCS run elimination and reconciliation. |
+| EC-CS Elimination   | <2016-10-07 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/5c/c1bcd4445f11d189f00000e81ddfac/content.htm?frameset=/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=125&show_children=false][online help]]  | The help doc describes detail on the Inter-Unit Elimination in ECCS |
+| Parent Company      | <2016-10-09 Sun> | [[https://en.wikipedia.org/wiki/Parent_company][wikipedia]]    | A parent company is a company that owns enough voting stock in another firm to control management and operation by doing and influencing or electing its board of directors. The second company is deemed a subsidiary of the parent company. |
+| Subsidiary          | <2016-10-09 Sun> | [[https://en.wikipedia.org/wiki/Subsidiary][wikipedia]]    | A subsidiary, subsidiary company or daughter compan is a company that is owned or controlled by another company, which is called the parent company, parent, or holding company. |
+| Affiliate/Associate | <2016-10-09 Sun> | [[http://www.investopedia.com/ask/answers/06/subsidiaries.asp][investopedia]] | All three of these terms refer to the degree of ownership that a parent company holds in another company. In most cases, the terms affiliate and associate are used synonymously to describe a company whose parent only possesses a minority stake in the ownership of the company. |
+| Divison             | <2016-10-09 Sun> | [[https://en.wikipedia.org/wiki/Division_(business)][wikipedia]]    | A division of a business or business division (sometimes called a business sector) is one of the parts into which a business, organization or company is divided. |
+| Branch Office       | <2016-10-09 Sun> | [[http://www.investopedia.com/terms/b/branch-office.asp][investopedia]] | A location, other than the main office, where business is conducted. Most branch offices are comprised of smaller divisions of different aspects of the company such as human resources, marketing, accounting, etc. A branch office will typically have a branch manager who will report directly to, and take orders from, a management member of the main office. |
 
-** Existing Elimination Solutions and UIs
+** Design
+*** Context
+The most basic consolidation function is the elimination of intercompany postings. If Company A and Company B are in the same group, and Company A sells something to Company B, then the corresponding bookings must be eliminated during consolidation. 
+
+Technically, elimination does reversing on these internal transactions among entities. The difficulty is how to figure out which transactions should be eliminated. This requires a mix of intercompany and group relevant information. If under a consolidation group hierarchy, there are companies who have reciprocal transactions, then these line items should be revsered, and repost amounts to elimination accounts. 
+
+Typical eliminations are to look at the payables and receivables of companies within one group and to eliminate them. There are also eliminations like: to look at loans and loan payments, license payments and license income, dividen payable and receivable, intercompany provisions, gains and losss on internal transfer of assets, and so on. General speaking, all cross-company postings, which most importantly impact the debit and credit balance, are relevent from eliminations.
+
+Howerver if the companies report different values, this would result imbalanced postings during elimination. For example, if Company A reports payables to Company B 100, but B reports receivables from A of 200, the resulting elimination posting would be imbalanced by 100.
+
+There are multiple reasons for such imbalanced postings. For example, the corresponding business process might only be processed by one company so far, or there might be an actual dispute between the two companies. Such differences are normally clarified and eliminated before the consolidation is done in the Intercompany Reconciliation. Even after successful intercompany reconciliation some, but few and minor, differences might remain. So consolidation traditionally contains means to create automatic adjustments for intercompany differences. With real-time on-the-fly consolidation, where there is no intercompany reconciliation done boeforehand, this gets even more important. 
+
+The auto adjustment substitutes the posting from the intercompany reconciliation. As such it is a complete posting, including balancing debit and credit, including posting tax effects, document split and whatever would be part of real intercompany reconciliation positng in FI. However, we can go for a simplify version at first.
+
+**** Example
+How do elimination and auto adjustment posting look like?
+
+We start with two companies and consider the auto adjustment for elimination of payables and receivable. So the seleciton is payables, the counter selection is receivables. The auto adjustment is posted to the company with the payable selection. 
+
+At the start, Company A has inventory worth 1000(could be some goods to be sold), Company B has nothing. 
+| Company | Partner | Account   | Amount |
+|---------+---------+-----------+--------|
+| A       |         | Inventory |   1000 |
+
+Now A sells its inventory to B, however, B decides only to accept 900 as payable and inventory(maybe something got lost in transport).
+| Company | Partner | Account     | Amount |
+|---------+---------+-------------+--------|
+| A       |         | Inventory   |   1000 |
+| A       | B       | Receivables |   1000 |
+| A       |         | Inventory   |  -1000 |
+| B       | A       | Payables    |   -900 |
+| B       |         | Inventory   |    900 |
+
+A and B are in the same group G1, from the G1's view, the receivables of A and the corresponding payables of B should be eliminated. The eliminated lines are in italics.
+| Company | Partner | Account       |  Amount |
+|---------+---------+---------------+---------|
+| A       |         | Inventory     |    1000 |
+| A       | B       | Receivables   |    1000 |
+| A       |         | Inventory     |   -1000 |
+| B       | A       | Payables      |    -900 |
+| B       |         | Inventory     |     900 |
+| /A/     | /B/     | /Receivables/ | /-1000/ |
+| /B/     | /A/     | /Payables/    |   /900/ |
+
+Then if we see the group level report righ now(just by removing column Company and Partner, and sum all the amount up), we find 100 of inventory is lost.
+| Group | Account   | Amount |
+|-------+-----------+--------|
+| G1    | Inventory | 900    | 
+
+Now comes the auto adjustment. We should keep in mind that this is just a short cut for the real intercompany reconciliation. In real cases, experts would find the reason and post a document reflecting that reason. For example, increasing the receivalbes from B by 100 and creating an insurance claim from B of 100. Here, we donot know the reason of differences, we just post against IC Differences account.
+| Group | Company | Partner | Account          |  Amount |
+|-------+---------+---------+------------------+---------|
+|       | A       |         | Inventory        |    1000 |
+|       | A       | B       | Receivables      |    1000 |
+|       | A       |         | Inventory        |   -1000 |
+|       | B       | A       | Payables         |    -900 |
+|       | B       |         | Inventory        |     900 |
+|       | /A/     | /B/     | /Receivables/    | /-1000/ |
+|       | /B/     | /A/     | /Payables/       |   /900/ |
+| G1    | /B/     | /A/     | /IC Differences/ |   /100/ |
+
+Let's do the final consolidated report, this now correclty shows that inventory worth 100 got lost, and that there is a correspoinding IC difference need to be cleared. 
+| Group | Account        | Amount |
+|-------+----------------+--------|
+| G1    | Inventory      |    900 |
+| G1    | IC Differences |    100 |
+
+*** Key Requirements and Design Goals
+Elimination for Real-Time Consolidation should be able to run On-The-Fly together with On-The-Fly currency translation. Performance is a key successful point under the prerequiste of those essential elimination features are fulfilled. 
+**** Following Design Goals *MUST* be Met:
+1. Elimination methods can be defined for each contains arbitrary number of auto adjustment steps;
+2. An Elimination method generates AMDP runtime objects which can be invoked directly by all possible applications;
+3. The same method also generates AMDP runables that can be excuted for reconciliation purposes;
+4. Each auto adjustment step must contain a selection and a counter selection(if One-Sided is chosen, the counter selection is hided);
+5. Posting strategy must be provided to control which side the adjustments should be posted;
+6. Each auto adjustment step must contain differetial items definations, which can have arbitrary subitems definiations;
+7. A group hierarchy must be given, and it must support time dependent;
+8. Elimination result must support both reproduce and restatement due to potential changes in the group hierarchy;
+
+**** Following Design Goals *SHOULD* be Met:
+1. An elimination method should support either "One-Sided Elimination" or "Two-Sided Elimination";
+2. An elimination method should support both parallelly and sequentially execution;
+3. User can choose key figure/attributes for elimination comparasion and posting;
+4. Differences can be splitted per transaction currency;
+5. Thresholds can be defined to prevent the system from posting the elimination entry if the elimination differences are too high;
+6. User can choose on which level does the threshold check applies? That is per differential line item or per method step;
+7. There should be UIs to maintain consolidation group, consolidation method, and consolidation rate;
+8. Document type should be defined for elimination;
+9. A Fiori-based On-The-Fly report to display elimination result;
+
+*** Major Building Blocks
+
+**** Elimination Method
+
+**** Group
+
+**** Elimination Runables
+
+**** Automatic Posting
+
+**** On-The-Fly Reporting
+
+** UI Mockups
+
+*** Elimination Method
+
+** Appendix: Existing Elimination Solutions and UIs
 *** BPC Inter-company Booking & US Elimination
 
 **** Inter-company Booking
