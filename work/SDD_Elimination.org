@@ -1,4 +1,4 @@
-#+PAGEID: 
+#+PAGEID: 1852751018
 #+VERSION: 1
 #+STARTUP: align
 #+OPTIONS: toc:1
@@ -118,20 +118,539 @@ Elimination for Real-Time Consolidation should be able to run On-The-Fly togethe
 9. A Fiori-based On-The-Fly report to display elimination result;
 
 *** Major Building Blocks
+#+Caption: Elimination Overall Context
+[[../image/EliminationOverall.png]] 
 
-**** Elimination Method
+ Elimination runs after currency translation. Because each entity can be assigned with a dedicate CT method, to converted all the data, CT methods should be run sequentially entity by entity. Local data is read from ACDOCA or ACDOCC, converted, and then saved into the global temporal table GT_ACDOCC, which has the similar structure with ACDOCC. 
 
-**** Group
+The On-The-Fly CT runables and Reconciliation Runablescan read the translated data and produce On-The-Fly CT Report and Reconciliation Report directly. 
 
-**** Elimination Runables
+Elimination runables read the translated data and produce auto-adjustment lines, which will then inserted into GT_ACDOCC. During elimination, group hierarchy information is read, so that the system know which entities belong to the same group(or super group). Till now, GT_ACDOCC contains the eliminated data for group reporting.
 
-**** Automatic Posting
+On-The-Fly elimination runables converts the data in GT_ACDOCC to structured group reporting format. Besides, posting method read the data from GT_ACDOCC and then persist into ACDOCC. It Can be chosen to only post the currency transalated result or also the elimination result. 
+
+User can also define their own reporting, as all the data needed are either in the global temporary table, or persisted in ACDOCC. 
+
+Based on the diagram, following building blocks should be given:
+
+**** Elimination Method                                               :Chang:
+Elimination method(ELIM Method in short) can be used for both elimination and reconciliation. It shares the same technology with currency translation: AMDP and Global Temporary Table. And it can be run immediately after currency translation with a single HANA call. In other words, we can achieve on-the-fly run currency translation and elimination, which gives out a group point view of financial data.
+
+ELIM methods are defined using an ABAP UI. It is under the unified method framework that all other consolidation methods are based on. You will see similar UIs for Currency Translation, Validation, Data Submission, and so on. The framework requires a method with multiple steps, which can either be executed sequentially, or parallely. Each step can be configured to fulfill different usages according to different method types. However, there is a share pattern for all steps. A step can be regarded as 3 ordered actions: First select data based on selections; Then calculate and convert; At last, post the result amount on differential items.
+
+**** Group Hierarchy
+Group hierarchy is the mandatory information. You must have your consolidation group hierarchy defined before running eliminations. However, group hierarchy is not the only information required by elimination, there is also ownership information(aka consolidation rate and consolidation method) attached to different viewpoints of the hierarchy. 
+
+Also to be in mind, consolidation group defination is time-dependant. From period to period, you will see different group hierarchy and ownership information.  
+
+~Group information is also version dependant, but it is not the version of group itself. It is actually the consolidation version that is assigned with a dedicate group hierarchy.~
+
+**** Elimination Runables                                            :Marvin:
+Elimination runables are AMDP methods that are genereted accroding the definations of an ELIM method. Elimination usually run after currency translation, that is based on the result of currency translation. The communication channel between CT and ELIM is through the global temporary table. 
+
+The generated ELIM runables also contains the posting logic(aka the posting method of elimination). In case user wants to save the elimination auto adjustments, then settings from the assigned document type are read and applied. 
 
 **** On-The-Fly Reporting
+A Fiori-based report should be given to show the group view of the financial data after elimination(of cource, after the currency translation). The report would be a standard B/S and I/S, which can run CT and ELIM on-the-fly, and simulate accroding to different given input parameters. 
 
-** UI Mockups
+A reconciliation report is necessary to run reconciliation before running eliminations. It should also be a Fiori-based report and of course run on-the-fly with currency translation. 
 
+#+Caption: An Example of Reconciliation Report
+[[../image/ReconciliationReport.png]] 
+
+** Detail Design
 *** Elimination Method
+ELIM methods are defined using an ABAP UI. It is under the unified method framework that all other consolidation methods are based on. You will see similar UIs for Currency Translation, Validation, Data Submission, and so on. The framework requires a method with multiple steps, which can either be executed sequentially or parallely. Each step can be configured to fulfill different usages according to different method types. However, there is a share pattern for all steps. A step can be regarded as 3 ordered actions: First select data based on selections; Then calculate and convert; At last, post the result amount on differential items.
+
+**** General Settings
+The settings in the general tab will effect the layout of other tabs. 
+
+#+Caption: Elimination Method General Tab
+[[../image/EliminationMethod01.png]] 
+
+An ElIM method must be defined under a consolidation model. However it can be activated and generated runables separately. Only if fields on foundation view change do you need to re-generate ELIM method, otherwise, the runables stays consistent. 
+
+Execution mode determines whether the generated runables allow sequential or parallel execution of steps. Parallel execution gives you better runtime performance, while sequential execution maybe somehow mandatory if you have depandency among your elimination steps.
+
+You decide whether to use "One-Sided Elimination" or "Two-Sided Elimination" in selection mode. "Two-Sided Elimination" is much more common. It is based on two selections and is typically used for eliminations of group-internal business relationships through trade and services. By contrast, one-sided interunit elimination is a simplified form of elimination. Here, the elimination entries are based on the values listed in only one selection. You can use this simplified form of elimination for the consolidation of IU revenue and expense, in particular.
+
+Differences Splitting allows you to analyze the reason for the elimination differences. The system distinguishes between currency-related elimination differences and other elimination differences:
++ Currency-related differences :: are incurred if a consolidation unit and its partner unit have the same transaction currency values in a business transaction, but report different group currency values because they use different local currencies and/or exchange rates.
++ Other differences :: are incurred if a consolidation unit and its partner unit use different ways of reporting business relationships in their financial data
+.
+Possible reasons for the different ways of reporting financial data:
++ The units post their data on different dates
++ The units use different accounting and valuation methods
++ One unit makes an error in posting
+By splitting differences you can post currency-related and other differences to different accounting objects.
+
+Check the "Split Differences Per Transaction Currency" will activate the difference splitting feature. You must also assign an exhcnage rate indicator so that the system can calulate the currency-related differences. 
+
+Document type should be assigned to a method so that additional information like deferred taxes, selected key figures/quantity, and so on can be got during generation of ELIM runables. Document Type is a genaric attributes for all types of methods.
+ 
+**** Method Step List
+#+Caption: Elimination Method Steps Tab
+[[../image/EliminationMethod02.png]] 
+Step list shows an overall list of steps belong to this method. Each line shows the step ID, step description, and selections involved. If the method is "One-Sided", then only Selection1 is shown. Selection can be reuse existings or generated along with the method. Double click a line will navigate you to the step detail tab. You can also =Add= or =Delete= a step in the list view. If =Add= is clicked, it will also navigate you to the step detail tab with an empty step defination. 
+
+You can also adjust the sequence of the steps.  The step ID has nothing to do with execution sequence. There is a hided dedicate column called "EXSEQ" to indicate what the sequence during execution. 
+
+**** Single Step Detial
+#+Caption: Elimination Method Step Detail Tab
+[[../image/EliminationMethod03.png]] 
+
+Each step has its own description. The ID of step is automatically generated and has nothing to do with the execution sequence.
+
+For "Two-Sided Elimination", you can assign 2 selections, Selection 1 and its counter Selection 2. You use the selections to reflect the business relationships (receivables/payables and revenue/expense) between the consolidation entities within a consolidation group. The first selection contains the accounting objects; the second selection contains the offsetting accounting objects for the eliminations. If "One-Sided Elimination" is selected in the =General= tab, then the second selection is not shown.
+
+The system differentiates elimination entries in terms of business relationships, as follows:
+- The system processes a given pair of consolidation units (for example, consolidation units A and B).
+- Within a pair of consolidation units, the system processes one pair of selections at a time (selection 1 and selection 2).
+- The values of consolidation unit A in selection 1 (with consolidation unit B as the partner assignment) and the values of consolidation unit B in selection 2 (with consolidation unit A as the partner assignment) indicate a business relationship. The system eliminates these values and determines any existing differences.
+The reverse correlation – that is, the values of consolidation unit B from selection 1 and the values of consolidation unit A from selection 2 – is also regarded as a business relationship.
+
+If you want to restrict the values to be eliminated, you must or can select the following characteristics for each selection:
+| <20>                 |                     | <50>                                               |
+| Field                | Required / Optional | Purpose                                            |
+|----------------------+---------------------+----------------------------------------------------|
+| RACCT                | Required            | Determines the FS item or the offsetting FS item   |
+| ENTITY               | Optional            | Restricts the selection of consolidation/partner units to these units when you later specify the consolidation group in an IU elimination run. If no consolidation/partner units are specified here, the system scans the business relationships for all unit pairs in the consolidation group. |
+| PENTITY              | Optional            | Same as above                                      |
+| Subitem              | Optional            | Restricts the values in the selection to those values that were posted with exactly this subitem(Transaction Type, producet, region, and so on). |
+| DocType              | Optional            | Further restricts the selection                    |
+| Other characteristics (if desired) | Optional            | Same as above                                      |
+
+The system calculates and posts elimination differences for each business relationship between two consolidation entities (that is, a entity and a partner unit). The system posts the elimination difference to one of the two consolidation entities concerned. You can define the strategy the system uses to determine which consolidation unit the elimination difference is posted to.
+
+You can select one of the following strategies for posting differences:
++ Consolidation enity from selection 1 or 2. In Customizing you choose whether the system posts the elimination difference to the consolidation unit:
+  + from selection 1 or
+  + from selection 2
++ Consolidation unit with lower or higher value. In this strategy the amount of the value of the accounting objects being eliminated determines how the elimination differences are posted. In Customizing you choose whether the system posts the elimination difference to the consolidation unit that has:
+  + the lower value or
+  + the higher value
+
+You choose which key figure or which attribute for the consolidation entity is decisive for the strategy for posting differences. The specified key figure or attribute is only relevant for a posting strategy in which the elimination difference is recorded at the consolidation entity with the smaller or greater reported value. Which means the drop-down box should not be shown in case a dedicate entity for either selection 1 or 2 is chosen.
+- If you specify a key figure for the consolidation entity, the system records the differences at the consolidation entity that reports the smaller or greater amount on that key figure.
+- If you specify an attribute for the consolidation unit, then the relative sizes of that attribute for the consolidation unit and the partner unit determine at which consolidation unit the elimination difference is posted.
+
+The =Check Threshold= drop-down box controls how the system compares the elimination differences with the thresholds defined in the =Thresholds= tab. 
+- Per difference row or
+- Per method step
+
+You can specify differential accounting objects per method step and pair of selections. If you split the differences you can specify different accounting objects for currency-related differences and other differences. If the differential item should be broken down by subitems, you can add other characteristics and input fix values on them.
+
+*Caution:* The differential accounting objects must be outside of the ranges you defined for the selections.
+
+**** Thresholds
+#+Caption: Elimination Method Thresholds Tab
+[[../image/EliminationMethod04.png]] 
+
+When you perform interunit (IU) eliminations, you may want to prevent the system from posting the elimination entry if the elimination differences are too high.
+For this purpose, you can specify thresholds for elimination differences in Customizing:
++ per currency key and/or
++ per unit of measure
+
+If an elimination difference exceeds the thresholds, the system merely generates a message and suggests a journal entry – the document is not posted. You can then examine the elimination differences that exceed the thresholds and post any necessary adjustments. If you regard the elimination difference as being valid and you want to post the difference, first you must deactivate the indicator for using =Check Thresholds=.
+
+*** Examples & Deduction
+**** Group Hierarchy
+Following group hierarchy is used for the overall deduction.
+#+Caption: Group Hierarchy
+[[../image/GroupHierarchy4Deduction.png]] 
+
+**** Customizing for Selection
+Selection 1
+| Field   | Expression  |
+|---------+-------------|
+| Account | Receivables |
+
+Selection 2
+| Field   | Expression |
+|---------+------------|
+| Account | Payables   |
+
+Posting differences to the entity from Selection 1.
+
+**** Aggreated Data from ACDOCA
+The fact table is projected from ACDOCA based on company dimension. The column =Posting Level= "05" stands for the =Amount= is converted into group currency. 
+
+| Company | Partner | Account     | TTYPE | Amount | Posting Level |
+|---------+---------+-------------+-------+--------+---------------|
+| B       | C       | Receivables |   100 |     60 |            05 |
+| B       | C       | Receivables |   200 |     80 |            05 |
+| C       | B       | Payables    |   300 |    -20 |            05 |
+| C       | B       | Payables    |   100 |    -30 |            05 |
+
+**** Elimination Result
+*Case 1* 
+
+Customzing of the Differential Items: Account and TTYPE. Account is assigned with fix values on both Debit and Credit; TTYPE is empty, which means take the value of the source lines. 
+| Field          | Debit              | Credit        |
+|----------------+--------------------+---------------|
+| Account        | Other Expenditures | Other Revenue |
+| TTYPE          |                    |               |
+
+Auto-adjustment postings in ACDOCC, differential items are in italics.
+| Company | Partner | Account              | TTYPE | Amount | Posting Level |
+|---------+---------+----------------------+-------+--------+---------------|
+| B       | C       | Receivables          | 100   | -60    | 20            |
+| /B/     | /C/     | /Other Expenditures/ | /100/ | /60/   | /20/          |
+| B       | C       | Receivables          | 200   | -80    | 20            |
+| /B/     | /C/     | /Other Expenditures/ | /200/ | /80/   | /20/          |
+| C       | B       | Payables             | 300   | 20     | 20            |
+| /B/     | /C/     | /Other Revenue/      | /300/ | /-20/  | /20/          |
+| C       | B       | Payables             | 100   | 30     | 20            |
+| /B/     | /C/     | /Other Revenue/      | /100/ | /-30/  | /20/          | 
+
+*Case 2*
+Both Account and TTYPE is defined with fix values:
+| Field   | Debit              | Credit        |
+|---------+--------------------+---------------|
+| Account | Other Expenditures | Other Revenue |
+| TTYPE   | 100                | 100           |
+
+Entries in ACDOCC:
+| Company | Partner | Account              | TTYPE | Amount | Posting Level |
+|---------+---------+----------------------+-------+--------+---------------|
+| B       | C       | Receivables          |   100 |    -60 |            20 |
+| B       | C       | Receivables          |   200 |    -80 |            20 |
+| C       | B       | Payables             |   300 |     20 |            20 |
+| C       | B       | Payables             |   100 |     30 |            20 |
+| /B/     | /C/     | /Other Expenditures/ | /100/ |   /90/ |          /20/ |
+
+*Case 3*
+Only Account is selected, all other characteristic fields will be left with empty values. 
+| Field   | Debit              | Credit        |
+|---------+--------------------+---------------|
+| Account | Other Expenditures | Other Revenue |
+
+Entries in ACDOCC:
+| Company | Partner | Account              | TTYPE | Amount | Posting Level |
+|---------+---------+----------------------+-------+--------+---------------|
+| B       | C       | Receivables          |   100 |    -60 |            20 |
+| B       | C       | Receivables          |   200 |    -80 |            20 |
+| C       | B       | Payables             |   300 |     20 |            20 |
+| C       | B       | Payables             |   100 |     30 |            20 |
+| /B/     | /C/     | /Other Expenditures/ |       |   /90/ |          /20/ |
+
+In general, the differential items should be aggregated if all characteristics are same(except Account) before posting to the ACDOCC.
+
+**** Richer Data for Different Cases
+Besides the reciprocal transactions between B and C, let's produce more data to cover more cases. The column =Case= is added only to describe which lines belong to the same selection pair, it won't be saved into ACDOCC.
+| Case | Company | Partner | Account     | TTYPE | Amount | P.LVL |
+|------+---------+---------+-------------+-------+--------+-------|
+|    1 | B       | C       | Receivables |   100 |     60 |    05 |
+|      | B       | C       | Receivables |   200 |     80 |    05 |
+|      | C       | B       | Payables    |   300 |    -20 |    05 |
+|      | C       | B       | Payables    |   100 |    -30 |    05 |
+|    2 | C       | B       | Receivables |   200 |     10 |    05 |
+|      | B       | C       | Payables    |   200 |      0 |    05 |
+|    3 | D       | E       | Receivables |   200 |     30 |    05 |
+|      | E       | D       | Payables    |   200 |    -30 |    05 |
+|    4 | E       | D       | Receivables |   200 |     15 |    05 |
+|    5 | B       | D       | Receivables |   200 |     40 |    05 |
+|      | D       | B       | Payables    |   200 |    -40 |    05 |
+|    6 | A       | B       | Receivables |   200 |     45 |    05 |
+|      | B       | A       | Payables    |   200 |    -35 |    05 |
+|    7 | A       | X       | Receivables |   200 |     70 |    05 |
+|      | X       | A       | Payables    |   200 |    -70 |    05 |
+
+Suppose the differential items is customized in this way:
+| Field          | Debit              | Credit        |
+|----------------+--------------------+---------------|
+| Account        | Other Expenditures | Other Revenue |
+| TTYPE          |                    |               |
+
+Let's see what happen case by case:
+*Case 1:* Same as above.
+
+*Case 2:* The reverse correlation of case 1, that is B is buyer, C is seller. B has the aggregated payable amount of 0. The lines should be eliminated:
+| Case | Company | Partner | Account            | TTYPE | Amount | P.LVL |
+|------+---------+---------+--------------------+-------+--------+-------|
+|    2 | C       | B       | Receivables        |   200 |     10 |    05 |
+|      | C       | B       | Receivables        |   200 |    -10 |    20 |
+|      | C       | B       | Other Expenditures |   200 |     10 |    20 |
+|      | B       | C       | Payables           |   200 |      0 |    05 |
+
+*Case 3:* Reciprocal transactions between D and E in group Germany. The amounts are same, and can be fully eliminated, no differential line is generated:
+| Case | Company | Partner | Account     | TTYPE | Amount | P.LVL |
+|------+---------+---------+-------------+-------+--------+-------|
+|    3 | D       | E       | Receivables |   200 |     30 |    05 |
+|      | D       | E       | Receivables |   200 |    -30 |    20 |
+|      | E       | D       | Payables    |   200 |    -30 |    05 |
+|      | E       | D       | Payables    |   200 |     30 |    20 |
+
+*Case 4:* Only one side has the line, then no elimination should be given:
+| Case | Company | Partner | Account     | TTYPE | Amount | P.LVL |
+|------+---------+---------+-------------+-------+--------+-------|
+|    4 | E       | D       | Receivables |   100 |     15 |    05 |
+
+*Case 5:* The 2 entities B and D don't share the same parent group, but share the same grandpa group. The transactions between them should be eliminatd:
+| Case | Company | Partner | Account     | TTYPE | Amount | P.LVL |
+|------+---------+---------+-------------+-------+--------+-------|
+|    3 | B       | D       | Receivables |   200 |     40 |    05 |
+|      | B       | D       | Receivables |   200 |    -40 |    20 |
+|      | D       | B       | Payables    |   200 |    -40 |    05 |
+|      | D       | B       | Payables    |   200 |     40 |    20 |
+
+*Case 6:* A is directly under root group Europa, B is under the sub group France. The transactions between them should be eliminatd:
+| Case | Company | Partner | Account            | TTYPE | Amount | P.LVL |
+|------+---------+---------+--------------------+-------+--------+-------|
+|    3 | A       | B       | Receivables        |   200 |     45 |    05 |
+|      | A       | B       | Receivables        |   200 |    -45 |    20 |
+|      | B       | A       | Payables           |   200 |    -35 |    05 |
+|      | B       | A       | Payables           |   200 |     35 |    20 |
+|      | A       | B       | Other Expenditures |   200 |     10 |    20 |
+
+*Case 7:* Transactions are between an external entity, then no elimination should be given:
+| Case | Company | Partner | Account     | TTYPE | Amount | P.LVL |
+|------+---------+---------+-------------+-------+--------+-------|
+|    7 | A       | X       | Receivables |   100 |     70 |    05 |
+|      | X       | A       | Payables    |   100 |    -70 |    05 |
+
+In any cases, the group information is not posted to the elimination documents. Because during reporting, the group information can be dynamically cast the journal items. You can find detail in the _Group Reporting_ sector. 
+**** Thresholds
+Say, the following reported financial data is being processed: Receivables and payables along with the differential items have a subitem =Due Date=.
+
+*The threshold is 380*
+
+Reported data:
+| Company | Partner | Account     |   Due Date | Amount | P.LVL |
+|---------+---------+-------------+------------+--------+-------|
+| A       | B       | Receivables | 2016.10.15 |    100 |    05 |
+| A       | B       | Receivables | 2016.11.24 |     50 |    05 |
+| B       | A       | Payables    | 2016.10.15 |   -500 |    05 | 
+
+Elimination Document:
+| Line Item | Company | Partner | Account            |   Due Date | Amount | P.LVL |
+|-----------+---------+---------+--------------------+------------+--------+-------|
+|         1 | A       | B       | Receivables        | 2016.10.15 |   -100 |    20 |
+|         2 | B       | A       | Payables           | 2016.10.15 |    500 |    20 |
+|         3 | A       | B       | Other Revenue      | 2016.10.15 |   -400 |    20 |
+|         4 | A       | B       | Receivables        | 2016.11.24 |    -50 |    20 |
+|         5 | A       | B       | Other Expenditures | 2016.11.24 |     50 |    20 |
+
+Check of the threshold:
+
+*Case 1*: Threshold is checked per differential line item. Line 3 has the difference -400, whose absolute value exceeds 380. The posting is not allowed.
+
+*Case 2*: Threshold is checked per method step. The total difference by adding line 3 and line 5 is -350, whose absolute value doesn't exceed 380. The posting is allowed. 
+
+**** Thresholds with On-The-Fly Display
+As On-The-Fly run elimination doesn't do posting anyway, then the display of result should explicitly show which lines are invalid. Let's run a more complicate case.
+
+In the posting strategy, we choose posting to the "the lower value". The key figure is set to "Transaction Currency". Check threshold per different row. Nothing changes for the differential items settings.
+
+In the =Thresholds=, we give following settings:
+| Currency | Text          | Amount |
+|----------+---------------+--------|
+| FRF      | French Franc  |    100 |
+| EUR      | European Euro |    150 |
+
+The reported data looks like:
+| Company | Partner | Account     | TC_Amount | TC_Key | GC_Amount | GC_Key | P.LVL |
+|---------+---------+-------------+-----------+--------+-----------+--------+-------|
+| B       | C       | Receivables |  100      | FRF    |       200 | EUR    |    05 |
+| C       | B       | Payables    |  -170     | FRF    |      -340 | EUR    |    05 |
+
+Intermediate Elimination Document:
+| Company | Partner | Account       | TC_Amount | TC_Key | GC_Amount | GC_Key | P.LVL |
+|---------+---------+---------------+-----------+--------+-----------+--------+-------|
+| B       | C       | Receivables   |      -100 | FRF    |      -200 | EUR    |    20 |
+| C       | B       | Payables      |       170 | FRF    |       340 | EUR    |    20 |
+| B       | C       | Other Revenue |       -70 | FRF    |      -170 | EUR    |    20 |
+
+The TC_Amount of the Receivables accounts is lower than Payables accounts, so the difference will be recorded to Company B. The difference of transaction currency is -70, whose absolute value doesn't exceed the threshold 100, so it is valid. However the difference of group currency is -170, which exceeds the threshold 150. 
+
+The On-The-Fly Elimination Report will be display this way:
+| Group  | Account       | Company | Partner | P.LVL | TC(FRF) | GC(EUR) |
+|--------+---------------+---------+---------+-------+---------+---------|
+| France | Receivables   |         |         |       |       0 |       0 |
+|        |               | B       | C       |    05 |     100 |     200 |
+|        |               | B       | C       |    20 |    -100 |    -200 |
+|        | Payables      |         |         |       |       0 |       0 |
+|        |               | C       | B       |    05 |    -170 |    -340 |
+|        |               | C       | B       |    20 |     170 |     340 |
+|        | Other Revenue |         |         |       |     -70 |  ~-170~ |
+|        |               | B       | C       |    20 |     -70 |  ~-170~ |
+The amount "-170" in Other Revenue will be marked with RED color to indicate invalid eliminations. When user place the cursor on the invalid value, tootips will show to tell why. In this case, the difference exceeds the threshold value.
+
+**** Group Reporting
+Based on the group hierarchy, the reported data, and the auto posted elimination documents, we can generate group level reports. Now suppose the reported data and the elimination documents are all in the HANA global temporary table: GT_ACDOCC.
+
+| Company | Partner | Account            | P.LVL | TTYPE | Amount |
+|---------+---------+--------------------+-------+-------+--------|
+| B       | C       | Receivables        |    05 |   100 |     60 |
+| B       | C       | Receivables        |    20 |   100 |    -60 |
+| B       | C       | Other Expenditures |    20 |   100 |     60 |
+| B       | C       | Receivables        |    05 |   200 |     80 |
+| B       | C       | Receivables        |    20 |   200 |    -80 |
+| B       | C       | Other Expenditures |    20 |   200 |     80 |
+| C       | B       | Payables           |    05 |   300 |    -20 |
+| C       | B       | Payables           |    20 |   300 |     20 |
+| B       | C       | Other Revenue      |    20 |   300 |    -20 |
+| C       | B       | Payables           |    05 |   100 |    -30 |
+| C       | B       | Payables           |    20 |   100 |     30 |
+| B       | C       | Other Revenue      |    20 |   100 |    -30 |
+| C       | B       | Receivables        |    05 |   200 |     10 |
+| C       | B       | Receivables        |    20 |   200 |    -10 |
+| B       | C       | Payables           |    05 |   200 |      0 |
+| D       | E       | Receivables        |    05 |   200 |     30 |
+| D       | E       | Receivables        |    20 |   200 |    -30 |
+| E       | D       | Payables           |    05 |   200 |    -30 |
+| E       | D       | Payables           |    20 |   200 |     30 |
+| E       | D       | Receivables        |    05 |   200 |     15 |
+| B       | D       | Receivables        |    05 |   200 |     40 |
+| B       | D       | Receivables        |    20 |   200 |    -40 |
+| D       | B       | Payables           |    05 |   200 |    -40 |
+| D       | B       | Payables           |    20 |   200 |     40 |
+| A       | B       | Receivables        |    05 |   200 |     45 |
+| A       | B       | Receivables        |    20 |   200 |    -45 |
+| B       | A       | Payables           |    05 |   200 |    -35 |
+| B       | A       | Payables           |    20 |   200 |     35 |
+| A       | B       | Other Expenditures |    20 |   200 |     15 |
+| A       | X       | Receivables        |    05 |   200 |     70 |
+| X       | A       | Payables           |    05 |   200 |    -70 |
+
+The group hierarchy information are stored in 2 table:
+1. The Entity master data table (RTC_ENTITY) which has the group attribute:
+| Entity | Group   |
+|--------+---------|
+| A      | Europa  |
+| B      | France  |
+| C      | France  |
+| D      | Germany |
+| E      | Germany |
+
+2. The group node (RTC_GNODE) which constructs the hierarchy:
+| Group     | PGroup    |
+|-----------+-----------|
+| Worldwide |           |
+| Europa    | Worldwide |
+| France    | Europa    |
+| Germany   | Europa    |
+
+Now we want to report on group "France". First, we should recursively find all the entities belong to the group. They are B and C. Then the data filtering on the GT_ACDOCC should be:
+#+BEGIN_SRC sql
+select * from GT_ACDOCC 
+ where (COMPANY = 'B' or COMPANY = 'C' and PLVL < 20)
+    or (COMPANY = 'B' or COMPANY = 'C' and PARTNER = 'B' or PARTNER = 'C' and PLVL = 20) 
+#+END_SRC 
+
+The report look like:
+| Group  | Account            | TTYPE | Company | Partner | P.LVL | GC(EUR) |
+|--------+--------------------+-------+---------+---------+-------+---------|
+| France | Receivables        |       |         |         |       |    *40* |
+|        |                    |   100 | B       | C       |    05 |      60 |
+|        |                    |   100 | B       | C       |    20 |     -60 |
+|        |                    |   200 | B       | C       |    05 |      80 |
+|        |                    |   200 | B       | C       |    20 |     -80 |
+|        |                    |   200 | C       | B       |    05 |      10 |
+|        |                    |   200 | C       | B       |    20 |     -10 |
+|        |                    |   200 | B       | D       |    05 |      40 |
+|        | Payables           |       |         |         |       |   *-35* |
+|        |                    |   300 | C       | B       |    05 |     -20 |
+|        |                    |   300 | C       | B       |    20 |      20 |
+|        |                    |   100 | C       | B       |    05 |     -30 |
+|        |                    |   100 | C       | B       |    20 |      30 |
+|        |                    |   200 | B       | C       |    05 |       0 |
+|        |                    |   200 | B       | A       |    05 |     -35 |
+|        | Other Expenditures |       |         |         |       |   *140* |
+|        |                    |   100 | B       | C       |    20 |      60 |
+|        |                    |   200 | B       | C       |    20 |      80 |
+|        | Other Revenue      |       |         |         |       |   *-50* |
+|        |                    |   300 | B       | C       |    20 |     -20 |
+|        |                    |   100 | B       | C       |    20 |     -30 |
+
+If I want to report group Europa, then all the data will be involved:
+| Group  | Account            | TTYPE | Company | Partner | P.LVL | GC(EUR) |
+|--------+--------------------+-------+---------+---------+-------+---------|
+| Europa | Receivables        |       |         |         |       |    *85* |
+|        |                    |   100 | B       | C       |    05 |      60 |
+|        |                    |   100 | B       | C       |    20 |     -60 |
+|        |                    |   200 | B       | C       |    05 |      80 |
+|        |                    |   200 | B       | C       |    20 |     -80 |
+|        |                    |   200 | C       | B       |    05 |      10 |
+|        |                    |   200 | C       | B       |    20 |     -10 |
+|        |                    |   200 | D       | E       |    05 |      30 |
+|        |                    |   200 | D       | E       |    20 |     -30 |
+|        |                    |   200 | E       | D       |    05 |      15 |
+|        |                    |   200 | B       | D       |    05 |      40 |
+|        |                    |   200 | B       | D       |    20 |     -40 |
+|        |                    |   200 | A       | B       |    05 |      45 |
+|        |                    |   200 | A       | B       |    20 |     -45 |
+|        |                    |   200 | A       | X       |    05 |      70 |
+|        | Payables           |       |         |         |       |   *-70* |
+|        |                    |   300 | C       | B       |    05 |     -20 |
+|        |                    |   300 | C       | B       |    20 |      20 |
+|        |                    |   100 | C       | B       |    05 |     -30 |
+|        |                    |   100 | C       | B       |    20 |      30 |
+|        |                    |   200 | B       | C       |    05 |       0 |
+|        |                    |   200 | E       | D       |    05 |     -30 |
+|        |                    |   200 | E       | D       |    20 |      30 |
+|        |                    |   200 | D       | B       |    05 |     -40 |
+|        |                    |   200 | D       | B       |    20 |      40 |
+|        |                    |   200 | B       | A       |    05 |     -35 |
+|        |                    |   200 | B       | A       |    20 |      35 |
+|        |                    |   200 | X       | A       |    05 |     -70 |
+|        | Other Expenditures |       |         |         |       |   *155* |
+|        |                    |   100 | B       | C       |    20 |      60 |
+|        |                    |   200 | B       | C       |    20 |      80 |
+|        |                    |   200 | A       | B       |    20 |      15 |
+|        | Other Revenue      |       |         |         |       |   *-50* |
+|        |                    |   300 | B       | C       |    20 |     -20 |
+|        |                    |   100 | B       | C       |    20 |     -30 |
+
+*** Elimination Runables 
+#+Caption: Elimination Detial Flow
+[[../image/EliminationDetailFlow.png]] 
+
+Elimination runables are AMDP methods that are genereted according the definations of an ELIM method. An ELIM method definiation can be shared for reconciliation and elimination. Because both reconciliation and elimination share the same source data reading logic, which are the Selection 1 and Selection 2. The difference between them is that: a reconciliation report only compares the amount between, for example, AP of Company A and AR of Company B; while the elimination will post auto adjustments, check thresholds, finally report the eliminated result or do postings.
+
+The Elimination Run reads the translated result based on the 2 selections and then insert the reversed sign amounts into GT_ACDOCC. For example, it reads AP of company A (Selection 1) and AR of company B(Selection 2), reverse the sign for each line's amounts that selected, and insert them back to GT_ACDOCC. Of cource, every business relationship will be applied with the same logic. 
+
+The eliminated lines should be calculated for differences and record them into differential items. Based on the posting strategy, the system determins on which side(entity) the differences should be posted. Those difference lines will also be inserted into GT_ACDOCC so that from group level, the B/S and I/S are still balanced to zero. 
+
+Threshold values are checked based on the checking strategy and threshold values maintained. If the amount exceeds the value, posting is not allowed. However, group reporting can still be made with alerts that indicate which amounts can not be eliminated automatically.
+
+The posting method will read the temporal data in GT_ACDOCC and transport it to the core posting API. The eliminated result will finally be persisted in ACDOCC.
+
+In order to parallely execution of mulitple elimination steps, each step should be given a dedicate global temporary table. This is because if multiple steps update the same table(GT_ACDOCC), techniquely, parallelism is not allowed. The step temporaray table holds the final result of each step, which then be merged into GT_ACDOCC.
+
+**** Psudeo SQL
+#+CAPTION: Elimination SQL Scripts
+#+begin_src sql
+-- Eliminate all internal reciprocal transactions 
+insert into GT_ACDOCC
+  select '20' as PLVL,
+         (0 - TC) as TC,
+         (0 - LC) as LC,
+         (0 - GC) as GC,
+         (0 - QUANTITY) as QUANTITY,
+         * 
+    from GT_ACDOCC
+   where ACCOUNT in <selection_1> or account in <selection_2>
+     and ENTITY in <all_entities_under_the_root_group>
+     and PENTITY in <all_entities_under_the_root_group>;
+
+-- Generate Difference Lines, replace the accounts and subitems to the differenctial items.
+var LT_ACDOCC =
+select (case when GC > 0
+              'Other Expenditures'
+             when GC < 0
+              'Other Revenue'
+          end) as ACCOUNT,
+       <subitem> as SUBITEM,
+       '' as OTHER_CHARACTORISTICS
+       (0 - sum(TC)) as TC,
+       (0 - sum(LC)) as LC,
+       (0 - sum(GC)) as GC,
+       (0 - sum(QUANTITY)) as QUANTITY,
+       *
+  from GT_ACDOCC
+ where PLVL = '20';
+#+end_src
 
 ** Appendix: Existing Elimination Solutions and UIs
 *** BPC Inter-company Booking & US Elimination
