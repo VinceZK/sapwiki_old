@@ -1,5 +1,5 @@
 #+PAGEID: 1852751018
-#+VERSION: 1
+#+VERSION: 4
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Elimination
@@ -74,7 +74,7 @@ A and B are in the same group G1, from the G1's view, the receivables of A and t
 Then if we see the group level report right now(just by removing column Company and Partner, and sum all the amount up), we find 100 of inventory is lost.
 | Group | Account   | Amount |
 |-------+-----------+--------|
-| G1    | Inventory | 900    | 
+| G1    | Inventory |    900 |
 
 Now comes the auto adjustment. We should keep in mind that this is just a short cut for the real intercompany reconciliation. In real cases, experts would find the reason and post a document reflecting that reason. For example, increasing the receivables from B by 100 and creating an insurance claim from B of 100. Here, we don't know the reason of differences, we just post against IC Differences account.
 | Group | Company | Partner | Account          |  Amount |
@@ -283,13 +283,11 @@ The fact table is projected from ACDOCA based on company dimension. The column =
 | C       | B       | Payables    |   100 |    -30 |            05 |
 
 **** Elimination Result
-*Case 1* 
-
-Customizing of the Differential Items: Account and TTYPE. Account is assigned with fix values on both Debit and Credit; TTYPE is empty, which means take the value of the source lines. 
-| Field          | Debit              | Credit        |
-|----------------+--------------------+---------------|
-| Account        | Other Expenditures | Other Revenue |
-| TTYPE          |                    |               |
+*Case 1* Customizing of the Differential Items: Account and TTYPE. Account is assigned with fix values on both Debit and Credit; TTYPE is empty, which means take the value of the source lines. 
+| Field   | Debit              | Credit        |
+|---------+--------------------+---------------|
+| Account | Other Expenditures | Other Revenue |
+| TTYPE   |                    |               |
 
 Auto-adjustment postings in ACDOCC, differential items are in italics.
 | Company | Partner | Account              | TTYPE | Amount | Posting Level |
@@ -301,10 +299,9 @@ Auto-adjustment postings in ACDOCC, differential items are in italics.
 | C       | B       | Payables             | 300   | 20     | 20            |
 | /B/     | /C/     | /Other Revenue/      | /300/ | /-20/  | /20/          |
 | C       | B       | Payables             | 100   | 30     | 20            |
-| /B/     | /C/     | /Other Revenue/      | /100/ | /-30/  | /20/          | 
+| /B/     | /C/     | /Other Revenue/      | /100/ | /-30/  | /20/          |
 
-*Case 2*
-Both Account and TTYPE is defined with fix values:
+*Case 2* Both Account and TTYPE is defined with fix values:
 | Field   | Debit              | Credit        |
 |---------+--------------------+---------------|
 | Account | Other Expenditures | Other Revenue |
@@ -319,8 +316,7 @@ Entries in ACDOCC:
 | C       | B       | Payables             |   100 |     30 |            20 |
 | /B/     | /C/     | /Other Expenditures/ | /100/ |   /90/ |          /20/ |
 
-*Case 3*
-Only Account is selected, all other characteristic fields will be left with empty values. 
+*Case 3* Only Account is selected, all other characteristic fields will be left with empty values. 
 | Field   | Debit              | Credit        |
 |---------+--------------------+---------------|
 | Account | Other Expenditures | Other Revenue |
@@ -357,12 +353,13 @@ Besides the reciprocal transactions between B and C, let's produce more data to 
 |      | X       | A       | Payables    |   200 |    -70 |    05 |
 
 Suppose the differential items is customized in this way:
-| Field          | Debit              | Credit        |
-|----------------+--------------------+---------------|
-| Account        | Other Expenditures | Other Revenue |
-| TTYPE          |                    |               |
+| Field   | Debit              | Credit        |
+|---------+--------------------+---------------|
+| Account | Other Expenditures | Other Revenue |
+| TTYPE   |                    |               |
 
 Let's see what happen case by case:
+
 *Case 1:* Same as above.
 
 *Case 2:* The reverse correlation of case 1, that is B is buyer, C is seller. B has the aggregated payable amount of 0. The lines should be eliminated:
@@ -420,7 +417,7 @@ Reported data:
 |---------+---------+-------------+------------+--------+-------|
 | A       | B       | Receivables | 2016.10.15 |    100 |    05 |
 | A       | B       | Receivables | 2016.11.24 |     50 |    05 |
-| B       | A       | Payables    | 2016.10.15 |   -500 |    05 | 
+| B       | A       | Payables    | 2016.10.15 |   -500 |    05 |
 
 Elimination Document:
 | Line Item | Company | Partner | Account            |   Due Date | Amount | P.LVL |
@@ -451,8 +448,8 @@ In the =Thresholds=, we give following settings:
 The reported data looks like:
 | Company | Partner | Account     | TC_Amount | TC_Key | GC_Amount | GC_Key | P.LVL |
 |---------+---------+-------------+-----------+--------+-----------+--------+-------|
-| B       | C       | Receivables |  100      | FRF    |       200 | EUR    |    05 |
-| C       | B       | Payables    |  -170     | FRF    |      -340 | EUR    |    05 |
+| B       | C       | Receivables |       100 | FRF    |       200 | EUR    |    05 |
+| C       | B       | Payables    |      -170 | FRF    |      -340 | EUR    |    05 |
 
 Intermediate Elimination Document:
 | Company | Partner | Account       | TC_Amount | TC_Key | GC_Amount | GC_Key | P.LVL |
@@ -514,7 +511,8 @@ Based on the group hierarchy, the reported data, and the auto posted elimination
 | X       | A       | Payables           |    05 |   200 |    -70 |
 
 The group hierarchy information are stored in 2 table:
-1. The Entity master data table (RTC_ENTITY) which has the group attribute:
+
+The Entity master data table (RTC_ENTITY) which has the group attribute:
 | Entity | Group   |
 |--------+---------|
 | A      | Europa  |
@@ -523,7 +521,7 @@ The group hierarchy information are stored in 2 table:
 | D      | Germany |
 | E      | Germany |
 
-2. The group node (RTC_GNODE) which constructs the hierarchy:
+The group node (RTC_GNODE) which constructs the hierarchy:
 | Group     | PGroup    |
 |-----------+-----------|
 | Worldwide |           |

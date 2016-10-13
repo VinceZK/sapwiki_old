@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 18
+#+VERSION: 19
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Pull Request for Consolidation
@@ -312,17 +312,22 @@ If the corresponding item is not exist in the table, it means the entity in that
 The Data Submit Cockpit is the central place for both local accountants and group accountants to collect data, validate data, and submit data for consolidation tasks. 
 
 #+CAPTION: Data Submit Cockpit Main Screen
-[[../image/DataSubmitCockpit01.png]]
+[[../image/DataSubmitCockpit10.png]]
 
-There are 3 areas: The permanent parameters in the upper area, the package list group by periods in the left area, and the package detail area in the right area. 
+#+CAPTION: Data Submit Cockpit Controls
+[[../image/DataSubmitCockpit11.png]]  
 
-1. Permanent parameters are mandatory filtering parameters that are used to determine the package list. Only after all the parameters are entered, can the package list be displayed.
-2. 
+#+CAPTION: Data Submit Cockpit Comments
+[[../image/DataSubmitCockpit12.png]]  
+
+#+CAPTION: Data Submit Cockpit Attachments
+[[../image/DataSubmitCockpit13.png]]  
+
+#+CAPTION: Data Submit Cockpit Submit History 
+[[../image/DataSubmitCockpit14.png]]  
+
 #+CAPTION: Data Submit Cockpit Data Entry Screen
-[[../image/DataSubmitCockpit02.png]]  
-
-#+CAPTION: Data Submit Cockpit History Submitted Requests
-[[../image/DataSubmitCockpit03.png]]  
+[[../image/DataSubmitCockpit20.png]]  
 
 ** Local Accountants Raise Pull Requests 
 The local accountant can raise pull requests when he feels the data is ready. Before submitting the data, he can run a local validation. Then the request is raised to the group accountant. The following screen mock-up explains detail on it. 

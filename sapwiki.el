@@ -1095,7 +1095,7 @@ of contents as a string, or nil if it is empty."
                           (concat
                            (and numberedp
                                 (format
-                                 "<span style=\"color:black; margin-right:10px\">%s</span>"
+                                 "<span style=\"color:black; margin-right:10px\">%s&nbsp;</span>"
                                  (mapconcat #'number-to-string numbers ".")))
                            full-text)
                           level)
