@@ -190,7 +190,7 @@ The conclusion is that we first achieve: BPC can execute rules defined in RTC(VE
 Validation rule definition UI should use Fiori, HRF UI controls can be easily embedded in Fiori but not Dynpro or WebDynpro. Following UI mockups follows the Fiori design.
 
 **** Compose Rule Expressions
-The UI divides into the left panel and the right panel. The left panel contains the list of all rules defined, user can type words to do fuzzy search. Click a rule in the list, details of the rule will be shown in the right panel. You can also create a new rule by click the "New" button in the bottom bar of the left panel, which then will display an empty rule in the right panel.
+The UI divides into the left panel and the right panel. The left panel contains the list of all rules defined, user can type words to do fuzzy searches. Click a rule in the list, details will be shown in the right panel. You can also create a new rule by click the "New" button in the bottom bar of the left panel, which then will display an empty rule in the right panel.
 
 #+Caption: Validation Rule Expression
 [[../image/ValidationRule01.png]]  

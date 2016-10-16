@@ -4,15 +4,18 @@
 #+OPTIONS: toc:1
 #+TITLE: SDD-Totals Validation
 ** Context
-Totals data includes: 
-1. *Reported financial data*
-2. *Standardized financial data*  
-3. *Consolidated data*
-4. *Additional financial data* 
+Data validation in RTC usually contains  =Totals Validation= and =Document Validation=. =Document Validation= happens on every incoming financial document. It does validation on the transient data that supplied with middle-ware(Real-time Journal Entries Replication) or UI(Manually Input). This SDD only presents  =Totals Validation= in RTC. 
 
-Totals data validation uses validation rules, which you can define in Customizing. To do this, you establish selection conditions (usually with items and sub-items), which you then use in a formula. Then the system tests whether the validation rule is true orX1 false for a given data set. 
+=Totals Vailidation= ensures the consistency of financial statements and reports. "Totals" means the data is aggregated, not in a single FI document and line item level. From technique perspective, totals validation usually runs on the persisted data mainly in ACDOCA and ACDOCC. Following diagram describes the detail.
 
-We will leverage HRF to realize the totals data validation. As HRF has a fancy rule editor and generates DB procedures to encapsulate rule logic. In our first release, we will re-use the HRF@BRF workbench as the rule maintenance UI, and provide an ABAP report to consume the generated HANA artifacts. Later on, we will consider how to integrate HRF's UI control into our rule maintenance APP, and establish a deep integration with BPC's control framework. 
+#+CAPTION: Validation in RTC
+[[../image/ValidationDataFlow.png]]  
+
+=Totals Validation= runs the type of analytic rules in Validation Engine. The totals validation rules are assigned with the BRF+ application which is genereated by the correspoinding consolidation model. There are also some default CDS views already in the BRF+ application:
+1. Validation CDS view for *Reported financial data*: Before any consolidation entries are posted you need to ensure that the reported financial data you have collected is consistent.
+2. Validation CDS view for *Standardized financial data*: After posting standardizing entries, you need to check the consistency of the standardized financial data.  
+3. Validation CDS view for *Consolidated data*:  After posting the consolidation entries, you can check that the consolidated data is consistent.
+4. Validation CDS view for *Additional financial data*: If additional financial data is provided, you can also run validaitons on them. 
 
 *** Some examples for totals validations
 + Total assets = total liabilities
@@ -20,134 +23,73 @@ We will leverage HRF to realize the totals data validation. As HRF has a fancy r
 + Retained earnings on balance sheet = annual net income on income statement
 
  
-** Use Case Description
+*** Use Cases
 
-*** Persona
-*IT Professional*: Create initial rule contexts, DB modeling, and deliver example rules. Knowledge transfer to accountants so that they can maintain rules by themselves. 
+**** Persona
+*IT Professional*: Create initial rule vocabulary, DB modeling, and deliver example rules. Knowledge transfer to accountants so that they can compose rules by themselves. 
 
 *Local Accountant*: Do validations on his own reported financial data based on the rules defined by group accountant. He can also define his local rules if possible.
 
-*Group Accountant*: Do validations on all subsidiaries' reported financial data. She defines group rules which should be applied to all subsidiaries (Each subsidiary could be assigned with different rules). She also validates the standardized financial data and the consolidated data.
+*Group Accountant*: Do validations on all subsidiaries' reported financial data. She defines group rules and distribute them to different subsidiaries. She also runs validation on  the standardized financial data and the consolidated data.
 
-*** Data Flow and Validations Point (runtime)
-Data validation in RTC usually contains =Document Validation= and =Totals Validation=. =Document Validation= happens on every incoming financial document. It does validation on the transient data that supplied with middle-ware(Real-time Journal Replication) or UI(Manually Input). This SDD mainly presents  =Totals Validation= in RTC. 
+**** Rule Authoring Process
+#+CAPTION: Rule Authoring Process
+[[../image/RuleAuthoringProcess.png]]  
 
-=Totals Validation= does data aggregations and comparisons on the persisted data mainly in ACDOCA and ACDOCC. User could also have additional data to be involved in the validation calculation. Following diagram describes details.
+At first, IT professionals need to create the rule vocabulary. This can be done either by generating BRF+ Applications and CDS views from consolidation model definition, or manually create a BRF+ Application and assign CDS views to it. 
 
-#+CAPTION: Validation in RTC
-[[../image/ValidationEngineContext.png]]  
+Group accountants can then compose their validation rules based on the vocabulary that IT professionals created. She can group rules using validation methods which can be assigned to consolidation entities or tasks. Local accountants can run the validation method be assigned, and group accountant can run group rules on the consolidation tasks.
 
-=Reported Financial Data= mainly resides in ACDOCA as in Central Finance case, we already have local financial data be replicated real-timely. The local data is then read and validated. Only if the validation is passed, the aggregated reported financial data can be saved in in ACDOCC. It is also possible the local data is coming from flexible uploading (through spreadsheet), then the data is not persisted. In this case, we could let the data be saved in ACDOCC first with a special status to indicate that it is not validated. After the successfully validation, the status is changed to "Validated".
 
-When financial data is reported (with "Validated" status in ACDOCC), we can run standardizing and currency translation tasks. The result is upserted into ACDOCC which forms a standardized data set. We run validation on the =Standardized Financial Data= to check certain rules is fulfilled. 
+** Detail Design
+=Totals Validation= is built on =Validation Engine=. You define your validation rules with type "Analytic Rule",  assign the BRF+ application generated by your consolidation model. You can choose a generated CDS view as the vocabulary, as well as your self-created CDS views. The output structure should be fixed to "RTC_VALIDATION_OUTPUT". Please refer [[https://wiki.wdf.sap.corp/wiki/x/Yic2b][SDD-Validation Engine]] for detail.
 
-BPC will then do eliminations and consolidations on the standardized financial data. The result is again write-back to ACDOCC. Then we have the final consolidation result set which can be used for different Corp level financial statements. But before the disclosure, we should run =Consolidated Data= validation again to make sure the result is correct. If error or inconsistency is found, you can adjust it through manual posting.   
+*** Validation Method UI
+The UI divides into the left panel and the right panel. The left panel contains the list of all methods defined under a certain model. User can type words to do fuzzy searches. Click a method in the list, details will be shown in the right panel. You can also create a new method by click the "New" button in the bottom bar of the left panel, which then will display an empty method in the right panel.
+
+**** Validation Method General Tab
+#+Caption: Validation Method General Tab
+[[../image/ValidationMethod01.png]] 
+
+A validation method is defined under a consolidation model. You must first category your validation method into totals validaiton or document validation. If "Totals Data Validation" is chosen, you then select the whether it is one of the following templates:
+1. Reported Data Validation;
+2. Standardized Data Validation;
+3. Consolidated Data Validation;
+4. Additional Financial Data Validation;
+5. Other Data Validation;
+
+Once you select a template, the "Input Parameters" and "Output Structure" in the "HRF Integration" section will be automatically determined. However, you can adjust the "Input Parameters" on your requests, but "Output Structure" can not be changed. 
+
+The BRF+ Application name is fixed, as it is generated during model activation. You click the link of the application name will open the BRF+ workbench with the application. 
+
+~If document validation is chosen, you need to select whether it is header level, item level, or document level. This will be described more detail in the SDD of document validation.~
+
+**** Validation Method Rules Tab
+#+Caption: Validation Method Rules Tab
+[[../image/ValidationMethod02.png]] 
+
+In the Rules Tab, you assign validation rules to the method. You can either add an existing rule or create a new one under a method. If you add an existing rule, it will do a match on the rule definition with the method defination. Only following criterias are met, can a rule be added to a method:
+1. If method category is "Totals Validation", then the rule must be an analytic rule;
+2. The BRF+ application must be the same;
+3. The input parameters must equal, which means the number and the technqiue names of them are the same. The sequence of the parameters dosen't require to be the same.
+4. The output structure must be the same.
+
+By default, when you click the button "Add Existing", it will opens a dialog window only show the rules that fulfill the above criterias.
+
+If you click the button "Create New", it will navigate you to the rule creation page. The =Data Context= tab is filled with the correct rule type, correct BRF+ Application, default vocabulary(according to the template selected), and the correct output structure. So it will by default show you the =Expression= tab so that you can compose rule expressions directly.
+
+The "Delete" button only remove the rule from the method, not delete the rule persistently. 
+
+**** Run Simulation of the Validation Method
+#+Caption: Validation Method Simulation Tab
+[[../image/ValidationMethod03.png]] 
+
+You can run simulations on the validation method. You must first fill the input parameters. Basically, all the input parameters of a rule is mandatory and single-value. Because all the rules under a method share the same input parameters and output structure, the rules are executed one by one. The result is given as a list with each line a result of rule. You can navigate to a rule's definiation page; you can single execute a rule; you can see the message test of the rule, and you can test the drill-through reports. 
+
+The result of a validation method run is called validation log. The validation log contains the display and persistency, also with comments/attachment. It should be designed as a reusabe component which can be either a seperated application or embedded in other applications.
  
-*** Rule Authoring Process (design time)
-There should be an easy use tool to allow accountants define their rules intuitively. This tool is Firoi-based and close to accountants context. But it won't be showed in the first release as to deliver a Fiori APP needs lots of gates to go through. We decide to leverage the BRF workbench as an temporal solution to let accountants maintain their rules. 
 
-Thus the following work-flow for rule design time is presented. 
- 
-#+CAPTION: Validation Engine in RTC
-[[../image/VE_RuleDefination.png]]  
-
-At first, IT professionals need to do rule context definition. That's mainly regarding with CDS views creation to form a rule context. The CDS views are mainly based on ACDOCA and ACDOCC with associations to master data dimension tables. Each CDS view is assigned to a BRF application in the web workbench. 
-
-Group accountants can define their own rules based on the sample rules that IT professionals created. She can group rules into rule sets which can then be assigned to each consolidation group/unit. Local accountants can define their own rules too, but only effect on his own consolidation unit. Both of them use a same Tcode to run validation on different aspects.  
-
-
-** Design
-We will re-use the BRF workbench as the rule maintenance UI. We won't develop an additional UI for end-users to defines rules, but only deliver 3 BRF+ applications which stand for "Reported Financial Data", "Standardized Financial Data", and "Consolidated Data" respectively. Each BRF+ application contains multiple functions which share a same data context(data objects). Data objects are generated from CDS views. The associations in a CDS view can be now interpreted by BRF+. So we can use CDS to define the validation data contexts.
-
-We will then define 3 CDS views respectively for the 3 totals validation types:
-1. Reported financial data: Unions of ACDOCA and ACDOCC.
-2. Standardized data: on ACDOCC.
-3. Consolidated data: on ACDOCC.
-
-The following diagram describes detail:
-#+CAPTION: Totals Validation Class Diagram
-[[../image/TotalsValidation.png]]  
-
-Validation type defines the data context and output. It is the super class that our 3 totals validation types are inherited on. 
-
-A validation step contains "Prerequisite", "Check", and "Output". "Prerequisite" could be a simple expression, or another validation step. "Check" is the actual expression that represents the main validation rule logic. "Output" defines the validation result output structure, it could be an ABAP message structure with additional variables.   
-
-A validation type and its multiple validation steps forms an actual "Validation". A "Validation" can be assigned to Consolidation groups and units. According to different validation types, "Reported Data Validation" and "Standardized Validation" can only be assigned to consolidation units; While "Consolidated Validation" could only be assigned to consolidation groups. 
-
-From technique point of view, a "Validation Type" and its "Validation Steps" can be represented using a BRF+ application with multiple functions. To be simplifying, we can only have 3 validations in the first release, all consolidation groups and units just share the same validation.
-
-*** Table Design
-"Validation Type", "Validation Step", and "Validation" should be persisted. Following tables design are given:
-
-#+CAPTION: Validation Type
-| Field    | Key | Description      |
-|----------+-----+------------------|
-| MANDT    | X   | SAP Client       |
-| VTYPE    | X   | Validation Type  |
-| BRF_APP  |     | BRF+ Application |
-| DESCRIPT |     | Description      |
- 
-A validation type maps to a BRF+ application. We will predefine 3 validation types and their respective BRF+ application: "Reported Financial Data Validation", "Standardized Validation", and "Consolidated Validation". As CDS views are already assigned to the BRF+ application, so it is not necessary to assign here again.
-
-#+CAPTION: Validation Step
-| Field    | Key | Description                     |
-|----------+-----+---------------------------------|
-| MANDT    | X   | SAP Client                      |
-| VTYPE    | X   | Validation Type                 |
-| VSTEP    | X   | Validation Step Name            |
-| PREREQ   |     | Prerequisite of the Step        |
-| FUNC     |     | BRF+ Function of an Application |
-| OUTPUT   |     | Output Structure Name           |
-| DESCRIPT |     | Description                     |
-
-A validation step maps to a BRF+ function in the corresponding application(validation type). As a step could have its prerequisite which could be another step, you can maintain another function name in the field "PREREQ". A BRF+ function has its output structure, so it may not be necessary to assign a "OUTPUT" structure for a validation step again. We here reserve the "OUTPUT" field for future use. 
-
-#+CAPTION: Validation Head
-| Field    | Key | Description                |
-|----------+-----+----------------------------|
-| MANDT    | X   | SAP Client                 |
-| VNAME    | X   | Validation Name            |
-| VTYPE    |     | Validation Type            |
-| BRFFUNC  |     | Execute all BRF+ functions |
-| DESCRIPT |     | Description                |
-
-You define an actual "Validation" based on a "Validation Type". You can then choose and import the steps(functions) that belong to the validation type. The steps will be persisted in the "validation steps table" bellow.  If "BRFFUNC" is checked, then it will discard the contents in the validation steps table, and execute all the functions belong to the BRF+ application. It will be much easier that you only define functions in BRF+ application, without assigning them in those customization tables again.  
-
-#+CAPTION: Validation Steps
-| Field    | Key | Description        |
-|----------+-----+--------------------|
-| MANDT    | X   | SAP Client         |
-| VNAME    | X   | Validation Name    |
-| VSTEP    | X   | Validation Step    |
-| SEQUENCE |     | Execution Sequence |
-
-Validation steps table persists steps that are chosen for this validation. It has an additional "SEQUENCE" field to control the execution sequence during runtime.   
-
-*** Design Time Flow
-We predefine 3 BRF+ applications(Including CDS Views), and their corresponding objects(Validation Type and Validation) in RTC. End-users only need to define functions under each BRF+ application. The functions must be copied from an example one, and should be based on the same data objects and output definition. Rules can be redefined by users' own needs. It is still possible to enhance the data objects or even redefine the BRF+ application to fulfill further requirements. 
-
-All the activities above are actually based on standard HRF@BRF+ features. RTC can then cascade the definitions in BRF+ into its own context by defining mappings, and run the generated BRF+ artifacts. No additional efforts are needed at the design time.  
-
-*** Run Time Flow
-The detail run time data and calling flow need further investigation during development. The mockup UIs for triggering the run of validation are given.
-
-#+CAPTION: Totals Data Validation Initial Screen
-[[../image/TotalsValidationUI_01.png]]  
-
-You must choose a RTC model, a consolidation version, and Fiscal Year/Period for a totals validation run. You can narrow the validation by assigning specific consolidation groups and units. Each time you can run one type of validation by choosing a radio button. The "Display Log" check-box controls whether details logs should be given or only a signal result "Pass/Error" will be given.  
-
-#+CAPTION: Totals Data Validation Results Screen
-[[../image/TotalsValidationUI_02.png]]  
-
-The result screen is splitted into 2 areas. It is built using BAL framework. ~Refer demo ABAP program: SBAL_DEMO_05_E~
-
-The left area of the result view shows the consolidation hierarchy. The hierarchy is maintained in BPC, which can be gotten using a specific BPC interface. The traffic lights are grouped by status of each children nodes. If one child node has an error result, then all its parent groups have the "red" light. Click each node will show all validation results that belong to it. A "Group" node will contain all its "Unit" results combined with its own validation results. 
-
-The right area displays a list of validation results that belong to the node you selected. First column is the traffic light of each rule(validation step/BRF function) result. Second column is the rule text(step/function description). You click the detail information to pop-up a dialog to show detail rule context information, like: the rule outputs, long description, variables in runtime, and so on.
-
-
-** HRF@BRF
-*** Examples of RTC rules in HRF
+** Examples of Totals Validation Rules
 #+CAPTION: Base CDS View for Rule Defination
 #+BEGIN_SRC sql
 @AbapCatalog.sqlViewName: '/RTCART/MOS02200' @VDM.viewType: #CONSUMPTION @ClientDependent: false
@@ -204,7 +146,7 @@ define view /RTCART/P_VMOS02200
 6. MSGV3: Placeholder 3
 7. MSGV4: Placeholder 4
 
-**** Asset = Liability + Equity
+*** Asset = Liability + Equity
 
 =Prerequisite=
 
@@ -224,7 +166,7 @@ True
 | false         | 'E'   | MSG_CLASS_XXX |   001 | XXXX  | X     |       |       |
 
 
-**** Partner information exists for all intercompany account receivable accounts
+*** Partner information exists for all intercompany account receivable accounts
 
 =Prerequisite=
 IF Account(RACCT) is between "5000" and "6000"
@@ -239,7 +181,7 @@ PENTITY is not equal to ''
 | True         | false         | 'E'   | MSG_CLASS_XXX |   004 | XXXX  | X     |       |       |
 
 
-**** If the deviation of account 4101001 for fully consolidated partner units as a total is bigger than $2 million and bigger than 25% of the prior period, then explain. 
+*** If the deviation of account 4101001 for fully consolidated partner units as a total is bigger than $2 million and bigger than 25% of the prior period, then explain. 
 =Prerequisite=
 
 If Account is equal to '1714001'
@@ -261,7 +203,8 @@ If Account is equal to '1714001'
 |--------------+-----------------+-------+---------------+-------+-------+-------+-------+-------|
 | true         | true            | 'E'   | MSG_CLASS_XXX |   005 | XXX   | XXX   |       |       |
   
-**** Check cost center based on a line item in ACDOCC
+
+*** Check cost center based on a line item in ACDOCC
 
 =Prerequisite=:
 If company code = "F001" and account = "1001010" (expense)
@@ -286,7 +229,7 @@ Actual Rule in HRF Decision Table (Rule Name: DocumentPosting):
 | Should pass | F001  |    0003082090 | 1900004205 |   000006 | 0000001102  |
 
 
-**** Actual vs Plan: ACDOCC/ACDOCA/COEP
+*** Actual vs Plan: ACDOCC/ACDOCA/COEP
 ~ERP is realized using User Exit~
 
 =Prerequisite=:
@@ -378,7 +321,3 @@ select
 SELECT * FROM "SAP_HRF"."tmp.fi.rtc.hrf.service::DocumentPosting02.VIEW" 
 ('PLACEHOLDER' = ('$$DocNum$$', '0100027332'), 'PLACEHOLDER' = ('$$ItemNum$$', '000001'))
 #+END_SRC
-
-*** User exists (rules)
-*** RTC and BRF integration
-**** Design time
