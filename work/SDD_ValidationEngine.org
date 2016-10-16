@@ -1,5 +1,5 @@
 #+PAGEID: 1815488354
-#+VERSION: 24
+#+VERSION: 25
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Validation Engine
@@ -55,7 +55,7 @@ Till now, the data is ready for consolidation. Consolidation, in a narrow sense,
 The overall data flow of consolidation validation is described in following diagram. Reported Financial Data mainly resides in ACDOCA if the subsidiaries are already integrated company codes in S/4HANA finance. Otherwise, they must provide the local data through flexible upload, which saves data in ACDOCC. So running report data validation access both table ACDOCA and ACDOCC. The standardized data is posted in ACDOCC, however, run Standardized Data Validation needs both the reported data and the standardized data. Consolidated Data Validation only needs to access ACDOCC, as the consolidation journal entries are posted either automatically or manually to ACDOCC only. 
 
 #+CAPTION: Data Flow in Validation
-[[../image/ValidationEngineContext.png]] 
+[[../image/ValidationDataFlow.png]] 
 
 Reported Data Validation, Standardized Data Validation, and Consolidated Data Validation together are categorized as *Totals Data Validation*. Besides, we have *Document Validation*, which happens during document posting. Documents are manual consolidation journal entries, as well as FI Accounting journal entries.The validation is triggered either in interception points or on the posting UI.
 
@@ -194,6 +194,7 @@ The UI divides into the left panel and the right panel. The left panel contains 
 
 #+Caption: Validation Rule Expression
 [[../image/ValidationRule01.png]]  
+
 You compose your rule expressions in the first tab. A rule contains:
 1. A prerequisite;
 2. Rule body or the main rule expression;
@@ -219,6 +220,7 @@ Check "Can be exempted by providing comments" to indicate the rule can be exempt
 **** Define Data Context 
 #+Caption: Validation Rule Data Context
 [[../image/ValidationRule02.png]]  
+
 Data context must be given before you compose your rule expressions. When creating a new rule, the "Data Context" tab is shown first if it is not defined yet. 
 
 You first choose the type of rule, that is whether it is an analytic rule or a transactional rule. Analytic rule runs on the persisted data, while transactional rule is on transient data. This choice will determine how executables are compiled.
@@ -231,7 +233,8 @@ If you want the validation result be explained in much detail, then you can assi
 
 **** Document a Rule
 #+Caption: Validation Rule Documentation
-[[../image/ValidationRule03.png]]  
+[[../image/ValidationRule03.png]] 
+ 
 Rules can be documented in much detail. You can give a long description as we as supply rich information using long texts. All these documentation support multi-language. You can also attach multi-media attachments into a rule.
 
 **** Simulate Running a Rule
@@ -246,6 +249,7 @@ Once rule is activated, you can run simulations. You must supply all the input p
 
 A list to show where the rule is used. Rules are collected under validation methods. A validation method can be created under a consolidation model or stand-alone, which can be invoked by representing a bundle of rules together. A rule can be assigned to a method in case they match each other on input parameters and output structure. For details please find in [[https://wiki.wdf.sap.corp/wiki/x/g7r_b][SDD-Totals Validation]].
  
+
 ** Appendix: Requirements from Design-Thinking with Customers 
 *** Totals Data Validation Requirements
 + Easy to use cockpit quick overview of validation rules (traffic lights for orientation)
