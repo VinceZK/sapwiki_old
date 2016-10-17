@@ -204,16 +204,16 @@ The "Flow" column is added to indicates the mapping from TI to CTA flows. The it
 | CTA Flow for Average Rate(=F81=) | /TI.1/                                      |
 | CTA Flow for Opening Rate(=F82=) | TI.2, TI.3 and /TI.3/                       |
 /TI.2/ lines are left with blank flow value, as it can not mapped to any CTA flows.
- 
+
 *** More Deductions
 The exchange rates that are used to calculate the above results:
 #+CAPTION: Exchange Rates
 | Period | Open Rate | Average Rate = Spec. Ex Rate | Close Rate = Ref. Ex Rate |
 |--------+-----------+------------------------------+---------------------------|
-|    000 |           |                          1.6 |                       1.7 |
-|    001 |       1.7 |                          2.0 |                       1.7 |
-|    002 |       1.7 |                          1.6 |                       1.5 |
-|    003 |       1.5 |                          1.8 |                       1.7 |
+|    000 |           |                          1.7 |                       1.6 |
+|    001 |       1.7 |                          1.7 |                       2.0 |
+|    002 |       1.7 |                          1.5 |                       1.6 |
+|    003 |       1.5 |                          1.7 |                       1.8 |
 
 Remove TI column and aggregated 
 #+CAPTION: CTA Result
