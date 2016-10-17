@@ -48,20 +48,17 @@ The data submit request is somehow conflict with the on-the-fly consolidation in
 We use data submit request approach to process the legal period end consolidation statements, which requires more on data precise, security, and clear duties. Each period, a consolidated result will be generated. The On-the-Fly consolidation statements always runs on the latest data basis which only extract current period data in ACDOCA, combines with the last periods' consolidated results in ACDOCC, will form a full consolidated picture at anytime.
    
 ** Overall Data Flow
-Here gives an bird's-eye view of the data flow.
-
-#+CAPTION: Data Flow of S/4 Consolidation 
+The overall data flow show how the data is collected and submitted to the consolidation system(BPC).  
+#+CAPTION: Data Flow of Data Submission
 [[../image/DataFlowOverview.png]]  
 
 1. Data comes from the local finance systems through Central Finance's real-time data replication. Data streams could be validated at document level according to rules defined in the central system, and saved in the central journal table ACDOCA.
-2. As not all the subsidiaries are involved in the central finance's landscape, those who can only provide their financial data in spreadsheets can submit via "Flexible Upload". The data will first be saved in a staging area before be counted into consolidation tasks.
-3. Only if the local accountant raises a data submit request can the group accountant pull the data from ACDOCA or Staging area into ACDOCC. You can regard a data submit request as a SQL where-expression which can be applied on ACDOCA or ACDOCC(staging area) to boundary the data. As data in ACDOCA is time-vary, so a timestamp is used for filter-in data before it. Thus a snapshot is taken which forms a "Reported Data View".
-4. A data submit request can be raised after the local accountants close their fiscal year/period. At that point, now new document will be posted in the period. For those who submit data through flexible uploading, the data submit requests is creatd along with uploading activity. 
-5. Both loal and group accountants can run totals validation on the "Reported Data View". When run totals validation, it also requires the consolidated results of the former periods, and the adjustments that posted by group accountantsare also in ACDOCC.
-6. If the validation is passed, the actual consolidation tasks can be run. Till now, the data handover from the local accountants to the group accountants is finished. If the validation is not passed, adjustments should be done by the local accountant, who needs to re-open the period and post adjustment documents, or upload a new version through flexible uploading. He should then raise a data submit request again so that the group accountant is notified and run validation on the adjustd data.
-7. There are mulitple BPC consolidation views created based on ACDOCA and ACDOCC. How many views and how they would be created depand on different use cases. But those views can be generally categorized into 3 categories: 1)Real-time data for priliminary consolidations, 2)Reported data fro legal consolidations, 3)Consolidated results and adjustments. Those views are unioned under a composite provider, and will be accessed as a whole by both BPC consolidation engine and reporting. You should carefully filter the data for different consolidation tasks and reports, as the data is overlapped among the views.
-8. It is possible for the local accountant to run currency translation in S/4(then it is not necessary to run currency translation in BPC again). In this way, BPC only needs to access data in ACDOCC. And BPC cannot run consolidation until the currency translation is done by local accountants and the translated results are posted into ACDOCC.
-
+2. As not all the subsidiaries are involved in the central finance's landscape, those who can only provide their financial data through spreadsheets submit via "Flexible Upload". The data will first be saved in a staging area before taking into the consolidation system.
+3. Only if the local accountant raises a data submit request can the group accountant pull the data from ACDOCA or copy data from staging area to ACDOCC. You can regard a data submit request as a SQL where-clause which can be applied on ACDOCA or ACDOCC to filter the data. As data in ACDOCA is time-vary, so a timestamp is used for filter-in data before it. Thus a snapshot is taken which forms a "Reported Data View".
+4. Both local and group accountants can run totals validation on the "Reported Data View". When run totals validation, it also requires the consolidated results from the former periods, as well as the adjustments that posted by group accountants are also in ACDOCC.
+5. If the validation is passed, consolidation tasks can be run. Till now, the data handover from the local accountants to the group accountants is finished. If the validation is not passed, adjustments should be done by the local accountant, who needs to re-open the period and post adjustment documents. He should then raise a data submit request again so that the group accountant is notified and run validation on the adjusted data.
+6. There are mulitple BPC consolidation views created based on ACDOCA and ACDOCC. How many views and how they would be created depends on different use cases. But those views can be generally categorized into 2 categories: 1)Real-time data for priliminary consolidations, 2)Data filterred by submit request for final consolidation. Those views are merged under a composite provider.
+7. It is possible for the local accountant to run currency translation in S/4, then it is not necessary to rerun currency translation in BPC again. In this way, BPC only needs to access data in ACDOCC. Because CT in S/4 already saves the transalted results in ACDOCC.
 
 
 * DB Design for Data Submit Request
@@ -74,11 +71,11 @@ The data submit request table is actually hold filter information that is used t
 | Field   | Key | Description                                               |
 |---------+-----+-----------------------------------------------------------|
 | MANDT   | X   | SAP Client                                                |
-| PRUUID  | X   | Data Submit Request UUID                                         |
+| PRUUID  | X   | Data Submit Request UUID                                  |
 | MODEL   |     | Consolidation Model                                       |
 | BCATE   |     | BPC Data Category                                         |
 | CONSV   |     | Consolidation Version                                     |
-| PTYPE   |     | Data Submit Request Type: Collective/MonthEnd/Adjustment         |
+| PTYPE   |     | Data Submit Request Type: Collective/MonthEnd/Adjustment  |
 | FYEAR   |     | Fiscal Year                                               |
 | FPERI   |     | Fiscal Period                                             |
 | ENTITY  |     | Consolidation Entities: Company, Profit Center            |
@@ -87,8 +84,8 @@ The data submit request table is actually hold filter information that is used t
 | DENTRY  |     | Data Entry ID                                             |
 | USTAT   |     | User Status: Initial/Rejected/Deferred/Submitted/Approved |
 | SSTAT   |     | System Status: Ready/Running/Processed/Error              |
-| CREATOR |     | Who creates the Data Submit Request                              |
-| CTIME   |     | Data Submit Request create time                                  |
+| CREATOR |     | Who creates the Data Submit Request                       |
+| CTIME   |     | Data Submit Request create time                           |
 | UPDATOR |     | Who is the last user update it                            |
 | UTIME   |     | The last update time                                      |
 
