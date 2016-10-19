@@ -73,12 +73,15 @@ The data submit request table is actually hold filter information that is used t
 | MANDT   | X   | SAP Client                                                |
 | PRUUID  | X   | Data Submit Request UUID                                  |
 | MODEL   |     | Consolidation Model                                       |
-| BCATE   |     | BPC Data Category                                         |
+| DIMEN   |     | Dimension(UC-CS)                                          |
+| BCATE   |     | BPC Category(BPC)                                         |
 | CONSV   |     | Consolidation Version                                     |
+| RVERS   |     | Version for Data Entry(UC-CS)                             |
 | PTYPE   |     | Data Submit Request Type: Collective/MonthEnd/Adjustment  |
 | FYEAR   |     | Fiscal Year                                               |
 | FPERI   |     | Fiscal Period                                             |
 | ENTITY  |     | Consolidation Entities: Company, Profit Center            |
+| BUNIT   |     | Consolidation Unit(UC-CS)                                 |
 | CLTIME  |     | Period Close Timestamp                                    |
 | DCMETH  |     | Data Collection Method                                    |
 | DENTRY  |     | Data Entry ID                                             |
@@ -99,6 +102,7 @@ The data submit request table is actually hold filter information that is used t
 8. User status(=USTAT=) are statuses from user perspective. It is used to control the data submit process and the data visibility. For details please refer ~Data Submit Request Status and Pseudo SQL~. 
 9. System status(=SSTAT=) are statuses from system perspective. For example, when a data submit request is approved, the data is ready for consolidation tasks. But if system errors happen during tasks' run, then the system status is set to "Error". And when the tasks are in "Running" status, you cannot submit further requests.
 10. Audit information like who(=CREATOR= and =UPDATOR=) and when(=CTIME= and =UTIME=) create it or update it is also attached.
+11. =DIMEN=, =RVERS=, and =BUNIT= are only used for UC-CS, which are corresponding to the Model, consolidatin version, and consolidation entity.
 
 ** Data Collection Method and Data Submit Request 
 Data Collection Method is defined as the meta data to control how Data Submit Requests are generated. You can regard Data Submit Requests are instances of a Data Collection Method. For example, I define a Data Collection Method as following:
@@ -311,100 +315,69 @@ If the corresponding item is not exist in the table, it means the entity in that
 
 
 * Data Submit Cockpit
-The Data Submit Cockpit is the central place for both local accountants and group accountants to collect data, validate data, and submit data for consolidation tasks. 
+The Data Submit Cockpit is designed for local accountants to collect data, validate data, and submit data for consolidation. However, group accountants can also use it to check, validate, and approve the local reported data.
 
+** Data Submit Cockpit Main Screen
 #+CAPTION: Data Submit Cockpit Main Screen
 [[../image/DataSubmitCockpit10.png]]
 
+The Data Submit Cockpit is divided into 2 sections: The permanant parameters in the upper area, and the package contents in the lower area. The permanant parameters are fixed to the following 5:
+1. Consolidation Model(Dimension if it is UC-CS);
+2. Consolidation Version(BPC Category if it is for BPC);
+3. Consolidation Enity(Consolidation Unit if it is UC-CS);
+4. Group Fiscal Year;
+5. Group Fiscal Period.
+
+A package is defined as data of one entity for one period. For example, the data of entity 300000 for period 2016008. A package can be further divided into sub-packages, usually based on different types of accounts. For example, All account payables & account receivables are defined as a sub-package. All sub-packages together should cover the complete set of the main package, however, intersections among sub-packages are allowed.
+
+You click the name of a sub-package can navigate you to the sub-package detail page. However, you can also directly operate on the list for these important operations listed bellow:
+1. Locked/Unlocked: Whether this sub-package is locked or not by the group accountant, click to switch between "Lock" and "Unlock".
+2. Control: Control runs the data validation before sub-package is submitted. If it doesn't pass, submission is not allowed. You click to run the control directly or open the detail page of the su-package's control.
+3. User Status: Status changing triggered by users, like: Initial, Submitted, Approved, Rejected, Deferred; Click to pop-up a dropdown list to swtich the status. 
+4. System Status: It is used to record the status of whether BPC is running consolidation tasks for the specific cons unit. The system status contains: Ready, Processing, Finished, and Failed. The status is display only. 
+5. Variation: Each time a user logons Data Submit Cockpit, it detects whether there is variation till last consolidation run in the same period. Variation means data changes after consolidation is finished for the period. Click the status will navigate you to the detail of the changed data in the "Submit History" tab.
+
+The main package itself also has user status, system status, and control status. Once all its sub-packages are approved, can the package itself get approved. The control of the main package is not just sumarization of all sub-packages' controls, it is a seperate rule set.
+
+The buttons on the toolbar area operates on package level(not sub-package level). The blue buttons are only shown when group accountants access the application, and the orange ones are only shown for local accountants.
+
+** Data Submit Cockpit Controls
+Both main package and its sub-packages have their own controls. However, the layout is the same. 
 #+CAPTION: Data Submit Cockpit Controls
 [[../image/DataSubmitCockpit11.png]]  
 
+The control page will first show the result of last run if it has. If not, it does an initial run and give out the result which is still not persisted until you click the button "Save Result". 
+
+Each rule result has a trrific light to state it is passed or not. Red light means failed, green light means pass. Yellow means failed but comments are provided which is then exampted. You can run a rule seperated by click the icon _Run This Rule_; you can hover over the link _Detail_ to view more detail of the rule result; you can supply or read comments and attachments; and you can dropdown the drill through reports to get further investigations. 
+
+** Data Submit Cockpit Comments
 #+CAPTION: Data Submit Cockpit Comments
 [[../image/DataSubmitCockpit12.png]]  
 
+In the comment tab, you can view and leave comments. A comment can be made on a (sub-)package, a submit request, or a validation rule result. You can filter to display comments on different levels. 
+
+If you are in the comment tab of the main package, then you can view all the comments which belong to its sub-packages, its submit requests, and its validation logs. User can fitler to display. If you are in the comment tab of the sub-package, you can only view comments that belong to its submit requests and validation logs. 
+** Data Submit Cockpit Attachments
 #+CAPTION: Data Submit Cockpit Attachments
 [[../image/DataSubmitCockpit13.png]]  
-
+In the attachment tab, you can upload or download attachments like word, ppt, pdf, and so on. Like comments, attachments can be attached to (sub-)package, submit request, and validation log. 
+ 
+** Data Submit Cockpit Submit History
 #+CAPTION: Data Submit Cockpit Submit History 
 [[../image/DataSubmitCockpit14.png]]  
-
+In the left panel, you can view all the data submit requests related to the (sub-)package for a cerntain period. A data submit request is timestamp annoted. You can compare the difference between either 2 requests. In the right panel, from the dropdown box, you select the beginning. For example, you select "Opening", which is the startpoint of the period, usally the first second of the period. Then you click any one of the item in the left list, it will show you the difference between the 2 timestamp. 
+** Data Submit Cockpit Data Entry 
 #+CAPTION: Data Submit Cockpit Data Entry Screen
 [[../image/DataSubmitCockpit20.png]]  
+Click the link of each sub-package navigates you to this data entry page, which contains the actual data in B/S format. The report contains amounts of prior periods in local currency, you can also run on-the-fly currency translation to get the group currency amount. You can switch the group currency in the right-up corner. 
 
-** Local Accountants Raise Data Submit Requests 
-The local accountant can raise data submit requests when he feels the data is ready. Before submitting the data, he can run a local validation. Then the request is raised to the group accountant. The following screen mock-up explains detail on it. 
+"Submitted Amount" means data already submitted in the previous submit requests. "To be Submitted" means the delta amount assigned to current tobe submitted request. The amount is calculated by the total amount minus the "Submitted Amount". 
+** Data Submit Group View
+#+CAPTION: Data Submit Group View
+[[../image/DataSubmitGroupView.png]]  
+The group view is a report for group accountants to view the data submit status for multiple entities. They can get an overview on the statuses for a certain group node or a bunch of entities. You can click an entity to navigate to the Data Submit Cockpit, you can batch approve/reject, and you can batch lock/unlock. 
 
-1. The local accountant login into the central system, and open the data submit request raise application.
-2. He chooses which consolidation model and which data category the data submit request should be sent to .
-3. The "Fiscal Year" is defaultly set to the current fiscal year, which can be calculated from the current nature time and the group fiscal year variant setting in the model. But local accountant can switch back to the last fiscal year. This is because data submittion of last period may happens on the new fiscal year.
-4. "Fiscal Period" is always set to the current period of the fiscal year. User cann't change it. 
-5. He can also choose differenty "Entities" if he is granted authorization to do so. Generally, a local accountant can only process one entity he is reponsible for. 
-6. "New Water Mark" is the time when he enters in this application.
-7. When he clicks the button "Get Data", it will fetch the data between "Last Water Mark" and "New Water Mark" group by "Fiscal Period" from ACDOCA. "Last Water Mark" stands for last approved data submit requests by periods. But if there are data submit requests exists but not approved, then the application will ignore them. It only returns the data between this one and the *last approved one*. If there is no data changed for a period since last approved, then the period will not be shown in the list. 
-8. The data showed to the local accountant only contains the changed account and their delta amounts. The already processed amounts will also be showed as a reference. Thus the local accountant can get a clear view of what has been changed in this interval.
-9. He can then click the "Validate" button, which will navigate to the "Report Data Validation" App. It will do validations on the current period data(the consolidate data in ACDOCC) along with the delta ones(The new data in ACDOCA), thus to get a comprehensive validation result. The validation app will leverage BPC's control, who will provide a URL link. 
-10. If validation is passed, he can raise the data submit request. Click the "Raise" button will generate a data submit request *only for the current period*. ~The former periods which have the changes should be fixed using other means. In 1610 release we won't deal with the amount.~ If the period of the entity is locked, then he cannot raise the data submit request, and an error message will be given. 
-11. After successfully sent the data submit request, the data table will be refreshed empty if no new data change is happening. 
-
-*** Raise Data Submit Requests in Flexible Uploading                      :Summer:
-If the local accountant submits the data through flexible uploading, then the reported data is in ACDOCC. He can still use the same application to raise a data submit request. The difference is that data in ACDOCC won't use timestamp for filtering. 
-
-In the flexible uploading APP, the local accountant can upload the data and raise a data submit request directly. The uploaded data will generate a doucment. And once he click "Raise" button, a data submit request is created and its UUID is set in every row of the document. Then the data submit request UUID is used to pull the correct data from ACDOCC. The data submit request for ACDOCC has a specific type "C".
-
-The local accountant can, however, still use "Raise Data Submit Request" APP to do the same thing. The benefit that using this APP is he can see changes between this copy and the last copy. 
-
-*** Raise Data Submit Requests in Currency Translation                    :Marvin:
-The local accountant can submit the translated data to the group accountant. He can run currency transalation in the central system and do validations on the transalted results. If data comes from ACDOCA, the CT post_run will read it and translated it into ACDOCC. The document numbers generated will be recorded in the CT audit table. The local accountant can then raise a data submit request directly in the CT APP. The pull reqeust ID is then set to all the documents' lines related. 
-
-If the data need to be translated is from flexible uploading, then the local accountant can still use the same CT APP to do the same stuff: translating and submiting. To the end-user, it is transparent. No matter the data is from ACDOCA or ACDOCC. He can navigate to the CT APP directly from the Flexible Upload APP. 
-
-Whether local accountants should submit translated result or not is determined by the settings in the model. If the model is set that currency translation should be done in S/4HANA, then local accountants should only submit the translated results, and vice-versa. It is not possible for a model that supports some entities submit translated results, others submit non-translated. And also keep in mind, once currency translation is run in S/4HANA, BPC only needs to access data in ACDOCC. So, from the group accountants' perspective, she can never access the real-time data in ACDOCA.     
-** Group Accountants Check Data Submit Requests
-In the 1610 release, the data submit request produces 2 effects:
-1. Notify BPC for the new coming data;
-2. Filter data before the timestap by join with the underlying HANA views. 
-
-Once the data submit request is raised, the filtering information will be copied into a BPC table. The BPC Consolidation Monitor can use this information to control the task status for each entity. For example, if a new data submit request comes in, the status will be set to "To Be Reviewed". If group accountant clicks a task in "To be Reviewed" status, a dialog pupup will show which contains a link to an ABAP report that shows changed data. And the "Execute" button to re-run the task. 
-How data submit request is used to filter out the data please refer to the SDD: [[https://wiki.wdf.sap.corp/wiki/x/Ds83bQ][BPC HANA Views Modeling]].
-
-*** This part will be frozen in 1610
-Once the group accountant gets the data submit request notification in BPC's consolidation monitor, she clicks it and a dialog window will pop-up and show a data submit request list. She can then decide how to process the data submit requests.  
-
-~The dialog window is realized using an ABAP ALV report. The best way is to use BPC's UI5 framework.~
-
-The data submit request process application contains 3 screens: search screen, list screen, and the detail screen. If it is called from BPC's consolidation monitor, the "Search Screen" will be omitted as the search parameters is already filled by BPC. Then the "List Screen" will be showed to the user directly. 
-
-#+CAPTION: Data Submit Request Search Screen 
-[[../image/PullRequestProcess01.png]]  
-
-The group accountant can of course open the data submit request application directly in S/4. In the search screen, she can input search parameters to filer the data submit requests. 
-
-1. The "RTC Model" and "BPC Environment & BPC Model" are mandatory, but if one choose the "RTC Model" the "BPC Environment" and "BPC Model" are determined automatically, and vice verse.
-2. Fiscal Year/Period has the default value of current fiscal year and period.
-3. "BPC Category" and "Cons. Version" are too mutual determinable.
-4. "Cons. Group",  "Cons. Entity", User Status, and System Status are all optional filtering parameters. 
-
-#+CAPTION: Data Submit Request List Screen 
-[[../image/PullRequestProcess02.png]]  
-
-The list view lists all the data submit requests that fulfill the search parameters. It is grouped by "Group" and "Entity". 
-
-1. data submit request numbers are UUIDs with time sequence.
-2. "Request type" includes =MonthEnd= and =Adjustment=. =MonthEnd= means the data submit request is generated automatically by a consolidation recurrence schedule, and this kind of data submit request must be processed by each period. =Adjustment= is for occasionally adjustment posts after the =MonthEnd= data submit request is done.
-3. "Timestamp" is the close time when the data submit request is raised.
-4. "User Status" are status on the perspective of end users, it contains: Raise/Reject/Approve/Defer.
-5. "System Status" stands for how the consolidation system dealing with the data submit requests. It contains: /Ignore/Processed/Ready/Running/Error.
-6. The group accountant can do operations like "Validate", "Approve", "Defer", and "Reject" on multiple items. But it contains status constrains. For example, you can not approve the data submit request that already has the system status "Running".
-
-#+CAPTION: Data Submit Request Detail Screen 
-[[../image/PullRequestProcess03.png]]  
-
-The detail view contains the data submit requests that belong to an entity, or "Group/Entity" combination. The list will always show the data between the latest data submit request and the last successfully processed one. The data submit requests between them will be omitted. Like the "data submit request raise app", the list will be grouped by fiscal periods, with each period a water mark timestamp to indicate last successfully processed time.  
-
-1. Validation is mandatory before approval and deferral. The validation will counts the new data into the already processed data, and do a comprehensive check.
-2. If validation errors happen, then the data submit request can only be rejected. Approval and Deferral can just not be executed.
-3. Once the group accountant choose "Approve", the user status will be changed to "Approve" immediately, a notification will be sent to the local accountant, and the system status will be set to "Ready", which means it is ready to run consolidation tasks.
-4. If the "Defer" button is clicked, user status will be set to "Defer", the system status will be left with empty. This data submit request will then be counted in next occurrence run.
+The lock supports lock/unlock in future. Which means, group accountant can schedule to lock/unlock entities for data package submitting. 
 
 
 * Deduction

@@ -1,5 +1,5 @@
 #+PAGEID: 1852158416
-#+VERSION: 3
+#+VERSION: 6
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Translation Difference
@@ -49,7 +49,7 @@ To be in mind, only one group of OR, AR, and CR is used during translation for e
 - The cash flow statement is based on balance sheet variations which are converted at the average rate for the period.
 
 CTA is flow-based, following flows are involved during translation:
-- F10: Opening flow;
+- F00: Opening flow;
 - F15: Movement flow;
 - F80: CTA flow;
 - F81: CTA flow for difference between movement flow and closing flow;
@@ -105,17 +105,15 @@ We first translate using the TI approach, there should exist following lines in 
 |    001 |   123456 |    2 |    0 |    440 |
 |    001 |   123456 |    3 |    0 |   -440 |
 |  /001/ | /300010/ |  /1/ |  /0/ |   /30/ |
-|  /001/ | /200010/ |  /2/ |  /0/ | /-440/ |
 |  /001/ | /300010/ |  /3/ |  /0/ |  /440/ |
 |    002 |   123456 |    0 |  200 |    320 |
 |    002 |   123456 |    1 |    0 |    -20 |
 |    002 |   123456 |    2 |    0 |   -480 |
 |    002 |   123456 |    3 |    0 |    240 |
 |  /002/ | /300010/ |  /1/ |  /0/ |   /20/ |
-|  /002/ | /300010/ |  /2/ |  /0/ |  /480/ |
 |  /002/ | /200010/ |  /3/ |  /0/ | /-240/ |
 
-Differences(in italic) are recorded to differential items so that balance sheet and income statement keep in balance. *Note*: How differential items are posted needs further investigation. I am not very sure if TI.1, TI.2, TI.3 should be all posted with each a reverse amount?
+Differences(in italic) are recorded to differential items so that balance sheet and income statement keep in balance. *Note*: +How differential items are posted needs further investigation. I am not very sure if TI.1, TI.2, TI.3 should be all posted with each a reverse amount?+ Differential items are generated for TI.1 and TI.3. TI.3 dosen't produce the differential item.
 
 We then translate using CTA approach. CTA is flow based, so we define =F15= as the movement flow, and =F80= as the CTA flow. The close flow(=F99=) for each period can be calculated by summing the amount of all other flows *to* this period. And the opening flow(=F15=) for each period can be calculated by summing the amount of all other flows *before* this period, or equivalent, it is the close flow of its previous period. Period 000 is carry-forwarded from last fiscal year, and it is the beginning of all the open flows. We then have following translated result in the consolidation journal table. 
 #+CAPTION: CTA Translation Result
@@ -181,20 +179,17 @@ Base on the settings in previous chapter and this chapter, we run the CT method 
 |    001 |   123456 |    2 | F82   |    0 |    440 |
 |    001 |   123456 |    3 | F82   |    0 |   -440 |
 |  /001/ | /123456/ |  /1/ | /F81/ |  /0/ |   /30/ |
-|  /001/ | /123456/ |  /2/ |       |  /0/ | /-440/ |
 |  /001/ | /123456/ |  /3/ | /F82/ |  /0/ |  /440/ |
 |    002 |   123456 |    0 | F15   |  200 |    320 |
 |    002 |   123456 |    1 | F15   |    0 |    -20 |
 |    002 |   123456 |    2 | F82   |    0 |   -480 |
 |    002 |   123456 |    3 | F82   |    0 |    240 |
 |  /002/ | /123456/ |  /1/ | /F81/ |  /0/ |   /20/ |
-|  /002/ | /123456/ |  /2/ |       |  /0/ |  /480/ |
 |  /002/ | /123456/ |  /3/ | /F82/ |  /0/ | /-240/ |
 |    003 |   123456 |    0 | F15   |  100 |    180 |
 |    003 |   123456 |    1 | F15   |    0 |    -10 |
 |    003 |   123456 |    2 | F82   |    0 |    280 |
 |  /003/ | /123456/ |  /1/ | /F81/ |  /0/ |   /10/ |
-|  /003/ | /123456/ |  /2/ |       |  /0/ | /-280/ |
 
 The "Flow" column is added to indicates the mapping from TI to CTA flows. The italic lines are differential item lines to keep balance. Detail mapping rules can be described in bellow table:
 | Flow                             | lines                                       |
@@ -203,7 +198,6 @@ The "Flow" column is added to indicates the mapping from TI to CTA flows. The it
 | Movement Flow (=F15=)            | TI.0 and TI.1                               |
 | CTA Flow for Average Rate(=F81=) | /TI.1/                                      |
 | CTA Flow for Opening Rate(=F82=) | TI.2, TI.3 and /TI.3/                       |
-/TI.2/ lines are left with blank flow value, as it can not mapped to any CTA flows.
 
 *** More Deductions
 The exchange rates that are used to calculate the above results:

@@ -72,15 +72,13 @@ Assume account 123456 is an asset account like cash, and the differential items 
 | 200010 | Other Revenue | 300010 | Other Expense |
 
 
-According to =Table2=, it will automatically generate following differential line items into =Table2= to keep the B/S still balance.
+According to =Table2=, it will automatically generate following differential line items into =Table2= to keep the B/S still balance. TI.2 doesn't produce differential items.
 | Period | FS Item | T.I. | LC |   GC |
 |--------+---------+------+----+------|
 |    000 |  200010 |    1 |  0 | -110 |
 |    001 |  300010 |    1 |  0 |   30 |
-|    001 |  200010 |    2 |  0 | -440 |
 |    001 |  300010 |    3 |  0 |  440 |
 |    002 |  300010 |    1 |  0 |   20 |
-|    002 |  300010 |    2 |  0 |  480 |
 |    002 |  300010 |    3 |  0 | -240 |
 
 *** Psudeo SQL
@@ -171,7 +169,8 @@ insert into Table2
          (0 -GC) as GC,
     from Table2
    where PERIOD = '002'
-     and TRANSL_IND > '0';
+     and TRANSL_IND = '1'
+     and TRANSL_IND = '3';
 #+end_src  
 
 ** Currency Translation Key (Algorithm)
