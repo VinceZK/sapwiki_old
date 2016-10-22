@@ -1,5 +1,5 @@
 #+PAGEID: 1821717599
-#+VERSION: 13
+#+VERSION: 15
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Modeling
@@ -266,29 +266,97 @@ Some groups are mandatory, for example ~Consolidation Unit/Dimension~, you must 
 
 This UI representation of field projection and role assignment is tailored to ACDOCA table. It should be flexible enough for other tables. So templates will be designed which allow user to using exist settings. For example, template for ACDOCA should already have some field assigned for those  mandatory field groups. User can also extend the view and save as their own templates.
 
-*** User Interface
-This section describe the UI design for the Real-time Consolidation Modeling Tool. 
-**** Initial Screen
-#+Caption: Real-time Consolidation Modeling Tool: Initial Definition
+
+*** Design Challenges resulting from Non-Functional Requirements                       
+*** Used Components and Frameworks
+| Name | Description                  | Software Component | Implications |
+|------+------------------------------+--------------------+--------------|
+| BRF+ | Business Rule Framework plus |                    |              |
+
+*** Compliance to Standards and Guidelines
+**** Applied Architecture/Design Guidelines
+- [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline][CDS Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
+- [[https://ux.wdf.sap.corp/fiori-design/foundation/get-started/][Firoi Design Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
+
+**** Approved deviations
+| <8>      | <l40>                                    | <l20>                |
+| Rule ID  | Deviation                                | Approval Status      |
+|----------+------------------------------------------+----------------------|
+| C-BRMS-2 | HRF must not be used directly but through the BRFplus encapsulation only. In case BRFplus encapsulation is not updated or enough, we may need bypass BRF+ APIs. |                      |
+
+
+** Detail Design
+*** RTC Modeling Tool Ui
+Real-time Consolidation Modeling Tool is used to generate consolidation views used for various consolidation tasks. 
+**** Initial Screen & Basic Settings
+#+Caption: RTC Modeling Tool: Basic Settings
 [[../image/RTCModelingToolUI01.png]]
 
-You can create a consolidation model in the initial screen by entering a model name (6 char long). Existing check and lock check will be made to make sure the model name is available. You can also display or change an existing model. A model cannot be deleted once it is activated, but it can be de-activated to forbid use. You can also do checks on a model to make sure all the settings distributed between BPC and S/4 are consistent. The check results will be shown in a pop up dialog(screen 900) if any inconsistency is found.
+You can create a consolidation model in the initial screen by entering a model name (6 characters long). Existing check and lock check will be made to make sure the model name is available. You can also display or change an existing model. A model cannot be deleted once it is activated, but it can be de-activated to forbid use. You can also do checks on a model to make sure all the settings are consistent. The check results will be shown in a pop up dialog.
 
-When you create a model, the second screen 200 will pop up to let you enter the consolidation foundation view. It is a HANA calculation view on ACDOCA which has realized fields projection, data filtering, CoA mapping and fiscal year period alignment. You must first enter the HANA package where the foundation view resides. To be in mind, the HANA DB user "SAP<SID>" must have the read/write access to the HANA package. As later on, it will generate HANA Calculation views into the package. 
+You must assign:
+1. A *Consolidation Dimension* is to determine which field or fields combination is defined as the consolidation entity and partner entity. 
+2. A *Consolidation Chart of Accounts* is used to present the group financial statements. 
+3. A *Consolidation Fiscal Year Variant* is used to distribute journal entries into the right group fiscal year period.
 
-You must assign a consolidation Chart of Account, a Group Fiscal Year Variant, a Consolidation Dimension. Besides 2 BPC categories must be assigned, one is for the final consolidation, and the other is for the preliminary consolidation run. 
+In the "Integration Option", you set whether the model integrates with BPC. If yes, you have to give a "Default Flow Type" which is actually a transaction type. This is because transaction type in ACDOCA is mapped to BPC's flow dimension, and BPC requires every row have a flow type. In case lines in ACDOCA do not have the transaction type, then the default one is used.You can also decide whether currency translation happens in S/4HANA or in BPC. The integration options controls how the consolidation views are generated.  
 
-For some special fields like partner entity, and transaction type(flow type), BPC doesn't allow empty values. You must give a default value for the empty ones. 
-
-By default, Real-time Consolidation needs BPC for the complete consolidation functionalities. So the check-box of "Integrate with BPC" is always checked. It is possible for those customers who doesn't have BPC, can still run some simple consolidations directly in S/4. Then they should un-check the option. And this model will not generate any BPC consolidation views. 
-
-If "Currency Translation in S4H" is checked, then the model requires currency translation be done in S/4. The translated result is saved in ACDOCC. BPC should only access data in ACDOCC. It is not necessary to union data in ACDOCA as BPC won't do currency translation again. 
-
-Click the "OK" button will do the consolidation views generation work. It will run validations first. The validation result will be shown in the next screen(300) as a pop-up dialog(screen 900). If everything is OK, the dialog won't be shown. 
-
-**** Cons. View Tab
-#+Caption: Real-time Consolidation Modeling Tool: Consolidation Views
+There are others settings like "Default Translation Method", which is optional. You can assign a CT method as the default one for those entities who are not assigned with a dedicate CT method. "Model Name Abbreviation" is used as a prefix for the generated consolidation views. It is 2 characters long, and can be auto determined from the full model name. However, users can assign one by themselves. The Model Name Abbreivation should keep unqiue.
+ 
+**** Data Source 
+#+Caption: Real-time Consolidation Modeling Tool: Data Source
 [[../image/RTCModelingToolUI02.png]]
+
+You define consolidation data sources in this tab. Consolidation data sources are grouped by *Data Category*. Each data category contains a full set of source data for consolidation. Different types of source data are further differentiated using *Stream Type*. You assign each "Stream Type" a HANA view(either CDS or Calculation view) that protocolized. Stream Types and their protocals are pre-defined.
+| <35>                                | <50>                                               |
+| Stream Type                         | Protocol                                           |
+|-------------------------------------+----------------------------------------------------|
+| FI Journals                         | Mandatory fields: FISCYEARPRD,ENTITY,RACCT, HSL..  |
+| FS Items or G/L Accounts            | Mandatory fields: KTOPL,RACCT,XBILK,KTOKS          |
+| Inventory Data                      |                                                    |
+| Supplier Share                      |                                                    |
+| Assets/Liabilities                  |                                                    |
+| Noncurrent Assets                   |                                                    |
+| Noncurrent Assets - Consolidation   |                                                    |
+| Transfer of Noncurrent Assets       |                                                    |
+| Investment Data                     |                                                    |
+| Equity Data                         |                                                    |
+| Equity Holdings Adjustment Data     |                                                    |
+| Goodwill Data                       |                                                    |
+| Activity Numbers                    |                                                    |
+| Sequence of Activities              |                                                    |
+| Activity Sorting                    |                                                    |
+
+The stream type "FI Journals" is the main data source, all other stream types are optional. If the model is set to integrate with BPC, then you can only assign a HANA calculation view to this stream type, CDS view is not allowed. This is also known as the foundation view.
+
+~You must first enter the HANA package where the foundation view resides. To be in mind, the HANA DB user "SAP<SID>" must have the read/write access to the HANA package. As later on, it will generate HANA Calculation views into the package.~ 
+
+**** Consolidation Version
+Version is used to execute parallel consolidations according to different aspects. You can define multiple versions for a consolidation model. The consolidation result then will be isolated by by versions. Each version is defined as a combination of 3 version related fields: =Data Category=, =Account Principle=, and =Variant=. But in BPC side, there is only one dimension with the role "data category" has the similar usage. You have to create a mapping between =BPC Category= to the S/4 version combination if you model needs to integrate with BPC. 
+
+#+Caption: Real-time Consolidation Modeling Tool: Version
+[[../image/RTCModelingToolUI03.png]]
+
+In this tab screen, you can create a consolidation version, which you just assign a unique value combination of =Data Category=, =Account Principle=, and =Variant=. In the sceario with BPC, you must also map a BPC Category to one of your version combinations. 
+
+By default, there will be 2 BPC categories created: "FINAL" and "PRELIM" if integrates with BPC.And the version related value combination is also automatically generated in this way:
+| BPC Category | Data Category | Acct. Principle | Variant |
+|--------------+---------------+-----------------+---------|
+| FINAL        | Actual        |                 |     100 |
+| PRELIM       | Actual        |                 |     200 |
+In BPC scenario, the data category "Actual" is also automatically created, so do the variant 100 and 200. The Account Principle field is optional, you can leave it empty.  
+
+When you click the "Add", a popup dialog will allow you to add a new version. You give an unqiue BPC category. If it doesn't exist, it will create one.
+
+~The master head table for BPC category is FCOMC_CATEGORY which belongs to the IBPF team. We share the categroy master data for future planning and consolidation integration. If you add a new BPC category, it will insert a new entry into table FCOMC_CATEGORY.~
+
+**** Consolidation View
+Consolidation views are generated under each data category. In other words, different data categories generate different sets of consolidation views.
+#+Caption: Real-time Consolidation Modeling Tool: Consolidation Views
+[[../image/RTCModelingToolUI04.png]]
 
 Screen 300 is the main screen that contains all the tabs.You can do further maintenance for the model. For example, you can add a description. 
 
@@ -296,25 +364,13 @@ The tab "Cons. Views" is the default tab when the model is opened or created. In
 
 ~In future it will also allow multiple foundation views, like inventory data view, investment data view, and so on.~
   
-**** Integration Tab
+**** BPC Integration
 #+Caption: Real-time Consolidation Modeling Tool: Integration
-[[../image/RTCModelingToolUI03.png]]
+[[../image/RTCModelingToolUI04.png]]
 
 In the =Integration= tab, you define more details settings for the integration with BPC. You add a BPC consolidation environment and a BPC model which is created in BPC's web console before-hand. The BPC model's meta data is then read when you click the "Enter" key. If "Currency Translation in S4H" is checked, you should assign a translation method. Click the "Ownership Hierarchy" will navigate to a hierarchy view dialog. The data is real-time read from BPC's ownership cube. 
 
 ~BPC has exposed an interface to allow you read data in its ownership cube: CL_RSBPCO_APPL_ADAPTER!~
-
-**** Version Tab
-#+Caption: Real-time Consolidation Modeling Tool: Version
-[[../image/RTCModelingToolUI04.png]]
-
-Version is used to execute parallel consolidations according to different aspects. You can define multiple versions for a consolidation model. The consolidation result then will be saved with version information tagged. Each version is defined as a combination of one or multiple version fields, and almost every char type field in ACDOCC can be used as a version field. But in BPC side, there is only one dimension with the role "data category" has the similar usage. You should create a mapping between =BPC Category= to the S/4 version combinations. 
-
-In this tab screen, you can add a new version by first assigning a unique =BPC Category= value, and then assign a value combination of =Consolidation Ledger=, =RTC Category=, and =Variant=. The above three version fields are default assigned. In future release, you can define your own version fields combination as you like. Also, by default, the first 2 lines with =BPC Category= value equals "FINAL" and "PRELIM" are mandatory. You *cannot* delete them, and you must assign a valid value combination for it.  
-
-You can create a new BPC category for the  consolidation model. The master head table for BPC category is =FCOMC_CATEGORY= which belongs to the IBPF team. We share the categroy master data for future planning and consolidation integration. If you add a new BPC category, it will insert a new entry into table =FCOMC_CATEGORY=;
-
-In the popup dialog when you click "NEW", you give an unqiue name of the BPC category, and a decription. You must also choose a category type "Preliminary" or "Final". If you choose the "Preliminary", then the "Source Category" attribute of the added category is assigned with mandatory "PRELIM" category; If you choose "Final", then the "Source Category" attribute is set to "FINAL".
 
 **** Assignment Tab
 #+Caption: Real-time Consolidation Modeling Tool: Assignment
@@ -335,39 +391,6 @@ The assignment fields are very important fields for a consolidation model. If an
 
 =Admin= tab contains administrative data of the consolidation model. All these fields cannot be changed as it generates automatically along with other operations on the model. The last field =Current Active Version= indicates the version number of the model. It is used to check the consistency of the design time objects, and the consolidated data in ACDOCC. 
 
-*** Design Challenges resulting from Non-Functional Requirements
-*** Vocabulary Modeling
-
-*** Interfaces/Communication Handling                          
-*** Used Components and Frameworks
-| Name | Description                  | Software Component | Implications |
-|------+------------------------------+--------------------+--------------|
-| HRF  | HANA Rule Framework          |                    |              |
-| BRF+ | Business Rule Framework plus |                    |              |
-
-*** Package/Development Component Concept
-*** New Coupling of Software Components
-| SWC | Depends on SWC | Description of coupling and effects |
-|-----+----------------+-------------------------------------|
-|     |                |                                     |
-*** Upgrade/Migration/Compatibility
-*** TCO Considerations
-*** Compliance to Standards and Guidelines
-**** Applied Architecture/Design Guidelines
-- [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
-- [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline][CDS Guideline]]
-- [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
-- [[https://ux.wdf.sap.corp/fiori-design/foundation/get-started/][Firoi Design Guideline]]
-- [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
-
-**** Approved deviations
-| <8>      | <l40>                                    | <l20>                |
-| Rule ID  | Deviation                                | Approval Status      |
-|----------+------------------------------------------+----------------------|
-| C-BRMS-2 | HRF must not be used directly but through the BRFplus encapsulation only. In case BRFplus encapsulation is not updated or enough, we may need bypass BRF+ APIs. |                      |
-
-
-** Design Details Documentation
 *** Database Design
 *** Data Flow & Design Time
 Here describes how data is read, calculated, and write back during a consolidation. It is divided into 3 scenarios:
@@ -488,11 +511,6 @@ New fields derivation is quite same with scenario 2. But in this case, as =BPC C
 
 #+Caption: Design Time for Scenario 3
 [[../image/ModelingDesignTimeCase3.png]]
-
-*** Testability and Test Environment
-*** Complex Algorithms and Applied Patterns
-*** Design Alternatives and Trade-Offs
-*** Guide to the Implementation
 
 
 ** Appendix

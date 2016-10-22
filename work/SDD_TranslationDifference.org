@@ -1,5 +1,5 @@
 #+PAGEID: 1852158416
-#+VERSION: 6
+#+VERSION: 7
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Translation Difference
