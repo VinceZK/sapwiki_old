@@ -118,7 +118,7 @@ With Account Principle "GAAP" we assign 2 consolidation ledgers, with "C1" as th
 
 I will deduce following scenarios and see how the data is stored and read. 
 
-*** Flexible Upload
+*** Flexible Upx1load
 When the local accountant submits his local data with Flexible Upload, he only chooses a target Model and a Data Category. When the data is saved in ACDOCC, only Data Category field is filled with value "Actual", Leger and Variant fields are kept as empty. The following persistence layout apply:
 | Model  | D.Cate | Ledger | Variant |  Period | Entity | Amount | Curr |
 |--------+--------+--------+---------+---------+--------+--------+------|
@@ -144,7 +144,7 @@ Before opening the next period, the group accountant must first close the prior 
 | RTCCTB | Actual | C1     |     200 | 2016008 | COMPA  | 60,000 | USD  | X   |
 | RTCCTB | Actual | C1     |         | 2016008 | COMPA  | 60,000 | USD  |     |
 
-After the local accountant submits his local data again, the group accountant first run currency translation in *PRELIM* category. Now if the translation logic need amount of prior periods, it will read the amount of *FINAL* category.
+After the local accountant submits his local data again, the group accountant first run currency translation in *PRELIM* category. Now if the translation logic needs amount of prior periods, it will read the amount of *FINAL* category.
 | Model  | D.Cate | Ledger | Variant |  Period | Entity | Amount | Curr | Del |
 |--------+--------+--------+---------+---------+--------+--------+------+-----|
 | RTCCTB | Actual |        |         | 2016008 | COMPA  | 10,000 | CNY  |     |
@@ -153,15 +153,27 @@ After the local accountant submits his local data again, the group accountant fi
 | RTCCTB | Actual |        |         | 2016009 | COMPA  | 15,000 | CNY  |     |
 | RTCCTB | Actual | C1     |     200 | 2016009 | COMPA  | 90,000 | USD  |     |
 
-#+CAPTION: Pseduo SQL to simulate data consumption of Prelimianry Category
+#+CAPTION: Pseduo SQL to Simulate Data Consumption 
 #+BEGIN_SRC sql
+-- Read Flexible Uploaded Data
 select * from ACDOCC as A
     left join RTC_ACCTP as B
            on A.LEDGER = B.LEDGER
         where DEL = ''
           and A.DCATE   = 'Actual'
           and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
-          and (A.VARIANT = '' or A.VARIANT = '200');           
+          and (A.VARIANT = '' or A.VARIANT = '200');  
+
+-- Read BPC Result Data
+select 'FINAL' as BCATE
+        * 
+     from ACDOCC as A
+left join RTC_ACCTP as B
+       on A.LEDGER = B.LEDGER
+    where DEL = ''
+      and A.DCATE   = 'Actual'
+      and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
+      and (A.VARIANT = '' or A.VARIANT = '200');          
 #+END_SRC
 
 *** Additional Financial Data
@@ -405,7 +417,7 @@ Then next time, if I run RTCCT under *Actual1/LGAAP/200* for company *C100*, it 
 | Model  | D.Cate  | Ledger | Variant |  Period | Entity | LC CNY | GC JPY | DEL |
 |--------+---------+--------+---------+---------+--------+--------+--------+-----|
 | RTCCTS | Actual1 | C1     |         | 2016008 | C100   | 8,000  | 48,000 | X   |
-| RTCCTS | Actual1 | C1     | 200     | 2016008 | C100   | 8,000  | 48,000 |     |
+| RTCCTS | Actual1 | C1     |     200 | 2016008 | C100   | 8,000  | 48,000 |     |
 
 Then BPC can only read "PRELIM1" data. If we set the Variant of the former result to 100 rather then delete them, then BPC can still read "FINAL1". Need further consideration. Also to be considered is in delta translation cases. 
 

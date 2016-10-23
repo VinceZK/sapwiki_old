@@ -120,7 +120,7 @@ For example, the financial statement for cash can have subitems of banks. It sta
 
 =Subitem Category= is the total domain of subitems, or you can say a subitem contains a sub-domain of subitem category. Take sales region as an example, you can define a subitem with 3 regions of "Europe, Asia, Africa". The subitem is belong to the subitem category "Region" which may stand for all the sale regions on the earth. 
 
-=Subitem= and =Subitem Category= together is called =Subassignment=. In BCS, only =Subassignment= is used. And multiple subassignments can be grouped by =Breakdown Category=. 
+=Subitem= and =Subitem Category= together is called =Subassignment=. In BCS, only =Subassignment= is used. And multiple Subassigments can be grouped by =Breakdown Category=. 
 
 It's just too much concepts and layers here. Think if can be simplified during development.
 
@@ -135,7 +135,7 @@ Schema definition or what we call =Data Modeling= can be the main development st
 #+Caption: Data Modeling Design Time
 [[../image/DataModelingDesignTime.png]]
 
-The first step is to create a foundation view on ACDOCA(and other tables are also possilbe in future). The foundation view projects fields from ACDOCA (could join other tables), apply filters(where conditions), do field mappings and alignments. This can be achieved using HANA Calculation View Graphic Modeling Tool.
+The first step is to create a foundation view on ACDOCA(and other tables are also possible in future). The foundation view projects fields from ACDOCA (could join other tables), apply filters(where conditions), do field mappings and alignments. This can be achieved using HANA Calculation View Graphic Modeling Tool.
 
 ~User should ensure the performance of the foundation view, because almost all the consolidation tasks access data through it.~ 
 
@@ -151,7 +151,7 @@ Before generating consolidation views, there could be quite a lot of validations
 5. If all fields defined in foundation view have counterparts in ACDOCC?
 
 There are quite a lot of consolidation views generated automatically. These views are for different consolidation and validation tasks. In general, these views are categorized into 2 sets: HANA calculation views for BPC's consumption, and CDS views for RTC's own consumption. 
-The BPC consolidation views will be union-ed under a composite provider, together with a virtual provider for write-back(The cons. reuslt view is assigned to the virtual provider). User could still need to prepare info-objects(virtual or physical) for the dimensions in the composite provider. 
+The BPC consolidation views will be union-ed under a composite provider, together with a virtual provider for write-back(The cons. result view is assigned to the virtual provider). User could still need to prepare info-objects(virtual or physical) for the dimensions in the composite provider. 
 
 You can then open BPC modeling workbench to define BPC environment and model. After that, you switch back to RTC's modeling tool to assign the name of BPC environment and model. Finally you can check and activate the Real-time Consolidation Model. Besides the check rules before generating consolidation views, following additional rules will be checked before the activating:
 1. If entity definition is consistent between RTC and BPC?
@@ -185,13 +185,13 @@ You develop a customization table for version ID definition. Refer EC-CS' table:
 
 ~There are still some uncertainties about BCS' version combination. Actually, version ID and version combination are 2 redundant information.~   
 
-*Ledger* in consolidation is combined with =Accounting Principle=. You can just regard them as the same thing at concept level. So =Ledger= is also a version-related field used in version combination. You develop a customization table to allow user store different ledgers and ledger level settings. Each consolidation ledger can be mapped to multiple opertional ledgers. 
+*Ledger* in consolidation is combined with =Accounting Principle=. You can just regard them as the same thing at concept level. So =Ledger= is also a version-related field used in version combination. You develop a customization table to allow user store different ledgers and ledger level settings. Each consolidation ledger can be mapped to multiple operational ledgers. 
 
 *Category* is used to specify the consolidation purpose for, take an example, plan or actual. Try to reuse IBPF's existing category maintenance view: FCOMV_CATEGORY
  
 Version is the most complicate configurations in consolidation. You can refer EC-CS and BCS to see how they realize the consolidation version. Regarding with RTC, in its initial release, we should only pick the essential parts of them. 
 
-**** Foundation View                                                  :Frank:Blang:
+**** Foundation View                                            :Frank:Blang:
 Foundation view is the main source of consolidation data, based on what consolidation tasks are run to produce consolidated results. 
 
 In the initial releases, the source data is mainly coming from ACDOCA. You need to create a HANA calculation view on ACDOCA and do necessary fields projections and data filtering. ~The reason why using HANA calculation view not CDS view for the foundation view definition is because BPC only supports HANA calculation view. You can even not use HANA calculation view on CDS view.~
@@ -228,7 +228,7 @@ To achieve this, you should read the meta data of the HANA Calculation View. Nee
 
 You should reuse SAP application log (SLG0&SLG1) to show the check result. You can also refer ABAP class: ZCL_BG_LOG in S4H.
 
-**** Generate Consolidation Views     :Steve:
+**** Generate Consolidation Views                                     :Steve:
 #+Caption: Data Modeling Design Time
 [[../image/ConsViews02.png]]
 
@@ -247,11 +247,11 @@ More details can be found in: https://wiki.wdf.sap.corp/wiki/display/TIPABAPVB/C
 The generated artifacts(HANA Calculation Views, CDS views, and AMDP methods) are not transported. Only model data can be transported from DEV to QA, and PRD systems. It is at the target systems these artifacts can be regereated in local namespaces.
 
 **** Selection on Accounts                                          :Vincent:
-Not all the operational accounts need to be involved in a consolidation. There should be a place to allow user to define which oerptional account numbers should be involved in cerntain chart of accounts. 
+Not all the operational accounts need to be involved in a consolidation. There should be a place to allow user to define which operational account numbers should be involved in certain chart of accounts. 
 
 This can be achieved using the general object: =Selection=. A special composite selection is reserved with the name "SELECTION001". Under the composite selection, user can add multiple single selections to compile his accounts selection.
 
-When generate consolidation views in the RTC Modeling Tool, the above selection will be added into all the views. Then only the choose accounts is filterred in. 
+When generate consolidation views in the RTC Modeling Tool, the above selection will be added into all the views. Then only the choose accounts is filtered in. 
   
 **** +Field Projection and Role Assignment+
 *Frozen*
@@ -265,7 +265,6 @@ User first assigns a foundation table/view, then the above screen is pop up to l
 Some groups are mandatory, for example ~Consolidation Unit/Dimension~, you must at least assign one field (at maximum two) for this group of fields. ~Financial Statement Item~ is also mandatory. 
 
 This UI representation of field projection and role assignment is tailored to ACDOCA table. It should be flexible enough for other tables. So templates will be designed which allow user to using exist settings. For example, template for ACDOCA should already have some field assigned for those  mandatory field groups. User can also extend the view and save as their own templates.
-
 
 *** Design Challenges resulting from Non-Functional Requirements                       
 *** Used Components and Frameworks
@@ -285,11 +284,11 @@ This UI representation of field projection and role assignment is tailored to AC
 | <8>      | <l40>                                    | <l20>                |
 | Rule ID  | Deviation                                | Approval Status      |
 |----------+------------------------------------------+----------------------|
-| C-BRMS-2 | HRF must not be used directly but through the BRFplus encapsulation only. In case BRFplus encapsulation is not updated or enough, we may need bypass BRF+ APIs. |                      |
+| C-BRMS-2 | HRF must not be used directly but through the BRF-plus encapsulation only. In case BRF-plus encapsulation is not updated or enough, we may need bypass BRF+ APIs. |                      |
 
 
 ** Detail Design
-*** RTC Modeling Tool Ui
+*** RTC Modeling Tool UI
 Real-time Consolidation Modeling Tool is used to generate consolidation views used for various consolidation tasks. 
 **** Initial Screen & Basic Settings
 #+Caption: RTC Modeling Tool: Basic Settings
@@ -304,13 +303,13 @@ You must assign:
 
 In the "Integration Option", you set whether the model integrates with BPC. If yes, you have to give a "Default Flow Type" which is actually a transaction type. This is because transaction type in ACDOCA is mapped to BPC's flow dimension, and BPC requires every row have a flow type. In case lines in ACDOCA do not have the transaction type, then the default one is used.You can also decide whether currency translation happens in S/4HANA or in BPC. The integration options controls how the consolidation views are generated.  
 
-There are others settings like "Default Translation Method", which is optional. You can assign a CT method as the default one for those entities who are not assigned with a dedicate CT method. "Model Name Abbreviation" is used as a prefix for the generated consolidation views. It is 2 characters long, and can be auto determined from the full model name. However, users can assign one by themselves. The Model Name Abbreivation should keep unqiue.
+There are others settings like "Default Translation Method", which is optional. You can assign a CT method as the default one for those entities who are not assigned with a dedicate CT method. "Model Name Abbreviation" is used as a prefix for the generated consolidation views. It is 2 characters long, and can be auto determined from the full model name. However, users can assign one by themselves. The Model Name Abbreviation should keep unique.
  
 **** Data Source 
 #+Caption: Real-time Consolidation Modeling Tool: Data Source
 [[../image/RTCModelingToolUI02.png]]
 
-You define consolidation data sources in this tab. Consolidation data sources are grouped by *Data Category*. Each data category contains a full set of source data for consolidation. Different types of source data are further differentiated using *Stream Type*. You assign each "Stream Type" a HANA view(either CDS or Calculation view) that protocolized. Stream Types and their protocals are pre-defined.
+You define consolidation data sources in this tab. Consolidation data sources are grouped by *Data Category*. Each data category contains a full set of source data for consolidation. Different types of source data are further differentiated using *Stream Type*. You assign each "Stream Type" a HANA view(either CDS or Calculation view) that protocolized. Stream Types and their protocols are pre-defined.
 | <35>                                | <50>                                               |
 | Stream Type                         | Protocol                                           |
 |-------------------------------------+----------------------------------------------------|
@@ -340,7 +339,7 @@ Version is used to execute parallel consolidations according to different aspect
 #+Caption: Real-time Consolidation Modeling Tool: Version
 [[../image/RTCModelingToolUI03.png]]
 
-In this tab screen, you can create a consolidation version, which you just assign a unique value combination of =Data Category=, =Account Principle=, and =Variant=. In the sceario with BPC, you must also map a BPC Category to one of your version combinations. 
+In this tab screen, you can create a consolidation version, which you just assign a unique value combination of =Data Category=, =Account Principle=, and =Variant=. In the scenario with BPC, you must also map a BPC Category to one of your version combinations. 
 
 By default, there will be 2 BPC categories created: "FINAL" and "PRELIM" if integrates with BPC.And the version related value combination is also automatically generated in this way:
 | BPC Category | Data Category | Acct. Principle | Variant |
@@ -349,41 +348,32 @@ By default, there will be 2 BPC categories created: "FINAL" and "PRELIM" if inte
 | PRELIM       | Actual        |                 |     200 |
 In BPC scenario, the data category "Actual" is also automatically created, so do the variant 100 and 200. The Account Principle field is optional, you can leave it empty.  
 
-When you click the "Add", a popup dialog will allow you to add a new version. You give an unqiue BPC category. If it doesn't exist, it will create one.
+When you click the "Add", a pop-up dialog will allow you to add a new version. You give an unique BPC category. If it doesn't exist, it will create one.
 
-~The master head table for BPC category is FCOMC_CATEGORY which belongs to the IBPF team. We share the categroy master data for future planning and consolidation integration. If you add a new BPC category, it will insert a new entry into table FCOMC_CATEGORY.~
+~The master head table for BPC category is FCOMC_CATEGORY which belongs to the IBPF team. We share the category master data for future planning and consolidation integration. If you add a new BPC category, it will insert a new entry into table FCOMC_CATEGORY.~
 
 **** Consolidation View
 Consolidation views are generated under each data category. In other words, different data categories generate different sets of consolidation views.
 #+Caption: Real-time Consolidation Modeling Tool: Consolidation Views
 [[../image/RTCModelingToolUI04.png]]
 
-Screen 300 is the main screen that contains all the tabs.You can do further maintenance for the model. For example, you can add a description. 
+You choose a data category in the dropdown box, it lists all the consolidation views that belong to the data category. Consolidation views are further grouped by different usages. If the model is a BPC integration model, then there will be a group "BPC Calc View" which contains all the HANA calculation views that are consumed by BPC. The naming rule of the calculation view is designed like this:
 
-The tab "Cons. Views" is the default tab when the model is opened or created. In this tab, you can find all the consolidation views generated. You can of course change the foundation view. But once you changed, you should re-generate all the consolidation views. ACDOCC is fixed as the consolidation journal table in the initial releases. But we will consider if users are allowed to enter their own journal table to add more flexibility.  
+~C_<Model Abbrev>_<BPC Category>_<A or C>~
 
-~In future it will also allow multiple foundation views, like inventory data view, investment data view, and so on.~
+In the "Base CDS View" group, there lists the CDS views that are used by RTC applications like =Data Submit Cockpit=, =CT Method=, =Validation Method=, and so on. These applications either read data from the CDS views, or requires the meta definition of the view fields. All the generated CDS views have the namespace "/RTCART/", and the naming rule is designed like this:
+
+~/RTCART/<Model Abbr><View Group><Sequential Number>~
+
+*Not sure if we need to generate CDS views for validation and report.*  
   
 **** BPC Integration
-#+Caption: Real-time Consolidation Modeling Tool: Integration
-[[../image/RTCModelingToolUI04.png]]
-
-In the =Integration= tab, you define more details settings for the integration with BPC. You add a BPC consolidation environment and a BPC model which is created in BPC's web console before-hand. The BPC model's meta data is then read when you click the "Enter" key. If "Currency Translation in S4H" is checked, you should assign a translation method. Click the "Ownership Hierarchy" will navigate to a hierarchy view dialog. The data is real-time read from BPC's ownership cube. 
-
-~BPC has exposed an interface to allow you read data in its ownership cube: CL_RSBPCO_APPL_ADAPTER!~
-
-**** Assignment Tab
-#+Caption: Real-time Consolidation Modeling Tool: Assignment
+#+Caption: Real-time Consolidation Modeling Tool: BPC Integration
 [[../image/RTCModelingToolUI05.png]]
 
-In the assginment tabe, there are 4 assignment fields: =Consolidation Dimension=, =Fiscal Year Variant=, =Cons. Chart of Accounts=, and =Default Transaction Type=. You can change them, but once these fields are changed, you need to re-generate consolidation views and re-activate the model. 
+In the =BPC Integration= tab, you give a BPC consolidation environment and a BPC model name. The BPC model's meta data is then read when you click the "Enter" key. Click the "Ownership Hierarchy" will navigate to BPC's entity hierarchy view page.
 
-The assignment fields are very important fields for a consolidation model. If any of them are inconsistent with foundation views and BPC model, you just cannot activate the model. Details about the 4 fields are explained bellow:
-
-1. *Consolidation Dimension*: A 3 characters long ID that indicates which fields in ACDOCA will be regarded as conslidation entity realtion and its partner entity relation. For details please refer SDD:
-2. *Fiscal Year Variant*: The group fiscal year variant used for consolidation. It will be appeared in SQL where expressions in every consolidation view.
-3. *Cons Chart of Accounts*: The group chart of accounts which is used to map opertional accounts to group accounts.  Appeared in every Consolidation views' where expression.
-4. *Default Transaction Type*: Transaction type will be mapped to BPC flow type. As not every line in ACDOCA has values in transaction type which it is mandatory for BPC to have a flow type value. For those document lines with null transaction type value, a default value is given. 
+~BPC has exposed an interface to allow you read data in its ownership cube: CL_RSBPCO_APPL_ADAPTER!~
 
 **** Admin Tab
 #+Caption: Real-time Consolidation Modeling Tool: Admin
@@ -391,6 +381,36 @@ The assignment fields are very important fields for a consolidation model. If an
 
 =Admin= tab contains administrative data of the consolidation model. All these fields cannot be changed as it generates automatically along with other operations on the model. The last field =Current Active Version= indicates the version number of the model. It is used to check the consistency of the design time objects, and the consolidated data in ACDOCC. 
 
+**** Modeling Validation Log
+#+Caption: Real-time Consolidation Modeling Tool: Validation Log
+[[../image/RTCModelingToolUI90.png]]
+
+Before generating views or activating from the model definition, validation should be done to make sure the model definition is consistent. The validation result will be output as application log which is shown in a dialog box. 
+Following criterias must be fulfilled before generating consolidation views:
+1. Consolidation Dimension exists;
+2. Consolidation Chart of Accounts exists;
+3. Fiscal Year Variant exist;
+4. Default Flow Type exists;
+5. Model Name Abbreviation is unique;
+6. You must at least add one data category so that foundation views can be assigned.;
+7. A foundation view must be assigned to the stream type "FI Journals";
+8. The foundation view comply with the protocol of "FI Journals";
+9. If other stream types are assigned with CDS views, they must also comply with the corresponding protocol;
+10. The foundation view must contain all the fields defined in the consolidation dimension;
+11. You must at least create one consolidation version;
+12. A consolidation version must at least has a data category and a variant, Accounting Principle can be optional, however, each combination must be unique;
+13. If the model is BPC integrated, a BPC category must be mapped to a consolidation version;
+
+Following criterias must be additionally fulfilled before activating the model:
+1. You must assign a BPC environment and model to the RTC model;
+2. The assigned BPC environment and model must not be assigned to other RTC model;
+3. The settings between the BPC model and RTC model must be consistent, however, if the model is created using BPC integrated web client, the consistency is already permitted;
+4. The posting API exists;
+5. The global temporary table of ACDOCC exists;
+6. The default number range interval '00' of RTCJOURN exists;
+
+When activating the model, besides generating consolidation views, there are default document types generated.
+ 
 *** Database Design
 *** Data Flow & Design Time
 Here describes how data is read, calculated, and write back during a consolidation. It is divided into 3 scenarios:

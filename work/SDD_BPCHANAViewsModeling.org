@@ -54,7 +54,193 @@ This simplification has following restrictions:
 
 There are 2 different senarios in 1610: 1) Currency Translation in BPC; 2) Currency Translation in S/HANA. Details will be discussed in the following 2 sections. 
 
-*** CT in BPC
+
+** Detail Design
+
+*** Consolidation Entity View
+The entity view is generated before-hand, which will then be used by generating other consolidation views. 
+#+Caption: CDS View /RTCART/LCENTITY
+#+BEGIN_SRC sql
+  create view C_ENTITY as 
+    select DIM,ENTITY,RCOMP
+      from RTC_ENTITY_M
+     where MANDT = '820'
+       and DIM = '100';
+#+END_SRC
+
+#+Caption: Calculation View C_ENTITY
+#+BEGIN_SRC sql
+  create view C_ENTITY as 
+    select MANDT,DIM,ENTITY,RCOMP
+      from RTC_ENTITY_M
+     where MANDT = '820'
+       and DIM = '100';
+#+END_SRC
+
+*** Pull Request View
+Pull Request View gives out the latest submitted request for each entity each period. This view can be predefined and delivered to customer as standard contents. Both calucation view and CDS view are needed.
+
+#+Caption: CDS View RTC_PULL_REQ
+#+BEGIN_SRC sql
+  create view I_PULL_REQ as 
+    select MANDT,MODEL,BPC_CATG,FYEAR,FPERI,ENTITY,max(CLOSE_TIME)
+      from RTC_PULL_REQ
+     where USTATUS >= 30
+  group by MANDT,MODEL,BPC_CATG,FYEAR,FPERI,ENTITY;
+#+END_SRC
+
+#+Caption: Calculation View C_PULL_REQ
+#+BEGIN_SRC sql
+  create view C_PULL_REQ as 
+    select MANDT,MODEL,BPC_CATG,FYEAR,FPERI,ENTITY,max(CLOSE_TIME)
+      from RTC_PULL_REQ
+     where USTATUS >= 30
+  group by MANDT,MODEL,BPC_CATG,FYEAR,FPERI,ENTITY;
+#+END_SRC
+
+*** Foundation View                                                   :Blang:
+This is an example of streamlined foundation view for company consolidation. It projects fields from ACDOCA, however, company code (RBUKRS) is replaced by RCOMP through join with table T001. Only 2 key figures are choosen: TSL and HSL.
+| Field Name | Lable                           |
+|------------+---------------------------------|
+| RCLNT      | SAP Client                      |
+| RCOMP      | Company                         |
+| RASSC      | Trading Partner                 |
+| BUDAT      | Posting Date                    |
+| KTOPL      | Chart of Accounts               |
+| RACCT      | Account Number                  |
+| RMVCT      | Transaction Type                |
+| RTCUR      | Transaction Currency Key        |
+| RHCUR      | Company Code Currency Key       |
+| TSL        | Amount in Transaction Currency  |
+| HSL        | Amount in Company Code Currency |
+| TIMESTAMP  | Timestamp                       | 
+
+Through foundation view, you see the FI data still in local point of view. The above foundation view will then be converted to consolidation base view, which maps to the group chart of accounts and aligned with the group fiscal year variant. 
+
+*** Consolidation Base View
+Consolidation base views are the basis for other consolidation views to be built on. It contains the common logic that all other consolidation views needed. In the BPC integration scenario, there is also a HANA calculation view acts as the base view. 
+| Field Name  | Lable                           |
+|-------------+---------------------------------|
+| RCLNT       | SAP Client                      |
+| MODEL       | Consolidation Model             |
+| ENTITY      | Consolidation Entity            |
+| PENTITY     | Partner Entity                  |
+| PERIV       | Fiscal Year Variant             |
+| RYEAR       | Fiscal Year                     |
+| POPER       | Fiscal Period                   |
+| FISCYEARPER | Fiscal Year and Period          |
+| KTOPL       | Group Chart of Accounts         |
+| RACCT       | Group Account Number            |
+| RMVCT       | Transaction Type                |
+| RTCUR       | Transaction Currency Key        |
+| RHCUR       | Company Code Currency Key       |
+| TSL         | Amount in Transaction Currency  |
+| HSL         | Amount in Company Code Currency |
+| TIMESTAMP   | Timestamp                       |
+
+1. RCOMP is replaced by joining RTC_ENTITY_M for the field ENTITY as ENTITY.
+2. RASSC is replaced by joining RTC_ENTITY_M for the field ENTITY as PENTITY.
+3. BUDAT is replaced by joining FINS_FISC_DATE for the fields: PERIV, RYEAR, POPER, and FISCYEARPER.
+4. KTOPL is replaced by joining T004 for the field KKTPL as KTOPL.
+5. RACCT is replaced by joining SKA1 for the field BILKT as RACCT.
+Now, through the consolidation base view, you see the FI data in group point of view. 
+
+There are 4 consolidation base views generated. I give all of their SQL definitions:
+#+Caption: Calculation View, gives out data in ACDOCA only
+#+BEGIN_SRC sql
+  create view C_LC_ACTUAL_BASE as 
+  select A.RCLNT,
+         'RTCCTB'  as MODEL,
+         'Actual'  as RTC_CATG,
+         ''        as ACCTP,
+         ''        as RVERS,
+         '01'      as PLEVEL,
+         B.ENTITY,
+         C.ENTITY as PENTITY,
+         D.FISCAL_YEAR_VARIANT as PERIV,
+         D.FISCAL_YEAR as RYEAR,
+         D.FISCAL_PERIOD as POPER,
+         D.FISCYEARPER,
+         E.KKTPL as KTOPL,
+         F.BILKT as RACCT,         
+         case A.RMVCT when '' then 'F15' else A.RMVCT end as RMVCT,
+         A.RTCUR,
+         A.RHCUR,
+         A.RHCUR as CONS_CUR,
+         A.TSL,
+         A.HSL,
+         A.HSL as CONS_SL,
+         A.TIMESTAMP
+         from RTC_C_FOUNDATION
+         join C_ENTITY as B
+           on A.RCOMP = B.RCOMP
+    left join C_ENTITY as C
+           on A.RASSC = B.RCOMP
+         join RTC_C_FINS_FISC_DATE as D
+           on A.RCLNT = D.MANDT
+          and A.BUDAT = D.CALENDAR_DATE
+         join T004 as E
+           on A.RCLNT = E.MANDT
+          and A.KTOPL = E.KTOPL
+         join SKA1 as F
+           on A.RCLNT = F.MANDT
+          and A.KTOPL = F.KTOPL
+          and A.RACCT = F.SAKNR;          
+#+END_SRC
+
+#+Caption: CDS View, created directly from the table function based on C_LC_ACTUAL_BASE 
+#+BEGIN_SRC sql
+  create view /RTCART/LCB00001 as 
+   table function 
+     select * from C_LC_ACTUAL_BASE;          
+#+END_SRC
+
+#+Caption: CDS View, gives out data in ACDOCC only
+#+BEGIN_SRC sql
+  create view /RTCART/LCB00002 as 
+  select A.RCLNT,
+         A.MODEL,
+         A.RTC_CATG,
+         B.ACCTP,
+         A.RVERS,
+         A.PLEVEL,
+         C.ENTITY as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.RYEAR,
+         A.POPER,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.RTCUR,
+         A.RHCUR,
+         A.CONS_CUR,
+         A.TSL,
+         A.HSL,
+         A.CONS_SL,
+         A.TIMESTAMP
+         from ACDOCC as A
+    left join RTC_ACCTP as B
+           on A.LEDGER = B.LEDGER
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTB'
+          and A.DCATE   = 'Actual';          
+#+END_SRC
+
+#+Caption: CDS View, Union the other 2
+#+BEGIN_SRC sql
+  create view /RTCART/LCB00003 as 
+   select * from  /RTCART/LCB00001
+    union all
+   select * from  /RTCART/LCB00002 ;        
+#+END_SRC
+
+*** Consolidation Views for CT in BPC
 If CT happens in BPC, BPC should be able to access data in both ACDOCA and ACDOCC. Then, 5 HANA calculation views will be generated to cover the "Final" and "Preliminary" consolidations. 
 
 The simplified diagram looks like this:
@@ -62,74 +248,178 @@ The simplified diagram looks like this:
 #+Caption: HANA Views for BPC (CT in BPC)
 [[../image/ConsViews04.png]]
 
-**** Consolidation Result View
-Based on ACDOCC, only expose the consolidation results.
+**** Final View A
+This view gives out the submitted report data for these S/4 integrated entities. 
 #+BEGIN_SRC sql
-  select * from ACDOCC
-          where MODEL = 'RTC001'
-            and BTTYPE = 'RTBP'
-            and DELFLG = ''.
+  select A.RCLNT,
+         A.MODEL,
+         'FINAL'   as BPC_CATG,
+         'G_NONE'  as RCONGR1,
+         A.ENTITY,
+         case A.PENTITY when '' then 'NONE' else A.PENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         'INPUT'   as AUDIT_TRA,
+         'LC'      as CONS_CUR,
+         A.CONS_SL
+    from C_LC_ACTUAL_BASE as A
+    join C_PULL_REQ as B
+      on A.RCLNT = B.MANDT
+     and A.RYEAR = B.FYEAR
+     and A.POPER = B.FPERI
+     and A.ENTITY = B.ENTITY
+     and A.TIMESTAMP <= B.CLOSE_TIME
+   where B.MODEL = 'RTCCTB'
+     and B.BPC_CATG = 'FINAL'. 
 #+END_SRC
 
 **** Final View C
-Based on ACDOCC, those submitted flexible upload data of all periods. The view is created on ACDOCC join with the pull request table on pull request number. You should first filter in those latest approved pull requests group by year/periods. 
+For those external companies who supply data through flexible upload. Because each time the local accountant submits a request, the local data is copied from staging area (PLEVEL = 00) to the formal area(PLEVEL >= 01). So it is not necessary to join with the lastest pull requests. This view gives out all the report data of category FINAL for those external entities.  
 #+BEGIN_SRC sql
-  create view I_PULL_REQ_R as 
-    select MODEL, BPC_CATT, FYEAR, FPERI, ENTITY, max(CTIME), PLUUID
-      from RTC_PULL_REQ
-     where USTATUS = 'Approved'
-       and REQ_TYPE = 'C'
-     group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY;
-
-  select * from ACDOCC as C
-           join I_PULL_REQ_R as P
-             on C.MODEL = P.MODEL
-            and C.BPC_CATG = P.BPC_CATG
-            and C.RYEAR = P.FYEAR
-            and C.POPER = P.FPERI
-            and C.RCOMP = P.ENTITY
-            and C.PLUUID = P.PLUUID
-          where P.MODEL = 'RTC001'
-            and P.BPC_CATG = 'FINAL'
-            and C.DELFLG = ''.
+  select A.RCLNT,
+         A.MODEL,
+         'FINAL'   as BPC_CATG,
+         A.RCONGR1,
+         C.ENTITY as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.AUDIT_TRA,
+         A.CONS_CUR,
+         A.CONS_SL
+         from ACDOCC as A
+    left join RTC_ACCTP as B
+           on A.LEDGER = B.LEDGER
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTB'
+          and A.PLEVEL = '01'   --Posting Level = 01 means the submitted report data
+          and A.DCATE   = 'Actual'
+          and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
+          and (A.VARIANT = '' or A.VARIANT = '100');  
 #+END_SRC
 
 Once the local accountant submits the data, the pull request's user status will be set to "Approved". 
 
-**** Final View A
-Based on ACDOCA, those submitted flexible uploaded data of all periods. The view is created on ACDOCA join with the pull request table on timestamp. You should first filter in those latest approved pull requests group by year/periods. 
+**** Final Result View
+Based on ACDOCC, only expose the consolidation results.
 #+BEGIN_SRC sql
-  create view I_PULL_REQ_AR as 
-    select MODEL, BPC_CATG, FYEAR, FPERI, ENTITY, max(CLOSE_TIME)
-      from RTC_PULL_REQ
-     where USTATUS = 'Approved'
-       and REQ_TYPE = 'A'
-     group by MODEL, BPC_CATT, FYEAR, FPERI, ENTITY;
-
-    select * from I_FACDOCA as A
-             join I_PULL_REQ_AR as P
-               on A.RYEAR = P.FYEAR
-              and A.POPER = P.FPERI
-              and A.RCOMP = P.ENTITY
-              and A.TIMESTAMP <= P.CLOSE_TIME
-            where P.MODEL = 'RTC001'
-              and P.BPC_CATG = 'FINAL'. 
-#+END_SRC
-
-**** Preliminary View C
-All data in ACDOCC with the category "Prelim".
-#+BEGIN_SRC sql
-  select * from ACDOCC
-          where MODEL = 'RTC001'
-            and BTTYPE = 'RTFU'
-            and DELFLG = ''.
+  select A.RCLNT,
+         A.MODEL,
+         'FINAL'   as BPC_CATG,
+         A.RCONGR1,
+         C.ENTITY as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.AUDIT_TRA,
+         A.CONS_CUR,
+         A.CONS_SL
+         from ACDOCC as A
+    left join RTC_ACCTP as B
+           on A.LEDGER = B.LEDGER
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTB'
+          and A.PLEVEL > '01'   --Posting Level > 01 means all the BPC generatd data
+          and A.DCATE   = 'Actual'
+          and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
+          and (A.VARIANT = '' or A.VARIANT = '100');  
 #+END_SRC
 
 **** Preliminary View A
-All data from the foundation view. Fix category to "Prelim"
+The view gives out the up-to-time report data for S/4 integrated entities.
 #+BEGIN_SRC sql
-  select * 'Prelim' as BPC_CATG
-                  from I_FACDOCA.
+  select A.RCLNT,
+         A.MODEL,
+         'PRELIM'   as BPC_CATG,
+         'G_NONE'  as RCONGR1,
+         A.ENTITY,
+         case A.PENTITY when '' then 'NONE' else A.PENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         'INPUT'   as AUDIT_TRA,
+         'LC'      as CONS_CUR,
+         A.CONS_SL
+    from C_LC_ACTUAL_BASE;
+#+END_SRC
+
+**** Preliminary View C
+This view gives out the data in staging area of a defined data category.
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'PRELIM'  as BPC_CATG,
+         A.RCONGR1,
+         C.ENTITY  as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.AUDIT_TRA,
+         A.CONS_CUR,
+         A.CONS_SL
+         from ACDOCC as A
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTB'
+          and A.PLEVEL = '00'
+          and A.DCATE   = 'Actual';
+#+END_SRC
+
+**** Preliminary Result View
+Based on ACDOCC, only expose the consolidation results.
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'PRELIM'  as BPC_CATG,
+         A.RCONGR1,
+         C.ENTITY as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.AUDIT_TRA,
+         A.CONS_CUR,
+         A.CONS_SL
+         from ACDOCC as A
+    left join RTC_ACCTP as B
+           on A.LEDGER = B.LEDGER
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTB'
+          and A.PLEVEL > '01'   --Posting Level > 01 means all the BPC generatd data
+          and A.DCATE   = 'Actual'
+          and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
+          and (A.VARIANT = '' or A.VARIANT = '200');  
 #+END_SRC
 
 
@@ -344,8 +634,6 @@ latest data in ACDOCA of current period.
           where RYEAR = '2016'
             and POPER = '<this-period>'.
 #+END_SRC
-*** Foundation View     :Blang:
-The foundation view should be built using HANA calculation view(graphic). 
 
 *** Auto-generation of HANA Calculation Views                         :Steve:
 There is an exiting ABAP API to support generation of HANA calculation view. 
