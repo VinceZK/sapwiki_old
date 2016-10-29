@@ -2,7 +2,7 @@
 #+VERSION: 20
 #+STARTUP: align
 #+OPTIONS: toc:1
-#+TITLE: SDD-Data Submit Request for Consolidation
+#+TITLE: SDD-Data Submit Request
 * Context
 A data submit request represents a data submission activity done by local accountants. Usually, there is an underlying data replication step along with the submission activity. In Real-Time Consolidation, the data replication step is eliminated by only recording a timestamp (this typically stands for the financial close time). The timestamp is then used to filter in the data in the universal journal (table ACDOCA) which is before that point. 
 
@@ -61,7 +61,7 @@ The overall data flow show how the data is collected and submitted to the consol
 7. It is possible for the local accountant to run currency translation in S/4, then it is not necessary to rerun currency translation in BPC again. In this way, BPC only needs to access data in ACDOCC. Because CT in S/4 already saves the translated results in ACDOCC.
 
 
-* DB Design for Data Submit Request
+* Detail Design
 data submit requests are raised and saved in the central system. Each time, if the local accountant wants to submit his reported financial data, he must raise a data submit request. The group accountant will then be notified, and can use the information in the data submit request to pull data from ACDOCA/C.
 
 ** Data Submit Request Table Design
@@ -83,7 +83,7 @@ The data submit request table is actually hold filter information that is used t
 | ENTITY  |     | Consolidation Entities: Company, Profit Center            |
 | BUNIT   |     | Consolidation Unit(UC-CS)                                 |
 | CLTIME  |     | Period Close Timestamp                                    |
-| DCMETH  |     | Data Collection Method                                    |
+| DCMETH  |     | Data Submission Method                                    |
 | DENTRY  |     | Data Entry ID                                             |
 | USTAT   |     | User Status: Initial/Rejected/Deferred/Submitted/Approved |
 | SSTAT   |     | System Status: Ready/Running/Processed/Error              |
@@ -98,14 +98,14 @@ The data submit request table is actually hold filter information that is used t
 4. There are 3 types(=PTYPE=) of data submit request: 1) "Collective" means the data submit request contains sub-packages; 2) "MonthEnd" means a regular mandatory data submit request for each period; 3) "Adjustment" is for adjustment on the MonthEnd data.
 5. data submit request is also grouped by fiscal year(=FYEAR=), period(=FPERI=), and entity(=ENTITY=).
 6. Each data submit request must have a timestamp(=CLTIME=) assigned which stands for the period close time. And it is that timestamp which is used to filter in lines in ACDOCA who have timestamp value before it.
-7. A Data Collection Method must be assigned to a data submit request so that it can maps the data package meta data definition. For data submit requests with type "MonthEnd" and "Adjustment", a data entry ID is also needed, through which it can find a selection which contains additional filter information.
+7. A Data Submission Method must be assigned to a data submit request so that it can maps the data package meta data definition. For data submit requests with type "MonthEnd" and "Adjustment", a data entry ID is also needed, through which it can find a selection which contains additional filter information.
 8. User status(=USTAT=) are statuses from user perspective. It is used to control the data submit process and the data visibility. For details please refer ~Data Submit Request Status and Pseudo SQL~. 
 9. System status(=SSTAT=) are statuses from system perspective. For example, when a data submit request is approved, the data is ready for consolidation tasks. But if system errors happen during tasks' run, then the system status is set to "Error". And when the tasks are in "Running" status, you cannot submit further requests.
 10. Audit information like who(=CREATOR= and =UPDATOR=) and when(=CTIME= and =UTIME=) create it or update it is also attached.
 11. =DIMEN=, =RVERS=, and =BUNIT= are only used for UC-CS, which are corresponding to the Model, consolidation version, and consolidation entity.
 
-** Data Collection Method and Data Submit Request 
-Data Collection Method is defined as the meta data to control how Data Submit Requests are generated. You can regard Data Submit Requests are instances of a Data Collection Method. For example, I define a Data Collection Method as following:
+** Data Submission Method and Data Submit Request 
+Data Submission Method is defined as the meta data to control how Data Submit Requests are generated. You can regard Data Submit Requests are instances of a Data Submission Method. For example, I define a Data Submission Method as following:
 
 #+CAPTION: Method Header
 | Model  | Method | Type | Desc.                       | EMode      | Validation Method |
@@ -120,9 +120,9 @@ Data Collection Method is defined as the meta data to control how Data Submit Re
 | RTCCTB | DC001  |     003 | Equity&Liability |        3 | $EQU_LIAB | DV130             |
 | RTCCTB | DC001  |     004 | Profit&Loss      |        4 | $P_L      | DV140             |
 
-All data collection methods are in sequential execution mode, but actually the sequence is not strictly applied during runtime, it only affects the display order in the UI. The method "DC001" has 4 steps with each a selection is given to boundary the data to be submitted. From business perspective, each step is corresponding to a data entry that represents a sub-package. The 4 data entries together will cover the complete set of the local data. Each data entry can aslo be assigned with a Data Validation Method. The validation method is run only to validate the data entry, not the entire package. Only the validation method in the method level(=DV100=) is passed can consolidation tasks be run. 
+All data submission methods are in sequential execution mode, but actually the sequence is not strictly applied during runtime, it only affects the display order in the UI. The method "DC001" has 4 steps with each a selection is given to boundary the data to be submitted. From business perspective, each step is corresponding to a data entry that represents a sub-package. The 4 data entries together will cover the complete set of the local data. Each data entry can aslo be assigned with a Data Validation Method. The validation method is run only to validate the data entry, not the entire package. Only the validation method in the method level(=DV100=) is passed can consolidation tasks be run. 
 
-Now that we have the data collection method definition, we can deduce how local and group accountants play with it.
+Now that we have the data submission method definition, we can deduce how local and group accountants play with it.
 
 *** The group accountant opens the current period for data collection
 The group accountant can start the data collection for a period, usually, close to the month end. The activity can either be manually or automatically by a recurrence background job. Once opened, a data submit request with type "Collective" is inserted for each entity. Meanwhile, for each required data entry, a MonthEnd data submit request is also generated.
@@ -303,13 +303,14 @@ There is also a business lock table for the group accountant lock certain period
 |--------+-----+------------------------------------------------|
 | MANDT  | X   | SAP Client                                     |
 | MODEL  | X   | Consolidation Model                            |
-| DCATE  | X   | BPC Data Category                              |
+| VERID  | X   | Consolidation Version ID                       |
 | FYEAR  | X   | Group Fiscal Year                              |
 | FPERI  | X   | Group Fiscal Period                            |
 | ENTITY | X   | Consolidation Entities: Company, Profit Center |
 | STATUS |     | Lock Status: 0:Open, 1:Locked                  |
 | UUSER  |     | Last Activity User                             |
 | UTIME  |     | Last Activity Time                             |
+| ETIME  |     | Lock Effective Time                            |
 
 If the corresponding item is not exist in the table, it means the entity in that period is not locked. The lock data is generated the first time a lock is added for an entity and its certain period.
 
@@ -318,7 +319,13 @@ If the corresponding item is not exist in the table, it means the entity in that
 The Data Submit Cockpit is designed for local accountants to collect data, validate data, and submit data for consolidation. However, group accountants can also use it to check, validate, and approve the local reported data.
 
 ** Data Submit Cockpit Main Screen
-#+CAPTION: Data Submit Cockpit Main Screen
+#+CAPTION: Data Submit Cockpit Reported Data
+[[../image/DataSubmitCockpit09.png]]
+
+#+CAPTION: Data Submit Cockpit Flexible Upload
+[[../image/DataSubmitCockpit30.png]]
+
+#+CAPTION: Data Submit Cockpit Sub-packages
 [[../image/DataSubmitCockpit10.png]]
 
 The Data Submit Cockpit is divided into 2 sections: The permanent parameters in the upper area, and the package contents in the lower area. The permanent parameters are fixed to the following 5:
@@ -341,6 +348,9 @@ The main package itself also has user status, system status, and control status.
 
 The buttons on the tool-bar area operates on package level(not sub-package level). The blue buttons are only shown when group accountants access the application, and the orange ones are only shown for local accountants.
 
+#+CAPTION: Data Submit Cockpit Sub-package Level
+[[../image/DataSubmitCockpit20.png]]
+
 ** Data Submit Cockpit Controls
 Both main package and its sub-packages have their own controls. However, the layout is the same. 
 #+CAPTION: Data Submit Cockpit Controls
@@ -360,21 +370,25 @@ If you are in the comment tab of the main package, then you can view all the com
 ** Data Submit Cockpit Attachments
 #+CAPTION: Data Submit Cockpit Attachments
 [[../image/DataSubmitCockpit13.png]]  
+
 In the attachment tab, you can upload or download attachments like word, ppt, pdf, and so on. Like comments, attachments can be attached to (sub-)package, submit request, and validation log. 
  
 ** Data Submit Cockpit Submit History
 #+CAPTION: Data Submit Cockpit Submit History 
 [[../image/DataSubmitCockpit14.png]]  
+
 In the left panel, you can view all the data submit requests related to the (sub-)package for a certain period. A data submit request is timestamp annotated. You can compare the difference between either 2 requests. In the right panel, from the drop-down box, you select the beginning. For example, you select "Opening", which is the start-point of the period, usually the first second of the period. Then you click any one of the item in the left list, it will show you the difference between the 2 timestamp. 
 ** Data Submit Cockpit Data Entry 
 #+CAPTION: Data Submit Cockpit Data Entry Screen
 [[../image/DataSubmitCockpit20.png]]  
+
 Click the link of each sub-package navigates you to this data entry page, which contains the actual data in B/S format. The report contains amounts of prior periods in local currency, you can also run on-the-fly currency translation to get the group currency amount. You can switch the group currency in the right-up corner. 
 
 "Submitted Amount" means data already submitted in the previous submit requests. "To be Submitted" means the delta amount assigned to current to-be submitted request. The amount is calculated by the total amount minus the "Submitted Amount". 
 ** Data Submit Group View
 #+CAPTION: Data Submit Group View
 [[../image/DataSubmitGroupView.png]]  
+
 The group view is a report for group accountants to view the data submit status for multiple entities. They can get an overview on the statuses for a certain group node or a bunch of entities. You can click an entity to navigate to the Data Submit Cockpit, you can batch approve/reject, and you can batch lock/unlock. 
 
 The lock supports lock/unlock in future. Which means, group accountant can schedule to lock/unlock entities for data package submitting. 
@@ -382,164 +396,21 @@ The lock supports lock/unlock in future. Which means, group accountant can sched
 
 * Deduction
 
-** 1610 Without Defer
-In RTC's first release(1610), data submit request will be used as both a notification and timestamp filtering. The status control in the data submit request will not be fully appeared. BPC can access the data directly in ACDOCA with timestamp filtering. The timestamp in the data submit request which is submitted by the local accountant reflects the local close time. Before the time, the data is allowed(by local accountants) for consolidation, and after the time, the data should not be counted for consolidation. 
-
-This approach has following restrictions:
-
-1. Once the local accountant raise the data submit request, it is approved automatically, and group accountant can only accept it. There is no embedded control on this process, group accountant must notify the local accountant externally if she doesn't want the data. 
-2. Delta consolidation is still not possible. Each time the local accountant raise a new data submit request, BPC will always do a full re-consolidation based on the new timestamp. 
-3. You can not defer amount to next period.
-4. If consolidation is in "RUNNING" or "ERROR" status, reporting will produce data inconsistency.
-
-I give following examples to explain detail data flow:
-
-*** Scenario1: Local accountant submits data through flexible uploading 
-*Step 1: Upload data but not submitted*: Data is saved in ACDOCC, a document number is given. The document status in in "Staging". When the user submit the data, he must choose the value of BPC category. The currency key of "CONS_SL" is set to "LC" for easy consumption for BPC. The actual currency key will be saved in HCURK. Currently, there is no data submit request created, so BPC won't see the data.
-
-=ACDOCC=  
-| DOCNR | Status  | Entity |    Time | Currency | BPC Category | Group  | FLOW  | CONS_SL | PullReq |
-|-------+---------+--------+---------+----------+--------------+--------+-------+---------+---------|
-| 10001 | Staging | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |     100 |         |
-
-*Step 2: Submit the data*: The original document status is changed to "posted". A data submit request is created and the data submit request number is set in the document lines. Now, BPC can see the data because there is a data submit request exists which will be joined in the BPC consolidation view.
-
-=ACDOCC=
-| DOCNR | Status | Entity |   FTime | Currency | BPC Category | Group  | FLOW  | Amount | PullReq |
-|-------+--------+--------+---------+----------+--------------+--------+-------+--------+---------|
-| 10001 | Posted | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |    100 | 0000001 |
-
-=RTC_PULL_REQ=
-|    UUID | Type | Entity |   FTime | Category | USTATUS  |
-|---------+------+--------+---------+----------+----------|
-| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
-
-*Step 3: Re-upload a new copy and submit*: The former submitted document will be kept as it is. A new document is  posted along with the data submit requests. Through the consolidation view, BPC will get the data of the latest data submit request for each group of Entity, Fiscal Time, and BPC Category. 
-=ACDOCC=
-| DOCNR | Status | Entity |   FTime | Currency | BPC Category | Group  | FLOW  | Amount | PullReq |
-|-------+--------+--------+---------+----------+--------------+--------+-------+--------+---------|
-| 10001 | Posted | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |    100 | 0000001 |
-| 10002 | Posted | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |    110 | 0000002 |
-
-=RTC_PULL_REQ=
-|    UUID | Type | Entity |   FTime | Category | USTATUS  |
-|---------+------+--------+---------+----------+----------|
-| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
-| 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
-
-*** Scenario2: Local accountant submits data in ACDOCA  
-If local data is in ACDOCA, then data copy to ACDOCC is unnecessary. Only raise a data submit request with current timestamp is OK. The data submit request is then used to join with the foundation view to get the filtered data before the recored timestamp. 
-
-=RTC_PULL_REQ=
-|    UUID | Type | Entity |   FTime | Category |     CTimestamp | USTATUS  |
-|---------+------+--------+---------+----------+----------------+----------|
-| 0000001 | A    | C100   | 2016.01 | Actual   | 20160302100020 | APPROVED |
-
-*** Scenario3: Local accountants run currency translation in S/4, data comes from ACDOCA 
-Local accountants can run currency translation in S/4 and then do data validations. The translated results will be saved in ACDOCC. BPC cannot see the translated results until he raises a data submit request. In this case, BPC only gets data from ACDOCC rather than ACDOCA.
-
-*Step 1: Local close*: Data in ACDOCA:  
-| Entity |    Time | Currency | Amount |
-|--------+---------+----------+--------|
-| C100   | 2016.01 | LC       |    100 |
-
-*Step 2: Run currency translation*: A rollup runs implicitly to create a local aggregated document. Translated results are also posted with each currency a dedicate document.
-=ACDOCC=
-| DOCNR | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
-|-------+--------+---------+--------------+-----+-------+---------+----------+---------|
-| 10001 | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       |         |
-| 10002 | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      |         |
-| 10003 | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      |         |
- 
-*Step 3: Submit the data*: Raise a data submit request
-=ACDOCC=
-| DOCNR | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
-|-------+--------+---------+--------------+-----+-------+---------+----------+---------|
-| 10001 | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       | 0000001 |
-| 10002 | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      | 0000001 |
-| 10003 | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      | 0000001 |
-
-=RTC_PULL_REQ=
-|    UUID | Type | Entity |   FTime | Category | USTATUS  |
-|---------+------+--------+---------+----------+----------|
-| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
-
-*Step 3: Re-submit a new set of translated data*: 
-=ACDOCC=
-| DOCNR | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
-|-------+--------+---------+--------------+-----+-------+---------+----------+---------|
-| 10001 | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       | 0000001 |
-| 10002 | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      | 0000001 |
-| 10003 | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      | 0000001 |
-| 10004 | C100   | 2016.01 | Actual       | 100 | CNY   |     200 | LC       | 0000002 |
-| 10005 | C100   | 2016.01 | Actual       | 100 | CNY   |      40 | USD      | 0000002 |
-| 10006 | C100   | 2016.01 | Actual       | 100 | CNY   |      36 | EUR      | 0000002 |
-
-=RTC_PULL_REQ=
-|    UUID | Type | Entity |   FTime | Category | USTATUS  |
-|---------+------+--------+---------+----------+----------|
-| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
-| 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
-
-*** Scenario4: Local accountants run currency translation in S/4, data comes from flexible upload 
-
-*Step 1: Upload local data*: Data must be in posted status, or currency translation can not run on it.
-=ACDOCC=  
-| DOCNR | Status | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
-|-------+--------+--------+---------+--------------+-----+-------+---------+----------+---------|
-| 10001 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       |         |
-
-*Step 2: Run currency translation*: Each currency will generate a document.
-=ACDOCC=
-| DOCNR | Status | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
-|-------+--------+--------+---------+--------------+-----+-------+---------+----------+---------|
-| 10001 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       |         |
-| 10002 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      |         |
-| 10003 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      |         |
- 
-*Step 3: Submit the data*: Raise a data submit request
-=ACDOCC=
-| DOCNR | Status | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
-|-------+--------+--------+---------+--------------+-----+-------+---------+----------+---------|
-| 10001 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       | 0000001 |
-| 10002 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      | 0000001 |
-| 10003 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      | 0000001 |
-
-=RTC_PULL_REQ=
-|    UUID | Type | Entity |   FTime | Category | USTATUS  |
-|---------+------+--------+---------+----------+----------|
-| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
-
-*Step 4: Re-submit a new set of translated data*: 
-=ACDOCC=
-| DOCNR | Status | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
-|-------+--------+--------+---------+--------------+-----+-------+---------+----------+---------|
-| 10001 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       | 0000001 |
-| 10002 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      | 0000001 |
-| 10003 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      | 0000001 |
-| 10004 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     200 | LC       | 0000002 |
-| 10005 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      40 | USD      | 0000002 |
-| 10006 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      36 | EUR      | 0000002 |
-
-=RTC_PULL_REQ=
-|    UUID | Type | Entity |   FTime | Category | USTATUS  |
-|---------+------+--------+---------+----------+----------|
-| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
-| 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
-
-
 ** 1709 With Defer
 =Notes:=
-1. The data collection method has no sub-packages, the data submit request type is "Collective".
+1. The data submission method has no sub-packages, the data submit request type is "Collective".
 2. We assume local validation is supported in 1709. 
 3. Exchange rate between local currency and group currency USD is 1:1.
 4. Account number is omitted for simplicity.
 5. Irrelevant columns are hided for different steps. 
-6. "LC" only reflects BPC point of view.
+6. "LC" only reflects BPC's point of view.
+7. The corresponding pseudo sql can be found in [[https://wiki.wdf.sap.corp/wiki/x/Ds83bQ][SDD-Consolidation Views]].
 
-The corresponding pseudo sql can be found in 
+*** Open Period for Data Submission
+The group accountant has the right to open the current period so that local accountants can submit their report data, which is either in ACDOCA or uploaded to ACDOCC through flexible uploading. The open activity will generate monthend data submit requests for each entity. Without the monthend reqeusts, local accountants can not submit data to the group. 
 
 *** Scenario1: Local data comes from ACDOCA
+
 *Step 1: Local close*: Data in ACDOCA:  
 | Entity |  Period | Amount | Currency | Timestamp           |
 |--------+---------+--------+----------+---------------------|
@@ -788,44 +659,147 @@ If deferred, the data submit request's status is changed to "Deferred" and the c
 *** Scenario4: CT in S4, data comes from ACDOCC
 
 
-* Group Level Lock/Unlock Posting Period Request
-The local system synchronizes its FI documents into the central system, BPC access the data in the central system. The lock/unlock a period means both lock/unlock in the local system and the central system. Because although in most cases, documents are posted in the local system,  it is still possible to have documents directly posted in the central system. 
+** 1610 Without Defer
+In RTC's first release(1610), data submit request will be used as both a notification and timestamp filtering. The status control in the data submit request will not be fully appeared. BPC can access the data directly in ACDOCA with timestamp filtering. The timestamp in the data submit request which is submitted by the local accountant reflects the local close time. Before the time, the data is allowed(by local accountants) for consolidation, and after the time, the data should not be counted for consolidation. 
 
-According to different corporation contexts, there could be 3 different scenarios regarding with who is the initiator for the Lock/Unlock request, the local accountant or group accountant?
+This approach has following restrictions:
 
-** Lock is Requested by Group Accountant 
+1. Once the local accountant raise the data submit request, it is approved automatically, and group accountant can only accept it. There is no embedded control on this process, group accountant must notify the local accountant externally if she doesn't want the data. 
+2. Delta consolidation is still not possible. Each time the local accountant raise a new data submit request, BPC will always do a full re-consolidation based on the new timestamp. 
+3. You can not defer amount to next period.
+4. If consolidation is in "RUNNING" or "ERROR" status, reporting will produce data inconsistency.
 
-[[../image/GroupLevelPeriodLock01.png]]  
+I give following examples to explain detail data flow:
 
-In this case, the group accountant can raise a posting period lock request directly in BPC's consolidation monitor. The lock request is saved in the central system, and send to the local system. Based on configuration, the local system can either do the lock automatically(which means the group accountant has the full authority to do period lock/unlock); Or send a notification to the local accountant, so that he can decide whether to do the Lock.
+*** Scenario1: Local accountant submits data through flexible uploading 
+*Step 1: Upload data but not submitted*: Data is saved in ACDOCC, a document number is given. The document status in in "Staging". When the user submit the data, he must choose the value of BPC category. The currency key of "CONS_SL" is set to "LC" for easy consumption for BPC. The actual currency key will be saved in HCURK. Currently, there is no data submit request created, so BPC won't see the data.
 
-Once the group level posting period is locked in the lock system, it will also lock the counterpart in the central system. Because in central system, the account numbers may not be the same with those in the local system, necessary mapping should be done. Meanwhile, a data submit request will be raised which includes all the changes(new documents line items) belong to this interval. The data submit request is saved in central system, and the group accountant will be notified and do the data pulling.   
+=ACDOCC=  
+| DOCNR | Status  | Entity |    Time | Currency | BPC Category | Group  | FLOW  | CONS_SL | PullReq |
+|-------+---------+--------+---------+----------+--------------+--------+-------+---------+---------|
+| 10001 | Staging | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |     100 |         |
 
-** Local Accountant Does the Lock
+*Step 2: Submit the data*: The original document status is changed to "posted". A data submit request is created and the data submit request number is set in the document lines. Now, BPC can see the data because there is a data submit request exists which will be joined in the BPC consolidation view.
 
-[[../image/GroupLevelPeriodLock02.png]]  
+=ACDOCC=
+| DOCNR | Status | Entity |   FTime | Currency | BPC Category | Group  | FLOW  | Amount | PullReq |
+|-------+--------+--------+---------+----------+--------------+--------+-------+--------+---------|
+| 10001 | Posted | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |    100 | 0000001 |
 
-This case, the local accountant has the authority to do group level lock/unlock. The group accountant is only be notified that there is a new data submit request should be processed.  
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category | USTATUS  |
+|---------+------+--------+---------+----------+----------|
+| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
 
-** Local Accountant Request for Unlock 
+*Step 3: Re-upload a new copy and submit*: The former submitted document will be kept as it is. A new document is  posted along with the data submit requests. Through the consolidation view, BPC will get the data of the latest data submit request for each group of Entity, Fiscal Time, and BPC Category. 
+=ACDOCC=
+| DOCNR | Status | Entity |   FTime | Currency | BPC Category | Group  | FLOW  | Amount | PullReq |
+|-------+--------+--------+---------+----------+--------------+--------+-------+--------+---------|
+| 10001 | Posted | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |    100 | 0000001 |
+| 10002 | Posted | C100   | 2016.01 | LC       | Actual       | G_NONE | INPUT |    110 | 0000002 |
 
-[[../image/GroupLevelPeriodLock03.png]]  
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category | USTATUS  |
+|---------+------+--------+---------+----------+----------|
+| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
+| 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
 
-If group accountant has the full authority to do group level lock/unlock, then the local accountant  must raise a unlock request if he wants to do posting in a closed period. The unlock request is saved in the central system, and the group accountant decides whether to approve or reject it. The the unlock request gets approved, it will unlock the period both in the central system and the local system. 
+*** Scenario2: Local accountant submits data in ACDOCA  
+If local data is in ACDOCA, then data copy to ACDOCC is unnecessary. Only raise a data submit request with current timestamp is OK. The data submit request is then used to join with the foundation view to get the filtered data before the recored timestamp. 
 
-** Mapping Group Lock/Unlock to Local Open/Close Posting Period
-In either of the above 3 scenarios, mappings are needed as the account numbers and fiscal year variant are are different among BPC, central system, and local system. Each time a lock/unlock request, or a data submit request is raised, the local financial master data should be correctly mapped to the central ones and the group ones, and vice verse. 
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category |     CTimestamp | USTATUS  |
+|---------+------+--------+---------+----------+----------------+----------|
+| 0000001 | A    | C100   | 2016.01 | Actual   | 20160302100020 | APPROVED |
 
-These mapping activities could be complicate. Take fiscal year variant as an example, which could be different between group and local. From the consolidation perspective, the lock/unlock period always means according to the group fiscal variant. But to the local accountant, he may cares more on open/close fiscal year/period based on local fiscal variant. It's involuntary to think to combine local open/close with group lock/unlock. So that no additional effort is introduced to the local accountants. But these attempts would introduce more complexity than simplification.
+*** Scenario3: Local accountants run currency translation in S/4, data comes from ACDOCA 
+Local accountants can run currency translation in S/4 and then do data validations. The translated results will be saved in ACDOCC. BPC cannot see the translated results until he raises a data submit request. In this case, BPC only gets data from ACDOCC rather than ACDOCA.
 
-#+CAPTION: Existing Open and Close Posting Periods Maintenance View 
-[[../image/OpenClosePeriodMaintView.png]]  
+*Step 1: Local close*: Data in ACDOCA:  
+| Entity |    Time | Currency | Amount |
+|--------+---------+----------+--------|
+| C100   | 2016.01 | LC       |    100 |
 
-Above snapshot is taken from the IMG maintenance view for current open/close posting periods. The underlying table is ~T001B~, with the Tcode ~FAGL_EHP4_T001B_COFI~.  If you want to leverage this maintenance view to realize group level posting lock/unlock, you must convert the group fiscal year variant and account numbers into local ones before inserting items into this table. Besides, you should also determine:
-1. Which open posting variant(first column in above table) should be used.
-2. Which account type should be used.
-3. If I close a period, do I have to delete a line and then add a new correct line, or I should modify an existing line?
+*Step 2: Run currency translation*: A rollup runs implicitly to create a local aggregated document. Translated results are also posted with each currency a dedicate document.
+=ACDOCC=
+| DOCNR | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
+|-------+--------+---------+--------------+-----+-------+---------+----------+---------|
+| 10001 | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       |         |
+| 10002 | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      |         |
+| 10003 | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      |         |
+ 
+*Step 3: Submit the data*: Raise a data submit request
+=ACDOCC=
+| DOCNR | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
+|-------+--------+---------+--------------+-----+-------+---------+----------+---------|
+| 10001 | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       | 0000001 |
+| 10002 | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      | 0000001 |
+| 10003 | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      | 0000001 |
 
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category | USTATUS  |
+|---------+------+--------+---------+----------+----------|
+| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
 
+*Step 3: Re-submit a new set of translated data*: 
+=ACDOCC=
+| DOCNR | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
+|-------+--------+---------+--------------+-----+-------+---------+----------+---------|
+| 10001 | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       | 0000001 |
+| 10002 | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      | 0000001 |
+| 10003 | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      | 0000001 |
+| 10004 | C100   | 2016.01 | Actual       | 100 | CNY   |     200 | LC       | 0000002 |
+| 10005 | C100   | 2016.01 | Actual       | 100 | CNY   |      40 | USD      | 0000002 |
+| 10006 | C100   | 2016.01 | Actual       | 100 | CNY   |      36 | EUR      | 0000002 |
 
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category | USTATUS  |
+|---------+------+--------+---------+----------+----------|
+| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
+| 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |
 
+*** Scenario4: Local accountants run currency translation in S/4, data comes from flexible upload 
+
+*Step 1: Upload local data*: Data must be in posted status, or currency translation can not run on it.
+=ACDOCC=  
+| DOCNR | Status | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
+|-------+--------+--------+---------+--------------+-----+-------+---------+----------+---------|
+| 10001 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       |         |
+
+*Step 2: Run currency translation*: Each currency will generate a document.
+=ACDOCC=
+| DOCNR | Status | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
+|-------+--------+--------+---------+--------------+-----+-------+---------+----------+---------|
+| 10001 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       |         |
+| 10002 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      |         |
+| 10003 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      |         |
+ 
+*Step 3: Submit the data*: Raise a data submit request
+=ACDOCC=
+| DOCNR | Status | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
+|-------+--------+--------+---------+--------------+-----+-------+---------+----------+---------|
+| 10001 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       | 0000001 |
+| 10002 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      | 0000001 |
+| 10003 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      | 0000001 |
+
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category | USTATUS  |
+|---------+------+--------+---------+----------+----------|
+| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
+
+*Step 4: Re-submit a new set of translated data*: 
+=ACDOCC=
+| DOCNR | Status | Entity |    Time | BPC Category | HSL | HCURK | CONS_SL | CONS_KEY | PullReq |
+|-------+--------+--------+---------+--------------+-----+-------+---------+----------+---------|
+| 10001 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     100 | LC       | 0000001 |
+| 10002 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      20 | USD      | 0000001 |
+| 10003 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      18 | EUR      | 0000001 |
+| 10004 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |     200 | LC       | 0000002 |
+| 10005 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      40 | USD      | 0000002 |
+| 10006 | Posted | C100   | 2016.01 | Actual       | 100 | CNY   |      36 | EUR      | 0000002 |
+
+=RTC_PULL_REQ=
+|    UUID | Type | Entity |   FTime | Category | USTATUS  |
+|---------+------+--------+---------+----------+----------|
+| 0000001 | C    | C100   | 2016.01 | Actual   | APPROVED |
+| 0000002 | C    | C100   | 2016.01 | Actual   | APPROVED |

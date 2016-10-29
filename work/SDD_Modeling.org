@@ -1,5 +1,5 @@
 #+PAGEID: 1821717599
-#+VERSION: 15
+#+VERSION: 17
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Modeling
@@ -365,7 +365,7 @@ In the "Base CDS View" group, there lists the CDS views that are used by RTC app
 
 ~/RTCART/<Model Abbr><View Group><Sequential Number>~
 
-*Not sure if we need to generate CDS views for validation and report.*  
+For details on how these consolidation views are defined, please refer the [[https://wiki.wdf.sap.corp/wiki/x/Ds83bQ][SDD-BPC HANA Views Modeling]].
   
 **** BPC Integration
 #+Caption: Real-time Consolidation Modeling Tool: BPC Integration
