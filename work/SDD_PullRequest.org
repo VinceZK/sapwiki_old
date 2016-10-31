@@ -659,6 +659,177 @@ If deferred, the data submit request's status is changed to "Deferred" and the c
 *** Scenario4: CT in S4, data comes from ACDOCC
 
 
+** Statuses
+
+*** Before period is open
+The period is not open, no MonthEnd request is generated. When Data Submit Cockpit is open for this period, a gentle message will show in the bottom area which tells the user this period is not open for data submission. The "Submit" button is gray out, however, you can still do flexible upload or run CT for some preparation. 
+|                             | <60>                                                         |
+| UI Elements                 | State                                                        |
+|-----------------------------+--------------------------------------------------------------|
+| Package Status              | Empty                                                        |
+| Control                     | Empty                                                        |
+| Variation                   | Empty                                                        |
+| Lock Status                 | Empty                                                        |
+| System Status               | Empty                                                        |
+| Last Submit Time            | Empty                                                        |
+| This Submit Time            | Empty                                                        |
+| Submit Button               | Gray for local accountant, hiden for group accountant        |
+| Defer,Reject,Approve Button | Hiden for local accountant, gray for group accountant        |
+| Reported Data Tab           | Data in ACDOCA/C of current period, including the deferred amount from the previous period |
+| Sub-Packages Tab            | Show sub-package list if avaiable without any interaction allowed |
+| Control Tab                 | Not Allowed                                                  |
+| Comments Tab                | Not Allowed                                                  |
+| Attachments Tab             | Not Allowed                                                  |
+| Submit History Tab          | Not Allowed                                                  |
+
+BPC has nothing to do now.  
+| BPC Statuses              | State   |
+|---------------------------+---------|
+| Entity Data Submit Status | Initial |
+| Can run BPC Control       | No      |
+| Can run Consolidation     | No      |
+
+*** Period is open
+The period is open, MonthEnd request is generated with initial status. If the package is locked, you cannot submit the package. If you only run controls and save the control result, then "This timestamp" will be recorded into the pull request. 
+|                             | <60>                                                         |
+| UI Elements                 | State                                                        |
+|-----------------------------+--------------------------------------------------------------|
+| Package Status              | To be Submitted                                              |
+| Control                     | To be Run                                                    |
+| Variation                   | Empty                                                        |
+| Lock Status                 | Locked/Unlocked                                              |
+| System Status               | Empty                                                        |
+| Last Submit Time            | Empty                                                        |
+| This Submit Time            | Time when the APP is accessed                                |
+| Submit Button               | Available for local accountant, hiden for group accountant   |
+| Defer,Reject,Approve Button | Hiden for local accountant, gray for group accountant        |
+| Reported Data Tab           | Data in ACDOCA/C of current period before this submit time   |
+| Sub-Packages Tab            | Show sub-package list if avaiable with any interaction allowed |
+| Control Tab                 | There should be no control result save before, but you can run controls. |
+| Comments Tab                | Can add comment                                              |
+| Attachments Tab             | Can upload attachments                                       |
+| Submit History Tab          | Only one pull request with initial status, delta data is shown as the entire data of current period |
+
+BPC has nothing to do now.  
+| BPC Statuses              | State   |
+|---------------------------+---------|
+| Entity Data Submit Status | Initial |
+| Can run BPC Control       | No      |
+| Can run Consolidation     | No      |
+
+*** Package is submitted
+Package will be validated automatically before submitting if "This Submit Time" is different with the timestamp of last control run. If validation is failed, submission is not allowed. 
+|                             | <60>                                                         |
+| UI Elements                 | State                                                        |
+|-----------------------------+--------------------------------------------------------------|
+| Package Status              | Submitted                                                    |
+| Control                     | Passed                                                       |
+| Variation                   | If there is new data entering after this submit time         |
+| Lock Status                 | UnLocked/Locked                                              |
+| System Status               | Empty                                                        |
+| Last Submit Time            | The last submit time                                         |
+| This Submit Time            | Time after you click the submit button                       |
+| Submit Button               | If no variation, then click the button will not raise new request |
+| Defer,Reject,Approve Button | Hiden for local accountant, available for group accountant   |
+| Reported Data Tab           | Data in ACDOCA/C of current period before this submit time   |
+| Sub-Packages Tab            | Show sub-package list if avaiable with any interaction allowed |
+| Control Tab                 | Show the control result of last run. Saving result is not allowed |
+| Comments Tab                | Can add comment                                              |
+| Attachments Tab             | Can upload attachments                                       |
+| Submit History Tab          | Available                                                    |
+
+Once the package is submitted, the entity status in BPC's consolidation monitor will be changed to "_To be Viewed_". And the data is actually can be seen by BPC consolidation engine. Clicking "_To be Viewed_" will open the Data Submit Cockpit with the corresponding package.
+
+| BPC Statuses              | State            |
+|---------------------------+------------------|
+| Entity Data Submit Status | _To be Reviewed_ |
+| Can run BPC Control       | Yes              |
+| Can run Consolidation     | No               |
+
+*** Package is approved
+The group accountant approves the package. After approval, she can run consolidation tasks. The ssystem status will show current status of the data in consolidation engine. Whether it is running, failed, or finished successfully.
+|                             | <60>                                                         |
+| UI Elements                 | State                                                        |
+|-----------------------------+--------------------------------------------------------------|
+| Package Status              | Approved                                                     |
+| Control                     | Passed                                                       |
+| Variation                   | If there is new data entering after this submit time         |
+| Lock Status                 | UnLocked/Locked                                              |
+| System Status               | Empty / Running / Failed / Finished Successfully             |
+| Last Submit Time            | The last submit time                                         |
+| This Submit Time            | Time when you access this APP                                |
+| Submit Button               | If there is variation, then local accountant can click submit to raise an adjustment request. |
+| Defer,Reject,Approve Button | Hiden for local accountant, gray for group accountant        |
+| Reported Data Tab           | Data in ACDOCA/C of current period before this submit time   |
+| Sub-Packages Tab            | Show sub-package list if avaiable. You can view the content of each sub-packages, however, you cannot do any changes on it. |
+| Control Tab                 | Show the control result of last run. Saving result is allowed if there is variation. |
+| Comments Tab                | Can view comments, or give comments if there is variation    |
+| Attachments Tab             | Can download attachments, or upload if there is variation    |
+| Submit History Tab          | Available                                                    |
+
+Once the package is approved, the entity status in BPC's consoldiation monitor is changed to "_To be Executed_". You then click to run consolidation tasks. 
+| BPC Statuses              | State            |
+|---------------------------+------------------|
+| Entity Data Submit Status | _To be Executed_ |
+| Can run BPC Control       | Yes              |
+| Can run Consolidation     | Yes              |  
+
+*** Package is rejected
+After posting standardized journal entries, she wants to run validation again before approving. However, she thinks the data is not acceptable, so she rejected it with some comments provided to the local accountant. A new request will be created with initial status to allow the local accountant submit again utill get approval.
+|                             | <60>                                                         |
+| UI Elements                 | State                                                        |
+|-----------------------------+--------------------------------------------------------------|
+| Package Status              | Rejected                                                     |
+| Control                     | Passed                                                       |
+| Variation                   | If there is new data entering after this submit time         |
+| Lock Status                 | UnLocked                                                     |
+| System Status               | Empty                                                        |
+| Last Submit Time            | The last submit time                                         |
+| This Submit Time            | Time when you access this APP                                |
+| Submit Button               | If there is variation or any other changes like providing comments, then local accountant can click submit to raise an adjustment request. |
+| Defer,Reject,Approve Button | Hiden for local accountant, gray for group accountant        |
+| Reported Data Tab           | Data in ACDOCA/C of current period before this submit time   |
+| Sub-Packages Tab            | Show sub-package list if avaiable. You can view the content of each sub-packages, however, you cannot do any changes on it. |
+| Control Tab                 | Show the control result of last run. Can save control result. |
+| Comments Tab                | Can view/reply comments                                      |
+| Attachments Tab             | Can download/upload attachments                              |
+| Submit History Tab          | Available                                                    |
+
+As the request is not get approved, BPC can still not run consolidation. The status is changed to the former one, that is either "_Initial_" or "_To be Executed_". 
+| BPC Statuses              | State                         |
+|---------------------------+-------------------------------|
+| Entity Data Submit Status | _Initial_ or _To be Executed_ |
+| Can run BPC Control       | _Initial_?No:Yes              |
+| Can run Consolidation     | _Initial_?No:Yes              |
+
+*** Package is deferred
+When we say package is deferred, we only mean some adjustments are deferred. In other words, a MonthEnd request can not be deferred. Only adjustment requests can be deferred.  
+|                             | <60>                                                         |
+| UI Elements                 | State                                                        |
+|-----------------------------+--------------------------------------------------------------|
+| Package Status              | Deferred                                                     |
+| Control                     | Passed                                                       |
+| Variation                   | If there is new data entering after this submit time         |
+| Lock Status                 | Locked / Unlocked                                            |
+| System Status               | Empty                                                        |
+| Last Submit Time            | The last submit time                                         |
+| This Submit Time            | Time when you access this APP                                |
+| Submit Button               | If there is variation, then local accountant can click submit to raise an adjustment request. |
+| Defer,Reject,Approve Button | Hiden for local accountant, gray for group accountant        |
+| Reported Data Tab           | Data in ACDOCA/C of current period before this submit time.  |
+| Sub-Packages Tab            | Show sub-package list if avaiable. You can view the content of each sub-packages, however, you cannot do any changes on it. |
+| Control Tab                 | Show the control result of last run. Can save new control result if there is variation. |
+| Comments Tab                | Can comment if there is variation                            |
+| Attachments Tab             | Can upload attachments if there is variation                 |
+| Submit History Tab          | Available                                                    |
+
+Defer is just like approval, and its previous state should always be "_To be Executed_". Nothing changes for BPC, but only the deferred amount will be copied to next period. 
+| BPC Statuses              | State            |
+|---------------------------+------------------|
+| Entity Data Submit Status | _To be Executed_ |
+| Can run BPC Control       | Yes              |
+| Can run Consolidation     | Yes              | 
+ 
 ** 1610 Without Defer
 In RTC's first release(1610), data submit request will be used as both a notification and timestamp filtering. The status control in the data submit request will not be fully appeared. BPC can access the data directly in ACDOCA with timestamp filtering. The timestamp in the data submit request which is submitted by the local accountant reflects the local close time. Before the time, the data is allowed(by local accountants) for consolidation, and after the time, the data should not be counted for consolidation. 
 
