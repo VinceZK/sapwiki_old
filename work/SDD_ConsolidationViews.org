@@ -1,0 +1,530 @@
+#+PAGEID: 1832374030
+#+VERSION: 7
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Consolidation Views
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name                |
+|-----------------------+---------------------|
+| Author(s)             | Vincent Zhang       |
+| Architect             | Vincent Zhang       |
+| Product Owner         | Shi Ying, Carol Pan |
+| Information Developer |                     |
+| Quality Responsible   | Yao Cen             |
+| Developers            | Steve Mo, Sam       |
+
+*** References
+|                |                  |               | <30>                           |
+| Document Title | Date             | Link          | Comments                       |
+|----------------+------------------+---------------+--------------------------------|
+| HANA Script    | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
+| AMDP Guide     | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
+     
+
+** Design
+*** Key Requirements and Design Goals
+BPC needs to access the real-time data in ACDOCA with timestamp filtering. 
+
+The requirement comes from the legal consolidation which require strict data process control. Only the data that local accountants submitted can group accountants run validation and consolidation on them. But if we let BPC access data on ACDOCA directly, group accountants will always access the latest data without a handover control. Meanwhile, as the data in ACDOCA is always changing, it will also cause the data inconsistency during a consolidation process run. 
+
+The general idea is to use timestamps to snapshot multiple data statuses on ACDOCA. The timestamp usually stands for the time that local accountants close their periods. BPC now only accesses the snapshotted data in ACDOCA. Thus we achieve the data handover without any data copies. 
+
+If data comes in through flexible uploading, the handover is then potentially executed when the local accountants upload the data into ACDOCC. So timestamp filtering is not necessary for such cases. But it is good to include flexible uploading into the same pull request approach. 
+
+*** Context
+A [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Pull+Request+for+Consolidation][Pull Request]] is raised by a local accountant as a data handover document. It contains information like:mode, category,  entity, fiscal year/period, and close timestamp. The group accountant uses this filter information to pull data from ACDOCA for further validation and consolidation. 
+
+The pull requests are stored in table =RTC_PULL_REQ=, with additional user status and system status control. If a pull request is in status "Raised", group accountant can run validation on the data it points; If a pull request is in status "Approved", BPC consolidation engine can see the data it points; And only if the pull request is in user status "Approved", and consolidation runs successfully(system status equals "Processed"), can consolidation reports run on the data it points. 
+
+Because BPC/BW can not pass filtering parameters, so currently, it is impossible for BPC to using timestamp do any filtering before the actual consolidation logic. RTC will provide BPC with HANA views that already join with the pull request table. This approach will cause multiple HANA views to be provided for different purpose. BPC now should be able to differentiate them when doing certain consolidation tasks. 
+
+The design is divided into 2 versions: =1610 Version=, and the =Completed Version=. As you can guess, to achieve both real-time data access and sophistic status/workflow control are rather complicate and time/resource consuming. We design a simplified version for 1610, which is the first release. The 1610 version is simplified by eliminating the status control. Details of the 2 versions and the restrictions can be find in the upcoming sections. 
+
+*** 1610 Release
+In 1610 release, we can't achieve the full picture of the diagram. But we can try to simplified it by removing the status control in the data submission process. That means, once the local accountants submit the data, without any approval, BPC can read the data. 
+
+This simplification has following restrictions:
+1. Once the local accountant raise the pull request, it is approved automatically, group accountant can only accept it. There is no embedded control on this process, group accountant must notify the local accountant externally if she doesn't want the data.
+2. There is no control on local document posting to the consolidated periods. Those "illegal" postings are discarded, or must be resolved by external controls.
+3. Data validation is not integrated, there is no system promise that the submitted data is validate according to the rules. Expensive communication effort are necessary between group accountants and local accountants when such cases happen. 
+4. Delta consolidation is still not possible. Each time the local accountant raises a new pull request, BPC will always do a full re-consolidation based on the new timestamp. 
+5. You cannot defer amounts to the next period.
+6. Data inconsistency could happen when consolidation is running or processes errors.
+
+There are 2 different scenarios in 1610: 1) Currency Translation in BPC; 2) Currency Translation in S/HANA. Details will be discussed in the following 2 sections. 
+
+
+** Detail Design
+
+*** Consolidation Entity View
+The entity view is generated before-hand, which will then be used by generating other consolidation views. 
+#+Caption: CDS View /RTCART/LCENTITY
+#+BEGIN_SRC sql
+  create view /RTCART/LCENTITY as 
+    select DIM,ENTITY,RCOMP
+      from RTC_ENTITY_M
+     where MANDT = '820'
+       and DIM = '100';
+#+END_SRC
+
+#+Caption: Calculation View C_ENTITY
+#+BEGIN_SRC sql
+  create view C_ENTITY as 
+    select MANDT,DIM,ENTITY,RCOMP
+      from RTC_ENTITY_M
+     where MANDT = '820'
+       and DIM = '100';
+#+END_SRC
+
+*** Pull Request View
+Pull Request View gives out the latest submitted request for each entity each period. This view can be predefined and delivered to customer as standard contents. Both calculation view and CDS view are needed.
+
+#+Caption: CDS View RTC_PULL_REQ
+#+BEGIN_SRC sql
+  create view I_PULL_REQ as 
+    select MANDT,MODEL,BPC_CATG,FYEAR,FPERI,ENTITY,max(CLOSE_TIME)
+      from RTC_PULL_REQ
+     where USTATUS >= 30
+  group by MANDT,MODEL,BPC_CATG,FYEAR,FPERI,ENTITY;
+#+END_SRC
+
+#+Caption: Calculation View C_PULL_REQ
+#+BEGIN_SRC sql
+  create view C_PULL_REQ as 
+    select MANDT,MODEL,BPC_CATG,FYEAR,FPERI,ENTITY,max(CLOSE_TIME)
+      from RTC_PULL_REQ
+     where USTATUS >= 30
+  group by MANDT,MODEL,BPC_CATG,FYEAR,FPERI,ENTITY;
+#+END_SRC
+
+*** FS Items View
+FS Items View gives out all the local accounts and their mappings to the group accounts. A local CoA can be mapped to multiple group CoAs. You can also additionally set filters on the local accounts so that you can control which accounts should be involved in consolidation. 
+
+The data source view of stream type "FS Items" should contain following fields:
+| Field Name | Label                                          |
+|------------+------------------------------------------------|
+| MANDT      | SAP Client                                     |
+| KTOPL      | Local Chart of Accounts                        |
+| SAKNR      | Local Account Number                           |
+| XBILK      | Indicator: Account is a balance sheet account? |
+| KTOKS      | Local Account Group                            |
+| KKTPL      | Group Chart of Accounts                        |
+| RACCT      | Group Account Number                           | 
+
+The CDS view PRTC_ACCT applies the protocol of above table, which is pre-delivered. There is also a HANA calculation view C_PRTC_ACCT which acts as a counterpart for BPC consumption. In the BPC integration scenario, stream type "FS Items" is default-Ly set to PRTC_ACCT. If you want to change it to other CDS view, besides applying the protocol, you have to create a HANA calculation view with the same view structure in the same package of foundation view. The name of the calc view must apple to following rule: C_<CDS View Name>. 
+
+Base on the consolidation chart of accounts and the account selections you defined, it generates FS Items views. This FS Item view will be used to join with foundation view to filter in the accounts and map to the group accounts.  
+ 
+#+Caption: FS Item CDS View
+#+BEGIN_SRC sql
+  create view /RTCART/LCFS0001 as 
+    select *
+      from PRTC_ACCT
+     where MANDT = '820'
+       and KKTPL = 'RTC1'
+       and <Account Selections>;
+#+END_SRC    
+
+#+Caption: FS Item Calculation View
+#+BEGIN_SRC sql
+  create view C_ACTUAL_FS_ITEM as 
+    select *
+      from C_PRTC_ACCT
+     where MANDT = '820'
+       and KKTPL = 'RTC1'
+       and <Account Selections>;
+#+END_SRC
+
+*** Foundation View                                                   :Blang:
+This is an example of streamlined foundation view for company consolidation. It projects fields from ACDOCA, however, company code (RBUKRS) is replaced by RCOMP through join with table T001. Only 2 key figures are chosen: TSL and HSL.
+| Field Name | Label                           |
+|------------+---------------------------------|
+| RCLNT      | SAP Client                      |
+| RCOMP      | Company                         |
+| RASSC      | Trading Partner                 |
+| BUDAT      | Posting Date                    |
+| KTOPL      | Chart of Accounts               |
+| RACCT      | Account Number                  |
+| RMVCT      | Transaction Type                |
+| RTCUR      | Transaction Currency Key        |
+| RHCUR      | Company Code Currency Key       |
+| TSL        | Amount in Transaction Currency  |
+| HSL        | Amount in Company Code Currency |
+| TIMESTAMP  | Timestamp                       |
+
+Through foundation view, you see the FI data still in local point of view. The above foundation view will then be converted to consolidation base view, which maps to the group chart of accounts and aligned with the group fiscal year variant. 
+
+*** Consolidation Base View
+Consolidation base views are the basis for other consolidation views to be built on. It contains the common logic that all other consolidation views needed. In the BPC integration scenario, there is also a HANA calculation view acts as the base view. 
+| Field Name  | Label                           |
+|-------------+---------------------------------|
+| RCLNT       | SAP Client                      |
+| MODEL       | Consolidation Model             |
+| ENTITY      | Consolidation Entity            |
+| PENTITY     | Partner Entity                  |
+| PERIV       | Fiscal Year Variant             |
+| RYEAR       | Fiscal Year                     |
+| POPER       | Fiscal Period                   |
+| FISCYEARPER | Fiscal Year and Period          |
+| KTOPL       | Group Chart of Accounts         |
+| RACCT       | Group Account Number            |
+| RMVCT       | Transaction Type                |
+| RTCUR       | Transaction Currency Key        |
+| RHCUR       | Company Code Currency Key       |
+| TSL         | Amount in Transaction Currency  |
+| HSL         | Amount in Company Code Currency |
+| TIMESTAMP   | Timestamp                       |
+
+1. RCOMP is replaced by joining RTC_ENTITY_M for the field ENTITY as ENTITY.
+2. RASSC is replaced by joining RTC_ENTITY_M for the field ENTITY as PENTITY.
+3. BUDAT is replaced by joining FINS_FISC_DATE for the fields: PERIV, RYEAR, POPER, and FISCYEARPER.
+4. KTOPL and RACCT are replaced by joining C_ACTUAL_FS_ITEM for the field KKTPL and RACCT.
+Now, through the consolidation base view, you see the FI data in group point of view. 
+
+There are 4 consolidation base views generated. I give all of their SQL definitions:
+#+Caption: Calculation View, gives out data in ACDOCA only
+#+BEGIN_SRC sql
+  create view C_LC_ACTUAL_BASE as 
+  select A.RCLNT,
+         'RTCCTB'  as MODEL,
+         'Actual'  as RTC_CATG,
+         ''        as ACCTP,
+         ''        as RVERS,
+         '01'      as PLEVEL,
+         B.ENTITY,
+         C.ENTITY as PENTITY,
+         D.FISCAL_YEAR_VARIANT as PERIV,
+         D.FISCAL_YEAR as RYEAR,
+         D.FISCAL_PERIOD as POPER,
+         D.FISCYEARPER,
+         E.KKTPL as KTOPL,
+         E.RACCT,         
+         case A.RMVCT when '' then 'F15' else A.RMVCT end as RMVCT,
+         A.RTCUR,
+         A.RHCUR,
+         A.RHCUR as CONS_CUR,
+         A.TSL,
+         A.HSL,
+         A.HSL as CONS_SL,
+         A.TIMESTAMP
+         from RTC_C_FOUNDATION
+         join C_ENTITY as B
+           on A.RCOMP = B.RCOMP
+    left join C_ENTITY as C
+           on A.RASSC = B.RCOMP
+         join RTC_C_FINS_FISC_DATE as D
+           on A.RCLNT = D.MANDT
+          and A.BUDAT = D.CALENDAR_DATE
+         join C_ACTUAL_FS_ITEM as E
+           on A.RCLNT = E.MANDT
+          and A.KTOPL = E.KTOPL
+          and A.RACCT = E.SAKNR;          
+#+END_SRC
+
+#+Caption: CDS View, created directly from the table function based on C_LC_ACTUAL_BASE 
+#+BEGIN_SRC sql
+  create view /RTCART/LCBA0001 as 
+   table function 
+     select * from C_LC_ACTUAL_BASE;          
+#+END_SRC
+
+#+Caption: CDS View, gives out data in ACDOCC only
+#+BEGIN_SRC sql
+  create view /RTCART/LCB00002 as 
+  select A.RCLNT,
+         A.MODEL,
+         A.RTC_CATG,
+         B.ACCTP,
+         A.RVERS,
+         A.PLEVEL,
+         C.ENTITY as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.RYEAR,
+         A.POPER,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.RTCUR,
+         A.RHCUR,
+         A.CONS_CUR,
+         A.TSL,
+         A.HSL,
+         A.CONS_SL,
+         A.TIMESTAMP
+         from ACDOCC as A
+    left join RTC_ACCTP as B
+           on A.LEDGER = B.LEDGER
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTB'
+          and A.DCATE   = 'Actual';          
+#+END_SRC
+
+#+Caption: CDS View, Union the other 2
+#+BEGIN_SRC sql
+  create view /RTCART/LCB00003 as 
+   select * from  /RTCART/LCB00001
+    union all
+   select * from  /RTCART/LCB00002 ;        
+#+END_SRC
+
+*** Consolidation Views for CT in BPC
+If CT happens in BPC, BPC should be able to access data in both ACDOCA and ACDOCC. Then, 5 HANA calculation views will be generated to cover the "Final" and "Preliminary" consolidations. 
+
+The simplified diagram looks like this:
+
+#+Caption: HANA Views for BPC (CT in BPC)
+[[../image/ConsViews04.png]]
+
+**** Final View A
+This view gives out the submitted report data for these S/4 integrated entities. 
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'FINAL'   as BPC_CATG,
+         'G_NONE'  as RCONGR1,
+         A.ENTITY,
+         case A.PENTITY when '' then 'NONE' else A.PENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         'INPUT'   as AUDIT_TRA,
+         'LC'      as CONS_CUR,
+         A.CONS_SL
+    from C_LC_ACTUAL_BASE as A
+    join C_PULL_REQ as B
+      on A.RCLNT = B.MANDT
+     and A.RYEAR = B.FYEAR
+     and A.POPER = B.FPERI
+     and A.ENTITY = B.ENTITY
+     and A.TIMESTAMP <= B.CLOSE_TIME
+   where B.MODEL = 'RTCCTB'
+     and B.BPC_CATG = 'FINAL'. 
+#+END_SRC
+
+**** Final View C
+For those external companies who supply data through flexible upload. Because each time the local accountant submits a request, the local data is copied from staging area (PLEVEL = 00) to the formal area(PLEVEL >= 01). So it is not necessary to join with the lastest pull requests. This view gives out all the report data of category FINAL for those external entities.  
+
+Besides, this view also gives out the consolidation result that are gerenated by BPC. 
+
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'FINAL'   as BPC_CATG,
+         A.RCONGR1,
+         C.ENTITY as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.AUDIT_TRA,
+         A.CONS_CUR,
+         A.CONS_SL
+         from ACDOCC as A
+    left join RTC_ACCTP as B
+           on A.LEDGER = B.LEDGER
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTB'
+          and A.PLEVEL >= '01'   --Posting Level >= 01 means the submitted report data and consolidation data
+          and A.DCATE   = 'Actual'
+          and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
+          and (A.VARIANT = '' or A.VARIANT = '100');  
+#+END_SRC
+
+Once the local accountant submits the data, the pull request's user status will be set to "Approved". 
+
+**** Preliminary View A
+The view gives out the up-to-time report data for S/4 integrated entities.
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'PRELIM'   as BPC_CATG,
+         'G_NONE'  as RCONGR1,
+         A.ENTITY,
+         case A.PENTITY when '' then 'NONE' else A.PENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         'INPUT'   as AUDIT_TARA,
+         'LC'      as CONS_CUR,
+         A.CONS_SL
+    from C_LC_ACTUAL_BASE;
+#+END_SRC
+
+**** Preliminary View C
+This view gives out the flexible uploaded data in the staging area, as well as all the consolidation result of preliminary category. 
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'PRELIM'  as BPC_CATG,
+         A.RCONGR1,
+         C.ENTITY as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.AUDIT_TRA,
+         A.CONS_CUR,
+         A.CONS_SL
+         from ACDOCC as A
+    left join RTC_ACCTP as B
+           on A.LEDGER = B.LEDGER
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTB'
+          and A.DCATE   = 'Actual'
+          and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
+          and (A.VARIANT = '' or A.VARIANT = '200');  
+#+END_SRC
+
+*** Consolidation Views for CT in S/4HANA
+If CT happens in S/4HANA, BPC reads both the local amount and the translated amount from S/4HANA. Then the local amount must be snapshotted at a given time-point.
+
+#+Caption: HANA Views for BPC (CT in S/4HANA)
+[[../image/ConsViews05.png]]
+
+**** Final View A
+This view gives out the local amount for these S/4 integrated entities. 
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'FINAL'   as BPC_CATG,
+         'G_NONE'  as RCONGR1,
+         A.ENTITY,
+         case A.PENTITY when '' then 'NONE' else A.PENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         'INPUT'   as AUDIT_TRA,
+         'LC'      as CONS_CUR,
+         A.CONS_SL
+    from C_LC_ACTUAL_BASE as A
+    join C_PULL_REQ as B
+      on A.RCLNT = B.MANDT
+     and A.RYEAR = B.FYEAR
+     and A.POPER = B.FPERI
+     and A.ENTITY = B.ENTITY
+     and A.TIMESTAMP <= B.CLOSE_TIME
+   where B.MODEL = 'RTCCTS'
+     and B.BPC_CATG = 'FINAL'. 
+#+END_SRC
+
+**** Final View C
+This view gives out all the local data of external entities, as well as all the consolidation result. The S/4 CT generates data with posting level 05.
+
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'FINAL'  as BPC_CATG,
+         A.RCONGR1,
+         C.ENTITY as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.AUDIT_TRA,
+         A.CONS_CUR,
+         A.CONS_SL
+         from ACDOCC as A
+    left join RTC_ACCTP as B
+           on A.LEDGER = B.LEDGER
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTS'
+          and A.PLEVEL >= '01'   --Posting Level >= 01 means the submitted report data and consolidation data
+          and A.DCATE   = 'Actual'
+          and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
+          and (A.VARIANT = '' or A.VARIANT = '100');  
+#+END_SRC
+
+**** Preliminary View A
+When run preliminary consolidation, the group accountant must first run CT for all entities involved in S/4HANA. At the time she runs CT, a data submit request is created to record the exact time-point. Then the local amount is snapshotted with this view.
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'FINAL'   as BPC_CATG,
+         'G_NONE'  as RCONGR1,
+         A.ENTITY,
+         case A.PENTITY when '' then 'NONE' else A.PENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         'INPUT'   as AUDIT_TRA,
+         'LC'      as CONS_CUR,
+         A.CONS_SL
+    from C_LC_ACTUAL_BASE as A
+    join C_PULL_REQ as B
+      on A.RCLNT = B.MANDT
+     and A.RYEAR = B.FYEAR
+     and A.POPER = B.FPERI
+     and A.ENTITY = B.ENTITY
+     and A.TIMESTAMP <= B.CLOSE_TIME
+   where B.MODEL = 'RTCCTS'
+     and B.BPC_CATG = 'PRELIM'. 
+#+END_SRC
+
+**** Preliminary View C
+This view gives out the flexible uploaded data in the staging area, as well as all the consolidation result of preliminary category. 
+#+BEGIN_SRC sql
+  select A.RCLNT,
+         A.MODEL,
+         'PRELIM'  as BPC_CATG,
+         A.RCONGR1,
+         C.ENTITY as ENTITY,
+         case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+         A.PERIV,
+         A.FISCYEARPER,
+         A.KTOPL,
+         A.RACCT,         
+         A.RMVCT,
+         A.AUDIT_TRA,
+         A.CONS_CUR,
+         A.CONS_SL
+         from ACDOCC as A
+    left join RTC_ACCTP as B
+           on A.LEDGER = B.LEDGER
+         join C_ENTITY as C
+           on A.RCOMP = C.RCOMP
+    left join C_ENTITY as D
+           on A.RASSC = D.RCOMP
+        where A.DEL = ''
+          and A.MODEL = 'RTCCTS'
+          and A.DCATE   = 'Actual'
+          and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
+          and (A.VARIANT = '' or A.VARIANT = '200');  
+#+END_SRC
+
+
+*** Validation View
+
+*** Report View
