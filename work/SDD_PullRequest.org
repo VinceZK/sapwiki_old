@@ -105,24 +105,28 @@ The data submit request table is actually hold filter information that is used t
 11. =DIMEN=, =RVERS=, and =BUNIT= are only used for UC-CS, which are corresponding to the Model, consolidation version, and consolidation entity.
 
 ** Data Submission Method and Data Submit Request 
-Data Submission Method is defined as the meta data to control how Data Submit Requests are generated. You can regard Data Submit Requests are instances of a Data Submission Method. For example, I define a Data Submission Method as following:
+Data Submission Method is the meta to control how local data is submitted. You can divide the package into sub-packages which can be submitted seperately. Data Submit Requests are generated according to the definition of Data Submission Method. For example, I define a Data Submission Method as following:
 
 #+CAPTION: Method Header
-| Model  | Method | Type | Desc.                       | EMode      | Validation Method |
-|--------+--------+------+-----------------------------+------------+-------------------|
-| RTCCTB | DC001  | DC   | Data collection from ACDOCA | Sequential | DV100             |
+| Model  | Method | Type | Desc.                       | EMode      | VM    |
+|--------+--------+------+-----------------------------+------------+-------|
+| RTCCTB | DC001  | DC   | Data collection from ACDOCA | Sequential | DV100 |
 
 #+CAPTION: Method Steps
-| Model  | Method | Step ID | Desc.            | Sequence | Selection | Validation Method |
-|--------+--------+---------+------------------+----------+-----------+-------------------|
-| RTCCTB | DC001  |     001 | AP/AR            |        1 | $AP_AR    | DV110             |
-| RTCCTB | DC001  |     002 | Assets           |        2 | $ASSET    | DV120             |
-| RTCCTB | DC001  |     003 | Equity&Liability |        3 | $EQU_LIAB | DV130             |
-| RTCCTB | DC001  |     004 | Profit&Loss      |        4 | $P_L      | DV140             |
+| Model  | Method | Step ID | Desc.            | Seq. | Stream Type | Selection | VM    | Freq. |
+|--------+--------+---------+------------------+------+-------------+-----------+-------+-------|
+| RTCCTB | DC001  |     001 | AP/AR            |    1 | FI_JOURNAL  | $AP_AR    | DV110 |     1 |
+| RTCCTB | DC001  |     002 | Equity&Liability |    3 | FI_JOURNAL  | $EQU_LIAB | DV130 |     1 |
+| RTCCTB | DC001  |     003 | Profit&Loss      |    4 | FI_JOURNAL  | $P_L      | DV140 |     1 |
+| RTCCTB | DC001  |     004 | Investment       |    5 | INVESTMENT  |           | DV150 |     3 |
 
-All data submission methods are in sequential execution mode, but actually the sequence is not strictly applied during runtime, it only affects the display order in the UI. The method "DC001" has 4 steps with each a selection is given to boundary the data to be submitted. From business perspective, each step is corresponding to a data entry that represents a sub-package. The 4 data entries together will cover the complete set of the local data. Each data entry can aslo be assigned with a Data Validation Method. The validation method is run only to validate the data entry, not the entire package. Only the validation method in the method level(=DV100=) is passed can consolidation tasks be run. 
+All data submission methods are in sequential execution mode, but actually the sequence is not strictly applied during runtime, it only affects the display order in the UI. The method "DC001" has 4 steps with each a data stream type is assigned to indicate the consolidation view. You can also assign a selection to a step to futher boundary the data. From business perspective, each step is corresponding to a data entry that represents a subset of the local data, which is so-called sub-package.
 
-Now that we have the data submission method definition, we can deduce how local and group accountants play with it.
+You can assign a validation method to each sub-package, which should only contain rules that apply to the sub-package. You should also assign a validation method on the main package, that is on the method header level. Frequency is assigned to each sub-package to tell on which frequency local accountants should provide the data. The example shows the previous 3 sub-package should be provided every period, the last one should be provided quarterly.
+
+The sub-packages have no tent to cover the complete set of the reported data, nor need to avoid intersections. It is only defined for the reason that you can validate and submit seperately for a subset of the data. You don't have to submit the sub-packages one by one, you can directly provide all the data and submit all together.
+
+Let's try to deduce how local and group accountants play with it.
 
 *** The group accountant opens the current period for data collection
 The group accountant can start the data collection for a period, usually, close to the month end. The activity can either be manually or automatically by a recurrence background job. Once opened, a data submit request with type "Collective" is inserted for each entity. Meanwhile, for each required data entry, a MonthEnd data submit request is also generated.
@@ -694,9 +698,7 @@ If deferred, the data submit request's status is changed to "Deferred" and the c
 
 *** Scenario4: CT in S4, data comes from ACDOCC
 
-
 ** Statuses
-
 *** Before period is open
 The period is not open, no MonthEnd request is generated. When Data Submit Cockpit is open for this period, a gentle message will show in the bottom area which tells the user this period is not open for data submission. The "Submit" button is gray out, however, you can still do flexible upload or run CT for some preparation. 
 |                             | <60>                                                         |
@@ -808,7 +810,7 @@ Once the package is approved, the entity status in BPC's consoldiation monitor i
 |---------------------------+------------------|
 | Entity Data Submit Status | _To be Executed_ |
 | Can run BPC Control       | Yes              |
-| Can run Consolidation     | Yes              |  
+| Can run Consolidation     | Yes              |
 
 *** Package is rejected
 After posting standardized journal entries, she wants to run validation again before approving. However, she thinks the data is not acceptable, so she rejected it with some comments provided to the local accountant. A new request will be created with initial status to allow the local accountant submit again utill get approval.
@@ -864,7 +866,7 @@ Defer is just like approval, and its previous state should always be "_To be Exe
 |---------------------------+------------------|
 | Entity Data Submit Status | _To be Executed_ |
 | Can run BPC Control       | Yes              |
-| Can run Consolidation     | Yes              | 
+| Can run Consolidation     | Yes              |
  
 ** 1610 Without Defer
 In RTC's first release(1610), data submit request will be used as both a notification and timestamp filtering. The status control in the data submit request will not be fully appeared. BPC can access the data directly in ACDOCA with timestamp filtering. The timestamp in the data submit request which is submitted by the local accountant reflects the local close time. Before the time, the data is allowed(by local accountants) for consolidation, and after the time, the data should not be counted for consolidation. 
