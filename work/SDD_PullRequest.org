@@ -435,7 +435,7 @@ The data submit method is configured in this way:
 #+CAPTION: Method Steps
 | Model  | Method | Step ID | Desc.     | Seq. | Stream Type | Selection | VM | Freq. |
 |--------+--------+---------+-----------+------+-------------+-----------+----+-------|
-| RTCCTB | DC002  |     001 | B/L & I/S |    1 | FI_JOURNAL  |           |    |     1 | 
+| RTCCTB | DC002  |     001 | B/L & I/S |    1 | FI_JOURNAL  |           |    |     1 |
 
 The above method is the simplest but most usual case that only contain one sub-package which includes all the data. In this case, there is only the main package, the "sub-package tab" will be hiden. The frequency of the package is by period. Validation method is only given on header level. 
  
@@ -528,34 +528,35 @@ If data is validated and rejected, the data submit request's status is change to
 2. Finds the right timestamp when drilling through to the corresponding source journal items in ACDOCA.
 
 *** Scenario 2: CT in BPC, data comes from ACDOCC
-*Step 1: Flexible Upload*: Data is posted into ACDOCC using a special document type which allows to change the amounts after posting.  
-| DOCNR | DTYPE | Entity |  Period | Amount | Currency |
-|-------+-------+--------+---------+--------+----------|
-| 10001 | FU    | C100   | 2016.01 |    100 | LC       |
+*Step 1: Flexible Upload*: Data is posted into ACDOCC with posting level is null, which allows to change the amounts after posting.  
+| DOCNR | PLVL | Entity |  Period | Amount | Currency |
+|-------+------+--------+---------+--------+----------|
+| 10001 |      | C100   | 2016.01 |    100 | LC       |
 
-*Step 2: Submit Data*: Local accountant submits a data submit request, the uploaded data is copied to a new document.
+*Step 2: Submit Data*: Local accountant submits a data submit request, the uploaded data is copied to a new document with posting level "00".
 
 | PullReq | PTYPE | Status    | Entity |  Period | Timestamp           |
 |---------+-------+-----------+--------+---------+---------------------|
 | 0000001 | M     | Submitted | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
-| DOCNR | DTYPE | Entity |  Period | Amount | Currency | Timestamp           |
-|-------+-------+--------+---------+--------+----------+---------------------|
-| 10001 | FU    | C100   | 2016.01 |    100 | LC       |                     |
-| 20001 | SC    | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
+| DOCNR | PLVL | Entity |  Period | Amount | Currency | Timestamp           |
+|-------+------+--------+---------+--------+----------+---------------------|
+| 10001 |      | C100   | 2016.01 |    100 | LC       |                     |
+| 20001 | 00   | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
 
-*Step 3: Validate and check the submitted data*: The group accountant can now see the data. She decides to approve or reject it If the data is approved. The data submit request's status will be set to "Approved", otherwise, "Rejected". Because it is a MonthEnd request, she cannot defer it. Now suppose the data is rejected.
+*Step 3: Validate and check the submitted data*: The group accountant can now see the data. She decides to approve or reject it. Because it is a MonthEnd request, she cannot defer it. Now suppose the data is rejected, a new MonthEnd request with "Initial" status is inserted.
 
 | PullReq | PTYPE | Status   | Entity |  Period | Timestamp           |
 |---------+-------+----------+--------+---------+---------------------|
 | 0000001 | M     | Rejected | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| 0000002 | M     | Initial  | C100   | 2016.01 |                     |
 
 *Step 4: Change amount and re-submit*: The local accountant is notified the data is not approved. He changes the amount from 100 to 105, and re-submits a MonthEnd data submit request. Only the delta amount 5 is posted to ACDOCC as a new document. 
-| DOCNR | DTYPE | Entity |  Period | Amount | Currency | Timestamp           |
-|-------+-------+--------+---------+--------+----------+---------------------|
-| 10001 | FU    | C100   | 2016.01 |    105 | LC       |                     |
-| 20001 | SC    | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
-| 20002 | SC    | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
+| DOCNR | PLVL | Entity |  Period | Amount | Currency | Timestamp           |
+|-------+------+--------+---------+--------+----------+---------------------|
+| 10001 |      | C100   | 2016.01 |    105 | LC       |                     |
+| 20001 | 00   | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
+| 20002 | 00   | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
 
 | PullReq | PTYPE | Status    | Entity |  Period | Timestamp           |
 |---------+-------+-----------+--------+---------+---------------------|
@@ -569,50 +570,46 @@ If data is validated and rejected, the data submit request's status is change to
 | 0000002 | M     | Approved | C100   | 2016.01 | 2016/01/30 14:00:00 |
 | 0000003 | A     | Deferred | C100   | 2016.01 | 2016/01/31 09:49:13 |
 
-| DOCNR | DTYPE | Entity |  Period | Amount | Currency | Timestamp           |
-|-------+-------+--------+---------+--------+----------+---------------------|
-| 10001 | FU    | C100   | 2016.01 |    115 | LC       |                     |
-| 20001 | SC    | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
-| 20002 | SC    | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
-| 20003 | SC    | C100   | 2016.02 |     10 | LC       | 2016/01/31 09:49:13 |
+| DOCNR | PLVL | Entity |  Period | Amount | Currency | Timestamp           |
+|-------+------+--------+---------+--------+----------+---------------------|
+| 10001 |      | C100   | 2016.01 |    115 | LC       |                     |
+| 20001 | 00   | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
+| 20002 | 00   | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
+| 20003 | 00   | C100   | 2016.02 |     10 | LC       | 2016/01/31 09:49:13 |
 
 *** Scenario 3: CT in S4, data comes from ACDOCA
-*It is under the assumption that delta translation is supported.* 
+*The delta transaltion must be supported.* 
 
-*Step 1: Local close*: Data is translated and submitted. 
+*Step 1: Local close*: Data is translated and submitted. The timestamp of both consolidation journal entries and the submit reqeust should be the time point when data is read from ACDOCA. 
 #+CAPTION: Data in ACDOCA 
 | Entity |  Period | Amount | Currency | Timestamp           |
 |--------+---------+--------+----------+---------------------|
 | C100   | 2016.01 |    100 | LC       | 2016/01/28 20:10:32 |
 
 #+CAPTION: Data in ACDOCC 
-| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID |
-|--------+---------+-----------+--------+-----------+--------+---------------------+---------|
-| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
+| Entity |  Period | PLVL | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID |
+|--------+---------+------+-----------+--------+-----------+--------+---------------------+---------|
+| C100   | 2016.01 | 05   |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
 
 #+CAPTION: Data Submit Request
-| PullReq | Status    | Entity |  Period | Timestamp           |
-|---------+-----------+--------+---------+---------------------|
-| 0000001 | Submitted | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| PullReq | Type | Status    | Entity |  Period | Timestamp           |
+|---------+------+-----------+--------+---------+---------------------|
+| 0000001 | M    | Submitted | C100   | 2016.01 | 2016/01/29 10:30:00 |
 
 *Step 2: Approve MonthEnd data submit request*: The group accountant decides to approve or reject the request. If it is approved, only need to change the status of the data submit request. 
 #+CAPTION: Data Submit Request
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
 
-If "Rejected". Besides setting the status, the translated results will be deleted.
+If "Rejected", besides changing the status to "Rejected", a new MonthEnd request with "Initial" status is inserted.
 #+CAPTION: Data Submit Request
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | M    | Initial  | C100   | 2016.01 |                     |
 
-#+CAPTION: Data in ACDOCC 
-| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
-|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
-| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
-
-*Step 3: Post adjustments and re-submit*: In case the MonthEnd request is rejected, the local accountant has to post adjustment documents in ACDOCA, and re-submit a MonthEnd request. 
+*Step 3: Adjust and re-submit*: In case the MonthEnd request is rejected, the local accountant has to post adjustment documents in ACDOCA, and re-submit the package. However, only delta amount is translated and posted.
 #+CAPTION: Data in ACDOCA 
 | Entity |  Period | Amount | Currency | Timestamp           |
 |--------+---------+--------+----------+---------------------|
@@ -620,16 +617,16 @@ If "Rejected". Besides setting the status, the translated results will be delete
 | C100   | 2016.01 |      5 | LC       | 2016/01/29 11:10:12 |
 
 #+CAPTION: Data in ACDOCC 
-| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
-|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
-| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
-| C100   | 2016.01 |       105 | EUR    |       105 | USD    | 2016/01/29 11:27:01 | 0000002 |     |
+| Entity |  Period | PLVL | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID |
+|--------+---------+------+-----------+--------+-----------+--------+---------------------+---------|
+| C100   | 2016.01 | 05   |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
+| C100   | 2016.01 | 05   |         5 | EUR    |         5 | USD    | 2016/01/29 11:27:01 | 0000002 |
 
 #+CAPTION: Data Submit Request
-| PullReq | Status    | Entity |  Period | Timestamp           |
-|---------+-----------+--------+---------+---------------------|
-| 0000001 | Rejected  | C100   | 2016.01 | 2016/01/29 10:30:00 |
-| 0000002 | Submitted | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| PullReq | Type | Status    | Entity |  Period | Timestamp           |
+|---------+------+-----------+--------+---------+---------------------|
+| 0000001 | M    | Rejected  | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | M    | Submitted | C100   | 2016.01 | 2016/01/29 11:27:01 |
 
 *Step 4: Submit an adjustment request*: The local accountant find a new amount and wants to submit it as an adjustment. An adjustment data submit request is inserted and a delta CT document is posted.
 #+CAPTION: Data in ACDOCA 
@@ -640,60 +637,142 @@ If "Rejected". Besides setting the status, the translated results will be delete
 | C100   | 2016.01 |     10 | LC       | 2016/01/30 09:23:24 |
 
 #+CAPTION: Data in ACDOCC 
-| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
-|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
-| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
-| C100   | 2016.01 |       105 | EUR    |       105 | USD    | 2016/01/29 11:27:01 | 0000002 |     |
-| C100   | 2016.01 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 |     |
+| Entity |  Period | PLVL | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID |
+|--------+---------+------+-----------+--------+-----------+--------+---------------------+---------|
+| C100   | 2016.01 |   05 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
+| C100   | 2016.01 |   05 |         5 | EUR    |         5 | USD    | 2016/01/29 11:27:01 | 0000002 |
+| C100   | 2016.01 |   05 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 |
 
 #+CAPTION: Data Submit Request
-| PullReq | Status    | Entity |  Period | Timestamp           |
-|---------+-----------+--------+---------+---------------------|
-| 0000001 | Rejected  | C100   | 2016.01 | 2016/01/29 10:30:00 |
-| 0000002 | Approved  | C100   | 2016.01 | 2016/01/29 11:27:01 |
-| 0000003 | Submitted | C100   | 2016.01 | 2016/01/30 09:39:45 |
+| PullReq | Type | Status    | Entity |  Period | Timestamp           |
+|---------+------+-----------+--------+---------+---------------------|
+| 0000001 | M    | Rejected  | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | M    | Approved  | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | A    | Submitted | C100   | 2016.01 | 2016/01/30 09:39:45 |
 
 *Step 5: Approve/Reject/Defer the adjustment request:* Here, the group accountant can decide whether this delta amount need to be counted into this period, or defer to next period, or just reject it and ask the local accountant submit again. 
 
-If approved, only change the data submit request status. 
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
-| 0000002 | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
-| 0000003 | Approved | C100   | 2016.01 | 2016/01/30 09:39:45 |
+If approved, just change the status to "Approved". 
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | M    | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | A    | Approved | C100   | 2016.01 | 2016/01/30 09:39:45 |
 
-If rejected, besides change the status, the corresponding translated document is marked as deleted.
+If rejected, just change the status to "Rejected"
+#+CAPTION: Data Submit Request
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | M    | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | A    | Rejected | C100   | 2016.01 | 2016/01/30 09:39:45 |
+
+If deferred, besides the status is changed to "Deferred", a new document is posted into ACDOCC which rollup the delta amount and has its period value changes to next period and the currency is still in local. Then, in the next period, the amount will be re-translated. 
 #+CAPTION: Data in ACDOCC 
-| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
-|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
-| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
-| C100   | 2016.01 |       105 | EUR    |       105 | USD    | 2016/01/29 11:27:01 | 0000002 |     |
-| C100   | 2016.01 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 | X   |
+| Entity |  Period | PLVL | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID |
+|--------+---------+------+-----------+--------+-----------+--------+---------------------+---------|
+| C100   | 2016.01 |   05 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
+| C100   | 2016.01 |   05 |         5 | EUR    |         5 | USD    | 2016/01/29 11:27:01 | 0000002 |
+| C100   | 2016.01 |   05 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 |
+| C100   | 2016.02 |   05 |        10 | EUR    |        10 | LC     | 2016/01/30 10:02:31 | 0000003 |
 
 #+CAPTION: Data Submit Request
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
-| 0000002 | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
-| 0000003 | Rejected | C100   | 2016.01 | 2016/01/30 09:39:45 |
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | M    | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | A    | Deferred | C100   | 2016.01 | 2016/01/30 09:39:45 |
 
-If deferred, the data submit request's status is changed to "Deferred" and the corresponding translated document is marked as deleted. Meanwhile, a new document is posted into ACDOCC which rollup the delta amount and has its period value changes to next period and the currency is still in local. Then, in the next period, the amount will be re-translated. 
+*Step 6: You want a re-translation due to exchange rate changes:* You click "Reset", all the lines with posting level "05" will be marked as deleted. A new MonthEnd request is inserted with "Initial" status.
 #+CAPTION: Data in ACDOCC 
-| Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | DEL |
-|--------+---------+-----------+--------+-----------+--------+---------------------+---------+-----|
-| C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
-| C100   | 2016.01 |       105 | EUR    |       105 | USD    | 2016/01/29 11:27:01 | 0000002 |     |
-| C100   | 2016.01 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 | X   |
-| C100   | 2016.02 |        10 | EUR    |        10 | LC     | 2016/01/30 10:02:31 | 0000003 |     |
+| Entity |  Period | PLVL | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | Del |
+|--------+---------+------+-----------+--------+-----------+--------+---------------------+---------+-----|
+| C100   | 2016.01 |   05 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
+| C100   | 2016.01 |   05 |         5 | EUR    |         5 | USD    | 2016/01/29 11:27:01 | 0000002 | X   |
+| C100   | 2016.01 |   05 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 | X   |
+| C100   | 2016.02 |   05 |        10 | EUR    |        10 | LC     | 2016/01/30 10:02:31 | 0000003 | X   |
 
 #+CAPTION: Data Submit Request
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
-| 0000002 | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
-| 0000003 | Deferred | C100   | 2016.01 | 2016/01/30 09:39:45 |
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Rejected | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | M    | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | A    | Deferred | C100   | 2016.01 | 2016/01/30 09:39:45 |
+| 0000004 | M    | Initial  | C100   | 2016.01 |                     |
+   
+You then submit the MonthEnd request again.
+#+CAPTION: Data in ACDOCC 
+| Entity |  Period | PLVL | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID | Del |
+|--------+---------+------+-----------+--------+-----------+--------+---------------------+---------+-----|
+| C100   | 2016.01 |   05 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 | X   |
+| C100   | 2016.01 |   05 |         5 | EUR    |         5 | USD    | 2016/01/29 11:27:01 | 0000002 | X   |
+| C100   | 2016.01 |   05 |        10 | EUR    |        10 | USD    | 2016/01/30 09:39:45 | 0000003 | X   |
+| C100   | 2016.02 |   05 |        10 | EUR    |        10 | LC     | 2016/01/30 10:02:31 | 0000003 | X   |
+| C100   | 2016.01 |   05 |       115 | EUR    |       120 | USD    | 2016/01/30 15:13:32 | 0000004 |     |
+
+#+CAPTION: Data Submit Request
+| PullReq | Type | Status    | Entity |  Period | Timestamp           |
+|---------+------+-----------+--------+---------+---------------------|
+| 0000001 | M    | Rejected  | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | M    | Approved  | C100   | 2016.01 | 2016/01/29 11:27:01 |
+| 0000003 | A    | Deferred  | C100   | 2016.01 | 2016/01/30 09:39:45 |
+| 0000004 | M    | Submitted | C100   | 2016.01 | 2016/01/30 15:13:32 |
 
 *** Scenario 4: CT in S4, data comes from ACDOCC
+*Step 1: Flexible Upload*: Data is posted into ACDOCC with posting level null, which allows to change the amounts after posting.  
+| DOCNR | PLVL | Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |
+|-------+------+--------+---------+-----------+--------+-----------+--------+---------------------|
+| 10001 |      | C100   | 2016.01 |       100 | EUR    |       100 | LC     | 2016/01/30 09:45:00 |
+
+*Step 2: Submit Data*: Local accountant submits a data submit request. The data is copied into 2 documents, one is with posting level "00" for the local currency amount, another is with posting level "05" for the group currency amount. 
+| PullReq | PTYPE | Status    | Entity |  Period | Timestamp           |
+|---------+-------+-----------+--------+---------+---------------------|
+| 0000001 | M     | Submitted | C100   | 2016.01 | 2016/01/30 10:30:00 |
+
+| DOCNR | PLVL | Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |
+|-------+------+--------+---------+-----------+--------+-----------+--------+---------------------|
+| 10001 |      | C100   | 2016.01 |       100 | EUR    |       100 | LC     | 2016/01/30 09:45:00 |
+| 20001 |   00 | C100   | 2016.01 |       100 | EUR    |       100 | LC     | 2016/01/30 10:30:00 |
+| 20002 |   05 | C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/30 10:30:00 |
+
+~In case there are multiple group currencies, then each group currency will get a "05" document.~
+
+*Step 3: Validate and check the submitted data*: The group accountant can now see the data. She decides to approve or reject it. Because it is a MonthEnd request, she cannot defer it. Now suppose the data is rejected, a new MonthEnd request with "Initial" status is inserted.
+
+| PullReq | PTYPE | Status   | Entity |  Period | Timestamp           |
+|---------+-------+----------+--------+---------+---------------------|
+| 0000001 | M     | Rejected | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| 0000002 | M     | Initial  | C100   | 2016.01 |                     |
+
+*Step 4: Change amount and re-submit*: The local accountant changes the amount from 100 to 105, then re-submits the MonthEnd data submit request. Only the delta amount 5 is posted to ACDOCC as a new document. 
+| DOCNR | PLVL | Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |
+|-------+------+--------+---------+-----------+--------+-----------+--------+---------------------|
+| 10001 |      | C100   | 2016.01 |       100 | EUR    |       100 | LC     | 2016/01/30 09:45:00 |
+| 20001 |   00 | C100   | 2016.01 |       100 | EUR    |       100 | LC     | 2016/01/30 10:30:00 |
+| 20002 |   05 | C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/30 10:30:00 |
+| 20003 |   00 | C100   | 2016.01 |         5 | EUR    |         5 | LC     | 2016/01/30 14:00:00 |
+| 20004 |   05 | C100   | 2016.01 |         5 | EUR    |         5 | USD    | 2016/01/30 14:00:00 |
+ 
+| PullReq | PTYPE | Status    | Entity |  Period | Timestamp           |
+|---------+-------+-----------+--------+---------+---------------------|
+| 0000001 | M     | Rejected  | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| 0000002 | M     | Submitted | C100   | 2016.01 | 2016/01/30 14:00:00 |
+
+*Step 5: Submit an adjustment request and defer*: Now the MonthEnd request is approved, the local accountant wants to submit an adjustment. The group accountant decides to defer this adjustment to next period. 
+| PullReq | PTYPE | Status   | Entity |  Period | Timestamp           |
+|---------+-------+----------+--------+---------+---------------------|
+| 0000001 | M     | Rejected | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| 0000002 | M     | Approved | C100   | 2016.01 | 2016/01/30 14:00:00 |
+| 0000003 | A     | Deferred | C100   | 2016.01 | 2016/01/31 09:49:13 |
+
+| DOCNR | PLVL | Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |
+|-------+------+--------+---------+-----------+--------+-----------+--------+---------------------|
+| 10001 |      | C100   | 2016.01 |       100 | EUR    |       100 | LC     | 2016/01/30 09:45:00 |
+| 20001 |   00 | C100   | 2016.01 |       100 | EUR    |       100 | LC     | 2016/01/30 10:30:00 |
+| 20002 |   05 | C100   | 2016.01 |       100 | EUR    |       100 | USD    | 2016/01/30 10:30:00 |
+| 20003 |   00 | C100   | 2016.01 |         5 | EUR    |         5 | LC     | 2016/01/30 14:00:00 |
+| 20004 |   05 | C100   | 2016.01 |         5 | EUR    |         5 | USD    | 2016/01/30 14:00:00 |
+| 20005 |   00 | C100   | 2016.02 |        10 | EUR    |        10 | LC     | 2016/01/31 09:49:13 |
 
 ** Statuses
 *** Before period is open
