@@ -113,7 +113,7 @@ We first translate using the TI approach, there should exist following lines in 
 |  /002/ | /300010/ |  /1/ |  /0/ |   /20/ |
 |  /002/ | /200010/ |  /3/ |  /0/ | /-240/ |
 
-Differences(in italic) are recorded to differential items so that balance sheet and income statement keep in balance. *Note*: +How differential items are posted needs further investigation. I am not very sure if TI.1, TI.2, TI.3 should be all posted with each a reverse amount?+ Differential items are generated for TI.1 and TI.3. TI.3 dosen't produce the differential item.
+Differences(in italic) are recorded to differential items so that balance sheet and income statement keep in balance. *Note*: +How differential items are posted needs further investigation. I am not very sure if TI.1, TI.2, TI.3 should be all posted with each a reverse amount?+ Differential items are generated for TI.1 and TI.3. TI.2 dosen't produce the differential item.
 
 We then translate using CTA approach. CTA is flow based, so we define =F15= as the movement flow, and =F80= as the CTA flow. The close flow(=F99=) for each period can be calculated by summing the amount of all other flows *to* this period. And the opening flow(=F15=) for each period can be calculated by summing the amount of all other flows *before* this period, or equivalent, it is the close flow of its previous period. Period 000 is carry-forwarded from last fiscal year, and it is the beginning of all the open flows. We then have following translated result in the consolidation journal table. 
 #+CAPTION: CTA Translation Result

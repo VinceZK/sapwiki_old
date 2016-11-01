@@ -110,7 +110,7 @@ Data Submission Method is the meta to control how local data is submitted. You c
 #+CAPTION: Method Header
 | Model  | Method | Type | Desc.                       | EMode      | VM    |
 |--------+--------+------+-----------------------------+------------+-------|
-| RTCCTB | DC001  | DC   | Data collection from ACDOCA | Sequential | DV100 |
+| RTCCTB | DC001  | DS   | Data collection from ACDOCA | Sequential | DV100 |
 
 #+CAPTION: Method Steps
 | Model  | Method | Step ID | Desc.            | Seq. | Stream Type | Selection | VM    | Freq. |
@@ -129,42 +129,42 @@ The sub-packages have no tent to cover the complete set of the reported data, no
 Let's try to deduce how local and group accountants play with it.
 
 *** The group accountant opens the current period for data collection
-The group accountant can start the data collection for a period, usually, close to the month end. The activity can either be manually or automatically by a recurrence background job. Once opened, a data submit request with type "Collective" is inserted for each entity. Meanwhile, for each required data entry, a MonthEnd data submit request is also generated.
+The group accountant can start the data collection for a period, usually, close to the month end. The activity can either be manually or automatically by a recurrence background job. Once opened, a data submit request with type "MonthEnd" is inserted for each entity. Meanwhile, for each required data entry, a "Sub-package" data submit request is also generated.
 
 | PullReq | Model  | BCATE | Type |  Period | Entity | Status  | CLTIME | DCMETH | DENTRY |
 |---------+--------+-------+------+---------+--------+---------+--------+--------+--------|
-| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial |        | DC001  |        |
-| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial |        | DC001  |    001 |
-| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial |        | DC001  |    002 |
-| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial |        | DC001  |    003 |
-| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial |        | DC001  |    004 |
+| 0000001 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial |        | DC001  |        |
+| 0000002 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial |        | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial |        | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial |        | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial |        | DC001  |    004 |
 
-*** The local accountant submits data by packages
-Once the period is opened, the local accountant can see the package in the data submit cockpit. He now first submits the AP/AR data. The AP/AR data is first validated by validation method "DV110", and then submitted by changing the status  of data submit request =0000002= to "Submitted" and record the timestamp to =CLTIME=. 
+*** The local accountant submits a sub-package
+Once the period is opened, the local accountant can see the package in the data submit cockpit. He now first submits the AP/AR data. The AP/AR data is first validated by validation method "DV110", and then submitted by changing the status of data submit request =0000002= to "Submitted" and record the timestamp to =CLTIME=. 
 | PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
 |---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
-| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial   |                     | DC001  |        |
-| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/25 15:20:00 | DC001  |    001 |
-| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial   |                     | DC001  |    002 |
-| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial   |                     | DC001  |    003 |
-| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial   |                     | DC001  |    004 |
+| 0000001 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial   |                     | DC001  |        |
+| 0000002 | RTCCTB | FINAL | S    | 2016.01 | C100   | Submitted | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial   |                     | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial   |                     | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial   |                     | DC001  |    004 |
 
 *** The group accountant check the validation result
-Till now, only AP/AR data is submit, consolidation tasks cannot be run. But the group accountant can check the validation result along with the sub-package. To be in mind, BPC cannot see any data of this period for the entity. The validation is actually run in S4HANA side by invoking the validation method "DV110". Although it is the same method and produce the same result as the local accountant, but the group accountant can check the comments and attachments, and to decide whether the amount is accepted or not along with those non-amount explanations. 
+Till now, only AP/AR data is submit. In the BPC's consolidation monitor, the status is changed to "_To be Reviewed_". The group accountant can check the validation result of the AP/AR sub-package. She can also post standardized journal entries and run validation again. Validation in BPC's side can share the same rules with S/4 side. Thus it is not necessary to setup duplicate rules in BPC's control. The group accountant can check the comments/attachments from local accountants' submits, and/or re-run validations if standarized entries are posted. Then she can decide whether to approve or reject the sub-package. 
 
-~The results produced by a validation method can be overwritten with comments or attachments. For example, if rule1 is not passed, then the local accountant can write some comments and it will turn rule1 from red light to green light, so that he can still submit the data.~
+~The results produced by a validation method can be overwritten with comments/attachments. For example, if rule1 is not passed, then the local accountant can write some comments and it will turn rule1 from red light to green light, so that he can still submit the data.~
 
-If she decides to accept the data, then the data submit request status will be changed to "Approved", otherwise "Rejected". To be in mind, MonthEnd data submit request cannot be deferred. Once a data entry is approved, it is locked to forbid submit request on it again.
+If she approves the sub-package, then the data submit request status will be changed to "Approved", otherwise "Rejected". To be in mind, MonthEnd data submit request cannot be deferred. Once a sub-package is approved, it is locked to forbid submit requests on it again. The status in BPC's consolidation monitor will be changed to "_To be Executed_". Then if consolidation tasks are clicked to run, it should run only on the data that are already submitted. =However, currently BPC cannot deal with sub-packages. So, actaully, it will run on all the data before the timestamp of the sub-package.= Although it is not a big deal, as BPC can always re-run tasks, anyway it produces confusion. 
 | PullReq | Model  | BCATE | Type |  Period | Entity | Status   | CLTIME              | DCMETH | DENTRY |
 |---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
-| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial  |                     | DC001  |        |
-| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved | 2016/01/25 15:20:00 | DC001  |    001 |
-| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    002 |
-| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    003 |
-| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    004 |
+| 0000001 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |        |
+| 0000002 | RTCCTB | FINAL | S    | 2016.01 | C100   | Approved | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial  |                     | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial  |                     | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial  |                     | DC001  |    004 |
 
-**** What happens if a MonthEnd data submit request is rejected?
-Once a MonthEnd data submit request is rejected, it cannot be changed status again, and left as is. A new MonthEnd data submit request is created with status "Initial".
+**** What happens if a data submit request is rejected?
+If the data is not qualified after validation, then she reject it. Once a data submit request is rejected, it cannot be changed again, just left as it is. A new data submit request is created with status "Initial". 
 | PullReq | Model  | BCATE | Type |  Period | Entity | Status   | CLTIME              | DCMETH | DENTRY |
 |---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
 | 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial  |                     | DC001  |        |
@@ -174,79 +174,62 @@ Once a MonthEnd data submit request is rejected, it cannot be changed status aga
 | 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    004 |
 | 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |    001 |
 
-But if it is not a required MonthEnd request, then there is no new data submit request is created. 
+Next time, the local accountant submits data again, the standardized entries posted by the group accountant will also be included. 
 
-*** The local accountant submits all the data packages
-With several round-trips, finally, all the data is submitted and approved.
+*** The local accountant submits the main package
+After several round-trips, the local accountant thinks that the whole package is ready to submit. Then he click the submit button on the main package level, which will trigger a validation run firstly on all sub-packages's level, at last on the header level. 
+
+It is not necessary to submit all the sub-packages before submitting the main package. You can just submit the main package without caring about the status of sub-packages. However, when submitting the main package, validation methods on sub-package level will also be invoked. If any error happens, it will block the submitting. 
+
+~For example, if you want sub-package "Investment" should be mandatory, then you define a rule to check the number of rows of the data. If the result is zero, the rule is failed, which will forbid you to submit the main package.~
+
 | PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
 |---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
-| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Initial   |                     | DC001  |        |
-| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DC001  |    001 |
-| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DC001  |    002 |
-| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/26 11:30:40 | DC001  |    003 |
-| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 11:40:32 | DC001  |    004 |
-| 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 15:36:00 | DC001  |    002 |
+| 0000001 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/28 14:00:05 | DC001  |        |
+| 0000002 | RTCCTB | FINAL | S    | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DC001  |    001 |
+| 0000003 | RTCCTB | FINAL | S    | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DC001  |    002 |
+| 0000004 | RTCCTB | FINAL | S    | 2016.01 | C100   | Submitted | 2016/01/26 11:30:40 | DC001  |    003 |
+| 0000005 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial   | 2016/01/26 11:40:32 | DC001  |    004 |
+| 0000006 | RTCCTB | FINAL | S    | 2016.01 | C100   | Initial   | 2016/01/26 15:36:00 | DC001  |    002 |
 | 0000007 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/27 09:50:11 | DC001  |    003 |
 
-Now that all the data entries are approved, the collective data submit request can either be submitted by local accountant and ask for approval, or directly approved by the group accountant. In either case, the validation method "DV100" will run. As this method is run on the complete set of the data, and may produce additional errors. 
+The Data Submit Cockpit only takes care of the status of main packages, those sub-package statuses don't hinder any processes. 
 
-| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
-|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
-| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Submitted | 2016/01/28 14:00:05 | DC001  |        |
+*** The group accountant decides whether to approve/reject the main package
+Now that the whole data is presented to BPC, the group accountant post some standardized entries and/or runs controls. Based on the control results, she decides:
 
-Once the collective data submit request is in "Submitted" status, the data can be seen by the group accountant in BPC. She can run BPC controls in addition with validation method "DV100".
-
-*** The group accountant decides whether to approve/reject the collective data submit request
-Now data is transparent to BPC, the group accountant runs validation method "DV100", and then post some standardized journals, and run BPC controls. Based on the results, she decides:
-
-*Option1: Approve it*. She thinks the local data is OK for consolidation, so the collective data submit request is changed to "Approved", then consolidation tasks can run on it. 
+*Option1: Approve it*. She thinks the local data is OK for consolidation, so the collective data submit request is changed to "Approved", then consolidation tasks can run on it. Once approved, the main package is locked. 
  | PullReq | Model  | BCATE | Type |  Period | Entity | Status   | CLTIME              | DCMETH | DENTRY |
  |---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
- | 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Approved | 2016/01/28 14:00:05 | DC001  |        |
+ | 0000001 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved | 2016/01/28 14:00:05 | DC001  |        |
 
-*Option2: Reject it*. She thinks the local data is not ready for consolidation, so the collective data submit request is changed to "Rejected". She then decides which data entries should be re-opened to allow local accountant submit adjustment requests. In this case, data entry =001= is re-opened. The the local accountant submits a adjustment data submit request.  
-| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
-|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
-| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Rejected  | 2016/01/28 14:00:05 | DC001  |        |
-| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DC001  |    001 |
-| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DC001  |    002 |
-| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/26 11:30:40 | DC001  |    003 |
-| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 11:40:32 | DC001  |    004 |
-| 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 15:36:00 | DC001  |    002 |
-| 0000007 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/27 09:50:11 | DC001  |    003 |
-| 0000008 | RTCCTB | FINAL | A    | 2016.01 | C100   | Submitted | 2016/01/28 15:43:07 | DC001  |    001 |
+*Option2: Reject it*. She thinks the local data is not ready for consolidation, so the collective data submit request is changed to "Rejected". Meanwhile, a new MonthEnd request is created automatically and the period is unlocked so that the local accountant can submit again.     
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status   | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected | 2016/01/28 14:00:05 | DC001  |        |
+| 0000008 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |        |
  
-Now the validation method "DV110" runs on the data that the new timestamp points to. After approved by the group accountant again, a new collective data submit request is automatically inserted and submitted. Then the loop forms,it is back to the stage of former step. And she must also re-run all the consolidation tasks.
+The local accountant has to resubmit a new MonthEnd request, as it is mandatory at least one approved MonthEnd request for each period. Before resubmitting, he can view comments that the group accountant provided. Under the advice, he post adjustments and/or provide additional comments, then submit again. 
 | PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
 |---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
 | 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Rejected  | 2016/01/28 14:00:05 | DC001  |        |
-| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DC001  |    001 |
-| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DC001  |    002 |
-| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/26 11:30:40 | DC001  |    003 |
-| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 11:40:32 | DC001  |    004 |
-| 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 15:36:00 | DC001  |    002 |
-| 0000007 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/27 09:50:11 | DC001  |    003 |
-| 0000008 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/28 15:43:07 | DC001  |    001 |
-| 0000009 | RTCCTB | FINAL | C    | 2016.01 | C100   | Submitted | 2016/01/28 16:08:34 | DC001  |        |
+| 0000008 | RTCCTB | FINAL | C    | 2016.01 | C100   | Submitted | 2016/01/28 16:08:34 | DC001  |        |
 
-*** The local accountant wants to submit a new adjustment request
-Although data entry can be locked to forbid further data submits, but it cannot stop data entering into ACDOCA. However, the Data Submit Cockpit can censor if there are new lines entering into ACDOCA after the package is approved. If yes, then the local accountant has to ask for a re-open of the data entry. To the group accountant, she has to decide whether these new changes should be counted in this consolidation run, or defer to the next period. 
+*** The local accountant wants to submit an adjustment request
+Although data entry can be locked to forbid further data submits, but it cannot stop data entering into ACDOCA. However, the Data Submit Cockpit can censor if there are new lines entering into ACDOCA after the package is approved. If yes, then the local accountant has to ask for a unlock of the package. To the group accountant, she has to decide whether these new changes should be counted in this consolidation run, or defer to the next period. 
 
-If she chooses to approve the adjustment to this period, then everything is same as the case of rejecting collective request. Or she choose to defer this adjustment to next period, then the table looks like:
-| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | CLTIME              | DCMETH | DENTRY |
-|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
-| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Rejected  | 2016/01/28 14:00:05 | DC001  |        |
-| 0000002 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DC001  |    001 |
-| 0000003 | RTCCTB | FINAL | M    | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DC001  |    002 |
-| 0000004 | RTCCTB | FINAL | M    | 2016.01 | C100   | Submitted | 2016/01/26 11:30:40 | DC001  |    003 |
-| 0000005 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 11:40:32 | DC001  |    004 |
-| 0000006 | RTCCTB | FINAL | M    | 2016.01 | C100   | Approved  | 2016/01/26 15:36:00 | DC001  |    002 |
-| 0000007 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/27 09:50:11 | DC001  |    003 |
-| 0000008 | RTCCTB | FINAL | A    | 2016.01 | C100   | Approved  | 2016/01/28 15:43:07 | DC001  |    001 |
-| 0000009 | RTCCTB | FINAL | C    | 2016.01 | C100   | Approved  | 2016/01/28 16:08:34 | DC001  |        |
-| 0000010 | RTCCTB | FINAL | A    | 2016.01 | C100   | Deferred  | 2016/01/29 10:23:12 | DC001  |    004 |
+If she chooses to approve the adjustment to this period, then everything is same as the case of rejecting MonthEnd request. Or she chooses to defer this adjustment to the next period, then the table looks like:
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status   | CLTIME              | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Rejected | 2016/01/28 14:00:05 | DC001  |        |
+| 0000008 | RTCCTB | FINAL | C    | 2016.01 | C100   | Approved | 2016/01/28 16:08:34 | DC001  |        |
+| 0000009 | RTCCTB | FINAL | A    | 2016.01 | C100   | Deferred | 2016/01/29 10:23:12 | DC001  |        |
 
-The new request is changed to "Deferred" status, everything keeps same in the data submit request table. But behind, the changed amount is copied to ACDOCC, and the period is changed to the next. 
+The new request is changed to "Deferred" status, everything keeps same in the data submit request table. But behind, the changed amounts are copied to ACDOCC with the period changed to the next.
+
+*Only adjusment on main pakcage level can be deferred to next period. Sub-package doesn't support defer.* 
+
+When happen if there is another adjustment request submitted after deferring? If the group accountant decides defer again, then still the delta amounts are copied to next period. But if the group accountant wants to counted to the this period, then the former copied amounts must be marked as deleted. 
   
 ** Data Submit Request Status and Pseudo SQL
 The status of data submit requests not only controls the data submit process, but also controls the data visibility by BPC. BPC can only see the data pointed by data submit requests which have status "Submitted" or "Approved". In other words, status code must larger equal than "30". So for those data submit requests with status "Initial" or "Rejected" or "Deferred", BPC won't see the data they point to. 
@@ -387,16 +370,18 @@ The sub-package structure can be different by periods for a single entity. This 
 If for a certain period there is only one sub-package defined, then the "Sub-Packages" tab will not be shown. The only one sub-package should always be the FI data in ACDOCA/C, you just submit/approve it as the representive of the main package.
 
 Besides clicking the name of a sub-package which can navigate you to the detail page of the sub-package, you can also operate directly on the list:
-1. Locked/Unlocked: click to switch between "Lock" and "Unlock".
-2. Controls: click to run the control directly or open the detail page of the sub-package's control.
-3. Package Status: click to pop-up a drop-down list to stitch the status. 
-4. System Status: It is used to record the status of whether BPC is running consolidation tasks for the specific cons unit. The system status contains: Ready, Processing, Finished, and Failed. The status is display only. 
-5. Variation: Each time a user logins Data Submit Cockpit, it detects whether there is variation till last consolidation run in the same period. Variation means data changes after consolidation is finished for the period. Click the status will navigate you to the detail of the changed data in the "Submit History" tab.
+1. Controls: click to run the control directly or open the detail page of the sub-package's control.
+2. Package Status: click to pop-up a drop-down list to stitch the status. 
+3. System Status: It is used to record the status of whether BPC is running consolidation tasks for the specific cons unit. The system status contains: Ready, Processing, Finished, and Failed. The status is display only. 
+4. Variation: Each time a user logins Data Submit Cockpit, it detects whether there is variation till last consolidation run in the same period. Variation means data changes after consolidation is finished for the period. Click the status will navigate you to the detail of the changed data in the "Submit History" tab.
 
 #+CAPTION: Data Submit Cockpit Sub-package Detail
 [[../image/DataSubmitCockpit20.png]]
 
-The detail page of a sub-package is exactly the same layout as the main package. Because a sub-package doesn't have the sub-sub-package again, so the "Sub-Packages" tab is never shown. But a sub-package has its own controls, own comments, own attachments, and own submit history. The reported data shown here boundaries to the sub-package's data definition. For example, for the AP/AR sub-package, it only shows the amounts of AP/AR accounts. 
+The detail page of a sub-package is exactly the same layout as the main package in the exceptions as bellow:
+1. A sub-package inheriate lock status from the main package;
+2. A sub-package doesn't have the sub-sub-package again, so the "Sub-Packages" tab is never shown;
+3. A sub-package has its own controls, own comments, own attachments, and own submit history. The reported data shown here boundaries to the sub-package's data definition. For example, for the AP/AR sub-package, it only shows the amounts of AP/AR accounts. 
 
 You can through the breadcrumbs right underneath the permanent parameters area to navigate between the main package and sub-package. This also acts as the package headline to help you not get lost during switching between the main package and its sub-packages.
 
@@ -438,49 +423,62 @@ The lock supports lock/unlock in future. Which means, group accountant can sched
 
 
 * Deduction
+The following deduction mainly focus on how data submission integrated with BPC. 
 
 ** 1709 With Defer
-=Notes:=
-1. The data submission method has no sub-packages, the data submit request type is "Collective".
-2. We assume local validation is supported in 1709. 
-3. Exchange rate between local currency and group currency USD is 1:1.
-4. Account number is omitted for simplicity.
-5. Irrelevant columns are hided for different steps. 
-6. "LC" only reflects BPC's point of view.
-7. The corresponding pseudo sql can be found in [[https://wiki.wdf.sap.corp/wiki/x/Ds83bQ][SDD-Consolidation Views]].
+The data submit method is configured in this way:
+#+CAPTION: Method Header
+| Model  | Method | Type | Desc.                  | EMode      | VM    |
+|--------+--------+------+------------------------+------------+-------|
+| RTCCTB | DC002  | DS   | Data Submitting to BPC | Sequential | DV100 |
 
-*** Scenario1: Local data comes from ACDOCA
+#+CAPTION: Method Steps
+| Model  | Method | Step ID | Desc.     | Seq. | Stream Type | Selection | VM | Freq. |
+|--------+--------+---------+-----------+------+-------------+-----------+----+-------|
+| RTCCTB | DC002  |     001 | B/L & I/S |    1 | FI_JOURNAL  |           |    |     1 | 
+
+The above method is the simplest but most usual case that only contain one sub-package which includes all the data. In this case, there is only the main package, the "sub-package tab" will be hiden. The frequency of the package is by period. Validation method is only given on header level. 
+ 
+=Additional Notes:=
+1. We assume local validation is supported in 1709. 
+2. Exchange rate between local currency and group currency USD is 1:1.
+3. Account number is omitted for simplicity.
+4. Irrelevant columns are hided for different steps. 
+5. "LC" only reflects BPC's point of view.
+6. The corresponding pseudo sql can be found in [[https://wiki.wdf.sap.corp/wiki/x/Ds83bQ][SDD-Consolidation Views]].
+
+*** Scenario 1: CT in BPC, data comes from ACDOCA
 
 *Step 1: Local close*: Data in ACDOCA:  
 | Entity |  Period | Amount | Currency | Timestamp           |
 |--------+---------+--------+----------+---------------------|
 | C100   | 2016.01 |    100 | LC       | 2016/01/29 10:30:00 |
 
-*Step 2: Open period for data collection*: the group accountant opens current period which will generate MonthEnd requests for each entity. The status in initial.
-| PullReq | Status  | Entity |  Period | Timestamp |
-|---------+---------+--------+---------+-----------|
-| 0000001 | Initial | C100   | 2016.01 |           |
+*Step 2: Open period for data collection*: the group accountant opens current period which will generate a MonthEnd request for the entity. The status in initial.
+| PullReq | Type | Status  | Entity |  Period | Timestamp |
+|---------+------+---------+--------+---------+-----------|
+| 0000001 | M    | Initial | C100   | 2016.01 |           |
 
 *Step 3: Submit the report data*: the local accountant submits the report data for current period. The MonthEnd request's status is changed to "Submitted", and the current timestamp is also recorded.  
-| PullReq | Status    | Entity |  Period | Timestamp           |
-|---------+-----------+--------+---------+---------------------|
-| 0000001 | Submitted | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| PullReq | Type | Status    | Entity |  Period | Timestamp           |
+|---------+------+-----------+--------+---------+---------------------|
+| 0000001 | M    | Submitted | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
 *Step 4: Approve MonthEnd data submit request*: Once a data submit request is submitted, the group accountant can see the corresponding data in BPC. She can run validation again to confirm the data is OK. The rule could be same as the local accountant's before submit, or she can run additional validation rules. If the result is OK, then the status of the data submit request is changed to "Approved".
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Approved | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Approved | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
 If the group accountant rejects the data for some reason, then the MonthEnd request is set to "Rejected". And a new MonthEnd request is created automatically with initial status. 
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Rejected | C100   | 2016.01 | 2016/01/30 10:30:00 |
-| 0000002 | Initial  | C100   | 2016.01 |                     |
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Rejected | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| 0000002 | M    | Initial  | C100   | 2016.01 |                     |
 
 *Step 5: Run consolidation tasks in BPC*: Consolidation results are posted to ACDOCC.
-| DOCNR | Entity |    Time | BPC Category | Amount | Currency |
-|-------+--------+---------+--------------+--------+----------|
-| 10001 | C100   | 2016.01 | FINAL        |    100 | USD      |
+| DOCNR | Type | Entity |    Time | BPC Category | Amount | Currency |
+|-------+------+--------+---------+--------------+--------+----------|
+| 10001 | M    | C100   | 2016.01 | FINAL        |    100 | USD      |
 
 *Step 6: Post a new adjustment document in ACDOCA*: The period is re-open after consolidation run. 
 | Entity |    Time | Amount | Currency | Timestamp           |
@@ -489,18 +487,18 @@ If the group accountant rejects the data for some reason, then the MonthEnd requ
 | C100   | 2016.01 |      5 | LC       | 2016/01/30 11:20:00 |
 
 *Step 7: Raise an adjustment data submit request*: Data validation happens on the total data of period 2016.01, rather than the delta data. If passing the validation, a new data submit request is inserted.
-| PullReq | Status    | Entity |  Period | Timestamp           |
-|---------+-----------+--------+---------+---------------------|
-| 0000001 | Approved  | C100   | 2016.01 | 2016/01/29 10:30:00 |
-| 0000002 | Submitted | C100   | 2016.01 | 2016/01/30 11:20:00 |
+| PullReq | Type | Status    | Entity |  Period | Timestamp           |
+|---------+------+-----------+--------+---------+---------------------|
+| 0000001 | M    | Approved  | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | A    | Submitted | C100   | 2016.01 | 2016/01/30 11:20:00 |
 
 *Step 8: Check the new submitted data:* Here, the group accountant decides whether this delta amount need to be counted into this period, or defer to next period, or just reject it and ask the local accountant submit again. 
 
 If data is validated and approved, she can run consolidation tasks again. BPC re-runs all the consolidation tasks based on the complete data set, rather than only the new submitted delta part. But it posts only delta result to ACDOCC. 
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
-| 0000002 | Approved | C100   | 2016.01 | 2016/01/30 11:20:00 |
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | A    | Approved | C100   | 2016.01 | 2016/01/30 11:20:00 |
 
 | DOCNR | Entity |  Period | BPC Category | Amount | Currency |
 |-------+--------+---------+--------------+--------+----------|
@@ -508,27 +506,28 @@ If data is validated and approved, she can run consolidation tasks again. BPC re
 | 10002 | C100   | 2016.01 | FINAL        |      5 | USD      |
 
 If data is deferred, the data submit request's status is changed to "Deferred". Meanwhile, a new document is posted into ACDOCC which rollup the delta amount and has its period value changes to next period and the currency is still in local. Then, in the next period, the amount will be counted into consolidation. 
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
-| 0000002 | Deferred | C100   | 2016.01 | 2016/01/30 11:20:00 |
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | A    | Deferred | C100   | 2016.01 | 2016/01/30 11:20:00 |
 
 | DOCNR | Entity |  Period | BPC Category | Amount | Currency | PullReq |
 |-------+--------+---------+--------------+--------+----------+---------|
 | 10001 | C100   | 2016.01 | FINAL        |    100 | USD      |         |
 | 10002 | C100   | 2016.02 | FINAL        |      5 | LC       | 0000002 |
 
-If data is validated and rejected, the data submit request's status is change to "Rejected". Once rejected, BPC won't see the changed data again, it only can see the data which the latest "Submitted" or "Approved" data submit request points. 
-| PullReq | Status   | Entity |  Period | Timestamp           |
-|---------+----------+--------+---------+---------------------|
-| 0000001 | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
-| 0000002 | Rejected | C100   | 2016.01 | 2016/01/30 11:20:00 |
+If data is validated and rejected, the data submit request's status is change to "Rejected" and a new adjustment request is inserted with "Initial" status. Once rejected, BPC won't see the changed data again, it only can see the data which the latest "Submitted" or "Approved" data submit request points. 
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
+| 0000001 | M    | Approved | C100   | 2016.01 | 2016/01/29 10:30:00 |
+| 0000002 | A    | Rejected | C100   | 2016.01 | 2016/01/30 11:20:00 |
+| 0000003 | A    | Initial  | C100   | 2016.01 |                     |
 
 *The data submit request id provides following usages:*
 1. Flags a valid set of consolidation result lines that belongs to the last approved data submit request.
 2. Finds the right timestamp when drilling through to the corresponding source journal items in ACDOCA.
 
-*** Scenario2: Local data comes from ACDOCC
+*** Scenario 2: CT in BPC, data comes from ACDOCC
 *Step 1: Flexible Upload*: Data is posted into ACDOCC using a special document type which allows to change the amounts after posting.  
 | DOCNR | DTYPE | Entity |  Period | Amount | Currency |
 |-------+-------+--------+---------+--------+----------|
@@ -545,9 +544,7 @@ If data is validated and rejected, the data submit request's status is change to
 | 10001 | FU    | C100   | 2016.01 |    100 | LC       |                     |
 | 20001 | SC    | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
 
-*Step 3: Validate and check the submitted data*: The group accountant can now see the data. She decides to approve or reject it. 
-
-If the data is approved. The data submit request's status will be set to "Approved", otherwise, "Rejected". Because it is a MonthEnd request, she cannot defer it. Now suppose the data is rejected.
+*Step 3: Validate and check the submitted data*: The group accountant can now see the data. She decides to approve or reject it If the data is approved. The data submit request's status will be set to "Approved", otherwise, "Rejected". Because it is a MonthEnd request, she cannot defer it. Now suppose the data is rejected.
 
 | PullReq | PTYPE | Status   | Entity |  Period | Timestamp           |
 |---------+-------+----------+--------+---------+---------------------|
@@ -579,7 +576,7 @@ If the data is approved. The data submit request's status will be set to "Approv
 | 20002 | SC    | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
 | 20003 | SC    | C100   | 2016.02 |     10 | LC       | 2016/01/31 09:49:13 |
 
-*** Scenario3: CT in S4, data comes from ACDOCA
+*** Scenario 3: CT in S4, data comes from ACDOCA
 *It is under the assumption that delta translation is supported.* 
 
 *Step 1: Local close*: Data is translated and submitted. 
@@ -696,7 +693,7 @@ If deferred, the data submit request's status is changed to "Deferred" and the c
 | 0000002 | Approved | C100   | 2016.01 | 2016/01/29 11:27:01 |
 | 0000003 | Deferred | C100   | 2016.01 | 2016/01/30 09:39:45 |
 
-*** Scenario4: CT in S4, data comes from ACDOCC
+*** Scenario 4: CT in S4, data comes from ACDOCC
 
 ** Statuses
 *** Before period is open
