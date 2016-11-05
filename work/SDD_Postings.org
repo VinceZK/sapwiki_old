@@ -200,7 +200,7 @@ Business Transaction Type also controls the layout of document type customizatio
 |        | <50>                                               |
 | BTTYPE | Available Settings on Doc Type UI                  |
 |--------+----------------------------------------------------|
-| RTFC   | General tab without Deferred Taxes                 |
+| RTFU   | General tab without Deferred Taxes                 |
 | RTDS   | General tab without Deferred Taxes                 |
 | RTCT   | General tab without Deferred Taxes, Clearing Items tab without Clearing - Consolidation Entity |
 | RTBP   | General tab without Key Figures and Deferred Taxes |

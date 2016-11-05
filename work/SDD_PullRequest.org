@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 20
+#+VERSION: 21
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Data Submit Request
@@ -248,26 +248,23 @@ The status of data submit requests not only controls the data submit process, bu
        select MODEL, BCATE, FYEAR, FPERI, ENTITY, max(CLTIME)
          from RTC_PULL_REQ
         where USTATUS >= 30
-          and PTYPE = 'C'
      group by MODEL, BCATE, FYEAR, FPERI, ENTITY;
 
   create view C_RTC_FINAL_VIEWA as
        select * from C_FOUNDATION_VIEW as A
-         join I_PULL_REQ_C as B
+         join V_PULL_REQ_C as B
            on A.RYEAR = B.FYEAR
           and A.POPER = B.FPERI
           and A.RCOMP = B.ENTITY
           and A.TIMESTAMP <= B.CLOSE_TIME
         where B.MODEL = 'RTCCTB'
-          and B.BPC_CATG = 'FINAL'
-          and B.PTYPE = 'C';
+          and B.BPC_CATG = 'FINAL';
 
 -- Local Validation View for each Validation Method
   create view V_PULL_REQ_MA as 
        select MODEL, BCATE, FYEAR, FPERI, ENTITY, max(CLTIME)
          from RTC_PULL_REQ
         where USTATUS >= 30
-          and (PTYPE = 'M' or PTYPE = 'A')
      group by MODEL, BCATE, FYEAR, FPERI, ENTITY;
 
        select * from /RTCART/RTCCTB01 as A
