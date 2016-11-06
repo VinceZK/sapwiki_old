@@ -62,7 +62,7 @@ The overall data flow show how the data is collected and submitted to the consol
 
 
 * Design
-data submit requests are raised and saved in the central system. Each time, if the local accountant wants to submit his reported financial data, he must raise a data submit request. The group accountant will then be notified, and can use the information in the data submit request to pull data from ACDOCA/C.
+Data submit requests are raised and saved in the central system. Each time, if the local accountant wants to submit his reported financial data, he must raise a data submit request. The group accountant will then be notified, and can use the information in the data submit request to pull data from ACDOCA/C.
 
 ** Data Submit Request Table Design
 The data submit request table is actually hold filter information that is used to filter in data which is relevant for the consolidation. The mandatory filter dimension is timestamp which is used to point out the lines in ACDOCA. Besides, you can also filter at other dimensions, usually the account dimension, so that you can submit data by packages. 
@@ -155,6 +155,8 @@ Till now, only AP/AR data is submit. In the BPC's consolidation monitor, the sta
 ~The results produced by a validation method can be overwritten with comments/attachments. For example, if rule1 is not passed, then the local accountant can write some comments and it will turn rule1 from red light to green light, so that he can still submit the data.~
 
 If she approves the sub-package, then the data submit request status will be changed to "Approved", otherwise "Rejected". To be in mind, MonthEnd data submit request cannot be deferred. Once a sub-package is approved, it is locked to forbid submit requests on it again. The status in BPC's consolidation monitor will be changed to "_To be Executed_". Then if consolidation tasks are clicked to run, it should run only on the data that are already submitted. =However, currently BPC cannot deal with sub-packages. So, actaully, it will run on all the data before the timestamp of the sub-package.= Although it is not a big deal, as BPC can always re-run tasks, anyway it produces confusion. 
+
+=In 1709, submitting Sub-packages is not supported.=
 | PullReq | Model  | BCATE | Type |  Period | Entity | Status   | CLTIME              | DCMETH | DENTRY |
 |---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
 | 0000001 | RTCCTB | FINAL | M    | 2016.01 | C100   | Initial  |                     | DC001  |        |
@@ -362,15 +364,15 @@ A package can be further divided into sub-packages either by different groups of
 #+CAPTION: Data Submit Cockpit Sub-package List
 [[../image/DataSubmitCockpit10.png]]
 
-The sub-package structure can be different by periods for a single entity. This is because the frequency of the data requirement is not always the same. For example, investment data may be required quarterly. Besides, even some of the sub-packages are shown for the period, if they are optional, you can still omit them. Only the required ones need to be sumbitted mandatory. 
-
-If for a certain period there is only one sub-package defined, then the "Sub-Packages" tab will not be shown. The only one sub-package should always be the FI data in ACDOCA/C, you just submit/approve it as the representive of the main package.
+The sub-package structure can be different by periods for a single entity. This is because the frequency of the data requirement is not always the same. For example, investment data may be required quarterly. If for a certain period there is only one sub-package defined, then the "Sub-Packages" tab will not be shown. The only one sub-package should always be the FI data in ACDOCA/C, you just submit/approve it as the representive of the main package.
 
 Besides clicking the name of a sub-package which can navigate you to the detail page of the sub-package, you can also operate directly on the list:
 1. Controls: click to run the control directly or open the detail page of the sub-package's control.
 2. Package Status: click to pop-up a drop-down list to stitch the status. 
 3. System Status: It is used to record the status of whether BPC is running consolidation tasks for the specific cons unit. The system status contains: Ready, Processing, Finished, and Failed. The status is display only. 
 4. Variation: Each time a user logins Data Submit Cockpit, it detects whether there is variation till last consolidation run in the same period. Variation means data changes after consolidation is finished for the period. Click the status will navigate you to the detail of the changed data in the "Submit History" tab.
+
+=In the 1709 release, sub-packages can not be submitted, so "Package Status","System Status", and "Variation" are hiden=
 
 #+CAPTION: Data Submit Cockpit Sub-package Detail
 [[../image/DataSubmitCockpit20.png]]
@@ -380,10 +382,12 @@ The detail page of a sub-package is exactly the same layout as the main package 
 2. A sub-package doesn't have the sub-sub-package again, so the "Sub-Packages" tab is never shown;
 3. A sub-package has its own controls, own comments, own attachments, and own submit history. The reported data shown here boundaries to the sub-package's data definition. For example, for the AP/AR sub-package, it only shows the amounts of AP/AR accounts. 
 
+=In the 1709 release, sub-packages can not be submitted, so "Package Status","System Status", and "Variation" are hiden=
+
 You can through the breadcrumbs right underneath the permanent parameters area to navigate between the main package and sub-package. This also acts as the package headline to help you not get lost during switching between the main package and its sub-packages.
 
 ** Data Submit Cockpit Control
-Both main package and its sub-packages have their own controls. However, the layout is the same. 
+Both main package and its sub-packages have their own controls with the same display layout. 
 #+CAPTION: Data Submit Cockpit Controls
 [[../image/DataSubmitCockpit11.png]]  
 
@@ -539,7 +543,7 @@ If data is validated and rejected, the data submit request's status is change to
 | DOCNR | PLVL | Entity |  Period | Amount | Currency | Timestamp           |
 |-------+------+--------+---------+--------+----------+---------------------|
 | 10001 |      | C100   | 2016.01 |    100 | LC       |                     |
-| 20001 | 00   | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
+| 20001 |   00 | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
 
 *Step 3: Validate and check the submitted data*: The group accountant can now see the data. She decides to approve or reject it. Because it is a MonthEnd request, she cannot defer it. Now suppose the data is rejected, a new MonthEnd request with "Initial" status is inserted.
 
@@ -552,8 +556,8 @@ If data is validated and rejected, the data submit request's status is change to
 | DOCNR | PLVL | Entity |  Period | Amount | Currency | Timestamp           |
 |-------+------+--------+---------+--------+----------+---------------------|
 | 10001 |      | C100   | 2016.01 |    105 | LC       |                     |
-| 20001 | 00   | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
-| 20002 | 00   | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
+| 20001 |   00 | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
+| 20002 |   00 | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
 
 | PullReq | PTYPE | Status    | Entity |  Period | Timestamp           |
 |---------+-------+-----------+--------+---------+---------------------|
@@ -570,9 +574,9 @@ If data is validated and rejected, the data submit request's status is change to
 | DOCNR | PLVL | Entity |  Period | Amount | Currency | Timestamp           |
 |-------+------+--------+---------+--------+----------+---------------------|
 | 10001 |      | C100   | 2016.01 |    115 | LC       |                     |
-| 20001 | 00   | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
-| 20002 | 00   | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
-| 20003 | 00   | C100   | 2016.02 |     10 | LC       | 2016/01/31 09:49:13 |
+| 20001 |   00 | C100   | 2016.01 |    100 | LC       | 2016/01/30 10:30:00 |
+| 20002 |   00 | C100   | 2016.01 |      5 | LC       | 2016/01/30 14:00:00 |
+| 20003 |   00 | C100   | 2016.02 |     10 | LC       | 2016/01/31 09:49:13 |
 
 *** Scenario 3: CT in S4, data comes from ACDOCA
 *The delta transaltion must be supported.* 
@@ -586,7 +590,7 @@ If data is validated and rejected, the data submit request's status is change to
 #+CAPTION: Data in ACDOCC 
 | Entity |  Period | PLVL | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID |
 |--------+---------+------+-----------+--------+-----------+--------+---------------------+---------|
-| C100   | 2016.01 | 05   |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
+| C100   | 2016.01 |   05 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
 
 #+CAPTION: Data Submit Request
 | PullReq | Type | Status    | Entity |  Period | Timestamp           |
@@ -616,8 +620,8 @@ If "Rejected", besides changing the status to "Rejected", a new MonthEnd request
 #+CAPTION: Data in ACDOCC 
 | Entity |  Period | PLVL | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |  PRUUID |
 |--------+---------+------+-----------+--------+-----------+--------+---------------------+---------|
-| C100   | 2016.01 | 05   |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
-| C100   | 2016.01 | 05   |         5 | EUR    |         5 | USD    | 2016/01/29 11:27:01 | 0000002 |
+| C100   | 2016.01 |   05 |       100 | EUR    |       100 | USD    | 2016/01/29 10:30:00 | 0000001 |
+| C100   | 2016.01 |   05 |         5 | EUR    |         5 | USD    | 2016/01/29 11:27:01 | 0000002 |
 
 #+CAPTION: Data Submit Request
 | PullReq | Type | Status    | Entity |  Period | Timestamp           |
