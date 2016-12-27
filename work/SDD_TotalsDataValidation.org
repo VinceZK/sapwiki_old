@@ -89,6 +89,20 @@ You can run simulations on the validation method. You must first fill the input 
 The result of a validation method run is called validation log. The validation log contains the display and persistency, also with comments/attachment. It should be designed as a reusabe component which can be either a seperated application or embedded in other applications.
  
 
+*** Rule Distribution on Decentralized Architecture
+In a general case, we may have the corp group using a S4HANA instance, with subsidiaries on HCP across the world. Even a subsidiary may also have its own sub-subsidiaries, thus forms a decentralized hierarchy structure. Transaction data is collected from the buttom of the hierarchy, and consolidated level by level. However, meta data may be distributed from the top of the hierarchy to the sub-nodes. 
+
+The following diagram describe the approach for detail.
+#+Caption: Decentralized Rule Distribution
+[[../image/RulesDecentralized.png]] 
+
+1. S/4HANA uses Fiori-based UI5, while HCP uses pure UI5. If the UI development effort can be comined, or we have to deliver 2 different UIs? Investigate whether Fiori binaries on S/4 can be migrated into HCP. 
+2. We have Model, Method, Rules meta data in our own tables, which can be replicated to HCP platform. However the generated runtime executables are different. Without ABAP layer, HCP will generated DB artifacts directly. An adapter is used to map S/4HANA artifacts to HCP artifacts.
+3. The distribution module is used to set distribution rules of meta data and master data. 
+4. Master data like Chart-of-Accounts, group&entity, and so on can also be distributed from top to buttom. And top nodes can view master data of the down nodes if permission is given.
+5. ACDOCC is the shared data structure for both S/4HANA and HCP, so that DB procedures and views can be mapped and genreated easily. 
+
+
 ** Examples of Totals Validation Rules
 #+CAPTION: Base CDS View for Rule Defination
 #+BEGIN_SRC sql

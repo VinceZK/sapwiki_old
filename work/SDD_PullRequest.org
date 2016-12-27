@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 21
+#+VERSION: 23
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Data Submit Request
@@ -798,11 +798,11 @@ The period is not open, no MonthEnd request is generated. When Data Submit Cockp
 | Submit History Tab          | Not Allowed                                                  |
 
 BPC has nothing to do now.  
-| BPC Statuses              | State   |
-|---------------------------+---------|
-| Entity Data Submit Status | Initial |
-| Can run BPC Control       | No      |
-| Can run Consolidation     | No      |
+| BPC Statuses            | Open State     |
+|-------------------------+----------------|
+| Cons. Monitor by Entity | Initial        |
+| Control. Monitor        | To_be_Executed |
+| Can see the local data? | No             |
 
 *** Period is open
 The period is open, MonthEnd request is generated with initial status. If the package is locked, you cannot submit the package. If you only run controls and save the control result, then "This timestamp" will be recorded into the pull request. 
@@ -826,11 +826,11 @@ The period is open, MonthEnd request is generated with initial status. If the pa
 | Submit History Tab          | Only one pull request with initial status, delta data is shown as the entire data of current period |
 
 BPC has nothing to do now.  
-| BPC Statuses              | State   |
-|---------------------------+---------|
-| Entity Data Submit Status | Initial |
-| Can run BPC Control       | No      |
-| Can run Consolidation     | No      |
+| BPC Statuses            | Open State      |
+|-------------------------+----------------|
+| Cons. Monitor by Entity | Initial        |
+| Control. Monitor        | To_be_Executed |
+| Can see the local data? | No             |
 
 *** Package is submitted
 Package will be validated automatically before submitting if "This Submit Time" is different with the timestamp of last control run. If validation is failed, submission is not allowed. 
@@ -853,13 +853,13 @@ Package will be validated automatically before submitting if "This Submit Time" 
 | Attachments Tab             | Can upload attachments                                       |
 | Submit History Tab          | Available                                                    |
 
-Once the package is submitted, the entity status in BPC's consolidation monitor will be changed to "_To be Viewed_". And the data is actually can be seen by BPC consolidation engine. Clicking "_To be Viewed_" will open the Data Submit Cockpit with the corresponding package.
+Once the package is submitted, the entity status in BPC's consolidation monitor will be changed to "To_be_Reviewed". And the data actually can be seen by BPC consolidation engine. Clicking "To_be_Reviewed" will open the Data Submit Cockpit with the corresponding package. BPC can also run controls in the control monitor, all the possible statuses would be shown.
 
-| BPC Statuses              | State            |
-|---------------------------+------------------|
-| Entity Data Submit Status | _To be Reviewed_ |
-| Can run BPC Control       | Yes              |
-| Can run Consolidation     | No               |
+| BPC Statuses            | State          | Afterwards States           |
+|-------------------------+----------------+-----------------------------|
+| Cons. Monitor by Entity | To_be_Reviewed |                             |
+| Control Monitor         | To_be_excuted  | Successed/Failed/Dismissed  |
+| Can see the local data? | Yes            |                             |
 
 *** Package is approved
 The group accountant approves the package. After approval, she can run consolidation tasks. The ssystem status will show current status of the data in consolidation engine. Whether it is running, failed, or finished successfully.
@@ -882,12 +882,12 @@ The group accountant approves the package. After approval, she can run consolida
 | Attachments Tab             | Can download attachments, or upload if there is variation    |
 | Submit History Tab          | Available                                                    |
 
-Once the package is approved, the entity status in BPC's consoldiation monitor is changed to "_To be Executed_". You then click to run consolidation tasks. 
-| BPC Statuses              | State            |
-|---------------------------+------------------|
-| Entity Data Submit Status | _To be Executed_ |
-| Can run BPC Control       | Yes              |
-| Can run Consolidation     | Yes              |
+Once the package is approved, the entity status in BPC's consoldiation monitor is changed to "To_be_Executed". You then click to run consolidation tasks. Afterwards, BPC gives the result of consolidation run, that are Running, Successed, and Failed.
+| BPC Statuses            | Open State        | Afterwards States        |
+|-------------------------+-------------------+--------------------------|
+| Cons. Monitor by Entity | To_be_Executed    | Running/Successed/Failed |
+| Control Monitor         | Success/Dismissed |                          |
+| Can see the local data? | Yes               |                          |
 
 *** Package is rejected
 After posting standardized journal entries, she wants to run validation again before approving. However, she thinks the data is not acceptable, so she rejected it with some comments provided to the local accountant. A new request will be created with initial status to allow the local accountant submit again utill get approval.
@@ -910,12 +910,12 @@ After posting standardized journal entries, she wants to run validation again be
 | Attachments Tab             | Can download/upload attachments                              |
 | Submit History Tab          | Available                                                    |
 
-As the request is not get approved, BPC can still not run consolidation. The status is changed to the former one, that is either "_Initial_" or "_To be Executed_". 
-| BPC Statuses              | State                         |
-|---------------------------+-------------------------------|
-| Entity Data Submit Status | _Initial_ or _To be Executed_ |
-| Can run BPC Control       | _Initial_?No:Yes              |
-| Can run Consolidation     | _Initial_?No:Yes              |
+As the request is rejectted, BPC can still not run consolidation on the new submitted data. The status is changed to the former one, that is either "Initial" or "To_be_Executed". 
+| BPC Statuses            | Open State                                |
+|-------------------------+-------------------------------------------|
+| Cons. Monitor by Entity | Initial/To_be_Executed                    |
+| Control Monitor         | To_be_Executed/Successed/Failed/Dismissed |
+| Can see the local data? | Initial?No:Yes                            |
 
 *** Package is deferred
 When we say package is deferred, we only mean some adjustments are deferred. In other words, a MonthEnd request can not be deferred. Only adjustment requests can be deferred.  
@@ -938,12 +938,12 @@ When we say package is deferred, we only mean some adjustments are deferred. In 
 | Attachments Tab             | Can upload attachments if there is variation                 |
 | Submit History Tab          | Available                                                    |
 
-Defer is just like approval, and its previous state should always be "_To be Executed_". Nothing changes for BPC, but only the deferred amount will be copied to next period. 
-| BPC Statuses              | State            |
-|---------------------------+------------------|
-| Entity Data Submit Status | _To be Executed_ |
-| Can run BPC Control       | Yes              |
-| Can run Consolidation     | Yes              |
+BPC keeps its current status, but only the deferred amount will be copied to next period. 
+| BPC Statuses            | Open State                                |
+|-------------------------+-------------------------------------------|
+| Cons. Monitor by Entity | To_be_Executed/Running/Successed/Failed   |
+| Control Monitor         | To_be_Executed/Successed/Failed/Dismissed |
+| Can see the local data? | Yes, but not include the deferred amount  |
  
 ** 1610 Without Defer
 In RTC's first release(1610), data submit request will be used as both a notification and timestamp filtering. The status control in the data submit request will not be fully appeared. BPC can access the data directly in ACDOCA with timestamp filtering. The timestamp in the data submit request which is submitted by the local accountant reflects the local close time. Before the time, the data is allowed(by local accountants) for consolidation, and after the time, the data should not be counted for consolidation. 

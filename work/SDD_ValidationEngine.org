@@ -1,5 +1,5 @@
 #+PAGEID: 1815488354
-#+VERSION: 26
+#+VERSION: 28
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Validation Engine
@@ -208,6 +208,8 @@ Rule body is where the main rule takes place. To add readability, it is encourag
 
 There are 4 place-holders(MSGV1~MSGV4) provided for you to output some intermediate variables. You can fill any HRF expressions in the 4 fields, the returned value will all be converted to string type so that it can be displayed as part of the message text. 
 
+If you want your rule outputs breakdown by cerntain characteristics, then choose one, otherwise leave it empty. For details of how breakdown works, see the following chapter. 
+
 The message text can be freely defined. You can embedded the 4 place-holders in your text enclosed with "&". At runtime, these place-holders will be replaced with actual values and displayed to consumers.  
 
 During compilation, the prerequisite, rule body, and output will be converted to a decision table structure in this way:
@@ -249,6 +251,31 @@ Once rule is activated, you can run simulations. You must supply all the input p
 
 A list to show where the rule is used. Rules are collected under validation methods. A validation method can be created under a consolidation model or stand-alone, which can be invoked by representing a bundle of rules together. A rule can be assigned to a method in case they match each other on input parameters and output structure. For details please find in [[https://wiki.wdf.sap.corp/wiki/x/g7r_b][SDD-Totals Validation]].
  
+
+*** Breakdown
+Validation outputs can be breakdown by one sub-item(sub characteristics under FS item). 
+
+**** Breakdown Customization Table
+| Account | Column   |  Value |
+|---------+----------+--------|
+| 1301000 | RASSC    | 100000 |
+| 1301000 | RASSC    | 200000 |
+| 1401000 | RASSC    | 100000 |
+| 1401000 | RASSC    | 300000 |
+|       * | CONS_CUR |    USD |
+|       * | CONS_CUR |    EUR |
+
+**** Underlying HRF Service
+| *Prerequisite* | *Rule_Body* | MSGV1         | MSGV2         | MSGV3         | MSGV4         |
+|----------------+-------------+---------------+---------------+---------------+---------------|
+| *true*         | *false*     | <expression1> | <expression2> | <expression3> | <expression4> |
+
+**** The Output Results
+Result Object: VIEW_CONS_CUR_BD
+| *Currency(CONS_CUR)* | Status | MSGV1  | MSGV2 | MSGV3 | MSGV4 | MSG Text            |
+|----------------------+--------+--------+-------+-------+-------+---------------------|
+| USD                  | PASS   | 10,000 | 3,000 | 7,000 | A001  | The total assets... |
+| EUR                  | FAIL   | 11,301 | 3,100 | 8,200 | A001  | The total assets... |
 
 ** Appendix: Requirements from Design-Thinking with Customers 
 *** Totals Data Validation Requirements

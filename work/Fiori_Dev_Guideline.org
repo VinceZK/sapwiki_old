@@ -1,0 +1,82 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: Fiori Development Guideline
+
+** References
+|                           |                  |             | <30>                           |
+| Document Title            | Date             | Link        | Comments                       |
+|---------------------------+------------------+-------------+--------------------------------|
+| S/4 Guideline Map         | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1724544760][sapwiki]]     | Index page for all realted materials |
+| S/4 System Landscape      | <2016-12-22 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1280512521][sapwiki]]     | System Landscapes of S/4 development line |
+| S/4 UI Landscape          | <2016-12-22 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1540489628][sapwiki]]     | System Landscapes on Fiori UI Frontend server and webdispatcher |
+| S/4 Release Version Map   | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+Release+Version+Mapping][sapwiki]]     | Puzzled with UIAPFI70 300, sFIN 2.0 SP5, S/4H 1511, sFIN OP 1605 GA version or SAPUI5 Dist 1.37.x? Have a look at the Version Mapping |
+| S/4 Fiori Release FAQ     | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Fiori+%2528sFIN%2529+Release+Process+FAQ][sapwiki]]     | Do you have questions on what an MRC, FRB or a Maintenance Branch is? Have a look at the Release Build FAQ: |
+| SAP Gateway Help          | <2016-12-16 Fri> | [[http://help.sap.com/saphelp_gateway20sp12/helpdata/en/2d/f2caab316446d49c05ec12407ad284/content.htm?frameset=/en/60/de45e3754f4eca83e02727236064e2/frameset.htm&current_toc=/en/57/a41787789c4eca867d9a09696fc42c/plain.htm&node_id=53&show_children=false][online help]] | SAP Gateway online help, well introduce gateway from customer implementation perspective |
+| SAP Fiori Help            | <2016-12-22 Thu> | [[http://help.sap.com/fiori_bs2013/helpdata/en/14/966753a4834e3fe10000000a441470/content.htm?current_toc=/en/6b/966753a4834e3fe10000000a441470/plain.htm&show_children=true][online help]] | SAP Fiori online help, well introduce how to implement Fiori from customer perspective |
+| SAP Fiori Launchpad       | <2016-12-23 Fri> | [[http://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] | On how to config and use Launchpad from customer perspective |
+| Fiori Technology Wikipage | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Fiori+Technology+Home][sapwiki]]     | Fiori Architecture, WebIDE, Step-by-step Guides, Analytics, and so on |
+| Fiori Reuse Library       | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Fiori+Reuse+Library][sapwiki]]     | The sFIN Fiori Library is a UI Reuse Library based on this guideline intended for reuse of central components and artifacts which shall be reusable across the entire FIN UI Frontend Software Components UIAPFI70 and SAPSCORE (FIN only part). |
+| Fiori Reuse Guideline     | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/AT1+UI+Reuse+Guideline][sapwiki]]     | Guidelines for Reuse of UI Functionality in Fiori Archetype 1 Apps via Fiori Libraries |
+| Fiori Correction Cookbook | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/FIN+Fiori+Correction+Cookbook][sapwiki]]     | This cookbook should provide some assistance on the question how and where you need to create corrections for Transactional Fiori Apps. |
+| Git/Gerrit                | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1596197870][sapwiki]]     | For us, Fiori developers, git is a toolkit with which we come in contact literally every day. Used properly, it allows you gain great improvements in your development efficiency - but may also trash it completely, if you do not know what you are doing. |
+
+** General Rules
+
+** Naming Conventions Rules
+Please refer the following link for naming conventions of OData and UI: [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Naming+Conventions+for+Development+Objects][Naming Conventions for Development Objects]].
+
+** Best Practices
+
+It would be benefit if one can manually upload the Fiori Application into ABAP repository. There is a [[https://blogs.sap.com/2016/06/28/deploy-web-ide-developed-fiori-application-to-local-abap-repository/][blog]] on SCN describes the detail, however, after testing, it is not work in the new SAPUI5 version or infrastructure.
+
+** Component Structure
+
+*** Validation Engine
+
+*** Validation Method
+
+*** Consolidation Data Release Cockpit
+
+*** Open Period Consolidation Data Release
+
+*** Balance Sheet for Consolidation Data
+
+** Quick Start & How to Learn
+
+*** Your First Fiori App
+By following the [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1700398221][step-by-step guide]], it is easy to implement your first Fiori app.
+
+1. Create a CDS view "ZVINCE130_U" based on the base view generated by modeling tool. 
+2. Follow the steps in the above guide to finish your first Fiori app.
+
+*** Fiori Launchpad Configuration
+This part introduce how you embed your applications into the Fiori Launchpad, or vice verser, how you find an existing application from Launchpad to the backend services. 
+
+1. If your applications are legacy SAPGUI or WebDynpro, then you should define your Backend Catalogs. Please use this [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500#][tool]] to create your Backend Catalogs and refer the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wikipage]] for detail;
+2. You may need to apply semantic objects;
+3. You create your catalogs and business groups in [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](FLP Designer). Please follow the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/UI+-+Related+Naming+Conventions%252C+Packages+and+Software+Components][naming conventions]];
+5. You create PFCG roles and assign launchpad catalogs and groups into the roles, *this task should be done in Frontend Server*;
+6. Finally, you assign SAP users to the PFCG role, and then open the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Launchpad]] will see your tiles.
+
+You can find more details steps in the [[https://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] link. However, you will find you do not have the authorization to do user/role assignments. You have to apply Business Roles by using the DLM self service tool: https://vmw4958.wdf.sap.corp:44344/sap/bc/webdynpro/sap/zdlm_nav_role?sid=UXT&clnt=902. For example, you add the existing business role "SAP_BR_GL_ACCOUNTANT".
+
+Incase you want to find the Fiori code and the backend service, you can process in following steps:
+
+1. You find roles assigned to your SAP user in the Frontend Server. For example, SAP_BR_GL_ACCOUNTANT;
+2. Open "SAP_BR_GL_ACCOUNTANT" using PFCG, try to compare the description of the group and find the its technique name. For example, "General Reporting" has the technical name "SAP_SFIN_BCG_GL_GEN_REP";
+3. Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?scope=CUST&sap-client=902#][FLP Designer]] open the group "SAP_SFIN_BCG_GL_GEN_REP", find the tile of the app click the "i" icon to see the catalog's ID. You can double click the catalog link to navi to the catalog detail;
+4. Switch to the tab "Target Mapping", find the semantic object ("FinancialStatement" for example), click "Configure" in the buttom toolbar;
+5. In the detail page of the mapping, you can find the ID of the application(that is "fin.gl.finstatement.display");
+6. Open [[https://projectportal.neo.ondemand.com][project portal]] to search "fin.gl.finstatement.display", click to see the detail of the Fiori project, like: BPS name, ABAP package, Software Component, and so on;
+7. You can view the code by either cloning to your Web IDE, or view it in web pages(Browse Sources in Gitiles). Find in manifest.json, and look for "dataSources". You can find the gateway service name("FAC_FINANCIAL_STATEMENT" for example);
+8. You open "FAC_FINANCIAL_STATEMENT" using SEGW in the Backend Server, and read or debug the backend codes. 
+
+*** Project Portal
+https://projectportal.neo.ondemand.com
+
+*** Git/Gerrit
+1. Install git, please find the binary "Git-2.5.0-64-bit.exe" in the following path: \\Cnpvgl000\restricted\FGI\50_Project\Central_Finance\99_Knowledge\03_Consolidation\Fiori\environment\software
+
+*** Web IDE
