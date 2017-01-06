@@ -70,6 +70,7 @@
 | Facility | isdelete     | 5 | 1900/1/3 |
 | Facility | ParkingArea  |   |          |
 
+http://slc.pvgl.sap.corp:1080/register/facility/employee/index.asp
 
 #+BEGIN_SRC sql
   insert into <TABLE>

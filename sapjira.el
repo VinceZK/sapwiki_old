@@ -91,7 +91,7 @@
 
 (defcustom dk-sapjira-sprints-fetch-url
   (concat dk-sapjira-main-url
-	  "rest/greenhopper/1.0/sprintquery/2442")
+	  "rest/greenhopper/1.0/sprintquery/")
   "Jira fetch all the sprints"
   :group 'sapjira
   :version "1.0"
@@ -355,13 +355,14 @@
 (defun sapjira-fetch ()
   "Fetch the open sprints and issues, and convert them into a fix org-mode format."
   (interactive)
-  (let ((project (dk-sapwiki-get-attribute-value "PROJECT")))
+  (let ((project (dk-sapwiki-get-attribute-value "PROJECT"))
+	(rapidview (dk-sapwiki-get-attribute-value "RAPIDVIEW")))
     (if (not project)
 	(message "Please make sure you are in a SAPJIRA org file!")
       (setq dk-sapjira-project-name project)
       (setq dk-sapjira-work-buffer (current-buffer))
       (dk-sapjira-http-get
-       dk-sapjira-sprints-fetch-url
+       (concat dk-sapjira-sprints-fetch-url rapidview)
        (list (cons "includeHistoricSprints" "false")
 	     (cons "includeFutureSprints" "false")
 	     (cons "_"  (format-time-string "%s%3N")))
@@ -419,8 +420,10 @@
   (dk-sapjira-http-get
    dk-sapjira-issues-fetch-url
    (list (cons "jqlQuery"
-	       "assignee = currentUser() AND resolution = Unresolved ORDER BY updatedDate DESC")
+	       (concat "project = " dk-sapjira-project-name
+		       " AND assignee = currentUser() AND resolution = Unresolved ORDER BY updatedDate DESC"))
 	 (cons "tempMax" "2500"))
+   ;;'dk-switch-to-url-buffer))
    'dk-sapjira-process-open-issues))
 
 (defun dk-sapjira-process-open-issues (status)
@@ -469,44 +472,45 @@
 	     ('customfields
 	      (setq sprint
 		    (dk-sapjira-get-customfield-value item "Sprint"))))))
-       issue)       
-      (with-current-buffer dk-sapjira-work-buffer
-	(unless (org-map-entries
-		 (lambda ()
-		   (message "Issue %s is already there!" key-num))
-		 (concat "+IssueNum=\"" key-num "\"")
-		 nil)
-	  (dk-sapjira-set-inprocess key-id key-num)
-	  (org-element-map (org-element-parse-buffer)
-	      'headline
-	    (lambda (headline)
-	      (when (string= (org-element-property :ID headline)
-			     sprint)
-		(let ((contents-begin
-		       (org-element-property :contents-begin headline))
-		      (contents-end
-		       (org-element-property :contents-end headline)))
-		  (goto-char contents-end)
-		  (when (> (- contents-end contents-begin) 60)
-		    (insert ?\n ?\n))
-		  (insert "** OPEN " summary ?\n)
-		  (insert ":PROPERTIES:" ?\n)
-		  (insert ":IssueNum: " key-num ?\n)
-		  (insert ":IssueID: " key-id ?\n)
-		  (insert ":Sprint: " sprint ?\n)
-		  (insert ":Type: " type ?\n)
-		  (insert ":PreAction: " (pcase status
-					   ("Reopened" "831")
-					   ("In Progress" "711")
-					   ("Done" "741")
-					   (_ "711")))
-		  (insert ?\n)
-		  (insert ":Priority: " priority ?\n)
-		  (insert ":Estimate: " estimate1 ?\n)
-		  (insert ":END:" ?\n)
-		  (insert "[[" link "][" dk-sapjira-project-name
-			  "-" key-num "]]" ?\n)
-		  (dk-sapjira-insert-sprint-table created))))))))))		
+       issue)
+      (when (string= type "Task")
+	(with-current-buffer dk-sapjira-work-buffer
+	  (unless (org-map-entries
+		   (lambda ()
+		     (message "Issue %s is already there!" key-num))
+		   (concat "+IssueNum=\"" key-num "\"")
+		   nil)
+	    (dk-sapjira-set-inprocess key-id key-num)
+	    (org-element-map (org-element-parse-buffer)
+		'headline
+	      (lambda (headline)
+		(when (string= (org-element-property :ID headline)
+			       sprint)
+		  (let ((contents-begin
+			 (org-element-property :contents-begin headline))
+			(contents-end
+			 (org-element-property :contents-end headline)))
+		    (goto-char contents-end)
+		    (when (> (- contents-end contents-begin) 60)
+		      (insert ?\n ?\n))
+		    (insert "** OPEN " summary ?\n)
+		    (insert ":PROPERTIES:" ?\n)
+		    (insert ":IssueNum: " key-num ?\n)
+		    (insert ":IssueID: " key-id ?\n)
+		    (insert ":Sprint: " sprint ?\n)
+		    (insert ":Type: " type ?\n)
+		    (insert ":PreAction: " (pcase status
+					     ("Reopened" "831")
+					     ("In Progress" "711")
+					     ("Done" "741")
+					     (_ "711")))
+		    (insert ?\n)
+		    (insert ":Priority: " priority ?\n)
+		    (insert ":Estimate: " estimate1 ?\n)
+		    (insert ":END:" ?\n)
+		    (insert "[[" link "][" dk-sapjira-project-name
+			    "-" key-num "]]" ?\n)
+		    (dk-sapjira-insert-sprint-table created)))))))))))
 ;;       (message "key-id=%s\nkey-num=%s\nsummary=%s
 ;; type=%s\npriority=%s\nstatus=%s\nassignee=%s\nreporter=%s
 ;; created=%s\nupdated=%s\ndue=%s\nresolved=%s\nestimate1=%s
@@ -520,7 +524,7 @@
 	 (when (string= (nth 2 (nth 2 customfield)) fieldname)
 	   (dolist (fieldvalue (nth 3 customfield))
 	     (when (listp fieldvalue)
-	       (setq result (nth 2 fieldvalue)))))))
+	       (setq result (cdr (nth 0 (nth 1 fieldvalue)))))))))
      customfields)
     result))
 
