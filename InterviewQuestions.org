@@ -248,15 +248,14 @@ describe('Unit Test Cases for Date Add&Minus', function(){
 It is not necessary for the condidate to write down all the test cases. It only examines if he/she has the good sense of testing, boundary values, organization of the test cases. 
 
 * Requirements Analysis
-Suppose you have a blog website on which you post your own essays and articles. All the contents are public. However, now you want some of the contents to be restrict to the registered users who have accounts of your website. The pitty thing is that your website doesn't has the user login and accessing module, you have to develop one by yourself.
+Suppose you have a blog website on which you post your own essays and articles. All the contents are open to public. Now you want some of the contents to be restricted, and only open to the registered users, who may have registed accounts of your website. The pitty thing is that your website doesn't has the user identification and accessing module. You have to develop one by yourself.
 
-You then conclude the requirements like bellow:
+You then conclude the requirements using the "User Story" paradigm, which is very popular within Agile Software Development methodologies. Here given 2 samples:
 
 1. *As a* blog reader, *I can* log in to the blog website with a username/password pair, *so that* I can gain access to the restricted contents of the site.
 2. *As a* blog reader, *I can* register an account from the blog website, *so that* I can use it to login into the site.
-3. ...
 
-You may add more stories to make requirements more close to reality. However, you are mainly asked to detailize each story in following format:
+You may add more user stories to make the requirements more close to reality. However, you are mainly asked to detailize each story using following format:
 (Take story 1 as an example)
 |      |      | <40>                                     | <40>                                     |
 | Flow | Step | When...                                  | Then...                                  |
