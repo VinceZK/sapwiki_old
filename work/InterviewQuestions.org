@@ -1,0 +1,175 @@
+#+PAGEID: 1866293383
+#+VERSION: 9
+#+STARTUP: align
+#+OPTIONS: toc:0
+#+TITLE: Interview Questions w/o Answers
+
+*All these 6 questions have no standard answer. Just feel free to write down your thoughts, opinions, and even suggestions.*
+
+* Write a Factorial(阶乘 n!) Function
+You can use your favourite programming language. If you have doubts, please also write them down.
+
+[[../image/halfblank.png]]
+
+
+* Write a SQL query
+Given following table (with sql query "SELECT * FROM journal"):
+| Company | Partner | Account       | Amount |
+|---------+---------+---------------+--------|
+| B       | C       | Receivables_A |     60 |
+| B       | C       | Receivables_B |     80 |
+| C       | B       | Payables_A    |    -60 |
+| C       | B       | Payables_B    |    -75 |
+
+Write a SQL query to show following list:
+| Buyer | Seller | Account       | Buyer Amount | Seller Amount |
+|-------+--------+---------------+--------------+---------------|
+| C     | B      | Receivables_A |           60 |               |
+|       |        | Payables_A    |              |            60 |
+|       |        | Receivables_B |           80 |               |
+|       |        | Payables_B    |              |            75 |
+
+[[../image/halfblank.png]]
+
+
+* Database Modeling
+Given following unnormalized table:
+| Corp | Corp Name    | Companys                     | Departments            |
+|------+--------------+------------------------------+------------------------|
+|    1 | Corp Group A | Company1, Company2, Company3 | IT Dept, FI Dept       |
+|    2 | Corp Group B | Company4, Company5           | Sales Dept, FI Dept    |
+|    3 | Corp Group C | Company6                     | IT Dept, Sales Dept    |
+|    4 | Corp Group D | Company7, Company8           | Purchase Dept, FI Dept |
+|    5 | Corp Group E | Company9                     | HR Dept, FI Dept       |
+
+Please normalize it so that it can achieve the Third Normal Form.
+
+[[../image/halfblank.png]]
+
+
+* Reading Codes
+Given following codes:
+#+BEGIN_SRC C
+void main()  
+{  
+    int i,j;  
+    for(i = 1; i <= 9; i++)  
+    {   
+        for(j = 1; j <= i; j++) 
+        {  
+            printf("%d*%d=%-4d",i,j,i*j);  
+        }  
+        printf("\n");  
+    }  
+} 
+#+END_SRC
+
+Write down the print result:
+
+[[../image/halfblank.png]]
+
+
+* Testing Codes
+Given following 2 function specifications of the "Date" object:
+#+BEGIN_SRC js
+/**
+ * Add time: Add time intervals to a date(time), and return the calcuated date object.
+ * @param strInterval: s:seconds, n:minutes, h:hours, d:days, w:weeks, q:quarters, m:month, y:year
+ * @param Number:  number of interval
+ * @returns: Date
+ */
+Date.DateAdd = function(strInterval, Number) {
+  //Implement codes to add Number of strIntervals to this Date, and return the Date object;
+};
+
+/**
+ * Minus time: Minus time intervals from a date(time), and return the calcuated date object.
+ * @param strInterval: s:seconds, n:minutes, h:hours, d:days, w:weeks, q:quarters, m:month, y:year
+ * @param Number:  number of interval
+ * @returns: Date
+ */
+Date.DateMinus = function(strInterval, Number) {
+   //Implement codes to minus Number of strIntervals from this Date, and return the Date object;
+};
+#+END_SRC
+
+Write down your unit test cases/scripts:
+
+[[../image/halfblank.png]]
+
+
+* Requirements Analysis
+Suppose you have a blog website on which you post your own essays and articles. All the contents are open to public. Now you want some of the contents to be restricted, and only open to the registered users, who may have registed accounts of your website. The pitty thing is that your website doesn't have the user identification and accessing module. You have to develop one by yourself.
+
+You then conclude the requirements using the "User Story" paradigm, which is very popular within Agile Software Development methodologies. Here given 2 samples:
+
+1. *As a* blog reader, *I can* log in to the blog website with a username/password pair, *so that* I can gain access to the restricted contents of the site.
+2. *As a* blog reader, *I can* register an account from the blog website, *so that* I can use it to login into the site.
+
+You may add more user stories to make the requirements more close to reality. However, you are mainly asked to detailize each story using following format:
+(Take story 1 as an example)
+|      |      | <40>                                     | <40>                                     |
+| Flow | Step | When...                                  | Then...                                  |
+|------+------+------------------------------------------+------------------------------------------|
+| Main |    1 | the user is not logged in                |                                          |
+|      |    2 | the user requests to view any 'Restricted' page |                                          |
+|      |    3 |                                          | the system tells the user it is restricted |
+|      |    4 |                                          | the system displays the log in page      |
+|      |  ... | ...                                      | ...                                      |
+|      |    7 | the user enters a valid user ID and password, and requests to log in |                                          |
+|      |  ... | ...                                      | ...                                      |
+| 7a   |    1 | the user enters a valid user ID but an invalid password |                                          |
+|      |    2 |                                          | the system re-displays the log in page   |
+|      |  ... | ...                                      | ...                                      |
+| 7b   |    1 | the user enters a valid user ID but an invalid password |                                          |
+|      |  ... | ...                                      | ...                                      |
+
+*Note:* The “Flow” column identifies the main flow and the alternative flows of the use case. For example, flow 7a is the first alternative flow to branch off main flow step 7, and flow 7b is the second to branch off the same step.  
+
+Story 1: *As a* blog reader, *I can* log in to the blog website with a username/password pair, *so that* I can gain access to the restricted contents of the site. 
+
+[[../image/halfblank.png]]
+
+Story 2: *As a* blog reader, *I can* register an account from the blog website, *so that* I can use it to login into the site.
+
+[[../image/halfblank.png]]
+
+Story 3: ...
+
+[[../image/halfblank.png]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

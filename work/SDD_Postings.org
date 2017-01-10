@@ -158,19 +158,22 @@ In the "General" tab contains basic settings that all document types may apply. 
 
 **** Posting Level 
 Posting level classifies documents posted by different consolidation tasks. During posting, the core API will read the value of the posting level set on the document type, and fill the value into the posting level column of consolidation journal table. The options in the drop-down box are:
-|               | <50>                                               |
-| Posting Level | Use                                                |
-|---------------+----------------------------------------------------|
-|          null | *Flexible Uploaded Data before submitted* The data is in the staging area, which is provisioned by flexible upload and can be changed/deleted freely. There is also no balance check when the data is entering into ACDOCC. |
-|            00 | *Reported financial data* If reported financial data comes from flexible upload, a new document will be posted to copy data from staging area to formal area which is tagged with posting level 00. For data in ACDOCA, there is no need for the data copy, so no document is posted. |
-|            01 | *Adjustments to reported financial data* If, after collecting the reported data of the consolidation units, you want to make changes to the data at corporate headquarters, we recommend doing this by posting adjustment entries with posting level 01. This has the benefit that your changes are documented. |
-|            02 | *Reported data: consolidation group changes*       |
-|            05 | *Currency Translation* Currency Translation in S4 also posts documents. |
-|            10 | *Standardizing entries* You may need to standardize the reported data of consolidation units to comply with corporate policies or valuation rules. In data records with posting levels less than or equal to 10, the system posts only to the consolidation unit – not to the consolidation group. Reporting takes into account the data records for all consolidation groups. |
-|            12 | *Standardizing entries: consolidation group changes* |
-|            20 | *Two-sided elimination entries* Inter-unit elimination, the elimination of inter-unit profit/loss in inventory, and reclassification are examples of two-sided elimination entries. Here, both the consolidation unit and the partner unit are recorded in the data records. Reporting takes into account the data records for all consolidation groups in which both the consolidation unit and the partner unit are posted. |
-|            22 | *Two-sided elimination entries: consolidation group changes* |
-|            30 | *Consolidation of investments entries* In consolidation of investment postings, the consolidation unit, partner unit, and consolidation group are recorded in the data records. Reporting only considers the data records with the assigned consolidation group and the higher-level consolidation groups. |
+|             |           | <50>                                               |
+| UC-CS Plevl | RTC Plevl | Use                                                |
+|-------------+-----------+----------------------------------------------------|
+|       Space |     Space | *UC-CS: Reported data from realtime update or rollup* </br> *RTC: Flexible Uploaded Data before submitted* The data is in the staging area, which is provisioned by flexible upload and can be changed/deleted freely. There is also no balance check when the data is entering into ACDOCC. |
+|          00 |        00 | *Reported financial data* If reported financial data comes from flexible upload, a new document will be posted to copy data from staging area to formal area which is tagged with posting level 00. For data in ACDOCA, there is no need for the data copy, so no document is posted. |
+|          01 |        01 | *Adjustments to reported financial data* If, after collecting the reported data of the consolidation units, you want to make changes to the data at corporate headquarters, we recommend doing this by posting adjustment entries with posting level 01. This has the benefit that your changes are documented. |
+|          02 |        02 | *Reported data: consolidation group changes*       |
+|          0T |        05 | *Currency Translation* Currency Translation in S4 also posts documents. |
+|          08 |        08 | *Item substitution and calculation of the retained earnings* |
+|          10 |        10 | *Standardizing entries* You may need to standardize the reported data of consolidation units to comply with corporate policies or valuation rules. In data records with posting levels less than or equal to 10, the system posts only to the consolidation unit – not to the consolidation group. Reporting takes into account the data records for all consolidation groups. |
+|          12 |        12 | *Standardizing entries: consolidation group changes* |
+|          20 |        20 | *Two-sided elimination entries* Inter-unit elimination, the elimination of inter-unit profit/loss in inventory, and reclassification are examples of two-sided elimination entries. Here, both the consolidation unit and the partner unit are recorded in the data records. Reporting takes into account the data records for all consolidation groups in which both the consolidation unit and the partner unit are posted. |
+|          22 |        22 | *Two-sided elimination entries: consolidation group changes* |
+|          23 |        23 | *Two-sided eliminating entries: Special logic*     |
+|          24 |        24 | *Two-sided eliminating entries: Cons group changes with special logic* |
+|          30 |        30 | *Consolidation of investments entries* In consolidation of investment postings, the consolidation unit, partner unit, and consolidation group are recorded in the data records. Reporting only considers the data records with the assigned consolidation group and the higher-level consolidation groups. |
 
 *Note:* Each posting level can be mapped to an audit type for the integration with BPC.  
 

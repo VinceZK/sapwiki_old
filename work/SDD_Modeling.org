@@ -53,7 +53,6 @@ To be more specifically, data modeling can be characterized by:
 1. Modeling tools should be intuitive and fulfill most of the consolidation requirements;
 2. Modeling tools should provide error-proof features to avoid data inconsistency.
 
-
 *** Context
 As mentioned, Modeling is the prerequisite for consolidation. There are lots of master data, customizations, settings, and even system configurations should be prepared before consolidation tasks actually run.
 
@@ -123,7 +122,6 @@ For example, the financial statement for cash can have subitems of banks. It sta
 =Subitem= and =Subitem Category= together is called =Subassignment=. In BCS, only =Subassignment= is used. And multiple Subassigments can be grouped by =Breakdown Category=. 
 
 It's just too much concepts and layers here. Think if can be simplified during development.
-
 
 *** Major Building Blocks  
 Modeling can contain many things, in this SDD, we only talk about master/customization data and schema(meta) definition for a consolidation. Other topics like system connectivity, data collection, and so on may exceed the area of consolidation itself.
