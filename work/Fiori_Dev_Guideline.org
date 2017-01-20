@@ -1,5 +1,5 @@
 #+PAGEID: 1865734207
-#+VERSION: 6
+#+VERSION: 8
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: Fiori Development Guideline
@@ -8,14 +8,14 @@
 |                             |                  |             | <30>                           |
 | Document Title              | Date             | Link        | Comments                       |
 |-----------------------------+------------------+-------------+--------------------------------|
-| S/4 Guideline Map           | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1724544760][sapwiki]]     | Index page for all realted materials |
+| S/4 Guideline Map           | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1724544760][sapwiki]]     | Index page for all related materials |
 | S/4 System Landscape        | <2016-12-22 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1280512521][sapwiki]]     | System Landscapes of S/4 development line |
 | S/4 UI Landscape            | <2016-12-22 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1540489628][sapwiki]]     | System Landscapes on Fiori UI Frontend server and webdispatcher |
 | S/4 Release Version Map     | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+Release+Version+Mapping][sapwiki]]     | Puzzled with UIAPFI70 300, sFIN 2.0 SP5, S/4H 1511, sFIN OP 1605 GA version or SAPUI5 Dist 1.37.x? Have a look at the Version Mapping |
 | S/4 Fiori Release FAQ       | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Fiori+%2528sFIN%2529+Release+Process+FAQ][sapwiki]]     | Do you have questions on what an MRC, FRB or a Maintenance Branch is? Have a look at the Release Build FAQ: |
 | SAP Gateway Help            | <2016-12-16 Fri> | [[http://help.sap.com/saphelp_gateway20sp12/helpdata/en/2d/f2caab316446d49c05ec12407ad284/content.htm?frameset=/en/60/de45e3754f4eca83e02727236064e2/frameset.htm&current_toc=/en/57/a41787789c4eca867d9a09696fc42c/plain.htm&node_id=53&show_children=false][online help]] | SAP Gateway online help, well introduce gateway from customer implementation perspective |
 | SAP Fiori Help              | <2016-12-22 Thu> | [[http://help.sap.com/fiori_bs2013/helpdata/en/14/966753a4834e3fe10000000a441470/content.htm?current_toc=/en/6b/966753a4834e3fe10000000a441470/plain.htm&show_children=true][online help]] | SAP Fiori online help, well introduce how to implement Fiori from customer perspective |
-| SAP Fiori Launchpad         | <2016-12-23 Fri> | [[http://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] | On how to config and use Launchpad from customer perspective |
+| SAP Fiori Launchpad         | <2016-12-23 Fri> | [[http://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] | On how to configure and use Launchpad from customer perspective |
 | Fiori Development Guideline | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][sapwiki]]     | The content of this development guideline portal is structured in specific topics like setting up the development environment, stateless applications, value help or others. Most of these topics are described in detail in separate guidelines on other Wiki pages. This portal is an entry point to deep dive information. |
 | IAM Development Guideline   | <2017-01-05 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][sapwiki]]     | What's Technical Catalog, Biz Catalog, Biz Roles, Semantic Objects, and so on and on. How to create them? |
 | Fiori Reuse Library         | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Fiori+Reuse+Library][sapwiki]]     | The sFIN Fiori Library is a UI Reuse Library based on this guideline intended for reuse of central components and artifacts which shall be reusable across the entire FIN UI Frontend Software Components UIAPFI70 and SAPSCORE (FIN only part). |
@@ -29,7 +29,7 @@
 #+CAPTION: Fiori Development Process 
 [[../image/FioriDevelopmentProcess.png]]  
 
-#+CAPTION: LOB Financials Fiori Landscape
+#+CAPTION: LOB Financial Fiori Landscape
 [[../image/FinFioriLandscape.png]]  
 
 | Purpose                          | GW  | UI Version   | Supply Rule          |
@@ -39,7 +39,7 @@
 | S/4 Hana OP and CE Infinity: PF  | U8P | 1.45snapshot | daily supply of 1.45 |
 | S/4 Hana OP 1610 Delivery: Dev   | NMK | 1.44.3       | UI V3 SP00 + notes   |
 | S/4 Hana OP 1610 Delivery: QA    | UXV | 1.44.4       | UI V3 SP00 + notes   |
-| S/4 Hana OP 1610 Delivery: PF    | M9P | 1.44.3       | UI V3 SP00 + notes   | 
+| S/4 Hana OP 1610 Delivery: PF    | M9P | 1.44.3       | UI V3 SP00 + notes   |
 
 There is a good tool which collects all the links: https://cpl.mo.sap.corp/launchpad/index.php?lds=OP1610&cat=S/4HANA
 
@@ -54,12 +54,36 @@ There is a good tool which collects all the links: https://cpl.mo.sap.corp/launc
 2. Do not use absolute URLs.
 3. Do not use the SEGW REDEFINE functionality.
 4. Dependencies to the ODATA packages in the standard packages are not allowed.
-5. Cross depenendencies between the OData packages are not allowed.
+5. Cross dependencies between the OData packages are not allowed.
 6. Do not create generic services e.g. for attachment handling for reuse purposes. An OData service shall only serve everything an UI/app needs and shall consider a specific business scenario.
 
 
 ** Quick Start
 
+#+CAPTION: A Reference Development Infrastructure
+[[../image/JavaDevInfras.png]] 
+
+*** Fiori Launchpad Configuration
+This part introduce how you embed your applications into the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html?sap-client=902#Shell-home][Fiori Launchpad(UXT902)]], or vice verser, how you find an existing application from Launchpad to the backend services. 
+
+1. If your applications are legacy SAPGUI or WebDynpro, then you should define your Backend Catalogs. Please use this [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500#][tool]] to create your Backend Catalogs and refer the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wikipage]] for detail;
+2. You may need to apply semantic objects;
+3. You create your catalogs and business groups in [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](FLP Designer). Please follow the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/UI+-+Related+Naming+Conventions%252C+Packages+and+Software+Components][naming conventions]];
+5. You create PFCG roles and assign launchpad catalogs and groups into the roles, *this task should be done in Frontend Server*;
+6. Finally, you assign SAP users to the PFCG role, and then open the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Launchpad Designer]] will see your tiles.
+
+You can find more details steps in the [[https://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] link. However, you will find you do not have the authorization to do user/role assignments. You have to apply Business Roles by using the DLM self service tool: https://vmw4958.wdf.sap.corp:44344/sap/bc/webdynpro/sap/zdlm_nav_role?sid=UXT&clnt=902. For example, you add the existing business role "SAP_BR_GL_ACCOUNTANT".
+
+In case you want to find the Fiori code and the backend service, you can process in following steps:
+
+1. You find roles assigned to your SAP user in the Frontend Server. For example, SAP_BR_GL_ACCOUNTANT;
+2. Open "SAP_BR_GL_ACCOUNTANT" using PFCG, try to compare the description of the group and find the its technique name. For example, "General Reporting" has the technical name "SAP_SFIN_BCG_GL_GEN_REP";
+3. Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?scope=CUST&sap-client=902#][FLP Designer]] open the group "SAP_SFIN_BCG_GL_GEN_REP", find the tile of the app click the "i" icon to see the catalog's ID. You can double click the catalog link to navi to the catalog detail;
+4. Switch to the tab "Target Mapping", find the semantic object ("FinancialStatement" for example), click "Configure" in the bottom toolbar;
+5. In the detail page of the mapping, you can find the ID of the application(that is "fin.gl.finstatement.display");
+6. Open [[https://projectportal.neo.ondemand.com][project portal]] to search "fin.gl.finstatement.display", click to see the detail of the Fiori project, like: BPS name, ABAP package, Software Component, and so on;
+7. You can view the code by either cloning to your Web IDE, or view it in web pages(Browse Sources in Gitiles). Find in manifest.json, and look for "dataSources". You can find the gateway service name("FAC_FINANCIAL_STATEMENT" for example);
+8. You open "FAC_FINANCIAL_STATEMENT" using SEGW in the Backend Server, and read or debug the backend codes. 
 *** Git/Gerrit
 1. Install git, please find the binary "Git-2.5.0-64-bit.exe" in the following [[\\Cnpvgl000\restricted\FGI\50_Project\Central_Finance\99_Knowledge\03_Consolidation\Fiori\environment\software][share folder]];
 2. After Installation git, you can find the tool "git bash" in your start menu, open it will popup a command window;
@@ -76,6 +100,7 @@ Also refer the following link to know more on the developer's perspective: https
 **** Working with GIT
 It is not necessary to remember the git commands, you can operate all GIT operations in Web IDE. Please refer the following link: https://wiki.wdf.sap.corp/wiki/display/webapptoolkit/Working+with+GIT
 
+Also read the helpful guide: "GIT Training for ABAP Developer", which resides in this [[\\Cnpvgl000\restricted\FGI\50_Project\Central_Finance\99_Knowledge\03_Consolidation\Fiori\Learning][share folder]].
 *** Web IDE
 https://code-fiori.dispatcher.cert.hana.ondemand.com/
 
@@ -93,6 +118,17 @@ Jenkins is used to build and package your Firoi applications/components. It is a
 
 You view the build status in the Jenkins server: https://xmake-ldi.wdf.sap.corp:8443/. 
 
+*** Maven
+Maven, a Yiddish word meaning accumulator of knowledge, was originally started as an attempt to simplify the build processes in the Jakarta Turbine project. There were several projects each with their own Ant build files that were all slightly different and JARs were checked into CVS. We wanted a standard way to build the projects, a clear definition of what the project consisted of, an easy way to publish project information and a way to share JARs across several projects.
+
+The result is a tool that can now be used for building and managing any Java-based project. We hope that we have created something that will make the day-to-day work of Java developers easier and generally help with the comprehension of any Java-based project.
+
+https://maven.apache.org/what-is-maven.html
+
+**** POM
+A Project Object Model or POM is the fundamental unit of work in Maven. It is an XML file that contains information about the project and configuration details used by Maven to build the project. It contains default values for most projects. Examples for this is the build directory, which is target; the source directory, which is src/main/java; the test source directory, which is src/test/java; and so on.
+
+https://maven.apache.org/guides/introduction/introduction-to-the-pom.html
 *** Nexus
 http://nexus.wdf.sap.corp:8081/nexus/
 
@@ -103,6 +139,7 @@ By following the [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1
 
 1. Create a CDS view "ZVINCE130_U" based on the base view generated by modeling tool. 
 2. Follow the steps in the above guide to finish your first Fiori app.
+
 
 
 ** Naming Conventions
@@ -121,30 +158,30 @@ Please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/UI+-+Relat
 
 P2 Area: FIN; P3 Area: CONS
 
-|                              |                              | <30>                           |
-| Artifacts Type               | Name                         | Description                    |
-|------------------------------+------------------------------+--------------------------------|
+|                              |                              | <30>                 |
+| Artifacts Type               | Name                         | Description          |
+|------------------------------+------------------------------+----------------------|
 | Technical Catalog (Frontend) | SAP_TC_FIN_CONS_COMMON       | SAP: Financials - Consolidation |
-| Technical Catalog (Backend)  | SAP_TC_FIN_CONS_BE_APPS      | SAP_TC_FIN_CONS_BE_APPS:S4FIN  |
-| Business Catalog             | SAP_FIN_BC_CONS_MASTER_DATA  | Financial Consolidation Master Data Preparation |
+| Technical Catalog (Backend)  | SAP_TC_FIN_CONS_BE_APPS      | SAP_TC_FIN_CONS_BE_APPS:S4FIN |
+| Business Catalog             | SAP_FIN_BC_CONS_MD           | Financial Consolidation Master Data Preparation |
 | Business Catalog             | SAP_FIN_BC_CONS_MODELING     | Financial Consolidation Model Definition |
 | Business Catalog             | SAP_FIN_BC_CONS_VALIDATION   | Financial Consolidation Validation Rules Definition |
-| Business Catalog             | SAP_FIN_BC_CONS_DATA_RELEASE | Financial Consolidation Data Release |
+| Business Catalog             | SAP_FIN_BC_CONS_DR           | Financial Consolidation Data Release |
 | Business Catalog             | SAP_FIN_BC_CONS_CONSOLE      | Financial Consolidation Console |
 | Business Catalog             | SAP_FIN_BC_CONS_REPORTS      | Financial Consolidation Reports |
-| Business Group               | SAP_FIN_BCG_CONS             | Financial Consolidation        |
+| Business Group               | SAP_FIN_BCG_CONS             | Financial Consolidation |
 | Business Role(R0248)         | SAP_BR_CONSLDTN_SPECIALIST   | Financial Consolidation Specialist |
 
 
-** Identity & Access Managment(IAM)
+** Identity & Access Management(IAM)
 *** Technical Catalogs     :Sam:
 Technical catalog act as containers that group all delivered applications (Fiori, UI5, WebDynpro, WebGUI, ...) along application area and software components. They act as the repository of delivered content from which the tiles are picked to create catalogs which are then used in the Fiori Launchpad. Every application that is in the functional scope of the product shall be represented as a tile in a technical catalog. The following rules apply:
 
 + No separation between "transactional", "factsheet" and "analytical" catalogs is used.
 + A separation between frontend (Fiori, UI) catalogs shipped with the frontend software components and and backend catalogs (WebDynpro, WebGUI, ...) shipped with the backend software components is used.
-+ If the semantically same app (i.e. the same intent), has different navigation targets in different deliviers, only one tile, but different navigation targets have to be created in the technical catalog. When building the business catalogs, the right navigation target has to be chosen as reference.
++ If the semantically same app (i.e. the same intent), has different navigation targets in different delivers, only one tile, but different navigation targets have to be created in the technical catalog. When building the business catalogs, the right navigation target has to be chosen as reference.
 
-Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UXT902) to define frontend catalogs; Use [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500&WDCONFIGURATIONID=SUI_TM_MM_APP#][Backend App Descriptors]](ER9500) to define your backend catalogs. For more detial, please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wiki-page]].
+Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UXT902) to define frontend catalogs; Use [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500&WDCONFIGURATIONID=SUI_TM_MM_APP#][Backend App Descriptors]](ER9500) to define your backend catalogs. For more detail, please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wiki-page]].
 
 *** Business Catalogs      :Sam:
 Business catalogs are the central object for UI and authorization assignment to business users and for structuring and organizing the authorization maintenance. If a user is assigned to a business catalog, he/she gets access to all apps included in the catalog and therefore requires the corresponding authorizations.
@@ -154,21 +191,21 @@ Business catalogs are the central object for UI and authorization assignment to 
 
 The visual part of a business catalog is represented as a Fiori catalog. Additional objects, i.e. business catalog role and restrictions, complement the Fiori catalog in the S/4HANA cloud editions to achieve automated lifecycle management for authorizations and extensibility.
 
-Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UXT902) to define your business catalogs. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Consideratons]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
+Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UXT902) to define your business catalogs. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Considerations]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
 
 *** Business Group      :Sam:
 Business groups are defined in the Fiori Launchpad Designer. The represent edition (on-premise/cloud) specific grouping of visible apps from one or more business catalogs from the same business area in the Fiori Launchpad. The represent the end user point of view and should have unique titles within the related business roles.
 
-The follwing rules apply for the title of business groups:
+The following rules apply for the title of business groups:
 + Use short business group titles. If possible with less than 20-30 characters. Longer titles will not work correctly as tab captions esp. on mobile devices.
-+ Use titles that are unique within the business roles that use the business group. As apposed to business catalog titles, business group ttitles don't have to be globally unique.
++ Use titles that are unique within the business roles that use the business group. As apposed to business catalog titles, business group titles don't have to be globally unique.
 + Use the plural by default. Example: "Recipes" and "Supplier Accounts".
 + Use gerunds to indicate activities. Example:"Maintenance Planning".
 
 *** Business Roles      :Sam:Carol:
 Business roles denote a role of a persona. For example "Administrator" or "Supply Chain Planner". They are an aggregation of the applications contained in one or more business catalogs under a common name. The title of business roles must comply with the content of the Fiori Role Portfolio. That list is currently still subject to changes and cleanup activities. Therefore you may see error reported for things that have already been aligned with the IAM team and are not yet reflected on the Wiki or programmatic checks.
 
-In the S/4HANA on-premise edition, business roles are technically represented by PFCG single roles which have the corresponding business catalogs assigned. The naming convention is "SAP_BR_<PERSONA>_<VARIANT>[_<COUNTRY>]". Because business roles are business driven their IDs must not include any area prefixes but shall reflect the description. For example "SAP_PLM_BOM_ENGINEER" is wrong while "SAP_BR_BOM_ENGINEER" is correct. _They exist in the frontend server and do not contain any authorizations._ They serve demo and trial use cases. Customers would typlically create their own business roles are PFCG single or composite roles in the transaction PFCG. Assigning the required backend authorizations is a separate step performed by the customer in the transaction PFCG of the corresponding backend clients.
+In the S/4HANA on-premise edition, business roles are technically represented by PFCG single roles which have the corresponding business catalogs assigned. The naming convention is "SAP_BR_<PERSONA>_<VARIANT>[_<COUNTRY>]". Because business roles are business driven their IDs must not include any area prefixes but shall reflect the description. For example "SAP_PLM_BOM_ENGINEER" is wrong while "SAP_BR_BOM_ENGINEER" is correct. _They exist in the frontend server and do not contain any authorizations._ They serve demo and trial use cases. Customers would typically create their own business roles are PFCG single or composite roles in the transaction PFCG. Assigning the required backend authorizations is a separate step performed by the customer in the transaction PFCG of the corresponding backend clients.
 
 In the S/4HANA cloud editions, business roles are technically a new cloud specific master data entity which is created by the customer using a cloud specific Fiori UI. Besides the assignment of the business catalogs and business users, the business role also contains restriction on activities (read-only/read-write) and instances (company "1010", "my team"). The generation of the required PFCG roles including both the frontend and the backend authorizations is an automated process. See Business Role for the complete design. The current collection of S/4HANA cloud edition business roles is document in S4HANA IAM Content. The assignment to the business role ID there is used as structuring information for SET content, generic test users and related test cases (see test user and test case per business role). The counter part of the PFCG single roles delivered as business roles in on-premise are the business role templates in the cloud. They are the basis for creating business roles and generic test users in cloud systems.
 
@@ -179,23 +216,23 @@ Semantic objects are used for role-based navigation within the Fiori Launchpad. 
 
 For more information on semantic objects, please refer:https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Semantic+Objects+for+Navigation
 
-For more infomation on Global Technical Namge Catalog, please refer: https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+Global+Term+Catalog+Application
+For more information on Global Technical Name Catalog, please refer: https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+Global+Term+Catalog+Application
 *** Fiori App ID        :Ying:
-Before you register your fiori app, you need first apply your business roles. 
+Before you register your Fiori app, you need first apply your business roles. 
 
 PO should maintain the Fiori Portfolio in OAM. In our case, we deliver in release op1709, which I suppose we should main OAM through this link: [[https://ifp.wdf.sap.corp/sap/bc/webdynpro/sps/wda_obt_variant?object_type_id=OBT_IFP_6CAE8B28C5DB1ED39A99A3948F2DC308?variant_id=6CAE8B26E4CB1ED6A9CAAF35ECB5B445?user_settings=X#][2017 / Q3 variant]]. All visible and editable columns should be fill. A short description of columns can be find [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1588149430][here]].
 
 You must pass the *Design Gate1* to get your Fiori ID. Without Fiori ID, you can not build and deploy your Fiori App into UXT system. Most of our Fiori UI5 apps are required to pass Design Gate 1. The purpose of Design Gate 1 is to ensure the optimal desirability, viability, and feasibility of the design. You can pass through this gate once the Global Design lead or a named substitute has reviewed the documents you prepared during the design phase. The sign-off is usually done via an email confirmation.
 
-For more detial please refer [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Fiori+App+Portfolio][Fiori App Portfolio]].
+For more detail please refer [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Fiori+App+Portfolio][Fiori App Portfolio]].
 
 
 ** Components                                                         :Vince:
-The following namings are refer the guideline of [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Naming+Conventions+for+Development+Objects][S4HANA Naming Conventions for Development Objects]].
+The following naming are refer the guideline of [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Naming+Conventions+for+Development+Objects][S4HANA Naming Conventions for Development Objects]].
 
 This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Leaf+ABAP+Packages+for+FIN+AT1+Fiori+Apps][Leaf ABAP Packages]].
  
-*** Validation Rule
+*** Validation Rule      :Steve:
 | Artifacts                         | Name                                      |
 |-----------------------------------+-------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_RULE       |
@@ -205,7 +242,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | BSP Application Name              | FIN_VALIRULES1                            |
 | Semantic Object                   | FinValidationRule                         |
 
-*** Validation Method
+*** Validation Method    
 | Artifacts                         | Name                                        |
 |-----------------------------------+---------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_METHOD       |
@@ -245,13 +282,14 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | BSP Application Name              | FIN_CONSFSS1                           |
 | Semantic Object                   | ConsFinStatement                       |
 
+
 ** Best Practices
-The best practices listed are taired for Real-time Consolidation development. 
+The best practices listed are tailored for Real-time Consolidation development. 
 
 *** Transaction Patterns
-The statless pattern of Fiori app posts a lot of issues regarding on the aspect of concurrency, transactional, session management, global temporary table access, and so on. Go through this [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Transactional+Patterns][wikipage]] to choose the right pattern of your app. 
+The stateless pattern of Fiori app posts a lot of issues regarding on the aspect of concurrency, transactional, session management, global temporary table access, and so on. Go through this [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Transactional+Patterns][wikipage]] to choose the right pattern of your app. 
 
-Generally, I prefer the pattern A and D. Draft Service is not recommanded as most of our objects has state 'S' and 'A'. Etag is recommanded to discover and resolve conflicts. Soft state should be used for reporting apps.
+Generally, I prefer the pattern A and D. Draft Service is not recommended as most of our objects has state 'S' and 'A'. Etag is recommended to discover and resolve conflicts. Soft state should be used for reporting apps.
 
 *** Message Handling
 Please read through this [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Message+Handling][wikipage]] to know hot to handle message and message long text on OData and Fiori level.
@@ -269,7 +307,7 @@ See the following [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/AT1+InApp+
 
 *** Deployment and Testing
 It would be benefit if one can manually upload the Fiori Application into ABAP repository. There is a [[https://blogs.sap.com/2016/06/28/deploy-web-ide-developed-fiori-application-to-local-abap-repository/][blog]] on SCN describes the detail, however, after testing, it is not work in the new SAPUI5 version or infrastructure.
-*** Iternationalization(I18N)
+*** Internationalization(I18N)
 Refer this [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Globalization][wikipage]] to be aware of globalization and translation.
 
 #+CAPTION: How to maintain text of a button. 
@@ -287,29 +325,6 @@ Refer this [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/01.1+Performance+
 
 *** Security
 Refer this [[https://wiki.wdf.sap.corp/wiki/display/fiorisec/Security+Guidelines+for+Fiori+Development][wikipage]] to know security on Fiori development. It also describe the security concerns on file upload/download.
-
-
-** Fiori Launchpad Configuration
-This part introduce how you embed your applications into the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html?sap-client=902#Shell-home][Fiori Launchpad(UXT902)]], or vice verser, how you find an existing application from Launchpad to the backend services. 
-
-1. If your applications are legacy SAPGUI or WebDynpro, then you should define your Backend Catalogs. Please use this [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500#][tool]] to create your Backend Catalogs and refer the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wikipage]] for detail;
-2. You may need to apply semantic objects;
-3. You create your catalogs and business groups in [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](FLP Designer). Please follow the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/UI+-+Related+Naming+Conventions%252C+Packages+and+Software+Components][naming conventions]];
-5. You create PFCG roles and assign launchpad catalogs and groups into the roles, *this task should be done in Frontend Server*;
-6. Finally, you assign SAP users to the PFCG role, and then open the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Launchpad Designer]] will see your tiles.
-
-You can find more details steps in the [[https://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] link. However, you will find you do not have the authorization to do user/role assignments. You have to apply Business Roles by using the DLM self service tool: https://vmw4958.wdf.sap.corp:44344/sap/bc/webdynpro/sap/zdlm_nav_role?sid=UXT&clnt=902. For example, you add the existing business role "SAP_BR_GL_ACCOUNTANT".
-
-Incase you want to find the Fiori code and the backend service, you can process in following steps:
-
-1. You find roles assigned to your SAP user in the Frontend Server. For example, SAP_BR_GL_ACCOUNTANT;
-2. Open "SAP_BR_GL_ACCOUNTANT" using PFCG, try to compare the description of the group and find the its technique name. For example, "General Reporting" has the technical name "SAP_SFIN_BCG_GL_GEN_REP";
-3. Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?scope=CUST&sap-client=902#][FLP Designer]] open the group "SAP_SFIN_BCG_GL_GEN_REP", find the tile of the app click the "i" icon to see the catalog's ID. You can double click the catalog link to navi to the catalog detail;
-4. Switch to the tab "Target Mapping", find the semantic object ("FinancialStatement" for example), click "Configure" in the buttom toolbar;
-5. In the detail page of the mapping, you can find the ID of the application(that is "fin.gl.finstatement.display");
-6. Open [[https://projectportal.neo.ondemand.com][project portal]] to search "fin.gl.finstatement.display", click to see the detail of the Fiori project, like: BPS name, ABAP package, Software Component, and so on;
-7. You can view the code by either cloning to your Web IDE, or view it in web pages(Browse Sources in Gitiles). Find in manifest.json, and look for "dataSources". You can find the gateway service name("FAC_FINANCIAL_STATEMENT" for example);
-8. You open "FAC_FINANCIAL_STATEMENT" using SEGW in the Backend Server, and read or debug the backend codes. 
 
 
 

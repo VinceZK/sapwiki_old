@@ -1,5 +1,5 @@
 #+PAGEID: 1780309655
-#+VERSION: 12
+#+VERSION: 13
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Postings
@@ -165,10 +165,11 @@ Posting level classifies documents posted by different consolidation tasks. Duri
 |          00 |        00 | *Reported financial data* If reported financial data comes from flexible upload, a new document will be posted to copy data from staging area to formal area which is tagged with posting level 00. For data in ACDOCA, there is no need for the data copy, so no document is posted. |
 |          01 |        01 | *Adjustments to reported financial data* If, after collecting the reported data of the consolidation units, you want to make changes to the data at corporate headquarters, we recommend doing this by posting adjustment entries with posting level 01. This has the benefit that your changes are documented. |
 |          02 |        02 | *Reported data: consolidation group changes*       |
-|          0T |        05 | *Currency Translation* Currency Translation in S4 also posts documents. |
+|             |        03 | *Defer from previous period*                       |
 |          08 |        08 | *Item substitution and calculation of the retained earnings* |
 |          10 |        10 | *Standardizing entries* You may need to standardize the reported data of consolidation units to comply with corporate policies or valuation rules. In data records with posting levels less than or equal to 10, the system posts only to the consolidation unit – not to the consolidation group. Reporting takes into account the data records for all consolidation groups. |
 |          12 |        12 | *Standardizing entries: consolidation group changes* |
+|          0T |        15 | *Currency Translation* Currency Translation in S4 also posts documents. |
 |          20 |        20 | *Two-sided elimination entries* Inter-unit elimination, the elimination of inter-unit profit/loss in inventory, and reclassification are examples of two-sided elimination entries. Here, both the consolidation unit and the partner unit are recorded in the data records. Reporting takes into account the data records for all consolidation groups in which both the consolidation unit and the partner unit are posted. |
 |          22 |        22 | *Two-sided elimination entries: consolidation group changes* |
 |          23 |        23 | *Two-sided eliminating entries: Special logic*     |

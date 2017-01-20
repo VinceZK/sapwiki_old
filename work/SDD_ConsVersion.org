@@ -118,8 +118,8 @@ With Account Principle "GAAP" we assign 2 consolidation ledgers, with "C1" as th
 
 I will deduce following scenarios and see how the data is stored and read. 
 
-*** Flexible Upx1load
-When the local accountant submits his local data with Flexible Upload, he only chooses a target Model and a Data Category. When the data is saved in ACDOCC, only Data Category field is filled with value "Actual", Leger and Variant fields are kept as empty. The following persistence layout apply:
+*** Flexible Upload
+When the local accountant submits his local data with Flexible Upload, he only chooses a target Model and a Data Category. When the data is saved in ACDOCC, only Data Category field is filled with value "Actual", Leger and Variant fields are kept as empty. The following persistence layout applies:
 | Model  | D.Cate | Ledger | Variant |  Period | Entity | Amount | Curr |
 |--------+--------+--------+---------+---------+--------+--------+------|
 | RTCCTB | Actual |        |         | 2016008 | COMPA  | 10,000 | CNY  |

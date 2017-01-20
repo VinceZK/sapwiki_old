@@ -12,7 +12,7 @@
 | Product Owner         | Shi Ying, Carol Pan |
 | Information Developer |                     |
 | Quality Responsible   | Yao Cen             |
-| Developers            | Lynn, Sam, Frank    |
+| Developers            | Sam, Jin            |
 
 *** References
 |                   |                  |               | <30>                           |
@@ -33,16 +33,16 @@
 
 ** Design
 *** Key Requirements and Design Goals
-Data Modeling is the prerequisite for consolidation. It defines the master data, customizing data, and transactional data that consolidation tasks are running on. 
+Data Modeling is the prerequisite for consolidation. It defines the views of  master data, customizing data, and transactional data that consolidation tasks are running on. 
 
-To be more specifically, data modeling can be characterized by:
+A Consolidation Model defines the boundary for a kind of consolidation purposes which may share the same data structure, master data, consolidation logic, and other configurations. To be more specifically, modeling can be breakdown into following steps:
 1. Define Currencies;
-2. Define Versions;
-3. Define Data Foundations and Consolidation Area;
-4. Consolidation Tasks, Document Type, and Consolidation Methods;
-5. Financial Statement Items, and Consolidation Chart of Accounts(Hierarchy);
-6. Subassigments and Breakdown Categories;
-7. Consolidation Units and Groups;
+2. Define Consolidation Versions;
+3. Financial Statement Items, and Consolidation Chart of Accounts(Hierarchy);
+4. Subassigments and Breakdown Categories;
+5. Consolidation Units and Groups;
+6. Define Data Foundation Views and Consolidation Version;
+7. Define Consolidation Methods, Document Types, and Consolidation Tasks;
 
 **** Following Design Goals *MUST* be Met:
 1. Fully take advantages of HANA and S/4 architecture;
@@ -56,12 +56,21 @@ To be more specifically, data modeling can be characterized by:
 *** Context
 As mentioned, Modeling is the prerequisite for consolidation. There are lots of master data, customizations, settings, and even system configurations should be prepared before consolidation tasks actually run.
 
-It is a heavy task that could be done by different roles includes: system administrators for connectivities, consultants, developers, and accountants. But after modelings perfectly set, consolidation tasks can be run smoothly and recursively.  
+It is a heavy task that could be done by different roles includes: system administrators for connectivities, consultants, developers, and accountants. But after consolidation model being perfectly set, consolidation tasks can be run smoothly and recursively.  
 
-Most terminologies and concepts of financial consolidation appears during modeling. Some of them are vital and should be carefully chosen among BCS, EC-CS, BPC, and G/L Accounting. We try to make Real-time Consolidation be more simpler and straight forward. 
+There are many terminologies and concepts emerging during modeling. Fortunately, we have good references from the existing consolidation solutions, like BCS, EC-CS, BPC, and FC; as well as G/L Accounting. However, they should be carefully picked up to Real-time Consolidation. We try to make Real-time Consolidation to be much simpler and straight forward. 
  
 **** G/L Account or Financial Statement Item
-RTC can use G/L Accounts to do consolidation, thus sharing the same set of account master data. But we still have doubts on why LC and EC-CS added FS item into their context? If there is good reasons to have an additional set of account master data for consolidation other than G/L Account?
+RTC can use G/L Accounts to do consolidation, thus sharing the same set of account master data. All other 4 solutions have their own financial statement item master data set. So the existing solutions all choose to replicate accounts(or FS items), which has most the advantages in accounts mapping and conversion during replication. However, the first priority for RTC is to eliminate data replication, so RTC choose to create HANA views on no matter SKA1 or other tables, as long as the view fulfils a pre-defined protocal. 
+
+**** Subitem and Subitem Category
+Subitems mean =Sub Financial Statement Item=. They are used to further differentiate(breakdown) the values of a =Financial Statement Item=. 
+
+For example, the financial statement for cash can have subitems of banks. It stands for the corp has multiple cash accounts of different banks. And in each bank, the subitem can be further breakdown by different currencies. The =Account Receivable= item can be breakdown by customers, then each customer number is a subitem. The advantage is saving namespaces of FS items, there is no need to create a FS item for each customer. 
+
+=Subitem Category= is the total domain of subitems, or you can say a subitem contains a sub-domain of subitem category. Take sales region as an example, you can define a subitem with 3 regions of "Europe, Asia, Africa". The subitem is belong to the subitem category "Region" which may stand for all the sale regions on the earth. 
+
+=Subitem= and =Subitem Category= together is called =Subassignment=. In BCS, only =Subassignment= is used. And multiple Subassigments can be grouped by =Breakdown Category=. 
 
 **** Consolidation Chart of Account
 Chart of Accounts is optional in BCS. Because you can use multiple hierarchies of account in an info-object. EC-CS has its own consolidation COA, but you can map cons COA to a G/L COA.
@@ -74,25 +83,30 @@ EC-CS COA is assigned with FS item hierarchies which contains has FS items repre
  Should verify if FS item hierarchy has something to do with SET and HRRP. 
 
 **** Ledger
-Reuse G/L ledger or EC-CS ledger? It seems BCS doesn't have the ledger concept.
+Ledger is only used in G/L Accounting and EC-CS. 
 
-The G/L ledger contains =Company Codes=. All the configurations are maintained on each company code. While in EC-CS, the ledger doesn't contain any company code, and all the configurations are globally maintained on ledger. 
+The G/L Accounting ledger groups journal entries. There are two types of ledger: *Standard Ledger* and *Extension Ledger*. Standard ledger contains a full set of journal entries for all business transaction. An extension ledger is assigned to a standard ledger and inherits all journal entries of the standard ledger for reporting. You should assign company codes to a ledger, and settings like Fiscal Year Variant and Currency Type are all company code based. 
 
-Considering if I want to do profit center consolidation, then what's meaning of ledger of profit centers? 
+In EC-CS, ledger is only used as a media to assign group currency key to a consolidation group. However, the assignment also depands on consolidation version. This means that you can assign different ledgers, and similary different consolidation group currencies, to a consolidation group in different consolidation versions. The field "RLDNR"(ledger) appears in both ECMCT and ECMCA, but is seems to be a redency infromation, as it can be determined through group and consolidation version. 
 
-**** Version
-In G/L Accounting, =Version= (or field RVERS) is absolute and remained only for the reason of compatibility. IBPF uses the combination of  =Ledger= and  =Category= for its version dimension. 
+Does RTC need the ledger concept? It seems ledger is not such useful in all existing consolidation solutions. 
 
-Do we need the field =RVERS= or not? If yes, do we reuse BCS' or EC-CS'?
+**** Accounting Principles
+Accounting principles are the rules and guidelines that companies must follow when reporting financial data. The common set of U.S. accounting principles is the generally accepted accounting principles (GAAP). Read more: http://www.investopedia.com/terms/a/accounting-principles.asp#ixzz4VtM9MFOF 
 
-**** Flow or Accounting Types Combination
+SAP G/L Accounting defines accounting principles to allow parallel accounting. You can assign each accounting priciple a ledger group, which can include multiple ledgers. You can find maintian Accounting Principles in the following IMG path: Financial Accounting(New)-->Ledgers-->Parallel Accounting.
+
+**** Consolidation Version
+In G/L Accounting, =Version= (field RVERS) is obsolete and remained only for the reason of compatibility. IBPF uses the combination of =Ledger= and =Category= for its version dimension. 
+
+Read more: https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Consolidation+Version
+
+**** Flow or Transaction Type
 BPC uses =Flow= to distinguish different journal items that are generated during different consolidation tasks. User then use the =Flow= dimension to filter the data he wants for different reporting purposes. 
 
 In Accounting, we have =Document Type=, =Transaction Type=, and  =Business Transaction= to differentiate types of journal items that are generated by different components and different purposes.
 
-The question is: does RTC need BPC's =Flow= concept, or we still use accounting types combination? =Flow= is a more generic concept that although it is very abstract, but once you understand it, you can do everything with it. The accounting types combination may be more useful for FI applications, but they are even inexplicable for people outside SAP FI.
-
-We need keep this in mind during development.
+In RTC, we use =Transaction Type= as the consolidation flow. 
  
 **** Consolidation Unit/Dimension and Group 
 BCS defines its cons unit by assigning ~Cons Unit~ role to info-objects, like: company, profit center, cost center, and so on. And cons group is an attribute of a cons unit info-object.
@@ -101,7 +115,7 @@ EC-CS has both maintenance views for cons unit and cons group. Additionally, EC-
 
 Despite the different representation, the basic idea of cons unit and cons group are rather same. No mater it is in BCS or EC-CS. And Even BPC has very similar concepts. 
 
-RTC may reuse the tables and maintenance views of EC-CS to define its own =Unit & Group=. Then try to map and synchronize them to the corresponding objects in BPC.
+RTC use the Accounting org structure to represent consolidation unit. The group hierarchy is reusing BPC's.
 
 **** Consolidation Area
 Consolidation Area only appears in BCS. In BPC the similar concept is consolidation environment without completely match. Consolidation area is to define a subsets of characteristic fields and amount fields from data basis tables (like ACDOCA). Meanwhile, permanent values are defined for filtering and default values. 
@@ -112,16 +126,7 @@ Consolidation Methods and Tasks are also assigned to consolidation area.
 
 In EC-CS, there is no such concept, instead it has =Global Parameter=. The global parameters includes dimension, Cons Unit/Group, Version, Fiscal Year, Period, and so on. These information can be accessed among all the consolidation tasks. The limitation is that EC-CS only allows single dimension consolidation, thus not such flexible as BCS.
 
-**** Subitem and Subitem Category
-Subitems mean =Sub Financial Statement Item=. They are used to further differentiate(breakdown) the values of a =Financial Statement Item=. 
-
-For example, the financial statement for cash can have subitems of banks. It stands for the corp has multiple cash accounts of different banks. And in each bank, the subitem can be further breakdown by different currencies. The =Account Receivable= item can be breakdown by customers, then each customer number is a subitem. The advantage is saving namespaces of FS items, there is no need to create a FS item for each customer. 
-
-=Subitem Category= is the total domain of subitems, or you can say a subitem contains a sub-domain of subitem category. Take sales region as an example, you can define a subitem with 3 regions of "Europe, Asia, Africa". The subitem is belong to the subitem category "Region" which may stand for all the sale regions on the earth. 
-
-=Subitem= and =Subitem Category= together is called =Subassignment=. In BCS, only =Subassignment= is used. And multiple Subassigments can be grouped by =Breakdown Category=. 
-
-It's just too much concepts and layers here. Think if can be simplified during development.
+For RTC, actually, consolidation model is much close the the consolidation area.
 
 *** Major Building Blocks  
 Modeling can contain many things, in this SDD, we only talk about master/customization data and schema(meta) definition for a consolidation. Other topics like system connectivity, data collection, and so on may exceed the area of consolidation itself.
@@ -277,7 +282,7 @@ This UI representation of field projection and role assignment is tailored to AC
 - [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
 - [[https://ux.wdf.sap.corp/fiori-design/foundation/get-started/][Firoi Design Guideline]]
 - [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
-
+  
 **** Approved deviations
 | <8>      | <l40>                                    | <l20>                |
 | Rule ID  | Deviation                                | Approval Status      |
@@ -307,12 +312,12 @@ There are others settings like "Default Translation Method", which is optional. 
 #+Caption: Real-time Consolidation Modeling Tool: Data Source
 [[../image/RTCModelingToolUI02.png]]
 
-You define consolidation data sources in this tab. Consolidation data sources are grouped by *Data Category*. Each data category contains a full set of source data for consolidation. Different types of source data are further differentiated using *Stream Type*. You assign each "Stream Type" a HANA view(either CDS or Calculation view) that protocolized. Stream Types and their protocols are pre-defined.
+You define consolidation data sources in this tab. Consolidation data sources are grouped by *Data Category*. Each data category contains a full set of source data for consolidation. Different types of source data are further differentiated using *Stream Type*. You assign each "Stream Type" a HANA view (either CDS or Calculation view) that protocolized. Stream Types and their protocols are pre-defined.
 | <35>                                | <50>                                               |
-| Stream Type                         | Protocol                                           |
+| Stream Type                         | Protocol(Mandatory Fields)                         |
 |-------------------------------------+----------------------------------------------------|
-| FI Journals                         | Mandatory fields: FISCYEARPRD,ENTITY,RACCT, HSL..  |
-| FS Items or G/L Accounts            | Mandatory fields: KTOPL,RACCT,XBILK,KTOKS          |
+| FI Journals                         | RCLNT, KTOPL, RACCT, RMVCT, BUDAT, HSL, RHCUR, TIMESTAMP and Fields in dimension |
+| FS Items or G/L Accounts            | MANDT, LKTOPL, LRACCT, GKTOPL, GRACCT              |
 | Inventory Data                      |                                                    |
 | Supplier Share                      |                                                    |
 | Assets/Liabilities                  |                                                    |
@@ -327,9 +332,24 @@ You define consolidation data sources in this tab. Consolidation data sources ar
 | Sequence of Activities              |                                                    |
 | Activity Sorting                    |                                                    |
 
-The stream type "FI Journals" is the main data source, all other stream types are optional. If the model is set to integrate with BPC, then you can only assign a HANA calculation view to this stream type, CDS view is not allowed. This is also known as the foundation view.
+The stream type "FI Journal" and "FS Item" are 2 mandatory stream types. All other stream types are optional. If the model is set to integrate with BPC, then you have to assign HANA calculation views to this stream type, CDS view is not allowed. This is also known as the foundation view.
 
-~You must first enter the HANA package where the foundation view resides. To be in mind, the HANA DB user "SAP<SID>" must have the read/write access to the HANA package. As later on, it will generate HANA Calculation views into the package.~ 
+~You must first enter the HANA package where the foundation view resides. To be in mind, the HANA DB user "SAP<SID>" must have the read/write access to the HANA package of FI Journal. As later on, it will generate HANA Calculation views into the same package.~ 
+
+The data category can be added from existing templates. SAP may deliver following 2 templates:
+| <10>       |                       |
+| Data Category Template | Description           |
+|------------+-----------------------|
+| Actual     | Actual data in ACDOCA |
+| Plan       | Plan data in ACDOCP   |
+
+| <10>       |             |                     |                  |                    |
+| Data Category Template | Stream Type | CDS View            | Hana Package     | Calc View          |
+|------------+-------------+---------------------+------------------+--------------------|
+| Actual     | FI_JOURNAL  | I_CONS_FOUNDATION_A | sap.erp.sfin.rtc | RTC_C_FOUNDATION_A |
+| Actual     | FS_ITEM     | I_CONS_GLACCOUNT    | sap.erp.sfin.rtc | RTC_C_GLACCOUNT    |
+| Plan       | FI_JOURNAL  | I_CONS_FOUNDATION_P | sap.erp.sfin.rtc | RTC_C_FOUNDATION_P |
+| Plan       | FS_ITEM     | I_CONS_GLACCOUNT    | sap.erp.sfin.rtc | RTC_C_GLACCOUNT    |
 
 **** Consolidation Version
 Version is used to execute parallel consolidations according to different aspects. You can define multiple versions for a consolidation model. The consolidation result then will be isolated by by versions. Each version is defined as a combination of 3 version related fields: =Data Category=, =Account Principle=, and =Variant=. But in BPC side, there is only one dimension with the role "data category" has the similar usage. You have to create a mapping between =BPC Category= to the S/4 version combination if you model needs to integrate with BPC. 
@@ -409,7 +429,7 @@ Following criterias must be additionally fulfilled before activating the model:
 
 When activating the model, besides generating consolidation views, there are default document types generated.
  
-*** Database Design
+*** Database Design 
 *** Data Flow & Design Time
 Here describes how data is read, calculated, and write back during a consolidation. It is divided into 3 scenarios:
 1. BPC read from ACDOCA, then write back to a cube/ADSO;
@@ -531,15 +551,115 @@ New fields derivation is quite same with scenario 2. But in this case, as =BPC C
 [[../image/ModelingDesignTimeCase3.png]]
 
 
-** Appendix
-*** Glossary
-| Term | Abbreviation | Definition |
-|------+--------------+------------|
-|      |              |            |
-*** Customizing
-*** Supportability Considerations
-*** Error Analysis
-**** Debugging
-**** Logging and Tracing
-**** Other Error Analysis Tools
-*** Other
+** Modeling Process Deduce
+
+*** Add a consolidation ledger
+#+CAPTION: RTC_LEDGER
+| Cons Ledger | Description            |
+|-------------+------------------------|
+| C1          | Consolidation Ledger 1 |
+| C2          | Consolidation Ledger 2 |
+
+*** Assign Accounting Ledgers and Company Codes to Consolidation Ledger
+#+CAPTION: RTC_LEDGER_ASGNMT
+| Cons Ledger | Acctg Ledger | Company Code |
+|-------------+--------------+--------------|
+| C1          | 0L           |         1000 |
+| C1          | 0L           |         1001 |
+| C1          | 0L           |         1002 |
+| C1          | 0L           |         1003 |
+| C1          | 0L           |         1004 |
+| C2          | 1L           |         2000 |
+| C2          | 1L           |         2001 |
+| C2          | 1L           |         2002 |
+| C2          | 1L           |         2003 |
+| C2          | 1L           |         2004 |
+| C2          | 1E           |         2000 |
+| C2          | 1E           |         2001 |
+| C2          | 1E           |         2002 |
+| C2          | 1E           |         2003 |
+| C2          | 1E           |         2004 |
+  
+*** Define a consolidation model
+Consolidation model "VINCE1" is created based on foundation view "C_FOUNDATION_VIEW". Two consolidation versions are defined:
+| Cons Ledger | Data Category | Variant |
+|-------------+---------------+---------|
+| C1          | Actual        |     100 |
+| C2          | Plan          |     200 |
+
+*** Generate consolidation views
+*Version independent logic:*
+1. Join C_FOUNDATION_VIEW with SKA1 for mapping operational CoA to group  CoA;
+2. Join C_FOUNDATION_VIEW with FISCAL_TIME for aligning operational FYV to group FYV;
+3. Join C_FOUNDATION_VIEW with RTC_ENTITY for mapping financial org to consolidation entity;
+
+*Version dependent logic:*
+1. Join C_FOUNDATION_VIEW with RTC_LEDGER_ASGNMT to get all local data;
+2. Fix values for columns "Ledger", "Data Category" and "Variant";
+3. Join RTC_DRR for timestamp filtering on perivous periods;
+4. Union ACDOCC for the version related data;
+
+base view 
+**** Conclusion
+*It is impossible for the runtime dynamic filtering on consolidation ledgers. We have to genreate consolidation views in design time for each consolidaiton version.* 
+
+*** Flexible Upload
+You have to provide consolidation ledger when upload the local report data. Or the data cannot be correctly unioned with ACDOCA. 
+| Model  | Cons Ledger | Data Category | Variant |  Period | Entity | Amount | Curr |
+|--------+-------------+---------------+---------+---------+--------+--------+------|
+| VINCE1 | C1          | Actual        |     100 | 2016008 | C1001  |    100 | CNY  |
+
+Now suppose I have another version defined:
+| Cons Ledger | Data Category | Variant |
+|-------------+---------------+---------|
+| C1          | Actual        |     100 |
+| C1          | Simulate      |     100 |
+| C2          | Plan          |     200 |
+If I want to re-use the flexible upload data, then I have to leave the "Data Category" empty, and filtering data only use "Cons Ledger". And I also think "Variant" is redundancy, we can just add an attribute on Data Category to indicate whether it needs data release controls. 
+| Model  | Cons Ledger | Data Category |  Period | Entity | Amount | Curr |
+|--------+-------------+---------------+---------+--------+--------+------|
+| VINCE1 | C1          |               | 2016008 | C1001  |    100 | CNY  |
+
+When you run CT, journal entiry will be generated for each "Cons Ledger" and "Data Category":
+| Model  | Cons Ledger | Data Category |  Period | Entity | Amount | Curr |
+|--------+-------------+---------------+---------+--------+--------+------|
+| VINCE1 | C1          |               | 2016008 | C1001  |    100 | CNY  |
+| VINCE1 | C1          | Actual        | 2016008 | C1001  |    200 | USD  |
+| VINCE1 | C1          | Simulate      | 2016008 | C1001  |    300 | USD  | 
+Then local amount is shared by both Actual and Simulate category
+
+*** Additional Financial Data
+You have to assign a consolidation ledger for each additional financial data set. 
+| Model  | Cons Ledger |  Period | Investor | Investee | Amount |
+|--------+-------------+---------+----------+----------+--------|
+| VINCE1 | C1          | 2016008 | C1001    | C1002    | 100    |
+Then both "Actual" and  "Simulate" share the same set of AFD.
+
+*** Consolidation Method Assignment
+To achieve consolidation method resue, you have add each entity-method assignment with data category. 
+| Model  | Data Category | Entity | Method |
+|--------+---------------+--------+--------|
+| VINCE1 | Actual        | C1001  | CTM01  |
+| VINCE1 | Actual        | C1002  | CTM02  |
+| VINCE1 | Simulate      | C1001  | CTM03  |
+| VINCE1 | Simulate      | C1002  | CTM03  |
+You can not add consolidation ledger to these assignments, as it some how indicates data sources. And if you combine consolidation logic with data, then reuse cannot achieveable. 
+
+*** Exchange Rate Indicator
+Exchange Rate Indicator should also be maintained under Data Category. You can achieve different Exchange Rate Types in different Data Categories. For example:
+| Model  | D.Cate   | ERI | Type |
+|--------+----------+-----+------|
+| VINCE1 | Actual   |   1 | 1001 |
+| VINCE1 | Actual   |   2 | 1002 |
+| VINCE1 | Actual   |   3 | 1003 |
+| VINCE1 | Simulate |   1 | 2001 |
+| VINCE1 | Simulate |   2 | 2002 |
+| VINCE1 | Simulate |   3 | 2003 |
+
+*** Conclusion
+1. Somehow the above deduction works;
+2. Version field "Variant" is not necessary. Keeping it will add complexity in consolidation view generation and add confusion;
+3. User has to maintain an additional mapping table for the consoldiation ledger to accounting ledger + company code. If the source data set consists of multiple ledgers, he has to maintain all the mappings. If the assignments are changed in the mapping table, then data inconsistency will happen;
+4. You must have "ledger" and "company code" in the foundation view, even if your consolidation dimension is built upon others, like segment, cost center, and so on.
+5. If you want union other data sources(for example: ACDOCP) in the foundation view, you have to make sure the leger mapping is correctly defined. If you want ACDOCP with ledger '2E', however you also want ACDOCA with ledger '0L'+'1E', then you have to maintain all the mappings to the 3 ledgers. If '2E' happens to be used in ACDOCA, then it is very hard to coordinate.
+6. With "Ledger"+"Data Category", you can only achieve reported data re-use, you can not re-use the consolidated data in ACDOCC. For example, if you want release the translated data to group level, then you have to run CT for each consolidation version even the source data and tranlation logic are the same. 
