@@ -81,7 +81,7 @@ In case you want to find the Fiori code and the backend service, you can process
 3. Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?scope=CUST&sap-client=902#][FLP Designer]] open the group "SAP_SFIN_BCG_GL_GEN_REP", find the tile of the app click the "i" icon to see the catalog's ID. You can double click the catalog link to navi to the catalog detail;
 4. Switch to the tab "Target Mapping", find the semantic object ("FinancialStatement" for example), click "Configure" in the bottom toolbar;
 5. In the detail page of the mapping, you can find the ID of the application(that is "fin.gl.finstatement.display");
-6. Open [[https://projectportal.neo.ondemand.com][project portal]] to search "fin.gl.finstatement.display", click to see the detail of the Fiori project, like: BPS name, ABAP package, Software Component, and so on;
+6. Open  to search "fin.gl.finstatement.display", click to see the detail of the Fiori project, like: BPS name, ABAP package, Software Component, and so on;
 7. You can view the code by either cloning to your Web IDE, or view it in web pages(Browse Sources in Gitiles). Find in manifest.json, and look for "dataSources". You can find the gateway service name("FAC_FINANCIAL_STATEMENT" for example);
 8. You open "FAC_FINANCIAL_STATEMENT" using SEGW in the Backend Server, and read or debug the backend codes. 
 *** Git/Gerrit
@@ -107,7 +107,7 @@ https://code-fiori.dispatcher.cert.hana.ondemand.com/
 Please also follow the following link to get helpful information on SAP Web IDE:https://wiki.wdf.sap.corp/wiki/display/webapptoolkit/Information+for+Working+with+SAP+Web+IDE
 
 *** Project Portal
-You need to create a project in the [[https://projectportal.int.sap.hana.ondemand.com/][Project Portal]] before typing the codes. The Project Portal will create a git repository which you can clone to your Web IDE space. Then you create your Fiori App project in the repository so that you can commit&push your changes to the central GIT.
+You need to create a project in the [[https://projectportal.int.sap.hana.ondemand.com%5B%5Bhttps://projectportal.int.sap.hana.onde][Project Portal]] before typing the codes. The Project Portal will create a git repository which you can clone to your Web IDE space. Then you create your Fiori App project in the repository so that you can commit&push your changes to the central GIT.
 
 Besides, you can also do the basic Gerrit settings like adding people to the committer group and owner group. So that the code review workflow can be initially realized. 
 
@@ -158,19 +158,19 @@ Please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/UI+-+Relat
 
 P2 Area: FIN; P3 Area: CONS
 
-|                              |                              | <30>                 |
-| Artifacts Type               | Name                         | Description          |
-|------------------------------+------------------------------+----------------------|
-| Technical Catalog (Frontend) | SAP_TC_FIN_CONS_COMMON       | SAP: Financials - Consolidation |
-| Technical Catalog (Backend)  | SAP_TC_FIN_CONS_BE_APPS      | SAP_TC_FIN_CONS_BE_APPS:S4FIN |
-| Business Catalog             | SAP_FIN_BC_CONS_MD           | Financial Consolidation Master Data Preparation |
-| Business Catalog             | SAP_FIN_BC_CONS_MODELING     | Financial Consolidation Model Definition |
-| Business Catalog             | SAP_FIN_BC_CONS_VALIDATION   | Financial Consolidation Validation Rules Definition |
-| Business Catalog             | SAP_FIN_BC_CONS_DR           | Financial Consolidation Data Release |
-| Business Catalog             | SAP_FIN_BC_CONS_CONSOLE      | Financial Consolidation Console |
-| Business Catalog             | SAP_FIN_BC_CONS_REPORTS      | Financial Consolidation Reports |
-| Business Group               | SAP_FIN_BCG_CONS             | Financial Consolidation |
-| Business Role(R0248)         | SAP_BR_CONSLDTN_SPECIALIST   | Financial Consolidation Specialist |
+|                              |                            | <30>                           |
+| Artifacts Type               | Name                       | Description                    |
+|------------------------------+----------------------------+--------------------------------|
+| Technical Catalog (Frontend) | SAP_TC_FIN_CONS_COMMON     | SAP: Financials - Consolidation |
+| Technical Catalog (Backend)  | SAP_TC_FIN_CONS_BE_APPS    | SAP_TC_FIN_CONS_BE_APPS:S4FIN  |
+| Business Catalog             | SAP_FIN_BC_CONS_MASTER_DAT | Financial Consolidation Master Data Preparation |
+| Business Catalog             | SAP_FIN_BC_CONS_MODELING   | Financial Consolidation Model Definition |
+| Business Catalog             | SAP_FIN_BC_CONS_VALIDATION | Financial Consolidation Validation Rules Definition |
+| Business Catalog             | SAP_FIN_BC_CONS_DATA_REL   | Financial Consolidation Data Release |
+| Business Catalog             | SAP_FIN_BC_CONS_CONSOLE    | Financial Consolidation Console |
+| Business Catalog             | SAP_FIN_BC_CONS_REPORTS    | Financial Consolidation Reports |
+| Business Group               | SAP_FIN_BCG_CONS           | Financial Consolidation        |
+| Business Role(R0248)         | SAP_BR_CONSLDTN_SPECIALIST | Financial Consolidation Specialist |
 
 
 ** Identity & Access Management(IAM)
@@ -231,7 +231,7 @@ For more detail please refer [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite
 The following naming are refer the guideline of [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Naming+Conventions+for+Development+Objects][S4HANA Naming Conventions for Development Objects]].
 
 This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Leaf+ABAP+Packages+for+FIN+AT1+Fiori+Apps][Leaf ABAP Packages]].
- 
+
 *** Validation Rule      :Steve:
 | Artifacts                         | Name                                      |
 |-----------------------------------+-------------------------------------------|
@@ -239,8 +239,9 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VALIDATION_RULE |
 | App name and ID in Project Portal | fin.cons.validationrules1                 |
 | POM Artifact ID                   | fin.cons.validationrules1                 |
+| Fiori ID                          | F2575                                     |
 | BSP Application Name              | FIN_VALIRULES1                            |
-| Semantic Object                   | FinValidationRule                         |
+| Semantic Object                   | FinancialValidationRule                   |
 
 *** Validation Method    
 | Artifacts                         | Name                                        |

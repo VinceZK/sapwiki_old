@@ -270,11 +270,7 @@ Some groups are mandatory, for example ~Consolidation Unit/Dimension~, you must 
 This UI representation of field projection and role assignment is tailored to ACDOCA table. It should be flexible enough for other tables. So templates will be designed which allow user to using exist settings. For example, template for ACDOCA should already have some field assigned for those  mandatory field groups. User can also extend the view and save as their own templates.
 
 *** Design Challenges resulting from Non-Functional Requirements                       
-*** Used Components and Frameworks
-| Name | Description                  | Software Component | Implications |
-|------+------------------------------+--------------------+--------------|
-| BRF+ | Business Rule Framework plus |                    |              |
-
+Generate both HANA calculation views and CDS views.
 *** Compliance to Standards and Guidelines
 **** Applied Architecture/Design Guidelines
 - [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
@@ -283,13 +279,6 @@ This UI representation of field projection and role assignment is tailored to AC
 - [[https://ux.wdf.sap.corp/fiori-design/foundation/get-started/][Firoi Design Guideline]]
 - [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
   
-**** Approved deviations
-| <8>      | <l40>                                    | <l20>                |
-| Rule ID  | Deviation                                | Approval Status      |
-|----------+------------------------------------------+----------------------|
-| C-BRMS-2 | HRF must not be used directly but through the BRF-plus encapsulation only. In case BRF-plus encapsulation is not updated or enough, we may need bypass BRF+ APIs. |                      |
-
-
 ** Detail Design
 *** RTC Modeling Tool UI
 Real-time Consolidation Modeling Tool is used to generate consolidation views used for various consolidation tasks. 
@@ -552,7 +541,6 @@ New fields derivation is quite same with scenario 2. But in this case, as =BPC C
 
 
 ** Modeling Process Deduce
-
 *** Add a consolidation ledger
 #+CAPTION: RTC_LEDGER
 | Cons Ledger | Description            |
