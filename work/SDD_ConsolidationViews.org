@@ -84,12 +84,12 @@ This section gives the pseduo sql scripts for all the consolidation views.
 
 | Consolidation View        | Group | Type | Description                                       |
 |---------------------------+-------+------+---------------------------------------------------|
-| /RTCART/500VINCE1_A | Base  | CDS  | Consolidation base view: on foundation views only |
-| RTC_C_500VINCE1_A   | Base  | Calc | Consolidation base view: on foundation views only |
-| /RTCART/500VINCE1_C | Base  | CDS  | Consolidation base view: on ACDOCC only           |
-| RTC_C_500VINCE1_C   | Base  | Calc | Consolidation base view: on ACDOCC only           |
-| /RTCART/500VINCE1_U | Base  | CDS  | Consolidation base view: union ACDOCA and ACDOCC  |
-| RTC_C_500VINCE1_U   | Base  | Calc | Consolidation base view: union ACDOCA and ACDOCC  |
+| /RTCART/500VINCE1_A       | Base  | CDS  | Consolidation base view: on foundation views only |
+| RTC_C_500VINCE1_A         | Base  | Calc | Consolidation base view: on foundation views only |
+| /RTCART/500VINCE1_C       | Base  | CDS  | Consolidation base view: on ACDOCC only           |
+| RTC_C_500VINCE1_C         | Base  | Calc | Consolidation base view: on ACDOCC only           |
+| /RTCART/500VINCE1_U       | Base  | CDS  | Consolidation base view: union ACDOCA and ACDOCC  |
+| RTC_C_500VINCE1_U         | Base  | Calc | Consolidation base view: union ACDOCA and ACDOCC  |
 | RTC_C_500VINCE1_BPCFINALA | BPC   | Calc | Consolidation BPC view: Final on ACDOCA           |
 | RTC_C_500VINCE1_BPCFINALC | BPC   | Calc | Consolidation BPC view: Final on ACDOCC           |
 | RTC_C_500VINCE1_BPCPRLIMC | BPC   | Calc | Consolidation BPC view: Preliminary on ACDOCC     |
