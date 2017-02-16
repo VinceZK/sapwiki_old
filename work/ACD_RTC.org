@@ -131,7 +131,7 @@ Each component's version depends on S4CORE.
 | *How does the interaction between initiator and executor take place?* | When the data release request is generated, the local accountant can view it in the Data Release Cockpit. The local accountant can then decide whether to release the data to consolidation. If yes, a timestamp is recorded to the data release request, which is used to filter in data before it. And the status of the request is changed to "Release". |
 | *Under which conditions / environment does the interaction take place?* | At period-end, 1000 sites will release their data. However, there is no data replication, only status changes on data release requests. |
 | *Result of activity*           | Data is corrected and ready for further consolidation tasks. |
-| *KPI*                          | Data is released, can group accountant can view the correct data(before the timestamp). | 
+| *KPI*                          | Data is released, can group accountant can view the correct data(before the timestamp). |
 
 **** Data Validation
 | <30>                           | <50>                                               |
@@ -140,7 +140,7 @@ Each component's version depends on S4CORE.
 | *How does the interaction between initiator and executor take place?* | Before the data release, a data validation can be automatically triggered. If validation is not pass, data is not allowed to release. |
 | *Under which conditions / environment does the interaction take place?* | At period-end, 1000 sites will release their data. 1000 Validation rules for each would be run againist the ACDOCA table. |
 | *Result of activity*           | Data quality is controlled for consolidation.      |
-| *KPI*                          | Data Validation can be run on-the-fly, which means at maximum time of 30 seconds. | 
+| *KPI*                          | Data Validation can be run on-the-fly, which means at maximum time of 30 seconds. |
 
 **** Currency Translation
 | <30>                           | <50>                                               |
@@ -151,7 +151,7 @@ Each component's version depends on S4CORE.
 | *Result of activity*           | Currency amounts are correclty converted and saved. |
 | *KPI*                          | Currency Translation can be run on-the-fly, which means at maximum time of 10 seconds. |
 
-*** Product Standards
+*** TODO Product Standards
 ~Ensure compliance with product standards. To do so, go through the product standard requirements of category "architecture & technology" in the Product Standard Compliance tool (PSC) before you start defining your architecture and describe in this section how product standard requirements influence the architecture to be defined.~
 
 ~Add a link to the PS planning in PSC or describe deviations within this chapter.~
@@ -176,8 +176,6 @@ Define which technologies / frameworks are used in which architecture area and f
 | Life-cycle Management                  | ABAP CTS, Fiori CI                                   |
 
 *** Reuse
-~List the reuse components (engines, objects, intrinsic/common services, 3rd party components) which have to be used for this development program/project/topic/integration scenario. Mention reuse components which explicitly must not be used within this development program.~
-
 General Principles for Reuse
 - Take reuse into account in every architecture definition. Well planned reuse has a big positive influence on stability, quality, common look and feel, TCO and TCD of the complete application.
 - But consider the costs in relationship to the benefits when reusing a function or feature from others. In especially check if the prerequisites (system, hardware, licenses, implementation and customizing efforts, etc) which are required to use the reuse functions are acceptable for customers. If you answer one of the following questions with yes please consult with your local reuse expert
@@ -185,17 +183,18 @@ General Principles for Reuse
 - Does the usage of a service or functionality force the customer to implement and customize a new application or technology hub?
 - Does the new framework or functionality which is planned exist in a similar version in other areas (Examples are rules engines, business object frameworks, master data, ...)?
 
-The following reuse components must/should/must not be used within this development:
+The following reuse components *must/should/mustnot* be used within this development:
 
-| <15>            | <15>            | <5>   | <5>   | <30>                           |
-| Reuse Component | Owned by        | Maintenance Guaranteed? | Usage | Remark / explanation           |
-|-----------------+-----------------+-------+-------+--------------------------------|
-| HRF 1.6.2       | HRF team        | Yes   | must  | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level.HRF license should be considered. |
-| BRF+ 2.0        | BRF team        | Yes   | must  | BRF+ must be used for the reason of the compliance with S4HANA guideline. HRF cannot be used directly, and must indirectly through BRF+. Compared to HRF, BRF+ is running on ABAP level which could not permits good performance on mass data processing. RTC should combine the advantages of HRF and BRF+. |
-| CDS 1.0         | CDS team        | Yes   | must  | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
-| Fiori 1.0       | Fiori team      | Yes   | must  | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
-| IBPF info-objects | IBPF team       | Yes   | must  | IBPF developed a lot of finance planning BW info-objects. RTC can re-used them, or do some extension whenever necessary. Beside, RTC and IBPF should combine efforts so that Consolidation and Planning can happen together. |
-| Design Studio   | EPM team        | Yes   | must  | Design Studio is used to create queries. The query can be opened via various analysis tools, like: AO, Fiori Apps, and so on. It is appointed by S4HANA guideline for the only query builder, and will replace BEx in future. |
+| <15>            | <15>            | <5>   | <6>    | <30>                           |
+| Reuse Component | Owned by        | Maintenance Guaranteed? | Usage  | Remark / Explanation           |
+|-----------------+-----------------+-------+--------+--------------------------------|
+| HRF 1.6.2       | HRF team        | Yes   | must   | HANA Rule Framework must be used to build RTC's validation engine. The validation engine should permit both high performance and easy rule maintenance for LOB users. RTC use HRF to push rule validation down to HANA level.HRF license should be considered. |
+| BRF+ 2.0        | BRF team        | Yes   | must   | BRF+ must be used for the reason of the compliance with S4HANA guideline. HRF cannot be used directly, and must indirectly through BRF+. Compared to HRF, BRF+ is running on ABAP level which could not permits good performance on mass data processing. RTC should combine the advantages of HRF and BRF+. |
+| CDS 1.0         | CDS team        | Yes   | must   | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
+| Fiori 1.0       | Fiori team      | Yes   | must   | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
+| IBPF info-objects | IBPF team       | Yes   | must   | IBPF developed a lot of finance planning BW info-objects. RTC can re-used them, or do some extension whenever necessary. Beside, RTC and IBPF should combine efforts so that Consolidation and Planning can happen together. |
+| Attachment Service |                 | Yes   | must   | Fiori Attachment Service is a reusable component for Firoi apps that need to upload and store documents into S4HANA system. |
+| Design Studio   | EPM team        | Yes   | should | Design Studio is used to create queries. The query can be opened via various analysis tools, like: AO, Fiori Apps, and so on. It is appointed by S4HANA guideline for the only query builder, and will replace BEx in future. |
 | BEx Query       | BW team         | Yes   | should | BEx query should only be used when Design Studio is not possible, or for some test purpose. |
 | HANA Calculation View | HANA team       | Yes   | should | HANA Calculation view should be only used for the purpose to integrated with BPC. Other cases should use CDS instead. |
 | BW              | BW team         | Yes   | should | BW cube should only be used for the purpose to integrated with BPC. RTC should avoid using BW cubes as it violate with S4HANA guideline, and it is not the future. |
@@ -204,7 +203,7 @@ The following reuse components must/should/must not be used within this developm
 | EC-CS           | IMS team        | Yes   | should | EC-CS is SAP's legacy ERP embedded consolidation application. EC-CS share a lot common features and ideas with RTC, like do consolidation directly on line items. RTC should research, reuse, and adopt EC-CS's functionalities whenever possible. |
 | BCS             | IMS team        | Yes   | should | BCS is the legacy consolidation application based on BW that some large corporation clients are still in-use. BCS has more functionalities than BPC, but with old-style UIs and too strict, somehow, too proficient, that not all the customers like it. A lot of BCS features and functionalities could be researched, reused, and adopt to RTC. |
 
-*** Cross-Release Compatibility
+*** TODO Cross-Release Compatibility
 ~Describe boundary conditions to ensure smooth upgrade / migration.~
 
 ~General Principles for Cross-Release Compatibility~
@@ -216,7 +215,9 @@ The following reuse components must/should/must not be used within this developm
 *** Other External Forces / Constraints and Assumptions
 ~Describe other external forces, constraints and assumptions, which influence or restrict your architecture. This could also be resource, skill set and time line constraints, etc.~
 
-BPC is the only legal consolidation and planning product in SAP. RTC may be bundled with BPC for sales and marketing. 
+1. BPC is the only legal consolidation and planning product in SAP. RTC may be bundled with BPC for sales and marketing.
+2. For the future Cloud usage, RTC would support distribution system architecture that allows applications on HCP can be easily integrated.
+3. RTC should also provide consolidation foundations for other consolidation solutions that would consume data in S4HANA. 
 
 
 ** Architecture Definition
