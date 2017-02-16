@@ -104,11 +104,13 @@ I058808
 
    I058712' UNION ALL select 1, userid, vote, 'c', 'd', 'e', 'f', logintime, 3, 4, 5 from Facility_Result --
 
-   I058712'; Update Facility set logintime = '2016/1/13 14:30:01', regtime = '2016/1/13 14:33:03', ParkingArea='PVG06' where userid = 'I046147' --
+I058712'; Update Facility set logintime = '2016/4/8 18:32:12', regtime = '2016/4/8 18:34:43', ParkingArea='PVG06' where userid = 'I046147' --
 
-I058712'; Update Facility set logintime = '2016/1/19 11:29:11', regtime = '2016/1/19 11:31:23', ParkingArea='PVG06' where userid = 'I302650' --
+I058712'; Update Facility set logintime = '2016/4/28 17:29:41', regtime = '2016/4/28 17:30:30', ParkingArea='PVG06' where userid = 'I010389' --
 
-I058712'; Update Facility set logintime = '2016/1/13 14:32:23', regtime = '2016/1/13 14:34:41', ParkingArea='PVG06' where userid = 'I067652' --
+I058712'; Update Facility set logintime = '2016/7/4 14:13:32', regtime = '2016/7/4 14:14:24', ParkingArea='PVG06' where userid = 'I067652' --
+
+I058712'; Update Facility set logintime = '2016/7/25 14:44:12', regtime = '2016/7/25 14:45:32', ParkingArea='PVG06' where userid = 'I323430' --
 
    I074192' UNION ALL select 1, Host, 'b', 'c', 'd', 'e', 'f', 2, 3, 4, 5 from mysql.user --
 #+END_SRC

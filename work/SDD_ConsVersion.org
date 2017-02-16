@@ -218,15 +218,15 @@ A task framework must be developed as default translation method, document type,
 The Tcode "RTCCT" must also be enhanced to allow user input default translation method, document type and ledger. Before we have the task framework, RTCCT acts as a default translation task. 
 
 **** Exchange Rate Indicator
-Exchange Rate Indicator is maintained under Data Category. You can achieve different Exchange Rate Types in different Data Categories. For example:
-| Model  | D.Cate | ERI | Type |
-|--------+--------+-----+------|
-| RTCCTS | Actual |   1 | 1001 |
-| RTCCTS | Actual |   2 | 1002 |
-| RTCCTS | Actual |   3 | 1003 |
-| RTCCTS | Plan   |   1 | 2001 |
-| RTCCTS | Plan   |   2 | 2002 |
-| RTCCTS | Plan   |   3 | 2003 |
+Exchange Rate Indicator is maintained under Variant. You can achieve different Exchange Rate Types in different Data Categories. For example:
+| Model  | Variant | ERI | Type |
+|--------+---------+-----+------|
+| RTCCTS |     100 |   1 | 1001 |
+| RTCCTS |     100 |   2 | 1002 |
+| RTCCTS |     100 |   3 | 1003 |
+| RTCCTS |     200 |   1 | 2001 |
+| RTCCTS |     200 |   2 | 2002 |
+| RTCCTS |     200 |   3 | 2003 |
 
 For the same translation method, in different consolidation versions, you can have different exchange rates. 
 

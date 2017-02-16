@@ -1,5 +1,5 @@
 #+PAGEID: 1821717599
-#+VERSION: 17
+#+VERSION: 21
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Modeling
@@ -10,7 +10,7 @@
 | Author(s)             | Vincent Zhang       |
 | Architect             | Vincent Zhang       |
 | Product Owner         | Shi Ying, Carol Pan |
-| Information Developer |                     |
+| Information Developer | Ciran               |
 | Quality Responsible   | Yao Cen             |
 | Developers            | Sam, Jin            |
 
@@ -30,8 +30,7 @@
 | HANA Script       | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
 | AMDP Guide        | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
 
-
-** Design
+** Overall Design
 *** Key Requirements and Design Goals
 Data Modeling is the prerequisite for consolidation. It defines the views of  master data, customizing data, and transactional data that consolidation tasks are running on. 
 
@@ -163,9 +162,9 @@ You can then open BPC modeling workbench to define BPC environment and model. Af
 4. If BPC categories and consolidation versions are correctly mapped?
 5. If other master data dimensions are consistent? ~In case using physical info-objects, there is no permit that the master data is consistent between BPC and S/4. In RTC's documentation, we should suggest user using virtual info-objects whenever possible.~
 
-Only after successful activation can consolidation tasks be run. Or user cannot raise pull requests. And BPC can not write-back any data.
+Only after successful activation can consolidation tasks be run. Or user cannot raise Data Release Requests. And BPC can not write-back any data.
 
-Besides, there are also some configuration tasks like define consolidation document types, define selections, and define currency translation methods. These tasks can be done after the activation of the consolidation model. 
+Besides, there are also some configuration tasks like defining consolidation document types, defining selections, and defining currency translation methods. These tasks can be done after the activation of the consolidation model. 
 
 **** Real-time Consolidation Modeling Tool(UI)                          :Sam:
 The RTC Modeling Tool is used to define a Real-time Consolidation model object, and generate necessary consolidation views. It also permits the consistency of a consolidation context that run across S/4 and BPC. The RTC Modeling tool contains following parts:
@@ -208,7 +207,7 @@ There are also mappings and derivations need to be done at foundation view level
 
 Text fields should be avoided to join here. And field names should keep unchanged. The foundation CDS view should also avoid to use parameters as BPC can not consume parameterized calc views. 
 
-**** Modeling Validation Method                                        :Steve:
+**** Modeling Validation                                         :Steve:
 As described above, modeling validation happens before consolidation view generation and model activation. There would be no less that than following rules should be checked:
 
 *These rules are before consolidation views generation:*
@@ -249,7 +248,9 @@ More details can be found in: https://wiki.wdf.sap.corp/wiki/display/TIPABAPVB/C
 
 The generated artifacts(HANA Calculation Views, CDS views, and AMDP methods) are not transported. Only model data can be transported from DEV to QA, and PRD systems. It is at the target systems these artifacts can be regereated in local namespaces.
 
-**** Selection on Accounts                                          :Vincent:
+**** +Selection on Accounts+                                      :Vincent:
+*This part is deprecated as a better solution is provided!* See [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Consolidation+Views#SDD-ConsolidationViews-4.4FSItemsMappingView][FS Item Mapping View]].
+
 Not all the operational accounts need to be involved in a consolidation. There should be a place to allow user to define which operational account numbers should be involved in certain chart of accounts. 
 
 This can be achieved using the general object: =Selection=. A special composite selection is reserved with the name "SELECTION001". Under the composite selection, user can add multiple single selections to compile his accounts selection.
@@ -257,7 +258,8 @@ This can be achieved using the general object: =Selection=. A special composite 
 When generate consolidation views in the RTC Modeling Tool, the above selection will be added into all the views. Then only the choose accounts is filtered in. 
   
 **** +Field Projection and Role Assignment+
-*Frozen*
+*This section is Frozen!*
+
 Fields are projected from data foundation tables, like ACDOCA or ACDOCC. These fields are categorized into certain groups. Some groups are mandatory for consolidation, and even the number of fields is fixed. Based on existing knowledge from BCS and EC-CS, I category fields into following groups:
 
 #+Caption: Field Projection & Role Assignment
@@ -301,12 +303,12 @@ There are others settings like "Default Translation Method", which is optional. 
 #+Caption: Real-time Consolidation Modeling Tool: Data Source
 [[../image/RTCModelingToolUI02.png]]
 
-You define consolidation data sources in this tab. Consolidation data sources are grouped by *Data Category*. Each data category contains a full set of source data for consolidation. Different types of source data are further differentiated using *Stream Type*. You assign each "Stream Type" a HANA view (either CDS or Calculation view) that protocolized. Stream Types and their protocols are pre-defined.
+You define consolidation data sources in this tab. Consolidation data sources are grouped by *Data Category*. Each data category contains a full set of source data for consolidation. Different types of source data are further differentiated using *Data Stream*. You assign each data stream a HANA view (either CDS or Calculation view) which is protocolized. Data streams and their protocols are pre-defined.
 | <35>                                | <50>                                               |
-| Stream Type                         | Protocol(Mandatory Fields)                         |
+| Data Stream                         | Protocol(Mandatory Fields)                         |
 |-------------------------------------+----------------------------------------------------|
-| FI Journals                         | RCLNT, KTOPL, RACCT, RMVCT, BUDAT, HSL, RHCUR, TIMESTAMP and Fields in dimension |
-| FS Items or G/L Accounts            | MANDT, LKTOPL, LRACCT, GKTOPL, GRACCT              |
+| FI Journals                         | RCLNT, RLDNR, GJAHR, RBUKRS, BELNR, KTOPL, RACCT, RMVCT, BUDAT, HSL, RHCUR, TIMESTAMP and Fields in dimension |
+| FS Items or G/L Accounts            | MANDT, KTOPL, SAKNR, KKTPL, RACCT                  |
 | Inventory Data                      |                                                    |
 | Supplier Share                      |                                                    |
 | Assets/Liabilities                  |                                                    |
@@ -321,24 +323,24 @@ You define consolidation data sources in this tab. Consolidation data sources ar
 | Sequence of Activities              |                                                    |
 | Activity Sorting                    |                                                    |
 
-The stream type "FI Journal" and "FS Item" are 2 mandatory stream types. All other stream types are optional. If the model is set to integrate with BPC, then you have to assign HANA calculation views to this stream type, CDS view is not allowed. This is also known as the foundation view.
+The data stream "FI Journal" and "FS Item" are 2 mandatory stream types. Others are optional. If the model is set to integrate with BPC, then you have to assign HANA calculation views to this stream type, CDS view is not allowed. This is also known as the foundation view.
 
 ~You must first enter the HANA package where the foundation view resides. To be in mind, the HANA DB user "SAP<SID>" must have the read/write access to the HANA package of FI Journal. As later on, it will generate HANA Calculation views into the same package.~ 
 
-The data category can be added from existing templates. SAP may deliver following 2 templates:
+The data category can be added from existing templates. SAP delivers following 2 templates:
 | <10>       |                       |
 | Data Category Template | Description           |
 |------------+-----------------------|
 | Actual     | Actual data in ACDOCA |
 | Plan       | Plan data in ACDOCP   |
 
-| <10>       |             |                     |                  |                    |
-| Data Category Template | Stream Type | CDS View            | Hana Package     | Calc View          |
-|------------+-------------+---------------------+------------------+--------------------|
-| Actual     | FI_JOURNAL  | I_CONS_FOUNDATION_A | sap.erp.sfin.rtc | RTC_C_FOUNDATION_A |
-| Actual     | FS_ITEM     | I_CONS_GLACCOUNT    | sap.erp.sfin.rtc | RTC_C_GLACCOUNT    |
-| Plan       | FI_JOURNAL  | I_CONS_FOUNDATION_P | sap.erp.sfin.rtc | RTC_C_FOUNDATION_P |
-| Plan       | FS_ITEM     | I_CONS_GLACCOUNT    | sap.erp.sfin.rtc | RTC_C_GLACCOUNT    |
+| <10>       |                 |               |                  |                   |
+| Data Category Template | Data Stream     | CDS View      | Hana Package     | Calc View         |
+|------------+-----------------+---------------+------------------+-------------------|
+| Actual     | FI_JOURNAL      | P_FOUNDATIONA | sap.erp.sfin.rtc | RTC_C_FOUNDATION  |
+| Actual     | FS_ITEM_MAPPING | P_CONSACCTM   | sap.erp.sfin.rtc | RTC_C_CONS_ACCT_M |
+| Plan       | FI_JOURNAL      | P_FOUNDATIONP | sap.erp.sfin.rtc | RTC_C_FOUNDATIONP |
+| Plan       | FS_ITEM_MAPPING | P_CONSACCTM   | sap.erp.sfin.rtc | RTC_C_CONS_ACCT_M |
 
 **** Consolidation Version
 Version is used to execute parallel consolidations according to different aspects. You can define multiple versions for a consolidation model. The consolidation result then will be isolated by by versions. Each version is defined as a combination of 3 version related fields: =Data Category=, =Account Principle=, and =Variant=. But in BPC side, there is only one dimension with the role "data category" has the similar usage. You have to create a mapping between =BPC Category= to the S/4 version combination if you model needs to integrate with BPC. 
@@ -348,7 +350,7 @@ Version is used to execute parallel consolidations according to different aspect
 
 In this tab screen, you can create a consolidation version, which you just assign a unique value combination of =Data Category=, =Account Principle=, and =Variant=. In the scenario with BPC, you must also map a BPC Category to one of your version combinations. 
 
-By default, there will be 2 BPC categories created: "FINAL" and "PRELIM" if integrates with BPC.And the version related value combination is also automatically generated in this way:
+It is recommended you have 2 BPC categories created: "FINAL" and "PRELIM" if integrates with BPC. And the version related value combination is also automatically generated in this way:
 | BPC Category | Data Category | Acct. Principle | Variant |
 |--------------+---------------+-----------------+---------|
 | FINAL        | Actual        |                 |     100 |
@@ -359,28 +361,30 @@ When you click the "Add", a pop-up dialog will allow you to add a new version. Y
 
 ~The master head table for BPC category is FCOMC_CATEGORY which belongs to the IBPF team. We share the category master data for future planning and consolidation integration. If you add a new BPC category, it will insert a new entry into table FCOMC_CATEGORY.~
 
-**** Consolidation View
-Consolidation views are generated under each data category. In other words, different data categories generate different sets of consolidation views.
+**** Consolidation View 
+Consolidation views are CDS views and HANA calculation views genereated by the modeling tool based on the foundation views and other meta definitions, like, Chart of Account, Fiscal Year Variant, consolidation dimension, and so on.
+
 #+Caption: Real-time Consolidation Modeling Tool: Consolidation Views
 [[../image/RTCModelingToolUI04.png]]
 
-You choose a data category in the dropdown box, it lists all the consolidation views that belong to the data category. Consolidation views are further grouped by different usages. If the model is a BPC integration model, then there will be a group "BPC Calc View" which contains all the HANA calculation views that are consumed by BPC. The naming rule of the calculation view is designed like this:
+Consolidation views are generated either by clicking the ~Generate~ button, or along with the activation. Consolidation views are grouped by usages, for example, base view, BPC view, Validation View, and so on. The usages and their consolidaton views are predefined by SAP. Which usages and views will be generated dynamically depends on the integration options. For example, if you don't check the "Integration with BPC", then the BPC view usage and its views are not genereated and shown.
 
-~C_<Model Abbrev>_<BPC Category>_<A or C>~
+The trafic light icon before each view or group indicates the status of the view:
++ Green: Every thing is OK;
++ Yellow: The view exists, however, need re-generation;
++ Red: The view doesn't exist.
 
-In the "Base CDS View" group, there lists the CDS views that are used by RTC applications like =Data Submit Cockpit=, =CT Method=, =Validation Method=, and so on. These applications either read data from the CDS views, or requires the meta definition of the view fields. All the generated CDS views have the namespace "/RTCART/", and the naming rule is designed like this:
+You can switch between "Normal View" or "Expert View" by clicking the button ~Normal/Expert View~ button. In the "Normal View", only the most useful views are shown; while in "Expert View", all the generated views are shown. The default is "Normal View" to eliminate complication.  
 
-~/RTCART/<Model Abbr><View Group><Sequential Number>~
+Read the SDD [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Consolidation+Views][Consolidation Views]] for details.
 
-For details on how these consolidation views are defined, please refer the [[https://wiki.wdf.sap.corp/wiki/x/Ds83bQ][SDD-BPC HANA Views Modeling]].
-  
 **** BPC Integration
 #+Caption: Real-time Consolidation Modeling Tool: BPC Integration
 [[../image/RTCModelingToolUI05.png]]
 
-In the =BPC Integration= tab, you give a BPC consolidation environment and a BPC model name. The BPC model's meta data is then read when you click the "Enter" key. Click the "Ownership Hierarchy" will navigate to BPC's entity hierarchy view page.
+The =BPC Integration= tab is only shown if you choose the "Integration with BPC" option. In this tabstrip, you must give a BPC consolidation environment and a BPC model name, or the model is not allowed to be activated. During activation, the BPC model is checked to see if it is compatiable with the current RTC model. If not, error logs are given in the "Modeling Validation Log". Bearing in mind, each BPC environment and model combination must not be used in more than one models. 
 
-~BPC has exposed an interface to allow you read data in its ownership cube: CL_RSBPCO_APPL_ADAPTER!~
+~BPC has exposed an interface to allow you read model meta data: CL_RSBPCO_APPL_ADAPTER.~
 
 **** Admin Tab
 #+Caption: Real-time Consolidation Modeling Tool: Admin
@@ -398,7 +402,6 @@ Following criterias must be fulfilled before generating consolidation views:
 2. Consolidation Chart of Accounts exists;
 3. Fiscal Year Variant exist;
 4. Default Flow Type exists;
-5. Model Name Abbreviation is unique;
 6. You must at least add one data category so that foundation views can be assigned.;
 7. A foundation view must be assigned to the stream type "FI Journals";
 8. The foundation view comply with the protocol of "FI Journals";
@@ -416,15 +419,15 @@ Following criterias must be additionally fulfilled before activating the model:
 5. The global temporary table of ACDOCC exists;
 6. The default number range interval '00' of RTCJOURN exists;
 
-When activating the model, besides generating consolidation views, there are default document types generated.
+When activating the model, besides generating consolidation views, there are default document types and BRF+ Application generated.
  
-*** Database Design 
+*** TODO Database Design                       
 *** Data Flow & Design Time
 Here describes how data is read, calculated, and write back during a consolidation. It is divided into 3 scenarios:
 1. BPC read from ACDOCA, then write back to a cube/ADSO;
 2. BPC read from union view of ACDOCA and ACDOCC, then write back to ACDOCC;
 3. BPC read from ACDOCC, then write back to ACDOCC.
-
+   
 **** Read from ACDOCA, write to cube
 *Aggregated result of ACDOCA*.
 | Category | Unit  | Account | Amount | Currency |
@@ -613,14 +616,14 @@ When you run CT, journal entiry will be generated for each "Cons Ledger" and "Da
 |--------+-------------+---------------+---------+--------+--------+------|
 | VINCE1 | C1          |               | 2016008 | C1001  |    100 | CNY  |
 | VINCE1 | C1          | Actual        | 2016008 | C1001  |    200 | USD  |
-| VINCE1 | C1          | Simulate      | 2016008 | C1001  |    300 | USD  | 
+| VINCE1 | C1          | Simulate      | 2016008 | C1001  |    300 | USD  |
 Then local amount is shared by both Actual and Simulate category
 
 *** Additional Financial Data
 You have to assign a consolidation ledger for each additional financial data set. 
 | Model  | Cons Ledger |  Period | Investor | Investee | Amount |
 |--------+-------------+---------+----------+----------+--------|
-| VINCE1 | C1          | 2016008 | C1001    | C1002    | 100    |
+| VINCE1 | C1          | 2016008 | C1001    | C1002    |    100 |
 Then both "Actual" and  "Simulate" share the same set of AFD.
 
 *** Consolidation Method Assignment

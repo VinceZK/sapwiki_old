@@ -151,13 +151,13 @@ The group accountant can start the data collection for a period, usually, close 
 
 *** The local accountant submits a sub-package
 Once the period is opened, the local accountant can see the package in the data release cockpit. He now first submits the AP/AR data. The AP/AR data is first validated by validation method "DV110", and then released by changing the status of data release request =0000002= to "Released" and record the timestamp to =RTIME=. 
-| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | RTIME               | DCMETH | DENTRY |
-|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
-| 0000001 | RTCCTB | FINAL | CRR  | 2016.01 | C100   | Initial   |                     | DR001  |        |
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status   | RTIME               | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | CRR  | 2016.01 | C100   | Initial  |                     | DR001  |        |
 | 0000002 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Released | 2016/01/25 15:20:00 | DR001  |    001 |
-| 0000003 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial   |                     | DR001  |    002 |
-| 0000004 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial   |                     | DR001  |    003 |
-| 0000005 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial   |                     | DR001  |    004 |
+| 0000003 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial  |                     | DR001  |    002 |
+| 0000004 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial  |                     | DR001  |    003 |
+| 0000005 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial  |                     | DR001  |    004 |
 
 *** The group accountant checks the validation result
 Till now, only AP/AR data is submit. In the BPC's consolidation monitor, the status is changed to "_To be Reviewed_". The group accountant can check the validation result of the AP/AR sub-package. She can also post standardized journal entries and run validation again. Validation in BPC's side can share the same rules with S/4 side. Thus it is not necessary to setup duplicate rules in BPC's control. The group accountant can check the comments/attachments from local accountants' submits, and/or re-run validations if standardized entries are posted. Then she can decide whether to approve or reject the sub-package. 
@@ -198,15 +198,15 @@ It is not *mandatory* to submit all the sub-packages before releasing the main p
 
 ~For example, if you want sub-package "Investment" should be mandatory, then you define a rule to check the number of rows of the data. If the result is zero, the rule is failed, which forbids you to submit the main package.~
 
-| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | RTIME               | DCMETH | DENTRY |
-|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status   | RTIME               | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
 | 0000001 | RTCCTB | FINAL | CRR  | 2016.01 | C100   | Released | 2016/01/28 14:00:05 | DR001  |        |
-| 0000002 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Approved  | 2016/01/25 15:20:00 | DR001  |    001 |
-| 0000003 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Rejected  | 2016/01/26 10:11:02 | DR001  |    002 |
+| 0000002 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Approved | 2016/01/25 15:20:00 | DR001  |    001 |
+| 0000003 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Rejected | 2016/01/26 10:11:02 | DR001  |    002 |
 | 0000004 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Released | 2016/01/26 11:30:40 | DR001  |    003 |
-| 0000005 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial   | 2016/01/26 11:40:32 | DR001  |    004 |
-| 0000006 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial   | 2016/01/26 15:36:00 | DR001  |    002 |
-| 0000007 | RTCCTB | FINAL | ARR  | 2016.01 | C100   | Approved  | 2016/01/27 09:50:11 | DR001  |    003 |
+| 0000005 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial  | 2016/01/26 11:40:32 | DR001  |    004 |
+| 0000006 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial  | 2016/01/26 15:36:00 | DR001  |    002 |
+| 0000007 | RTCCTB | FINAL | ARR  | 2016.01 | C100   | Approved | 2016/01/27 09:50:11 | DR001  |    003 |
 
 The Data Release Cockpit only takes care of the status of CRR, those sub-packages' statuses won't hinder any processes. 
 
@@ -225,9 +225,9 @@ Now that the whole data is presented to BPC, the group accountant posts some sta
 | 0000008 | RTCCTB | FINAL | CRR  | 2016.01 | C100   | Initial  |                     | DR001  |        |
  
 The local accountant has to re-submit a new CRR, as it is mandatory at least one approved CRR for each period. Before re-submitting, he can view comments that the group accountant provided. Under the advice, he post adjustments and/or provide additional comments, then submit again. 
-| PullReq | Model  | BCATE | Type |  Period | Entity | Status    | RTIME               | DCMETH | DENTRY |
-|---------+--------+-------+------+---------+--------+-----------+---------------------+--------+--------|
-| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Rejected  | 2016/01/28 14:00:05 | DR001  |        |
+| PullReq | Model  | BCATE | Type |  Period | Entity | Status   | RTIME               | DCMETH | DENTRY |
+|---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
+| 0000001 | RTCCTB | FINAL | C    | 2016.01 | C100   | Rejected | 2016/01/28 14:00:05 | DR001  |        |
 | 0000008 | RTCCTB | FINAL | C    | 2016.01 | C100   | Released | 2016/01/28 16:08:34 | DR001  |        |
 
 *** The local accountant wants to submit an adjustment request
@@ -252,14 +252,16 @@ After consolidation is finished for a period, there is still possibility that da
 ** Data Release Request Status and Pseudo SQL
 The status of data release requests not only controls the data release process, but also controls the data visibility by BPC. BPC can only see the data pointed by data release requests which have status "Released" or "Approved". In other words, status code must larger equal than "30". So for those data release requests with status "Initial" or "Rejected" or "Deferred", BPC won't see the data they point to. 
 #+CAPTION: Status Code
-| User Status | Code |
-|-------------+------|
-| Initial     |   00 |
-| Cancel      |   01 |
-| Rejected    |   10 |
-| Deferred    |   20 |
-| Released    |   30 |
-| Approved    |   40 |
+| User Status             | Code |
+|-------------------------+------|
+| Initial                 |   00 |
+| Currency Conversion Ran |   01 |
+| Validation Ran          |   02 |
+| Cancel                  |   03 |
+| Rejected                |   10 |
+| Deferred                |   20 |
+| Released                |   30 |
+| Approved                |   40 |
 
 #+CAPTION: Pseudo SQL that controls visibility
 #+BEGIN_SRC sql
@@ -528,8 +530,8 @@ The above method is the simplest but most usual case that only contain one sub-p
 | 0000001 | PRR  | Initial | C100   | 2016.01 |           |
 
 *Step 3: Submit the report data*: the local accountant submits the report data for current period. The PRR's status is changed to "Released", and the current timestamp is also recorded.  
-| PullReq | Type | Status    | Entity |  Period | Timestamp           |
-|---------+------+-----------+--------+---------+---------------------|
+| PullReq | Type | Status   | Entity |  Period | Timestamp           |
+|---------+------+----------+--------+---------+---------------------|
 | 0000001 | PRR  | Released | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
 *Step 4: Approve PRR*: Once a PRR is released, the group accountant can see the corresponding data in consolidation engine. She can run validation again to confirm the data is OK. The rule could be same as the local accountant's before release, or she can run additional validation rules. If the result is OK, then the status of the PRR is changed to "Approved".
@@ -602,9 +604,9 @@ If data is validated and rejected, the data release request's status is change t
 | 10001 |      | C100   | 2016.01 |    100 | LC       |
 
 *Step 2: Open period*: the group accountant opens current period which will generate a PRR for the entity. The status in initial.
-| PullReq | PTYPE | Status   | Entity |  Period | Timestamp           |
-|---------+-------+----------+--------+---------+---------------------|
-| 0000001 | PRR   | Initial  | C100   | 2016.01 | 2016/01/30 10:30:00 |
+| PullReq | PTYPE | Status  | Entity |  Period | Timestamp           |
+|---------+-------+---------+--------+---------+---------------------|
+| 0000001 | PRR   | Initial | C100   | 2016.01 | 2016/01/30 10:30:00 |
 
 *Step 3: Release Data*: Local accountant releases the uploaded data. The data is first copied to a new document with posting level "00". Then the data is validated by the assigned validation method. If the validation result is OK, the PPR is changed to "Released".
 | DOCNR | PLVL | Entity |  Period | Amount | Currency | Timestamp           |
@@ -654,9 +656,9 @@ If data is validated and rejected, the data release request's status is change t
 
 *Step 1: Open period*: the group accountant opens current period which will generate a PRR for the entity. The status in initial.
 #+CAPTION: Data Release Request
-| PullReq | Type | Status  | Entity |  Period | Timestamp           |
-|---------+------+---------+--------+---------+---------------------|
-| 0000001 | PRR  | Initial | C100   | 2016.01 |                     |
+| PullReq | Type | Status  | Entity |  Period | Timestamp |
+|---------+------+---------+--------+---------+-----------|
+| 0000001 | PRR  | Initial | C100   | 2016.01 |           |
 
 *Step 2: Currency Translation*: The local accountant run currency translation in the Data Release Cockpit. Local amounts are translated and posted into ACDOCC. The timestamp of CT run(cut-off time) is recorded to the PRR, but the status is still "Initial".  
 #+CAPTION: Data in ACDOCA 
@@ -786,9 +788,9 @@ Then it goes back to the *Step 1: Open period*
 *** Scenario 4: CT in S4, data comes from ACDOCC
 *Step 1: Open period*: the group accountant opens current period which will generate a PRR for the entity. The status in initial.
 #+CAPTION: Data Release Request
-| PullReq | Type | Status  | Entity |  Period | Timestamp           |
-|---------+------+---------+--------+---------+---------------------|
-| 0000001 | PRR  | Initial | C100   | 2016.01 |                     |
+| PullReq | Type | Status  | Entity |  Period | Timestamp |
+|---------+------+---------+--------+---------+-----------|
+| 0000001 | PRR  | Initial | C100   | 2016.01 |           |
 
 *Step 2: Flexible Upload*: Data is stored in ACDOCC with posting level equals "Space", which allows to change the amounts after posting. Each time the user upload new set of data, it uses "upsert" operation to update/insert data.  
 | DOCNR | PLVL | Entity |  Period | LC Amount | LC Key | GC Amount | GC Key | Timestamp           |
@@ -882,8 +884,8 @@ The period is not open, no MonthEnd request is generated. When Data Release Cock
 | System Status               | Empty                                                        |
 | Last Submit Time            | Empty                                                        |
 | This Submit Time            | Empty                                                        |
-| Submit Button               | Gray for local accountant, hidden for group accountant        |
-| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant        |
+| Submit Button               | Gray for local accountant, hidden for group accountant       |
+| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant       |
 | Reported Data Tab           | Data in ACDOCA/C of current period, including the deferred amount from the previous period |
 | Sub-Packages Tab            | Show sub-package list if available without any interaction allowed |
 | Control Tab                 | Not Allowed                                                  |
@@ -903,15 +905,15 @@ The period is open, MonthEnd request is generated with initial status. If the pa
 |                             | <60>                                                         |
 | UI Elements                 | State                                                        |
 |-----------------------------+--------------------------------------------------------------|
-| Package Status              | To be Released                                              |
+| Package Status              | To be Released                                               |
 | Control                     | To be Run                                                    |
 | Variation                   | Empty                                                        |
 | Lock Status                 | Locked/Unlocked                                              |
 | System Status               | Empty                                                        |
 | Last Submit Time            | Empty                                                        |
 | This Submit Time            | Time when the APP is accessed                                |
-| Submit Button               | Available for local accountant, hidden for group accountant   |
-| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant        |
+| Submit Button               | Available for local accountant, hidden for group accountant  |
+| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant       |
 | Reported Data Tab           | Data in ACDOCA/C of current period before this submit time   |
 | Sub-Packages Tab            | Show sub-package list if available with any interaction allowed |
 | Control Tab                 | There should be no control result save before, but you can run controls. |
@@ -931,7 +933,7 @@ Package will be validated automatically before submitting if "This Submit Time" 
 |                             | <60>                                                         |
 | UI Elements                 | State                                                        |
 |-----------------------------+--------------------------------------------------------------|
-| Package Status              | Released                                                    |
+| Package Status              | Released                                                     |
 | Control                     | Passed                                                       |
 | Variation                   | If there is new data entering after this submit time         |
 | Lock Status                 | Unlocked/Locked                                              |
@@ -939,7 +941,7 @@ Package will be validated automatically before submitting if "This Submit Time" 
 | Last Submit Time            | The last submit time                                         |
 | This Submit Time            | Time after you click the submit button                       |
 | Submit Button               | If no variation, then click the button will not raise new request |
-| Defer,Reject,Approve Button | Hidden for local accountant, available for group accountant   |
+| Defer,Reject,Approve Button | Hidden for local accountant, available for group accountant  |
 | Reported Data Tab           | Data in ACDOCA/C of current period before this submit time   |
 | Sub-Packages Tab            | Show sub-package list if available with any interaction allowed |
 | Control Tab                 | Show the control result of last run. Saving result is not allowed |
@@ -949,10 +951,10 @@ Package will be validated automatically before submitting if "This Submit Time" 
 
 Once the package is released, the entity status in BPC's consolidation monitor will be changed to "To_be_Reviewed". And the data actually can be seen by BPC consolidation engine. Clicking "To_be_Reviewed" will open the Data Release Cockpit with the corresponding package. BPC can also run controls in the control monitor, all the possible statuses would be shown.
 
-| BPC Statuses            | State          | Afterward States          |
+| BPC Statuses            | State          | Afterward States           |
 |-------------------------+----------------+----------------------------|
 | Cons. Monitor by Entity | To_be_Reviewed |                            |
-| Control Monitor         | To_be_executed  | Successed/Failed/Dismissed |
+| Control Monitor         | To_be_executed | Successed/Failed/Dismissed |
 | Can see the local data? | Yes            |                            |
 
 *** Package is approved
@@ -968,7 +970,7 @@ The group accountant approves the package. After approval, she can run consolida
 | Last Submit Time            | The last submit time                                         |
 | This Submit Time            | Time when you access this APP                                |
 | Submit Button               | If there is variation, then local accountant can click submit to raise an adjustment request. |
-| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant        |
+| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant       |
 | Reported Data Tab           | Data in ACDOCA/C of current period before this submit time   |
 | Sub-Packages Tab            | Show sub-package list if available. You can view the content of each sub-packages, however, you cannot do any changes on it. |
 | Control Tab                 | Show the control result of last run. Saving result is allowed if there is variation. |
@@ -977,7 +979,7 @@ The group accountant approves the package. After approval, she can run consolida
 | Submit History Tab          | Available                                                    |
 
 Once the package is approved, the entity status in BPC's consolidation monitor is changed to "To_be_Executed". You then click to run consolidation tasks. Afterward, BPC gives the result of consolidation run, that are Running, Successed, and Failed.
-| BPC Statuses            | Open State        | Afterward States        |
+| BPC Statuses            | Open State        | Afterward States         |
 |-------------------------+-------------------+--------------------------|
 | Cons. Monitor by Entity | To_be_Executed    | Running/Successed/Failed |
 | Control Monitor         | Success/Dismissed |                          |
@@ -996,7 +998,7 @@ After posting standardized journal entries, she wants to run validation again be
 | Last Submit Time            | The last submit time                                         |
 | This Submit Time            | Time when you access this APP                                |
 | Submit Button               | If there is variation or any other changes like providing comments, then local accountant can click submit to raise an adjustment request. |
-| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant        |
+| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant       |
 | Reported Data Tab           | Data in ACDOCA/C of current period before this submit time   |
 | Sub-Packages Tab            | Show sub-package list if available. You can view the content of each sub-packages, however, you cannot do any changes on it. |
 | Control Tab                 | Show the control result of last run. Can save control result. |
@@ -1024,7 +1026,7 @@ When we say package is deferred, we only mean some adjustments are deferred. In 
 | Last Submit Time            | The last submit time                                         |
 | This Submit Time            | Time when you access this APP                                |
 | Submit Button               | If there is variation, then local accountant can click submit to raise an adjustment request. |
-| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant        |
+| Defer,Reject,Approve Button | Hidden for local accountant, gray for group accountant       |
 | Reported Data Tab           | Data in ACDOCA/C of current period before this submit time.  |
 | Sub-Packages Tab            | Show sub-package list if available. You can view the content of each sub-packages, however, you cannot do any changes on it. |
 | Control Tab                 | Show the control result of last run. Can save new control result if there is variation. |

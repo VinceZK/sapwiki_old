@@ -1,5 +1,5 @@
 #+PAGEID: 1865734207
-#+VERSION: 8
+#+VERSION: 10
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: Fiori Development Guideline
@@ -107,7 +107,7 @@ https://code-fiori.dispatcher.cert.hana.ondemand.com/
 Please also follow the following link to get helpful information on SAP Web IDE:https://wiki.wdf.sap.corp/wiki/display/webapptoolkit/Information+for+Working+with+SAP+Web+IDE
 
 *** Project Portal
-You need to create a project in the [[https://projectportal.int.sap.hana.ondemand.com%5B%5Bhttps://projectportal.int.sap.hana.onde][Project Portal]] before typing the codes. The Project Portal will create a git repository which you can clone to your Web IDE space. Then you create your Fiori App project in the repository so that you can commit&push your changes to the central GIT.
+You need to create a project in the [[https://projectportal.int.sap.hana.ondemand.com][Project Portal]] before typing the codes. The Project Portal will create a git repository which you can clone to your Web IDE space. Then you create your Fiori App project in the repository so that you can commit&push your changes to the central GIT.
 
 Besides, you can also do the basic Gerrit settings like adding people to the committer group and owner group. So that the code review workflow can be initially realized. 
 
@@ -212,7 +212,7 @@ In the S/4HANA cloud editions, business roles are technically a new cloud specif
 Please refer this [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Fiori+Role+Portfolio][sapwiki]] on how to apply a business role in [[https://ifp.wdf.sap.corp/sap/bc/webdynpro/sps/wda_obt_ro_variant?object_type_id=OBT_IFP_6CAE8B26E4CB1ED5808C27D93BB8DD84?variant_id=6CAE8B26E4CB1ED6B1BA05D3A39EE0C0?user_settings=X#][OAM]](Object Attribute Manager).
 
 *** Semantic Objects    :Vince:
-Semantic objects are used for role-based navigation within the Fiori Launchpad. A semantic object is defined using the Semantic Object catalog following the naming rules of the virtual data model (VDM). In addition to the definition, *a registration* needs to be done centrally in U00. Use [[https://gtnc-w0211397f.dispatcher.int.sap.hana.ondemand.com/webapp/index.html][Global Technical Name Catalog]] to register your semantic object.
+Semantic objects are used for role-based navigation within the Fiori Launchpad. A semantic object is defined using the Semantic Object catalog following the naming rules of the virtual data model (VDM). In addition to the definition, a *registration* needs to be done centrally in U00. Use [[https://gtnc-w0211397f.dispatcher.int.sap.hana.ondemand.com/webapp/index.html][Global Technical Name Catalog]] to register your semantic object.
 
 For more information on semantic objects, please refer:https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Semantic+Objects+for+Navigation
 
@@ -227,7 +227,7 @@ You must pass the *Design Gate1* to get your Fiori ID. Without Fiori ID, you can
 For more detail please refer [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Fiori+App+Portfolio][Fiori App Portfolio]].
 
 
-** Components                                                         :Vince:
+** Fiori Components                                                  :Vince:
 The following naming are refer the guideline of [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Naming+Conventions+for+Development+Objects][S4HANA Naming Conventions for Development Objects]].
 
 This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Leaf+ABAP+Packages+for+FIN+AT1+Fiori+Apps][Leaf ABAP Packages]].
@@ -237,52 +237,108 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 |-----------------------------------+-------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_RULE       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VALIDATION_RULE |
-| App name and ID in Project Portal | fin.cons.validationrules1                 |
-| POM Artifact ID                   | fin.cons.validationrules1                 |
+| App name and ID in Project Portal | fin.cons.validationrule                   |
+| POM Artifact ID                   | fin.cons.validationrule                   |
 | Fiori ID                          | F2575                                     |
-| BSP Application Name              | FIN_VALIRULES1                            |
+| BSP Application Name              | FIN_VALIRULE                              |
+| Service Builder Project           | CONS_VALIDATION_RULE                      |
 | Semantic Object                   | FinancialValidationRule                   |
 
-*** Validation Method    
+*** Validation Method       :Summer:
 | Artifacts                         | Name                                        |
 |-----------------------------------+---------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_METHOD       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VALIDATION_METHOD |
-| App name and ID in Project Portal | fin.cons.validationmethods1                 |
-| POM Artifact ID                   | fin.cons.validationmethods1                 |
-| BSP Application Name              | FIN_VALIMETHODS1                            |
+| App name and ID in Project Portal | fin.cons.validationmethod                   |
+| POM Artifact ID                   | fin.cons.validationmethod                   |
+| Fiori ID                          | F2598                                       |
+| BSP Application Name              | FIN_VALIMETHOD                              |
+| Service Builder Project           | CONS_VALIDATION_METHOD                      |
 | Semantic Object                   | FinValidationMethod                         |
 
-*** Consolidation Data Release Cockpit
+*** Consolidation Data Release Cockpit               :Lynn:
 | Artifacts                         | Name                          |
 |-----------------------------------+-------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_DRC       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_DRC |
-| App name and ID in Project Portal | fin.cons.drcs1                |
-| POM Artifact ID                   | fin.cons.drcs1                |
-| BSP Application Name              | FIN_CONS_DPRCS1               |
+| App name and ID in Project Portal | fin.cons.drc                  |
+| POM Artifact ID                   | fin.cons.drc                  |
+| Fiori ID                          | F2591                         |
+| BSP Application Name              | FIN_CONS_DRC                  |
+| Service Builder Project           | CONS_DATA_RELEASE_COCKPIT     |
 | Semantic Object                   | ConsData                      |
 
-*** Consolidation Data Mass Approval
+*** Consolidation Data Mass Approval                      :William:
 | Artifacts                         | Name                          |
 |-----------------------------------+-------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_DMA       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_DMA |
-| App name and ID in Project Portal | fin.cons.data.mass.approvals1 |
-| POM Artifact ID                   | fin.cons.data.mass.approvals1 |
-| BSP Application Name              | FIN_CONS_DMAS1                |
+| App name and ID in Project Portal | fin.cons.data.mass.approval   |
+| POM Artifact ID                   | fin.cons.data.mass.approval   |
+| Fiori ID                          | F2620                         |
+| BSP Application Name              | FIN_CONS_DMA                  |
+| Service Builder Project           | CONS_DATA_MASS_APPROVAL       |
 | Semantic Object                   | ConsData                      |
 
-*** Financial Statement for Consolidation Data
+*** Consolidation Financial Statement for Entity                      :Chang:
+| Artifacts                         | Name                                          |
+|-----------------------------------+-----------------------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_ENTITY_FINSTATEMENT       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ENTITY_FINSTATEMENT |
+| App name and ID in Project Portal | fin.cons.entity.finstatement.display          |
+| POM Artifact ID                   | fin.cons.entity.finstatement.display          |
+| Fiori ID                          | F2627                                         |
+| BSP Application Name              | FIN_CONS_ENTITY_FS                            |
+| Service Builder Project           | CONS_ENTITY_FINANCIAL_STATEMENT               |
+| Semantic Object                   | ConsolidationFinStatement                     |
+
+*** Drill-through Report from Consolidation Financial Statement
+| Artifacts                         | Name                                      |
+|-----------------------------------+-------------------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_FS_DRILLTHROUGH       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_FS_DRILLTHROUGH |
+| App name and ID in Project Portal | fin.cons.finstatement.drillthrough        |
+| POM Artifact ID                   | fin.cons.finstatement.drillthrough        |
+| Fiori ID                          |                                           |
+| BSP Application Name              | FIN_CONS_FS_DRILL                         |
+| Service Builder Project           | CONS_FS_DRILLTHROUGH                      |
+| Semantic Object                   | DrillThroughReport                        |
+
+*** Consolidation Financial Statement Library
+Constains all reusable financial statement components, includes hierarch display, drill-through reports, and search helps. 
 | Artifacts                         | Name                                   |
 |-----------------------------------+----------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_FINSTATEMENT       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_FINSTATEMENT |
-| App name and ID in Project Portal | fin.cons.finstatement.displays1        |
-| POM Artifact ID                   | fin.cons.finstatement.displays1        |
-| BSP Application Name              | FIN_CONSFSS1                           |
-| Semantic Object                   | ConsFinStatement                       |
+| App name and ID in Project Portal | fin.cons.lib.finstatement              |
+| POM Artifact ID                   | fin.cons.lib.finstatement              |
+| Fiori ID                          |                                        |
+| BSP Application Name              | FIN_CONS_FINSTATEMENT                  |
+| Service Builder Project           | CONS_FINANCIAL_STATEMENT               |
 
+*** Control Result Library            :Steve:   
+It is used in Validation Method and Data Release Cockpit.
+| Artifacts                         | Name                                     |
+|-----------------------------------+------------------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_CONTROL_RESULT       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_CONTROL_RESULT |
+| App name and ID in Project Portal | fin.cons.lib.ctrlresult                  |
+| POM Artifact ID                   | fin.cons.lib.ctrlresult                  |
+| Fiori ID                          |                                          |
+| BSP Application Name              | FIN_CONS_CTRLRESULT                      |
+| Service Builder Project           | CONS_CONTROL_RESULT                      |
+
+*** Validation Engine Library
+It is used in Validation Rule and Validation Method
+| Artifacts                         | Name                                             |
+|-----------------------------------+--------------------------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_ENGINE            |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VALIDATION_RULE_ENGINE |
+| App name and ID in Project Portal | fin.cons.lib.validationengine                    |
+| POM Artifact ID                   | fin.cons.lib.validationengine                    |
+| Fiori ID                          |                                                  |
+| BSP Application Name              | FIN_VALIRULE_ENGINE                              |
+| Service Builder Project           | CONS_VALIDATION_ENGINE                           |
 
 ** Best Practices
 The best practices listed are tailored for Real-time Consolidation development. 
@@ -327,5 +383,5 @@ Refer this [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/01.1+Performance+
 *** Security
 Refer this [[https://wiki.wdf.sap.corp/wiki/display/fiorisec/Security+Guidelines+for+Fiori+Development][wikipage]] to know security on Fiori development. It also describe the security concerns on file upload/download.
 
-
-
+** Begin Development
+http://veui5infra.dhcp.wdf.sap.corp:8080/demokit
