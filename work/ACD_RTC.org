@@ -167,7 +167,7 @@ Define which technologies / frameworks are used in which architecture area and f
 |----------------------------------------+------------------------------------------------------|
 | Clients                                | BPC, S4HANA applications                             |
 | Presentation Layer /  User Interface   | BPC WebUI(UI5), Analytic Office, Fiori, SAPGUI       |
-| Business Logic Layer                   | ABAP, AMDP, CDS, Calculation View                    |
+| Business Logic Layer                   | ABAP, AMDP, CDS, HANA Calculation View               |
 | Analytics / Reporting                  | BW info-providers, BEx Query, CDS view, Fiori App    |
 | Integration Middle-ware                | Central Finance (based on SLT and MDG)               |
 | Business Process Management / Workflow | HRF/BRF+                                             |
@@ -193,7 +193,7 @@ The following reuse components *must/should/mustnot* be used within this develop
 | CDS 1.0         | CDS team        | Yes   | must   | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
 | Fiori 1.0       | Fiori team      | Yes   | must   | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
 | IBPF info-objects | IBPF team       | Yes   | must   | IBPF developed a lot of finance planning BW info-objects. RTC can re-used them, or do some extension whenever necessary. Beside, RTC and IBPF should combine efforts so that Consolidation and Planning can happen together. |
-| Attachment Service |                 | Yes   | must   | Fiori Attachment Service is a reusable component for Firoi apps that need to upload and store documents into S4HANA system. |
+| Attachment Service | PLM DMS team    | Yes   | must   | Fiori Attachment Service is a reusable component for Firoi apps that need to upload and store documents into S4HANA system. |
 | Design Studio   | EPM team        | Yes   | should | Design Studio is used to create queries. The query can be opened via various analysis tools, like: AO, Fiori Apps, and so on. It is appointed by S4HANA guideline for the only query builder, and will replace BEx in future. |
 | BEx Query       | BW team         | Yes   | should | BEx query should only be used when Design Studio is not possible, or for some test purpose. |
 | HANA Calculation View | HANA team       | Yes   | should | HANA Calculation view should be only used for the purpose to integrated with BPC. Other cases should use CDS instead. |

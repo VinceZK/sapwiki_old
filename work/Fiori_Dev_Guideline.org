@@ -316,7 +316,7 @@ Constains all reusable financial statement components, includes hierarch display
 | BSP Application Name              | FIN_CONS_FINSTATEMENT                  |
 | Service Builder Project           | CONS_FINANCIAL_STATEMENT               |
 
-*** Control Result Library            :Steve:   
+*** Validation Result Library                                         :Steve:   
 It is used in Validation Method and Data Release Cockpit.
 | Artifacts                         | Name                                     |
 |-----------------------------------+------------------------------------------|
@@ -339,6 +339,18 @@ It is used in Validation Rule and Validation Method
 | Fiori ID                          |                                                  |
 | BSP Application Name              | FIN_VALIRULE_ENGINE                              |
 | Service Builder Project           | CONS_VALIDATION_ENGINE                           |
+
+*** Responsive Comment Service Library
+Local accountants and group accountants can give comments on the validation results or packages.
+| Artifacts                         | Name                                |
+|-----------------------------------+-------------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_RCOMMENTS       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_RCOMMENTS |
+| App name and ID in Project Portal | fin.cons.lib.comments               |
+| POM Artifact ID                   | fin.cons.lib.comments               |
+| Fiori ID                          |                                     |
+| BSP Application Name              | FIN_COMMENTS                        |
+| Service Builder Project           | CONS_COMMENTS                       |
 
 ** Best Practices
 The best practices listed are tailored for Real-time Consolidation development. 
