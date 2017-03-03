@@ -1,5 +1,5 @@
 #+PAGEID: 1865734207
-#+VERSION: 10
+#+VERSION: 12
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: Fiori Development Guideline
@@ -10,7 +10,7 @@
 |-----------------------------+------------------+-------------+--------------------------------|
 | S/4 Guideline Map           | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1724544760][sapwiki]]     | Index page for all related materials |
 | S/4 System Landscape        | <2016-12-22 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1280512521][sapwiki]]     | System Landscapes of S/4 development line |
-| S/4 UI Landscape            | <2016-12-22 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1540489628][sapwiki]]     | System Landscapes on Fiori UI Frontend server and webdispatcher |
+| S/4 UI Landscape            | <2016-12-22 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Infra-Internal+New][sapwiki]]     | System Landscapes on Fiori UI Frontend server and webdispatcher |
 | S/4 Release Version Map     | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+Release+Version+Mapping][sapwiki]]     | Puzzled with UIAPFI70 300, sFIN 2.0 SP5, S/4H 1511, sFIN OP 1605 GA version or SAPUI5 Dist 1.37.x? Have a look at the Version Mapping |
 | S/4 Fiori Release FAQ       | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Fiori+%2528sFIN%2529+Release+Process+FAQ][sapwiki]]     | Do you have questions on what an MRC, FRB or a Maintenance Branch is? Have a look at the Release Build FAQ: |
 | SAP Gateway Help            | <2016-12-16 Fri> | [[http://help.sap.com/saphelp_gateway20sp12/helpdata/en/2d/f2caab316446d49c05ec12407ad284/content.htm?frameset=/en/60/de45e3754f4eca83e02727236064e2/frameset.htm&current_toc=/en/57/a41787789c4eca867d9a09696fc42c/plain.htm&node_id=53&show_children=false][online help]] | SAP Gateway online help, well introduce gateway from customer implementation perspective |
@@ -116,7 +116,12 @@ How to start as a project owner: https://wiki.wdf.sap.corp/wiki/display/fiorisui
 *** Jenkins
 Jenkins is used to build and package your Firoi applications/components. It is also connected with the translation system so that multi-language is supported. Your built Firoi applications/components will then stored in Nexus server as the central repository of artifacts. From the Nexus repository, your application is uploaded to the ABAP UI Frontend Server as a BSP application.  
 
-You view the build status in the Jenkins server: https://xmake-ldi.wdf.sap.corp:8443/. 
+There are 5 Jenkins server used for different purposes:
+1. CI Jobs:  https://fiodevci03.wdf.sap.corp/
+2. Quality Jobs: https://fiochecks.wdf.sap.corp/jenkins/
+3. Translation Jobs: https://fio-trans.wdf.sap.corp/
+4. CheckMarx(Security Relvant): https://fio-cx.wdf.sap.corp/
+5. Milestone Builds: https://fiorelease.wdf.sap.corp , internally calls https://xmake-dev.wdf.sap.corp  
 
 *** Maven
 Maven, a Yiddish word meaning accumulator of knowledge, was originally started as an attempt to simplify the build processes in the Jakarta Turbine project. There were several projects each with their own Ant build files that were all slightly different and JARs were checked into CVS. We wanted a standard way to build the projects, a clear definition of what the project consisted of, an easy way to publish project information and a way to share JARs across several projects.
@@ -163,13 +168,16 @@ P2 Area: FIN; P3 Area: CONS
 |------------------------------+----------------------------+--------------------------------|
 | Technical Catalog (Frontend) | SAP_TC_FIN_CONS_COMMON     | SAP: Financials - Consolidation |
 | Technical Catalog (Backend)  | SAP_TC_FIN_CONS_BE_APPS    | SAP_TC_FIN_CONS_BE_APPS:S4FIN  |
-| Business Catalog             | SAP_FIN_BC_CONS_MASTER_DAT | Financial Consolidation Master Data Preparation |
-| Business Catalog             | SAP_FIN_BC_CONS_MODELING   | Financial Consolidation Model Definition |
-| Business Catalog             | SAP_FIN_BC_CONS_VALIDATION | Financial Consolidation Validation Rules Definition |
-| Business Catalog             | SAP_FIN_BC_CONS_DATA_REL   | Financial Consolidation Data Release |
-| Business Catalog             | SAP_FIN_BC_CONS_CONSOLE    | Financial Consolidation Console |
+| Business Catalog             | SAP_FIN_BC_CONS_MASTER_DAT | Prepare chart of accountants, mappings, entities, group hierarchy, scope definition. |
+| Business Catalog             | SAP_FIN_BC_CONS_MODELING   | Define consolidation model, CT methods, rounding method, exchange rates, group hierarchy and all related customizations. |
+| Business Catalog             | SAP_FIN_BC_CONS_VALIDATION | Consolidation validation rule definition and assignment. |
+| Business Catalog             | SAP_FIN_BC_CONS_DATA_REL   | Local accountants release local data to group, includes data upload, data release, validation, currency transalation. |
+| Business Catalog             | SAP_FIN_BC_CONS_PREPARE    | Prepare for each period to get ready for the data collection and consolidation. Includes period initialization, maintain exchange rates, adjust scope and group hierarchy, and approval for the released data. |
+| Business Catalog             | SAP_FIN_BC_CONS_CONSOLE    | BPC consolidation monitor, control monitor and journal posting. |
 | Business Catalog             | SAP_FIN_BC_CONS_REPORTS    | Financial Consolidation Reports |
-| Business Group               | SAP_FIN_BCG_CONS           | Financial Consolidation        |
+| Business Group               | SAP_FIN_BCG_CONS_MODELING  | Financial Consolidation Modeling. Includes consultants, developers, and other domain experts who can model the consolidation data and process. |
+| Business Group               | SAP_FIN_BCG_CONS_LOCAL     | Local Accountants for Financial Consolidation |
+| Business Group               | SAP_FIN_BCG_CONS_GROUP     | Group Accountants for Financial Consolidation |
 | Business Role(R0248)         | SAP_BR_CONSLDTN_SPECIALIST | Financial Consolidation Specialist |
 
 
@@ -232,7 +240,7 @@ The following naming are refer the guideline of [[https://wiki.wdf.sap.corp/wiki
 
 This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Leaf+ABAP+Packages+for+FIN+AT1+Fiori+Apps][Leaf ABAP Packages]].
 
-*** Validation Rule      :Steve:
+*** Maintian Validation Rule                                           :Steve:
 | Artifacts                         | Name                                      |
 |-----------------------------------+-------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_RULE       |
@@ -244,7 +252,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | Service Builder Project           | CONS_VALIDATION_RULE                      |
 | Semantic Object                   | FinancialValidationRule                   |
 
-*** Validation Method       :Summer:
+*** Maintian Validation Method                                        :Summer:
 | Artifacts                         | Name                                        |
 |-----------------------------------+---------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_METHOD       |
@@ -256,7 +264,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | Service Builder Project           | CONS_VALIDATION_METHOD                      |
 | Semantic Object                   | FinValidationMethod                         |
 
-*** Consolidation Data Release Cockpit               :Lynn:
+*** Consolidation Data Release Cockpit                                 :Lynn:
 | Artifacts                         | Name                          |
 |-----------------------------------+-------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_DRC       |
@@ -266,9 +274,9 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | Fiori ID                          | F2591                         |
 | BSP Application Name              | FIN_CONS_DRC                  |
 | Service Builder Project           | CONS_DATA_RELEASE_COCKPIT     |
-| Semantic Object                   | ConsData                      |
+| Semantic Object                   | ConsolidationDataRelease      |
 
-*** Consolidation Data Mass Approval                      :William:
+*** Approve Financial Data for Consolidation                        :William:
 | Artifacts                         | Name                          |
 |-----------------------------------+-------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_DMA       |
@@ -278,9 +286,9 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | Fiori ID                          | F2620                         |
 | BSP Application Name              | FIN_CONS_DMA                  |
 | Service Builder Project           | CONS_DATA_MASS_APPROVAL       |
-| Semantic Object                   | ConsData                      |
+| Semantic Object                   | ConsolidationDataApproval     |
 
-*** Consolidation Financial Statement for Entity                      :Chang:
+*** Financial Statement for Consolidation Entity                       :Chang:
 | Artifacts                         | Name                                          |
 |-----------------------------------+-----------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_ENTITY_FINSTATEMENT       |
@@ -292,19 +300,21 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | Service Builder Project           | CONS_ENTITY_FINANCIAL_STATEMENT               |
 | Semantic Object                   | ConsolidationFinStatement                     |
 
-*** Drill-through Report from Consolidation Financial Statement
+*** Consolidation Used Document List                                 :Chang:
+A report can be drill-through from consolidation financial statements
 | Artifacts                         | Name                                      |
 |-----------------------------------+-------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_FS_DRILLTHROUGH       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_FS_DRILLTHROUGH |
-| App name and ID in Project Portal | fin.cons.finstatement.drillthrough        |
-| POM Artifact ID                   | fin.cons.finstatement.drillthrough        |
-| Fiori ID                          |                                           |
-| BSP Application Name              | FIN_CONS_FS_DRILL                         |
-| Service Builder Project           | CONS_FS_DRILLTHROUGH                      |
-| Semantic Object                   | DrillThroughReport                        |
+| App name and ID in Project Portal | fin.cons.document.list                    |
+| POM Artifact ID                   | fin.cons.document.list                    |
+| Fiori ID                          | F2638                                     |
+| BSP Application Name              | FIN_CONS_DOCLIST                          |
+| Service Builder Project           | CONS_DOCLIST                              |
+| Semantic Object                   | DocumentList                              |
 
-*** Consolidation Financial Statement Library
+*** Consolidation Used Financial Statement Library                   :Chang:
+
 Constains all reusable financial statement components, includes hierarch display, drill-through reports, and search helps. 
 | Artifacts                         | Name                                   |
 |-----------------------------------+----------------------------------------|
@@ -316,7 +326,7 @@ Constains all reusable financial statement components, includes hierarch display
 | BSP Application Name              | FIN_CONS_FINSTATEMENT                  |
 | Service Builder Project           | CONS_FINANCIAL_STATEMENT               |
 
-*** Validation Result Library                                         :Steve:   
+*** Validation Result Library                                         :Chang:   
 It is used in Validation Method and Data Release Cockpit.
 | Artifacts                         | Name                                     |
 |-----------------------------------+------------------------------------------|
@@ -328,7 +338,7 @@ It is used in Validation Method and Data Release Cockpit.
 | BSP Application Name              | FIN_CONS_CTRLRESULT                      |
 | Service Builder Project           | CONS_CONTROL_RESULT                      |
 
-*** Validation Engine Library
+*** Validation Engine Library                           :Steve:
 It is used in Validation Rule and Validation Method
 | Artifacts                         | Name                                             |
 |-----------------------------------+--------------------------------------------------|
@@ -340,7 +350,7 @@ It is used in Validation Rule and Validation Method
 | BSP Application Name              | FIN_VALIRULE_ENGINE                              |
 | Service Builder Project           | CONS_VALIDATION_ENGINE                           |
 
-*** Responsive Comment Service Library
+*** Responsive Comment Service Library                   :Jane:
 Local accountants and group accountants can give comments on the validation results or packages.
 | Artifacts                         | Name                                |
 |-----------------------------------+-------------------------------------|

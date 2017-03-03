@@ -226,200 +226,78 @@ The architecture chapter describes the main building blocks of the architecture 
 ~For conceptual and technical architecture diagrams use~ [[http://ency.wdf.sap.corp:1080/Modeling/Standard][Technical Architecture Modeling (TAM)]]. 
 
 *** Architecture Context and Overview
-RTC mainly interacts with 3 SAP applications: CF, BPC, and IBPF. Each takes a role as following:
+Real-Time Consolidation provides consolidation foundations in the context of S4HANA. It is designed to move consolidation prepareation activities to the source(local finance), and eliminate data replications as much as possible. The efficiency and data quality are improved before data comes into the consolidation egine(BPC) for further processing. The consolidated results can also be stored back into S4HANA(ACDOCC).
 
-1. *CF* provides a data foundation(ACDOCA) for RTC to create models on it.
-2. *RTC* enable the user to do typical consolidation preparation, like: data validation, currency translation, Inter-company reconciliation, and so on.
-3. *BPC* is the main consolidation tools that can be seamlessly integrated with RTC to do higher level consolidations and eliminations.
-4. *IBPF* is highly integrated with RTC. Which can do planning and simulation on the consolidation results, and vice versa. 
-
-Details on each building blocks and their relationships are explained below.
+The main components in RTC are:
+1. Consolidation Modeling
+2. Data Collection
+3. Data Validation
+4. Currency Translation
+5. Inter-Unit Reconcilation & Elimination
+6. Posting
+Which are also described in the following diagram:
 
 #+CAPTION: Overall Architecture Diagram
 [[../image/OverallArchitectureDiagram.png]]
 
-**** Line Item Level Data Integration
-Local financial systems synchronize their line items into CF's central journal repository(ACDOCA). The synchronization is realized through SLT. It is a middle-ware which can listen changes at database level and synchronize the updates to CF real-timely. 
+**** Foundation View
+Foundation view acts as the consolidation data foundation, on which all the consolidation views are generated. It is created manually by user, either CDS view or HANA Calculation view. It should only contain the essential logic like project fields and data filtering. In other words, it boundary the data for consolidation. 
 
-Data mapping happens when the newly created items are entering into CF through a master data mapping application called MDG(Master Data Governance). Mater data is mapped from local to group, these could includes: Accounts, Chart of Accounts, company code, cost center, and so on. 
+SAP delievers 2 examples of foundation views. With one on ACDOCA for actual data, and the other on ACDOCP for planning data. They project fields that are usually realted to financial consolidation, and do filtering on ledgers.  
 
-There is also an error handling component(AIF) which centrally process all the processing logs. If error happens, the context is saved for future re-processing. 
+**** Modeling
+The modeling includes all master data preperation, customization data definition, and consolidation model definition. There is a specific modeling tool which collects the foundation view, group chart-of-account, group fiscal year variant, and consolidation dimension to gerenate consolidation views.
 
-This building block is developed and maintained by CF's Waldorf team. RTC is highly depends on this component which permits data quality and timeliness. Meanwhile, RTC provides validation and currency translation services to CF. Additional consolidation rules and currency translations are applied before line items saved to ACDOCA.   
+**** Consolidation View
+Consolidation views are CDS views and HANA calculation views genereated by the modeling tool based on the foundation views and other meta definitions, like, Chart of Account, Fiscal Year Variant, consolidation dimension, and so on.
 
-**** Manual Adjustment Posting
-Adjustments can be made by posting additional financial documents. These adjustment documents can be either posted in original local financial systems and then synchronized to CF, or posted directly in CF. In both cases, the consolidation validation rules should be applied and existing document posting UIs should be also reuse.
+**** ACDOCC
+ACDOCC is the consolidation journal table which are mainly used to store consolidation journals and data provisioned by flexible upload.
 
-If ACDOCC is used, user has the third option to post documents to ACDOCC only for consolidation purpose. +Then a lighter document posting UI would be introduced by RTC, and less posting validation would be applied.+ This will be detail covered in the =Posting= block.  
+The ACDOCA and ACDOCP provide source local financial data for consolidation. Foundation views can be created on these tables. 
 
-**** Flexible Upload
-Flexible upload allows user to upload reported financial data, additional financial data, and master data from a file into CF. It should be part of RTC's  =Data Collection=, but as CF also has the similar functionalities, re-usability should be considered. 
+**** BW Integration
+It is necessary to provide interfaces for BW(BPC) consumption, as we can leverage a lot of existing analytic and consolidation features which BW aleady has. HANA calculation views are generated based on the consolidation view, which are then consumed by BW virtual provider or composite porvider. For the data write-back, an ABAP class is provided to allow BPC write-back the consolidation result to ACDOCC. 
 
-But there could be still difference between each other. I suppose CF is using flexible upload mainly for the group reporting, and the data is loaded to ACDOCA. Strict posting validation could be applied in this case; While for RTC, the financial data is uploaded only for the purpose of consolidation, and the data is saved in ACDOCC. Only light validation logic should be applied. 
+**** Validation
+Validation is used to control data quality during the consolidation process. The validation engine is designed as a standalone component, which can be used not only in financial consolidation, but also in other FI applications. Validation rules can be defined, stored, and run in validation engine. 
 
-Whether flexible upload is combined or how to combine still needs further investigation.   
+Total validation is used to validate data on aggregated level, which may already be persisted in DB tables. The rules used for total validation are called analytic rules. You group rules in validation engine and assign them to a call-point. 
+
+Document validation is used to validation line item data, which is transient. For example, I want to validate a document before posting based on rules defined by myself. The rules used for document validation are called transactional rules.  
 
 **** Data Collection
-Data is collected from all the subsidiaries, or the de-centralized systems through various ways. In the best situation, CF already helps to collect all the data correctly and timely. Then this building block only provides validations to make sure the local financial data is correct and ready for the consolidation. 
+Data is collected from all the subsidiaries through various ways. In ideal cases, all the companies run their financial transactions in one S4HANA instance, or the transactions are synchronized into a Central Finance System. Then we only need to control how data is released for consolidation by adding timestamp filterring and do data validations by request total validation component. 
 
-But in more realistic cases, data is not that ready enough for consolidation. Some subsidiaries data may not be able to automatically synchronize into CF, or even CF is not the right approach for some instances. In that way, RTC should provide a flexible data upload mechanism which may support spreadsheets upload, manually entering, and web services APIs. Through these flexible interfaces, the raw data will be validated upon consolidation rules, and then posted into ACDOCC.
+But in real cases, data is not that integrated. Some subsidiaries have to upload aggreated data through workbooks. The colllectiong process won't be in such an easy way. So flexible upload is provided so that external entities can provide their data to the consolidation system. Technically, it supports spreadsheets upload, manually entering, and web services APIs. The data is stored in ACDOCC by calling the posting APIs. Validation and data release control should also work on these kinds of data provision. 
 
-As said in =Flexible Upload= block, CF may already have covered a lot of data collection tasks. We should try to achieve maximum re-use and combine efforts.
+**** Currency Translation
+Currency translation is needed when local currency is different with the consoliation currency. The amounts have to be translated before futher consolidation acitvies. It reads the data through consolidation views, translate, and save the result into ACDOCC through posting APIs. 
 
-**** Data Foundation
-Data foundations are the tables that actual source financial lines are stored. They could be mainly 3 foundation tables:
-1. ACDOCA: actual financial journal items.
-2. ACDOCC: aggregated journal generated during consolidation.
-3. ACDOCP: aggregated journal generated during planning. 
+Currency translation can be invoked in multiple entry points. If local accountants are required to submit the translated amounts, then they run translation during data release; Group accountants can run translation either on-the-fly in reporting, or in consolidation processes before the elimination step. 
 
-There are 3 types of data would be stored in RTC:
+**** Posting
+Posting is used to save data into ACDOCC. It includes posting APIs and related manual posting UIs. To achieve better performance, the posting APIs are utlized using AMDP. So that the consolidation result is not necessary to send to ABAP and return back to the HANA. 
 
-*Reported financial data on line item level* | 
-This is the data which central finance takes care of already: the FI line items. This is the basis of the consolidation, and normally comes from an FI system. However, we have to take care of special situations and the transformations that typically take place when the data is copied from the local accounting to the group accounting.
+The posting may also need to call document validation to control the quality when data is entring into ACDOCC. Doucment type is supported which allow to do some customizations to control how posting is done for different purpose. 
 
-*Reported financial data on aggregated level* | 
-There will be most likely cases where the data is not provided on line item level. Examples are very small subsidiaries, that just do not do accounting on such a detailed level (they might just use a PC program). Or I remember one case where a joint venture was managed not so jointly, so one of the two parents did not get the detailed information, but only the high level aggregated data.
+For details, see [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Postings][SDD Posting]].
 
-Saving such kind of aggregated data to ACDOCA is not that easy, and a separate aggregated table, like ACDOCC, would be more achievable.  
+**** Inter-Unit Reconcilation & Elimination
+We support reconciliation and elimination so that group reports can be made as easily as possible. The reconciliation can be as simple as only a reconciliation report without any assignments. It is also possible to leverage existing SAP Inter-Company Reconcilation solution for a full feature set. 
 
-*Additional data* | 
-Not all data is in ACDOCA, and not all data in the full detail needed by consolidation. For example we do not have the investment information in ACDOCA. Or Financial Services store the details about the customer accounts in their own table, and only have an aggregated view in ACODCA. Another example is sub-ledgers which are not (yet) integrated into ACDOCA.
+Elimination shares the similar pairing rules with reconciliation, but it also contains how to do automatical postings and record differences. 
 
-How to save this additional data? Extending fields on ACDOCA and ACDOCC, or join additional tables? Either need model to be adjusted on DB level. Ensuring the flexibility and performance at same time on the enrichment of data foundation is a big challenge(see next chapter "Data foundation enrichment").
-
-**** Data Exposure via BW/CDS
-Multi-dimension views can be created either using BW info-providers or using CDS analytic views. They are both underlying modeling technologies that Data modeling tool depends on. The BW info-provider is only used to integrate with BPC and BCS. As both of them are build on BW components. 
-
-CDS analytic views are preferred as it is SAP's future modeling scripts, and the only modeling technology allowed by S4HANA guideline. The expectation is that BW can support CDS well, so that there is no need to support 2 different modeling technologies. 
-
-HRF vocabulary is also a data exposure technology. But it is for rule definition and execution. 
-
-**** Data Modeling
-Data modeling is to define fields and rules for a consolidation campaign. From technique point of view, data modeling is to create multi-dimension views and consolidation rules based on foundation tables. These activities could be simplified by consolidation modeling tools. 
-
-These foundation tables includes: ACDOCA, ACDOCC, and other data sources like ACDOCP (or customer specific data extensions). They are used to generate a fact view.
-
-Master data views(includes Hierarchies) which are generated upon existing master data tables will then be associated to the fact view to form a multi-dimension view. The multi-dimension view can then be used for reporting and analytics. Master data could be freely extended, both horizontally and vertically, according to various consolidation requirements.
-
-The consolidation customization data is used to define consolidation Units, Groups, and Scope. A =Unit= can be only assigned to one =Group=; =Group= can also contains sub-groups, thus to from a consolidation hierarchy. Nodes in the hierarchy could be time-dependent or version-dependent. Details can be found in building block "Consolidation Unit/Group/Scope" 
-
-Fields in fact view are implicitly assigned to different roles. Roles include: Key, Consolidation dimension(unit), Account, Currency, Sub-assignment, Version, and so on. When defining CDS views, we can add an abbreviation prefix to each field's semantic name. Each field's role is then assigned without having to using an additional mapping table. Following table indicates how we category Fields to their roles:
-| Field Role          | Abbr. Prefix | Semantic Name Example |
-|---------------------+--------------+-----------------------|
-| Key                 | K            | K.FiscalYear          |
-| Account             | A            | A.AccNum              |
-| Transaction         | T            | T.PostingLvl          |
-| Currency            | C            | C.GroupCurr           |
-| Unit                | M            | M.BaseUnit            |
-| Consolidation Unit  | U            | U.RCOMP               |
-| Partner Unit        | P            | P.PartnerComp         |
-| Consolidation Group | G            | G.ConsGroup           |
-| Account Assignment  | H            | H.SubCategory         |
-| Amount              | V            | V.GroupCurrAmount     |
-
-Those consolidation customization data are exposed via CDS views, which then can be associated with the fact view for reporting, or assigned to HRF vocabulary for rules definition. Although the consolidation hierarchy are changed frequently, but the meta of these objects are rather stable. So both the CDS views and HRF vocabulary can be pre-delivered as static artifacts (colored with yellow). 
-
-Unlike consolidation customization view and master data view, the meta of fact view is designed for flexible customization and frequently changing. Users may add/delete new fields according to their needs. So the fact CDS view and corresponding HRF vocabulary should be generated by modeling program dynamically. For details about objects and artifacts involve in modeling process, see following diagram:  
-
-#+CAPTION: Data Modeling Diagram
-[[../image/DataModeling.png]]
-
-This building block is dotted because it can be replaced by BPC's modeling tool. In case BPC is not possible due to release strategy or other reasons, RTC should provide a flexible modeling tool. In both cases, RTC should provide a set of modeling APIs that can generate CDS views, assign CDS views to HRF vocabulary, and allow other consolidation tools to integrate with. 
-
-**** Consolidation Unit/Group/Scope Definition
-Consolidation unit is the smallest element in a consolidation hierarchy which forms the basis for consolidation. You can define the role of consolidation unit for entities like:  =company=, =profit center=, =cost center=, =business are=, =plant=, and so on. If more than one entities are defined as consolidation unit in a consolidation area, then a matrix organization is portrayed.   
-
-Consolidation group groups consolidation units for the purpose of consolidation and reporting. A unit can be only assign to one group, and a group can be assigned only to another group. At the end, there should be a root group. Thus a consolidation hierarchy is structured which can be based on different perspective: regional, product,or organization structure. 
-
-Consolidation scope is a sub-tree of the hierarchy, which only includes those nodes that are relevant to this consolidation campaign. Irrelevant nodes (like 10% own of the entity) are removed from the scope.
-
-There are also consolidation version, financial statement item, sub-assignments, and so on. They are all consolidation specific customizations. These customizations are stored in a set of customization tables. Based on these customization, consolidation monitor, inter-company reconciliation and reporting can be portrayed correctly. 
-
-**** Inter-Company Reconciliation 
-Inter-company Reconciliation (ICR in short) provides you with periodic control over accounting documents that describe the accounting transactions within a corporate group. Designed to reduce the differences in corporate group consolidation, this application in Financial Accounting allows early analysis in the closing process to avoid differences altogether and to reduce the deadline pressure that normally arises during the end of a closing period.
-
-ICR operates on the level of companies and its trading partners. To avoid currency conversion differences, the documents are reconciled in the *transaction currency*. Both individual companies and their parent companies benefit from ICR. Individual companies benefit from paired documents because they need to ensure that their own documents from accounting transactions correspond to the documents of internal trading partners. This helps avoid delays and disputes when payments are processed. Their parent companies can then make a global check on the reconciliation results for all the companies.
-
-You can regard ICR as a special process that belongs to data collection. It is such a common usage that SAP already has this feature as a separate component called [[https://help.sap.com/saphelp_erp_fao_addon20/helpdata/en/d7/5a7c525ae17154e10000000a44176d/frameset.htm][SAP ICR]]. ICR supports the following three reconciliation processes:
-
-1. *G/L open items reconciliation.* This process is for reconciliation of open items if most of your inter-company receivables and payables are posted to G/L accounts.
-2. *G/L account reconciliation.* You use this process for reconciliation of documents that are posted to accounts which do not have open item management. This process is mostly used for reconciliation of profit and loss accounts.
-3. *Customer / vendor open items reconciliation.* You use this process for reconciliation of open items. Choose this process if most of your inter-company receivables and payables are posted to customer and vendor accounts.
-
-Currently, ICR has both dynpro UI and webdynpro UI, but without Fiori. Evaluation should be made to check if current webdynpro app can be enhanced, or new Fiori UI could be developed. The new ICR UI will access ACDOCA data through CDS exposure, and need the consolidation scope definition and reconciliation rules to be defined in the validation engine. 
-
-**** Inter-Unit Elimination
-When we talk about consolidation, we also means elimination. Consolidation and elimination are two actions that usually happen together. At most time, we simply called it "consolidation". Consolidation means do aggregations on the amount that belongs to the same dimension group. Elimination means some related amounts should be eliminated to avoid unnecessary counting. Elimination usually happens between 2 trading partners, for example: Partner A sold something to partner B with amount 100 dollars. Both A and B are belong to the same business group. So, from group's point of view, the transaction amount $100 should be eliminated.
-
-Elimination usually exists between a pair of consolidation units, such as:
-| Business Relationship                      | Inter-Unit Elimination                     |
-|--------------------------------------------+--------------------------------------------|
-| Payables & Receivables                     | Elimination of IU payables and receivables |
-| Revenue & Expense                          | Elimination of IU revenue and expense      |
-| Revenue & Expense from Investment Holdings | Elimination of investment income           |
-
-Prior to running inter-unit eliminations, you can use reconciliations to determine any elimination differences without having the system post elimination entries. By doing this, you can correct posting errors in the reported financial data, or manually post standardizing entries. So posting functions will be called either automatically or manually during inter-unit elimination. 
-
-**** TODO Posting
-**** Validation Engine
-Validation Engine is the core of financial consolidation. It is used for storing and running consolidation rules, and rules could be applied in all other building blocks. Easy customization and high performance of applying rules are the key targets that this building block should achieve.  
-
-Validation Engine is built on existing rule frameworks HRF and BRF+. HRF stands for Hana Rule Framework. Rules maintained in HRF can be applied directly in HANA, which permits good performance. BRF+ stands for Business Rule Framework plus. BRF+ is an ABAP-based rule framework. There is a road-map that HRF and BRF+ will be merged into one. But currently HRF can be integrated into BRF+ in some degree.
-
-How we use HRF combined with BRF+ is still under research.
- 
-**** Validation Rules Customization
-HRF has 2 kinds of rule editors, one is Text-Based Rules, and the other is Decision Table. HRF team has made them  UI5 components, so that it can be easily integrated and reused by other applications. 
-
-*Text-Based Rules:*
-Simple, natural, and intuitive business condition language (Rule Expression Language)
-
-#+CAPTION: Text-Based Rules
-[[../image/TextRuleEditor.png]]
-
-*Decision Table:* 
-Simple and intuitive UI control that supports text rules and decision tables
-
-#+CAPTION: Decision Table
-[[../image/DecisionTable.png]]
-
-While RTC can leverage HRF's high performance and intuitive rules editor, how to map existing rules of BPC and BCS, or even 3^{rd} party consolidation applications into HRF is still a big challenge.  
-  
-**** Currency Translation Engine
-Currency translation is based on the HANA function: *CURRENCY_TRANSLATION*. The function use the exchange rates in table: TCURR. TCURR and other related tables forms SAP ERP's exchange rate repository. Real-time consolidation should be connected to the exchange rate repository. 
-
-There are 3 kinds of exchange rates that consolidation needs:
-1. Average rate
-2. Transaction rate
-3. Reporting rate
-
-The choice of different type of rates is based on type of accounts. The currency translation engine should choose the right rate with high performance and high customization. HRF's decision table could be used in such case. 
-   
-**** Currency Translation Rules Customization
-As describe above, HRF Decision table could be used to maintain the currency exchange rules. It should be easy to mapping exchange rate rules to decision table. 
-
-API should also be provided to allow external rate repository to be imported into HRF. 
-
-**** Consolidation Monitor 
-Consolidation monitor provides a central place to view consolidation hierarchy, groups, and units. You can also executes consolidation tasks(like data collecting, standardizing, and elimination), and monitor the progress of execution.
-
-How consolidation processes depends on the consolidation hierarchy defined, tasks assigned and the rules maintained. Customers usually define consolidation rules based on their own needs. There are also standards to follow, like: GAAP and IFRS, which are legal requirements that all the corporations must follow.
-
-There could be difference generated during consolidation. For example, when local currency amount is translated to group currency amount, due to the fluctuation of currency rate, the translated group amount could be unbalanced. Thus, adjustment documents would be posted automatically, and the difference amount will be recorded to an account that specified in the rules. 
-
-The whole process may run in hours in traditional consolidation applications. But within Real-time Consolidation, it should be done in minutes(without scheduling any batch jobs). Sometimes, it could be run on-the-fly without doing any document postings. For example, when the operator wants to see updated results after small adjustments or new journals come in.   
-
-This building block is the main entry point for the users. It should be a Firoi App or can be replaced by BPC web client. 
-
+Both reconciliation and elimination can be run on-the-fly. 
 **** Reporting
-Reports or queries are based on multi-dimension views that exposed either by BW or CDS. Tools like BEx Query Designer and Design Studio could be used to create queries based on multi-dimension views. Those queries can be then consumed by AO and Fiori.
+There are some genaric reports developed using Fiori so that on-the-fly run can be supported. User can aslo define CDS views or BW Queries on consolidation views. Those queries can be then either consumed by AO, or any other reporting tools.
 
-Reports could be organized by consolidation hierarchies.
+**** Consolidation Dashboard
+Consolidation Dashboard provides a central place to view all statuses of consolidation processes, and also an entry point to access all modeling, customization, preparation, and running applications.
 
-There are report to report navigation called [[http://help.sap.com/saphelp_scm700_ehp02/helpdata/en/4a/5b96c6517f2e24e10000000a42189b/content.htm?frameset=/en/4a/5b96c6517f2e24e10000000a42189b/frameset.htm&current_toc=/en/b2/259b06d406454fa8429240ecaed4f6/plain.htm&node_id=123&show_children=false][Report-Report Interface]](RRI in short). RRI allows you the flexibility to call a jump target (receiver) on-line from a BEx query (sender) within or outside of the BW system. Jump targets that have been assigned to a BEx query can be selected in BEx Web applications and in the BEx Analyzer. You can access them from the context menu under the Goto function.
+**** BPC
+BPC consumes data through a virtual provider and the HANA views generated on consolidation views. From BPC's perspective, the data is already for consolidation. The consolidation engine of BPC access the real-time data, calculate and write-back to ACDOCC by calling the write-back class.
 
-Analytics Office also support RRI just like BEx Analyzer. Fiori Apps should develop corresponding navigation features to existing list view reports or detail transactions. The consolidation trace back requirements are actually realized through these report-to-report navigations. 
-  
 *** Main Architecture Challenges and Decisions
 **** Have to use calculation views and BW content
 HANA and BW content is not allowed in S4HANA guideline. This is because they are not targets to Cloud. But Real-time consolidation has to use them because it has to integrate with BPC. While BPC is SAP's only legal consolidation product, it is a sub-component of BW, and fully build on BW info-providers. Ask BPC to support CDS in short term is impossible. 
@@ -555,8 +433,6 @@ It is very possible that additional financial data is needed in a consolidation 
 
 If additional data is stored in other tables, then associated tables with ACDOCA or ACDOCC through DB join view is also very straight forward approach. Then the consolidation model tool should have the ability to recognize the joined fact views. There could be performance drawback in this situation, as join 2 large tables is not a good idea in HANA.
 
-In both extension options, these new added fields should be assigned with consolidation specific roles, like: version, account, entity, and so on. How this role assignment is done is still under investigation. 
-
 | <15>            | <50>                                               |
 | *Decision*      |                                                    |
 | *By*            |                                                    |
@@ -564,7 +440,7 @@ In both extension options, these new added fields should be assigned with consol
 | *Description*   |                                                    |
 
 **** Rule framework
-Consolidation rule is an important part of financial consolidation. In S/4 guideline, BRF+ is the only permitted rule framework. But BRF+ is an ABAP rule framework, if you want to leveraged HANA, you can only use HANA Rule Framework(HRF) through BRF+ interfaces. BRF+ and HRF already planned a road-map to make the 2 frameworks merged into one. 
+Consolidation rule is an important part of financial consolidation. In S/4 guideline, BRF+ is the only permitted rule framework. But BRF+ is an ABAP rule framework, if you want to leverage HANA, you can only use HANA Rule Framework(HRF) through BRF+ interfaces. BRF+ and HRF already planned a road-map to make the 2 frameworks merged into one. 
 
 RTC requires data validation based on a large amount of data. So using HRF is an idea choice compared with BRF+.But that also means there will be gaps among RTC, BRF+, and HRF. For example, if RTC finds a feature is missing, then there could be the BRF+ API issue, or the HRF issue. A lot of communication work will be raised. 
 
@@ -577,9 +453,9 @@ If we go through the first option, it complies with S/4 Guideline, but may hinde
 The second option is the faster approach. While it violates with S/4 Guidelines, we can still apply the deviation if we have listed good reasons. Meanwhile, we should keep in mind that some facility features could be provided by ourselves. This will at least includes: Transport of contents, DDIC conversion, Security. 
 
 | <15>            | <50>                                               |
-| *Decision*      |                                                    |
+| *Decision*      | Develop Validation on BRF+/HRF                     |
 | *By*            |                                                    |
-| *Date*          |                                                    |
+| *Date*          | <2016-12-02 Fri>                                   |
 | *Description*   |                                                    |
 
 **** Push down to HANA
@@ -601,7 +477,7 @@ In the best situation, a feature can be realized fully using HANA artifacts. But
 
 **** UI technology
 RTC will reuse BPC's UI as much as possible. But more or less, RTC could deliver some UI artifacts:
-1. *Consolidation Monitor*: for data collection, currency translation and Inter-company reconciliation.
+1. *Consolidation Dashboard*: for data collection, currency translation and Inter-company reconciliation.
 2. *Data Modeling*: for CDS and HRF vocabulary generating. 
 3. *Consolidation Customization*: define version, dimension, and hierarchies.
 4. *Document Posting*: a simplified document posting UI for consolidation.
@@ -610,7 +486,7 @@ RTC will reuse BPC's UI as much as possible. But more or less, RTC could deliver
 7. *Rule Maintenance*: maintain rules for data validation, currency conversion, and automatic postings.
 8. *Reporting*: some group reports, trace-back reports, and ICR comparison reports.   
 
-Fiori should be the first option according to the S/4 HANA guidelines. But considering the team capability, we are lacking of Fiori development resources. But if we choose ABAP dynpro, although we can gain some efficiency, we will lose the cloud target. Besides, the ABAP dynpro is less attractive.   
+Fiori should be the first option according to the S/4 HANA guidelines. But considering the team capability, we are lacking of Fiori development resources. If we choose ABAP dynpro, although we can gain some efficiency, we will lose the cloud target. Besides, the ABAP dynpro is less attractive.   
 
 The compromise approach is to mix use of different UI technologies in different phases. And try to find the best solution along with the development progress.
 
@@ -672,24 +548,35 @@ The following table lists all public APIs which are offered, be it newly created
 
 ~To do so, define how communication channels (protocol, data, ...) are protected. Describe how authentication, authorization and logging are performed. Consider architecture requirements pertaining to confidentiality, integrity and availability.~ 
 
-*** TODO Deployment and Operations
-~It is recommended to work with the local Technical Component and Delivery Architecture (TCDA) team on defining deployment and operations architecture. Contact is the "Delivery Architecture Engineer" maintained in [[https://ifp.wdf.sap.corp/sap(bD1lbiZjPTAwMSZpPTEmcz1TSUQlM2FBTk9OJTNhcHdkZjU3ODJfSUZQXzAxJTNhWEhRWUJUMFlnaXNneEZlWWZTemIwR1FhWnZxaXotY2lkX1Z3TUF0Zy1BVFQ=)/bc/bsp/sap/zpr/default.htm][program repository]] entry of your program.~
-
+*** Deployment and Operations
 **** Deployed Component Structure and Deployment Options
-Show all interdependencies of (groups of) software components using a package diagram (TAM). Assign the components to software layers, for example see: https://wiki.wdf.sap.corp/display/archGov/Software+Layers
+#+CAPTION: Software Component Structure
+[[../image/SoftwareComponentStructure.png]]
 
-Describe software component structure, package structure and their deployment options. Deployment options describe the different possibilities how the software components can be distributed across different systems. Indicate cross-component communication. Mention explicitly, if there are new dependencies between software components.
+There are 4 components in RTC:
+1. Consolidation Foundation, which includes modeling, currency transaltion, consolidation rule definition, and posting.
+2. Data Collection, which includes data release and flexible upload.
+3. Validation Engine, which can be decoupled from RTC to be a more genaric component. 
+4. BPC Integeration, which includes all BW and HANA artifacts for the integeration with BPC.
 
-Describe deployment unit and process component structure if relevant.
+The consolidation foundation optionally depends on BPC which belongs to the SAP_BW component if the model is created with BPC integeration option. Validation Engine depends on SAP BRF+/HRF which belongs to the SAP_BASIS component. And they are all in NW 752 version. 
+
+There are also dependencies on HANA level. For the BPC integeration part, it depends on the HANA calculation views in the delivery unit "HCO_ERP_SFIN_RTC". And SAP BRF+/HRF also depends on the delivery unit "HCO_RULE_FW".
 
 **** System Landscape
 ~Describe typical system landscape required to run the software developed within this program productive at a customer site. Show how the main deployable building blocks are distributed within that landscape. Determine which landscape components are mandatory and which are optional to run the software~
 
+#+CAPTION: Typical Production System Landscape at Customer Site 
+[[../image/TypicalProdLandscape.png]]
+If you use Real-Time Consolidation as a complete consolidation solution, then the embedded BPC must be cominbed. In ideal cases, the local FI data is already in G/L Accounting, or it is synchronized to the Central Finance system using real-time replication. For those external entities that are not integerated in S4HANA, flexible upload is needed. In either case, data collection component is needed for data release control. Validation may be always necessary to keep the data quality. And if you want to combine planning and consolidation, IBPF is the best chocie. 
+
+#+CAPTION: Minimal Production System Landscape at Customer Site 
+[[../image/MinimalProdLandscape.png]]
+For the minimal usage, Real-time Consolidation can be used as a simple and effective group reporting tool. Thus, you only need the foundation and data collection components. Of course, G/L Accounting is always a good companion.  
+
 **** Operation Concept
-~Describe how the planned software is operated and estimate the impact on TCO. This includes a rough description of complexity of installation, configuration, update, monitoring, and troubleshooting. Explain also how easy product and landscape optimization can be done during product lifecycle (such as scalability and high availability).~
-
-~In case TCO is high, explain a roadmap how simplification in next versions can be done (for example from complexity hiding to complexity reduction).~
-
+Real-time Consolidation is fully contained in S4CORE, and follows all the S4HANA operation standards. Besides, it is based on "Activate-to-Use" concept which provides good flexibility. Real-time means real-time modeling and real-time data, it is aimed to allow multi tenancy to fast deploy and adjust their consolidation processes.
+  
 *** Testing
 ~Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.~
 
@@ -767,8 +654,41 @@ The limits are mainly on the flexibility and performance. Reporting based on leg
 Regarding with RTC, as the emergence of S4HANA and ACDOCA, both flexibility and performance are well covered by core technologies. Thus its architecture would be more similar with EC-CS. But while EC-CS still has independent tables,like: /ECMCT/ for aggregated data and /ECMCA/ for line item data, RTC can direct use ACDOCA for consolidation. There is no more data copy, and it realizes the combination of OLTP and OLAP. 
 
 As BPC already delivers fancy UI and mature consolidation logic, RTC should achieve reuse. Virtual info-providers and virtual info-objects can be used as the main modeling tool and the intermediary layer which connects BPC and S4HANA finance. Thus BPC UIs and consolidation process can run directly on the actual data.   
+*** Consolidation Unit/Group/Scope Definition
+Consolidation unit is the smallest element in a consolidation hierarchy which forms the basis for consolidation. You can define the role of consolidation unit for entities like:  =company=, =profit center=, =cost center=, =business are=, =plant=, and so on. If more than one entities are defined as consolidation unit in a consolidation area, then a matrix organization is portrayed.   
 
+Consolidation group groups consolidation units for the purpose of consolidation and reporting. A unit can be only assign to one group, and a group can be assigned only to another group. At the end, there should be a root group. Thus a consolidation hierarchy is structured which can be based on different perspective: regional, product,or organization structure. 
+
+Consolidation scope is a sub-tree of the hierarchy, which only includes those nodes that are relevant to this consolidation campaign. Irrelevant nodes (like 10% own of the entity) are removed from the scope.
+
+There are also consolidation version, financial statement item, sub-assignments, and so on. They are all consolidation specific customizations. These customizations are stored in a set of customization tables. Based on these customization, consolidation monitor, inter-company reconciliation and reporting can be portrayed correctly. 
+
+*** Inter-Company Reconciliation 
+Inter-company Reconciliation (ICR in short) provides you with periodic control over accounting documents that describe the accounting transactions within a corporate group. Designed to reduce the differences in corporate group consolidation, this application in Financial Accounting allows early analysis in the closing process to avoid differences altogether and to reduce the deadline pressure that normally arises during the end of a closing period.
+
+ICR operates on the level of companies and its trading partners. To avoid currency conversion differences, the documents are reconciled in the *transaction currency*. Both individual companies and their parent companies benefit from ICR. Individual companies benefit from paired documents because they need to ensure that their own documents from accounting transactions correspond to the documents of internal trading partners. This helps avoid delays and disputes when payments are processed. Their parent companies can then make a global check on the reconciliation results for all the companies.
+
+You can regard ICR as a special process that belongs to data collection. It is such a common usage that SAP already has this feature as a separate component called [[https://help.sap.com/saphelp_erp_fao_addon20/helpdata/en/d7/5a7c525ae17154e10000000a44176d/frameset.htm][SAP ICR]]. ICR supports the following three reconciliation processes:
+
+1. *G/L open items reconciliation.* This process is for reconciliation of open items if most of your inter-company receivables and payables are posted to G/L accounts.
+2. *G/L account reconciliation.* You use this process for reconciliation of documents that are posted to accounts which do not have open item management. This process is mostly used for reconciliation of profit and loss accounts.
+3. *Customer / vendor open items reconciliation.* You use this process for reconciliation of open items. Choose this process if most of your inter-company receivables and payables are posted to customer and vendor accounts.
+
+Currently, ICR has both dynpro UI and webdynpro UI, but without Fiori. Evaluation should be made to check if current webdynpro app can be enhanced, or new Fiori UI could be developed. The new ICR UI will access ACDOCA data through CDS exposure, and need the consolidation scope definition and reconciliation rules to be defined in the validation engine. 
+
+*** Inter-Unit Elimination
+When we talk about consolidation, we also means elimination. Consolidation and elimination are two actions that usually happen together. At most time, we simply called it "consolidation". Consolidation means do aggregations on the amount that belongs to the same dimension group. Elimination means some related amounts should be eliminated to avoid unnecessary counting. Elimination usually happens between 2 trading partners, for example: Partner A sold something to partner B with amount 100 dollars. Both A and B are belong to the same business group. So, from group's point of view, the transaction amount $100 should be eliminated.
+
+Elimination usually exists between a pair of consolidation units, such as:
+| Business Relationship                      | Inter-Unit Elimination                     |
+|--------------------------------------------+--------------------------------------------|
+| Payables & Receivables                     | Elimination of IU payables and receivables |
+| Revenue & Expense                          | Elimination of IU revenue and expense      |
+| Revenue & Expense from Investment Holdings | Elimination of investment income           |
+
+Prior to running inter-unit eliminations, you can use reconciliations to determine any elimination differences without having the system post elimination entries. By doing this, you can correct posting errors in the reported financial data, or manually post standardizing entries. So posting functions will be called either automatically or manually during inter-unit elimination. 
 
 *** Business Rules with HANA Rules Framework
 
 **** [[http://scn.sap.com/docs/DOC-63047][Getting started with HANA Rules Framework]]
+  

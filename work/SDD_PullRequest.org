@@ -255,13 +255,13 @@ The status of data release requests not only controls the data release process, 
 | User Status             | Code |
 |-------------------------+------|
 | Initial                 |   00 |
-| Currency Conversion Ran |   01 |
-| Validation Ran          |   02 |
-| Cancel                  |   03 |
-| Rejected                |   10 |
-| Deferred                |   20 |
+| Cancel                  |   01 |
+| Currency Conversion Ran |   02 |
+| Validation Ran          |   03 |
+| Rejected                |   20 |
+| Deferred                |   21 |
 | Released                |   30 |
-| Approved                |   40 |
+| Approved                |   50 |
 
 #+CAPTION: Pseudo SQL that controls visibility
 #+BEGIN_SRC sql
@@ -490,6 +490,8 @@ In the left panel, you can view all the data release requests related to the (su
 The group view is a report for group accountants to view the data submit status for multiple entities. They can get an overview on the statuses for a certain group node or a bunch of entities. You can click an entity to navigate to the Data Release Cockpit, you can batch approve/reject, and you can batch lock/unlock. 
 
 The lock supports lock/unlock in future. Which means, group accountant can schedule to lock/unlock entities for data package submitting. 
+
+When the group accountant initializations the period, it generates a PRR for each enity. If it is the first period of the fiscal year, and the data in FINS_FISC_DATE is not generated for all involved local FSV and group FSV, then the application automatically generates the mapping data for current year.  
 
 
 * Deduction
