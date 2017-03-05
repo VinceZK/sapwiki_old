@@ -1,0 +1,27 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: Consolidation Should Be Real-Time
+
+* Real-Time
+When I took the topic "Real-Time Consolidation", I am always thinking what does "Real-Time" mean to an analytic APP. 
+
+** Real-Time Data
+No data replication. Of course, that is the obvious differences compared with existing solutions for decades. And Real-Time Consolidation is always the target which is chased for many years. The difficulties are:
+
+*** Where is the real-time data?
+A machine gun without bullets. Accounting system plus consolidation system.
+
+*** Concurrency Control
+ACDOCA is growing, organization is changing, so does the chart-of-accounts. Then how those changes directly impact the consolidation?
+
+*** Real-Time Transaction
+
+** Real-Time Modeling
+
+* Performance
+
+* Close to Data
+
+* Move EC-CS to Cloud 
