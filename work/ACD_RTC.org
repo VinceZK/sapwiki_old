@@ -1,7 +1,7 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+PAGEID: 1774869651
-#+VERSION: 87
+#+VERSION: 88
 #+TITLE: ACD of Real-time Consolidation
 
 ** Revision Log 
@@ -16,13 +16,13 @@
 | Product Team Architect             | Elfner, Stefan     |
 | Architect (Implementation Team)    | Vincent, Zhang     |
 | Product Owner                      | Ying, Shi          |
-| Solution Management Representatvie |                    |
+| Solution Management Representative |                    |
 | Program Quality Manager            |                    |
 | IMS Representative                 |                    |
 | User Interface Representative      |                    |
 
 ** Abstract
-Real-time Consolidation(RTC in short) provides the foundation for the finacial consolidation on S4HANA(OP&Cloud) platform. It provides the high quaility data for consolidation in a real-time fashion. RTC is designed to be easily integrated with BusinessObject Planning and Consolidation(BPC in short) and all other possilbe consolidation solutions. Existing consolidation solutions can leverage RTC to consume S4HANA data in a much easier way.     
+Real-time Consolidation(RTC in short) provides the foundation for the financial consolidation on S4HANA(OP&Cloud) platform. It provides the high quality data for consolidation in a real-time fashion. RTC is designed to be easily integrated with BusinessObject Planning and Consolidation(BPC in short) and all other possible consolidation solutions. Existing consolidation solutions can leverage RTC to consume S4HANA data in a much easier way.     
 
 Based on S4HANA Finance, RTC makes real-time financial consolidation possible in the following ways:
 1. No additional data copy and batch job is needed when running consolidation. Consolidated results can be made on-the-fly directly based on Universal Journal Entries. 
@@ -75,15 +75,15 @@ Siemens has established a so called global template. That means that the group d
 Local accountant release the data for consolidation at local close in S4HANA. In case external entities, they can upload the data into S4HANA and then release.
 
 **** Data Validation
-Data validation is to control the data quality for consolidation. It can be happen during data relase as well as consolidation process. 
+Data validation is to control the data quality for consolidation. It can be happen during data release as well as consolidation process. 
 
 **** Currency Translation
-Currency transaltion is used to convert the local currency amount to the consolidation currency amount. As different types of accounts use different translation methods and rates, translation differences thus could be happen can will recorded according to the translation rules predefined. 
+Currency translation is used to convert the local currency amount to the consolidation currency amount. As different types of accounts use different translation methods and rates, translation differences thus could be happen can will recorded according to the translation rules predefined. 
 
 **** Inter-Unit Reconciliation & Elimination
 The most basic consolidation function is the elimination of inter-company postings. If Company A and Company B are in the same group, and Company A sells something to Company B, then the corresponding bookings must be eliminated during consolidation.
 
-Technically, elimination does reversing on these internal transactions among entities. The difficulty is how to figure out which transactions should be eliminated. This requires a mix of intercompany and group relevant information. If under a consolidation group hierarchy, there are companies who have reciprocal transactions, then these line items should be revered, and repost amounts to elimination accounts.
+Technically, elimination does reversing on these internal transactions among entities. The difficulty is how to figure out which transactions should be eliminated. This requires a mix of inter-company and group relevant information. If under a consolidation group hierarchy, there are companies who have reciprocal transactions, then these line items should be revered, and repost amounts to elimination accounts.
 
 **** Year-End close (pre)consolidation
 Traditional consolidation takes days. It needs to extract data from group's sub financial systems, which needs the sub systems finish the closing first. Then transform the data, and load it to the consolidation system. The overall closing and ETL process are very time-consuming. No bother to mention if corrections are needed, the entire process could be re-processed. Corporation stakeholders suffers waiting too long a period for consolidated statements. 
@@ -119,10 +119,10 @@ Each component's version depends on S4CORE.
 | <30>                           | <50>                                               |
 | *Who initiates activity (interactor)?* | Group Accountant                                   |
 | *Addressed part of the system which executes initiated activity (executor)?* | Fiori App: Data Mass Approval                      |
-| *How does the interaction between initiator and executor take place?* | At period-end, the group accountant opens current period for consoldiation data collection. She open the Fiori App called Data Mass Approval, and choose current period, and then click the open button. |
-| *Under which conditions / environment does the interaction take place?* | At period-end, the group accountant initiates and 10,000 Data Release Requests will be genereated for 1000 sites. |
-| *Result of activity*           | Sites are notified, and data release requests are genrated. |
-| *KPI*                          | Data Release Requests are correctly genreated.     |
+| *How does the interaction between initiator and executor take place?* | At period-end, the group accountant opens current period for consolidation data collection. She open the Fiori App called Data Mass Approval, and choose current period, and then click the open button. |
+| *Under which conditions / environment does the interaction take place?* | At period-end, the group accountant initiates and 10,000 Data Release Requests will be generated for 1000 sites. |
+| *Result of activity*           | Sites are notified, and data release requests are generated. |
+| *KPI*                          | Data Release Requests are correctly generated.     |
 
 **** Data Release
 | <30>                           | <50>                                               |
@@ -138,7 +138,7 @@ Each component's version depends on S4CORE.
 | *Who initiates activity (interactor)?* | Local Accountant                                   |
 | *Addressed part of the system which executes initiated activity (executor)?* | Fiori App: Data Release Cockpit                    |
 | *How does the interaction between initiator and executor take place?* | Before the data release, a data validation can be automatically triggered. If validation is not pass, data is not allowed to release. |
-| *Under which conditions / environment does the interaction take place?* | At period-end, 1000 sites will release their data. 1000 Validation rules for each would be run againist the ACDOCA table. |
+| *Under which conditions / environment does the interaction take place?* | At period-end, 1000 sites will release their data. 1000 Validation rules for each would be run against the ACDOCA table. |
 | *Result of activity*           | Data quality is controlled for consolidation.      |
 | *KPI*                          | Data Validation can be run on-the-fly, which means at maximum time of 30 seconds. |
 
@@ -148,7 +148,7 @@ Each component's version depends on S4CORE.
 | *Addressed part of the system which executes initiated activity (executor)?* | Fiori App: Data Release Cockpit                    |
 | *How does the interaction between initiator and executor take place?* | Before the data release and before data validation, currency translation could be run which translates the local currency amount to consolidation currency amount. |
 | *Under which conditions / environment does the interaction take place?* | At period-end, 1000 sites will release their data and run currency translation on ACDOCA. |
-| *Result of activity*           | Currency amounts are correclty converted and saved. |
+| *Result of activity*           | Currency amounts are correctly converted and saved. |
 | *KPI*                          | Currency Translation can be run on-the-fly, which means at maximum time of 10 seconds. |
 
 *** TODO Product Standards
@@ -226,14 +226,14 @@ The architecture chapter describes the main building blocks of the architecture 
 ~For conceptual and technical architecture diagrams use~ [[http://ency.wdf.sap.corp:1080/Modeling/Standard][Technical Architecture Modeling (TAM)]]. 
 
 *** Architecture Context and Overview
-Real-Time Consolidation provides consolidation foundations in the context of S4HANA. It is designed to move consolidation prepareation activities to the source(local finance), and eliminate data replications as much as possible. The efficiency and data quality are improved before data comes into the consolidation egine(BPC) for further processing. The consolidated results can also be stored back into S4HANA(ACDOCC).
+Real-Time Consolidation provides consolidation foundations in the context of S4HANA. It is designed to move consolidation preparation activities to the source(local finance), and eliminate data replications as much as possible. The efficiency and data quality are improved before data comes into the consolidation engine(BPC) for further processing. The consolidated results can also be stored back into S4HANA(ACDOCC).
 
 The main components in RTC are:
 1. Consolidation Modeling
 2. Data Collection
 3. Data Validation
 4. Currency Translation
-5. Inter-Unit Reconcilation & Elimination
+5. Inter-Unit Reconciliation & Elimination
 6. Posting
 Which are also described in the following diagram:
 
@@ -243,13 +243,13 @@ Which are also described in the following diagram:
 **** Foundation View
 Foundation view acts as the consolidation data foundation, on which all the consolidation views are generated. It is created manually by user, either CDS view or HANA Calculation view. It should only contain the essential logic like project fields and data filtering. In other words, it boundary the data for consolidation. 
 
-SAP delievers 2 examples of foundation views. With one on ACDOCA for actual data, and the other on ACDOCP for planning data. They project fields that are usually realted to financial consolidation, and do filtering on ledgers.  
+SAP delivers 2 examples of foundation views. With one on ACDOCA for actual data, and the other on ACDOCP for planning data. They project fields that are usually related to financial consolidation, and do filtering on ledgers.  
 
 **** Modeling
-The modeling includes all master data preperation, customization data definition, and consolidation model definition. There is a specific modeling tool which collects the foundation view, group chart-of-account, group fiscal year variant, and consolidation dimension to gerenate consolidation views.
+The modeling includes all master data preparation, customization data definition, and consolidation model definition. There is a specific modeling tool which collects the foundation view, group chart-of-account, group fiscal year variant, and consolidation dimension to generate consolidation views.
 
 **** Consolidation View
-Consolidation views are CDS views and HANA calculation views genereated by the modeling tool based on the foundation views and other meta definitions, like, Chart of Account, Fiscal Year Variant, consolidation dimension, and so on.
+Consolidation views are CDS views and HANA calculation views generated by the modeling tool based on the foundation views and other meta definitions, like, Chart of Account, Fiscal Year Variant, consolidation dimension, and so on.
 
 **** ACDOCC
 ACDOCC is the consolidation journal table which are mainly used to store consolidation journals and data provisioned by flexible upload.
@@ -257,7 +257,7 @@ ACDOCC is the consolidation journal table which are mainly used to store consoli
 The ACDOCA and ACDOCP provide source local financial data for consolidation. Foundation views can be created on these tables. 
 
 **** BW Integration
-It is necessary to provide interfaces for BW(BPC) consumption, as we can leverage a lot of existing analytic and consolidation features which BW aleady has. HANA calculation views are generated based on the consolidation view, which are then consumed by BW virtual provider or composite porvider. For the data write-back, an ABAP class is provided to allow BPC write-back the consolidation result to ACDOCC. 
+It is necessary to provide interfaces for BW(BPC) consumption, as we can leverage a lot of existing analytic and consolidation features which BW already has. HANA calculation views are generated based on the consolidation view, which are then consumed by BW virtual provider or composite provider. For the data write-back, an ABAP class is provided to allow BPC write-back the consolidation result to ACDOCC. 
 
 **** Validation
 Validation is used to control data quality during the consolidation process. The validation engine is designed as a standalone component, which can be used not only in financial consolidation, but also in other FI applications. Validation rules can be defined, stored, and run in validation engine. 
@@ -267,30 +267,30 @@ Total validation is used to validate data on aggregated level, which may already
 Document validation is used to validation line item data, which is transient. For example, I want to validate a document before posting based on rules defined by myself. The rules used for document validation are called transactional rules.  
 
 **** Data Collection
-Data is collected from all the subsidiaries through various ways. In ideal cases, all the companies run their financial transactions in one S4HANA instance, or the transactions are synchronized into a Central Finance System. Then we only need to control how data is released for consolidation by adding timestamp filterring and do data validations by request total validation component. 
+Data is collected from all the subsidiaries through various ways. In ideal cases, all the companies run their financial transactions in one S4HANA instance, or the transactions are synchronized into a Central Finance System. Then we only need to control how data is released for consolidation by adding timestamp filtering and do data validations by request total validation component. 
 
-But in real cases, data is not that integrated. Some subsidiaries have to upload aggreated data through workbooks. The colllectiong process won't be in such an easy way. So flexible upload is provided so that external entities can provide their data to the consolidation system. Technically, it supports spreadsheets upload, manually entering, and web services APIs. The data is stored in ACDOCC by calling the posting APIs. Validation and data release control should also work on these kinds of data provision. 
+But in real cases, data is not that integrated. Some subsidiaries have to upload aggregated data through workbooks. The collection process won't be in such an easy way. So flexible upload is provided so that external entities can provide their data to the consolidation system. Technically, it supports spreadsheets upload, manually entering, and web services APIs. The data is stored in ACDOCC by calling the posting APIs. Validation and data release control should also work on these kinds of data provision. 
 
 **** Currency Translation
-Currency translation is needed when local currency is different with the consoliation currency. The amounts have to be translated before futher consolidation acitvies. It reads the data through consolidation views, translate, and save the result into ACDOCC through posting APIs. 
+Currency translation is needed when local currency is different with the consolidation currency. The amounts have to be translated before further consolidation activities. It reads the data through consolidation views, translate, and save the result into ACDOCC through posting APIs. 
 
 Currency translation can be invoked in multiple entry points. If local accountants are required to submit the translated amounts, then they run translation during data release; Group accountants can run translation either on-the-fly in reporting, or in consolidation processes before the elimination step. 
 
 **** Posting
-Posting is used to save data into ACDOCC. It includes posting APIs and related manual posting UIs. To achieve better performance, the posting APIs are utlized using AMDP. So that the consolidation result is not necessary to send to ABAP and return back to the HANA. 
+Posting is used to save data into ACDOCC. It includes posting APIs and related manual posting UIs. To achieve better performance, the posting APIs are utilized using AMDP. So that the consolidation result is not necessary to send to ABAP and return back to the HANA. 
 
-The posting may also need to call document validation to control the quality when data is entring into ACDOCC. Doucment type is supported which allow to do some customizations to control how posting is done for different purpose. 
+The posting may also need to call document validation to control the quality when data is entering into ACDOCC. Document type is supported which allow to do some customizations to control how posting is done for different purpose. 
 
 For details, see [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Postings][SDD Posting]].
 
-**** Inter-Unit Reconcilation & Elimination
-We support reconciliation and elimination so that group reports can be made as easily as possible. The reconciliation can be as simple as only a reconciliation report without any assignments. It is also possible to leverage existing SAP Inter-Company Reconcilation solution for a full feature set. 
+**** Inter-Unit Reconciliation & Elimination
+We support reconciliation and elimination so that group reports can be made as easily as possible. The reconciliation can be as simple as only a reconciliation report without any assignments. It is also possible to leverage existing SAP Inter-Company Reconciliation solution for a full feature set. 
 
-Elimination shares the similar pairing rules with reconciliation, but it also contains how to do automatical postings and record differences. 
+Elimination shares the similar pairing rules with reconciliation, but it also contains how to do automatic postings and record differences. 
 
 Both reconciliation and elimination can be run on-the-fly. 
 **** Reporting
-There are some genaric reports developed using Fiori so that on-the-fly run can be supported. User can aslo define CDS views or BW Queries on consolidation views. Those queries can be then either consumed by AO, or any other reporting tools.
+There are some generic reports developed using Fiori so that on-the-fly run can be supported. User can also define CDS views or BW Queries on consolidation views. Those queries can be then either consumed by AO, or any other reporting tools.
 
 **** Consolidation Dashboard
 Consolidation Dashboard provides a central place to view all statuses of consolidation processes, and also an entry point to access all modeling, customization, preparation, and running applications.
@@ -516,16 +516,12 @@ The compromise approach is to mix use of different UI technologies in different 
 |                      | Multiple entity types based on generic persistency. |                                                    |
 |                      | Single persistency and single maintenance UI.      |                                                    |
 |----------------------+----------------------------------------------------+----------------------------------------------------|
-| Cons. Hierarchy      | Support both version and time dependent.           | Create from scrach for both Backend & UI           |
+| Cons. Hierarchy      | Support both version and time dependent.           | Create from scratch for both Backend & UI           |
 |                      | Support multiple node types in one hierarchy.      | High effort                                        |
 |                      | Support cross area (e.g.: Controlling Area) in one hierarchy |                                                    |
 |                      | Specific to consolidation but still could be flexible |                                                    |
 |----------------------+----------------------------------------------------+----------------------------------------------------|
 *** Integration with Other Systems
-**** Integration with CF
-CF does most of the data collection tasks for RTC. To more seamlessly integration, consolidation logic should evenly embedded in transactions and executes when transaction happens. Thus some data validation and substitution should be applied during document posting. RTC will provide such kind of APIs.
-
-Reporting should also combine the operational reports, consolidated reports, and  planning/simulation reports. Thus how data is accessed and processed among ACDOCA, ACDOCC, ACDOCP, and others need re-thinking.  
 
 **** Integration with BPC
 RTC acts as a data provisioner for the BPC to consume data in S/4 HANA Finance real-timely. We can re-use BPC's existing consolidation logic and UI.
@@ -533,6 +529,10 @@ RTC acts as a data provisioner for the BPC to consume data in S/4 HANA Finance r
 RTC can also do some consolidation preparations, like: data collection and validation, currency translation, Inter-company reconciliation and elimination, before the data arrives at BPC to do further consolidation tasks.   
 **** Integration with IBPF
 IBPF stands for =Integrated Business Planning for Finance=. RTC shares the same architecture with IBPF when integrated with BPC. Both are based on BW virtual info-provider and virtual info-object. We could share most of the info-objects for the master data. Besides, we can think more on how we combine data in ACDOCC and ACDOCP, so that consolidation can run on planning data, and planning can run on consolidated data. 
+**** Integration with CF
+CF does most of the data collection tasks for RTC. To more seamlessly integration, consolidation logic should evenly embedded in transactions and executes when transaction happens. Thus some data validation and substitution should be applied during document posting. RTC will provide such kind of APIs.
+
+Reporting should also combine the operational reports, consolidated reports, and  planning/simulation reports. Thus how data is accessed and processed among ACDOCA, ACDOCC, ACDOCP, and others need re-thinking.  
 **** Public APIs and Contracts
 The following table lists all public APIs which are offered, be it newly created API or changes on existing APIs
 | <20>                 | <15>            | <10>       | <45>                                          |
@@ -543,32 +543,27 @@ The following table lists all public APIs which are offered, be it newly created
 | ACDOCC posting       | ABAP-based      | New        | Provide data validation and posting to ACDOCC logic in the write-back class, flexible upload, and other external processes. |
 | Validation & Substitutions | ABAP-based and HANA View | New        | A set of APIs that can be embedded in consolidation tasks, existing ABAP codes, and CDS views through join/union/association. They provide data validating and substitution services which the provides LoB users exists to maintain their rules. |
 
-*** TODO Security
-~Describe how the architecture protects the software against attacks or misuse.~
-
-~To do so, define how communication channels (protocol, data, ...) are protected. Describe how authentication, authorization and logging are performed. Consider architecture requirements pertaining to confidentiality, integrity and availability.~ 
-
+*** Security
+Security will follow S4HANA security guideline and standards. There is no special security aspects for Real-time Consolidation. 
 *** Deployment and Operations
 **** Deployed Component Structure and Deployment Options
 #+CAPTION: Software Component Structure
 [[../image/SoftwareComponentStructure.png]]
 
 There are 4 components in RTC:
-1. Consolidation Foundation, which includes modeling, currency transaltion, consolidation rule definition, and posting.
+1. Consolidation Foundation, which includes modeling, currency translation, consolidation rule definition, and posting.
 2. Data Collection, which includes data release and flexible upload.
-3. Validation Engine, which can be decoupled from RTC to be a more genaric component. 
-4. BPC Integeration, which includes all BW and HANA artifacts for the integeration with BPC.
+3. Validation Engine, which can be decoupled from RTC to be a more generic component. 
+4. BPC Integration, which includes all BW and HANA artifacts for the integration with BPC.
 
-The consolidation foundation optionally depends on BPC which belongs to the SAP_BW component if the model is created with BPC integeration option. Validation Engine depends on SAP BRF+/HRF which belongs to the SAP_BASIS component. And they are all in NW 752 version. 
+The consolidation foundation optionally depends on BPC which belongs to the SAP_BW component if the model is created with BPC integration option. Validation Engine depends on SAP BRF+/HRF which belongs to the SAP_BASIS component. And they are all in NW 752 version. 
 
-There are also dependencies on HANA level. For the BPC integeration part, it depends on the HANA calculation views in the delivery unit "HCO_ERP_SFIN_RTC". And SAP BRF+/HRF also depends on the delivery unit "HCO_RULE_FW".
+There are also dependencies on HANA level. For the BPC integration part, it depends on the HANA calculation views in the delivery unit "HCO_ERP_SFIN_RTC". And SAP BRF+/HRF also depends on the delivery unit "HCO_RULE_FW".
 
 **** System Landscape
-~Describe typical system landscape required to run the software developed within this program productive at a customer site. Show how the main deployable building blocks are distributed within that landscape. Determine which landscape components are mandatory and which are optional to run the software~
-
 #+CAPTION: Typical Production System Landscape at Customer Site 
 [[../image/TypicalProdLandscape.png]]
-If you use Real-Time Consolidation as a complete consolidation solution, then the embedded BPC must be cominbed. In ideal cases, the local FI data is already in G/L Accounting, or it is synchronized to the Central Finance system using real-time replication. For those external entities that are not integerated in S4HANA, flexible upload is needed. In either case, data collection component is needed for data release control. Validation may be always necessary to keep the data quality. And if you want to combine planning and consolidation, IBPF is the best chocie. 
+If you use Real-Time Consolidation as a complete consolidation solution, then the embedded BPC must be combined. In ideal cases, the local FI data is already in G/L Accounting, or it is synchronized to the Central Finance system using real-time replication. For those external entities that are not integrated in S4HANA, flexible upload is needed. In either case, data collection component is needed for data release control. Validation may be always necessary to keep the data quality. And if you want to combine planning and consolidation, IBPF is the best choice. 
 
 #+CAPTION: Minimal Production System Landscape at Customer Site 
 [[../image/MinimalProdLandscape.png]]
@@ -611,9 +606,19 @@ The performance result help us to understand the bottleneck, and know how to imp
 | <20>                 | <50>                                               |
 | Description          | RTC highly depends on BPC, and needs BPC as the main front-end tool. The situation is that BPC is not within S4HANA, and it in turns highly depends on BW cubes. BW cubes are already prohibited in S4HANA cloud releases. There is also fundamental design difference between RTC and BPC, as RTC is an embedded consolidation solution, while BPC was designed for a standalone solution. Besides, synchronizing the release strategy and time-line is quite a big challenge with 2 different teams under 2 different programs. |
 | Impact(for customer) | Customer who wants S4HANA Cloud version could not fully utilize the RTC, as there is no plan for BPC running on cloud. |
-| Impact Rating        | Very High                                          |
-| Risk Probability     | Very High                                          |
+| Impact Rating        | High                                               |
+| Risk Probability     | High                                               |
 | Mitigation Activity  | Considering even without BPC, RTC can still provide some preparation for consolidation. Differentiate consolidation into Low and High level. The low level could be done by RTC self, which already provide values to customers. The high level could be done by BPC or BCS. And some building blocks should be pluggable and replaceable, thus introduce the flexibility during implementation, which would also do help in mitigating risks. |
+| Responsible Person   | PO, Arch, and Program level management team        |
+| Due Date             | null                                               |
+
+**** Validation Engine is built upon HRF
+| <20>                 | <50>                                               |
+| Description          | Consolidation validation is built upon HRF which is in parallel development. The development plans of the 2 teams must be highly synchronized, or it will impact delivery of Real-time Consolidation. However, the 2 teams are in 2 different locations(one in Shanghai China, the other is in Israel), which introduces the inconvenient in communication. |
+| Impact(for customer) | Some functions can not be released in 1709 release. The worst case is the whole validation component cannot be released. |
+| Impact Rating        | High                                               |
+| Risk Probability     | High                                               |
+| Mitigation Activity  | Improve communication efficiency by on site visiting, weekly sync meeting, share customer's requirements. |
 | Responsible Person   | PO, Arch, and Program level management team        |
 | Due Date             | null                                               |
 
@@ -625,7 +630,7 @@ The performance result help us to understand the bottleneck, and know how to imp
 4. [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Postings][Posting]]
 5. [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Currency+Translation][Currency Translation]]
 6. [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Data+Release+Request][Data Release Cockpit]]
-7. [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Elimination][Reconcilation & Elimination]]
+7. [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Elimination][Reconciliation & Elimination]]
 8. [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Drill+Through+Report][Reporting]]
 
 ** Glossary

@@ -240,7 +240,7 @@ The following naming are refer the guideline of [[https://wiki.wdf.sap.corp/wiki
 
 This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Leaf+ABAP+Packages+for+FIN+AT1+Fiori+Apps][Leaf ABAP Packages]].
 
-*** Maintian Validation Rule                                           :Steve:
+*** Maintain Validation Rule                                          :Steve:
 | Artifacts                         | Name                                      |
 |-----------------------------------+-------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_RULE       |
@@ -252,7 +252,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | Service Builder Project           | CONS_VALIDATION_RULE                      |
 | Semantic Object                   | FinancialValidationRule                   |
 
-*** Maintian Validation Method                                        :Summer:
+*** Maintain Validation Method                                       :Summer:
 | Artifacts                         | Name                                        |
 |-----------------------------------+---------------------------------------------|
 | Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_METHOD       |
@@ -296,71 +296,70 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | App name and ID in Project Portal | fin.cons.entity.finstatement.display          |
 | POM Artifact ID                   | fin.cons.entity.finstatement.display          |
 | Fiori ID                          | F2627                                         |
-| BSP Application Name              | FIN_CONS_ENTITY_FS                            |
+| BSP Application Name              | FIN_CONS_EFS                                  |
 | Service Builder Project           | CONS_ENTITY_FINANCIAL_STATEMENT               |
 | Semantic Object                   | ConsolidationFinStatement                     |
 
-*** Consolidation Used Document List                                 :Chang:
+*** Consolidation Used Document List                                  :Chang:
 A report can be drill-through from consolidation financial statements
-| Artifacts                         | Name                                      |
-|-----------------------------------+-------------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_FS_DRILLTHROUGH       |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_FS_DRILLTHROUGH |
-| App name and ID in Project Portal | fin.cons.document.list                    |
-| POM Artifact ID                   | fin.cons.document.list                    |
-| Fiori ID                          | F2638                                     |
-| BSP Application Name              | FIN_CONS_DOCLIST                          |
-| Service Builder Project           | CONS_DOCLIST                              |
-| Semantic Object                   | DocumentList                              |
+| Artifacts                         | Name                              |
+|-----------------------------------+-----------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_DOCLIST       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_DOCLIST |
+| App name and ID in Project Portal | fin.cons.document.list            |
+| POM Artifact ID                   | fin.cons.document.list            |
+| Fiori ID                          | F2638                             |
+| BSP Application Name              | FIN_CONS_DL                       |
+| Service Builder Project           | CONS_DOCLIST                      |
+| Semantic Object                   | DocumentList                      |
 
 *** Consolidation Used Financial Statement Library                   :Chang:
-
-Constains all reusable financial statement components, includes hierarch display, drill-through reports, and search helps. 
-| Artifacts                         | Name                                   |
-|-----------------------------------+----------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_FINSTATEMENT       |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_FINSTATEMENT |
-| App name and ID in Project Portal | fin.cons.lib.finstatement              |
-| POM Artifact ID                   | fin.cons.lib.finstatement              |
-| Fiori ID                          |                                        |
-| BSP Application Name              | FIN_CONS_FINSTATEMENT                  |
-| Service Builder Project           | CONS_FINANCIAL_STATEMENT               |
+Contains all reusable financial statement components, includes hierarchy display, drill-through reports, and search helps. 
+| Artifacts                         | Name                                       |
+|-----------------------------------+--------------------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_LIB_FINSTATEMENT       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_LIB_FINSTATEMENT |
+| App name and ID in Project Portal | fin.cons.lib.finstatement                  |
+| POM Artifact ID                   | fin.cons.lib.finstatement                  |
+| Fiori ID                          | F2656                                      |
+| BSP Application Name              | FIN_CONS_LIB_FS                            |
+| Service Builder Project           | CONS_LIB_FINANCIAL_STATEMENT               |
 
 *** Validation Result Library                                         :Chang:   
 It is used in Validation Method and Data Release Cockpit.
-| Artifacts                         | Name                                     |
-|-----------------------------------+------------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_CONTROL_RESULT       |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_CONTROL_RESULT |
-| App name and ID in Project Portal | fin.cons.lib.ctrlresult                  |
-| POM Artifact ID                   | fin.cons.lib.ctrlresult                  |
-| Fiori ID                          |                                          |
-| BSP Application Name              | FIN_CONS_CTRLRESULT                      |
-| Service Builder Project           | CONS_CONTROL_RESULT                      |
+| Artifacts                         | Name                                            |
+|-----------------------------------+-------------------------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_LIB_VALIDATION_RESULT       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_LIB_VALIDATION_RESULT |
+| App name and ID in Project Portal | fin.cons.lib.validationresult                   |
+| POM Artifact ID                   | fin.cons.lib.validationresult                   |
+| Fiori ID                          | F2654                                           |
+| BSP Application Name              | FIN_CONS_LIB_VR                                 |
+| Service Builder Project           | CONS_LIB_VALIDATION_RESULT                      |
 
-*** Validation Engine Library                           :Steve:
+*** Validation Engine Library                                         :Steve:
 It is used in Validation Rule and Validation Method
-| Artifacts                         | Name                                             |
-|-----------------------------------+--------------------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_ENGINE            |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VALIDATION_RULE_ENGINE |
-| App name and ID in Project Portal | fin.cons.lib.validationengine                    |
-| POM Artifact ID                   | fin.cons.lib.validationengine                    |
-| Fiori ID                          |                                                  |
-| BSP Application Name              | FIN_VALIRULE_ENGINE                              |
-| Service Builder Project           | CONS_VALIDATION_ENGINE                           |
+| Artifacts                         | Name                                            |
+|-----------------------------------+-------------------------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_LIB_VALIDATION_ENGINE       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_LIB_VALIDATION_ENGINE |
+| App name and ID in Project Portal | fin.cons.lib.validationengine                   |
+| POM Artifact ID                   | fin.cons.lib.validationengine                   |
+| Fiori ID                          | F2653                                           |
+| BSP Application Name              | FIN_LIB_VE                                      |
+| Service Builder Project           | CONS_LIB_VALIDATION_ENGINE                      |
 
-*** Responsive Comment Service Library                   :Jane:
+*** Responsive Comment Service Library                                 :Jane:
 Local accountants and group accountants can give comments on the validation results or packages.
-| Artifacts                         | Name                                |
-|-----------------------------------+-------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_RCOMMENTS       |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_RCOMMENTS |
-| App name and ID in Project Portal | fin.cons.lib.comments               |
-| POM Artifact ID                   | fin.cons.lib.comments               |
-| Fiori ID                          |                                     |
-| BSP Application Name              | FIN_COMMENTS                        |
-| Service Builder Project           | CONS_COMMENTS                       |
+| Artifacts                         | Name                                    |
+|-----------------------------------+-----------------------------------------|
+| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_LIB_RCOMMENTS       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_LIB_RCOMMENTS |
+| App name and ID in Project Portal | fin.cons.lib.rcomments                  |
+| POM Artifact ID                   | fin.cons.lib.rcomments                  |
+| Fiori ID                          | F2655                                   |
+| BSP Application Name              | FIN_CONS_LIB_RC                         |
+| Service Builder Project           | CONS_LIB_RCOMMENTS                      |
 
 ** Best Practices
 The best practices listed are tailored for Real-time Consolidation development. 

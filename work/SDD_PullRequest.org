@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 28
+#+VERSION: 31
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Data Release Request
@@ -252,16 +252,16 @@ After consolidation is finished for a period, there is still possibility that da
 ** Data Release Request Status and Pseudo SQL
 The status of data release requests not only controls the data release process, but also controls the data visibility by BPC. BPC can only see the data pointed by data release requests which have status "Released" or "Approved". In other words, status code must larger equal than "30". So for those data release requests with status "Initial" or "Rejected" or "Deferred", BPC won't see the data they point to. 
 #+CAPTION: Status Code
-| User Status             | Code |
-|-------------------------+------|
-| Initial                 |   00 |
-| Cancel                  |   01 |
-| Currency Conversion Ran |   02 |
-| Validation Ran          |   03 |
-| Rejected                |   20 |
-| Deferred                |   21 |
-| Released                |   30 |
-| Approved                |   50 |
+| User Status                  | Code | Comment                                          |
+|------------------------------+------+--------------------------------------------------|
+| Initial                      |   00 | Initial Stauts                                   |
+| Cancel                       |   01 | Permanent cancelled                              |
+| Currency Conversion Executed |   10 | 02~09 are reserved for activities before CT      |
+| Validation Executed          |   20 | 11~19 are reserved for activities before Release |
+| Rejected                     |   21 | Once rejected, no change is allowed              |
+| Deferred                     |   25 | 25 can be switched to 21                         |
+| Released                     |   30 | 30 can be reversed to 20                         |
+| Approved                     |   50 | Once approved, no change is allowed              |
 
 #+CAPTION: Pseudo SQL that controls visibility
 #+BEGIN_SRC sql
@@ -345,58 +345,71 @@ Only "Initial" request can be canceled. For PRR/CRR, if there is no prior "Relea
 ** Data Release Lock
 There is also a business lock table for the group accountant lock certain periods to forbid local accountants raise data release requests in the periods. The lock table should look like this:
 #+CAPTION: Data Release Request Lock Table
-| Field     | Key | Description                                    |
-|-----------+-----+------------------------------------------------|
-| MANDT     | X   | SAP Client                                     |
-| MODEL     | X   | Consolidation Model                            |
-| VERID     | X   | Consolidation Version ID                       |
-| FYEAR     | X   | Group Fiscal Year                              |
-| FPERI     | X   | Group Fiscal Period                            |
-| ENTITY    | X   | Consolidation Entities: Company, Profit Center |
-| DR_METHOD | X   | Data Release Method                            |
-| DR_PKG    | X   | Data Release Package                           |
-| STATUS    |     | Lock Status: 0:Open, 1:Locked                  |
-| ETIME     |     | Lock Effective Time                            |
-| UUSER     |     | Last Activity User                             |
-| UTIME     |     | Last Activity Time                             |
-| BPC_CATG  |     | BPC Category                                   |
+| Field       | Key | Description                                    |
+|-------------+-----+------------------------------------------------|
+| MANDT       | X   | SAP Client                                     |
+| MODEL       | X   | Consolidation Model                            |
+| VERID       | X   | Consolidation Version ID                       |
+| FYEAR       | X   | Group Fiscal Year                              |
+| FPERI       | X   | Group Fiscal Period                            |
+| ENTITY      | X   | Consolidation Entities: Company, Profit Center |
+| DR_METHOD   | X   | Data Release Method                            |
+| DR_PKG      | X   | Data Release Package                           |
+| STATUS      |     | Lock Status: 0:Open, 1:Locked                  |
+| ETIME       |     | Lock Effective Time                            |
+| UUSER       |     | Last Activity User                             |
+| UTIME       |     | Last Activity Time                             |
+| BPC_CATG    |     | BPC Category                                   |
 
-If the corresponding item is not exist in the table, it means the entity in that period is not locked. The lock data is generated the first time a lock is added for an entity and its certain period.
+The lock data is generated at the time the period is initialized. The default status is "Open", after the entity period local data is approved, it is changed to "Locked".
+
+Concurrency control is necessary at each entity period level. If user A is operating on one entity 's period data(of course model and version dependent), then, the other user B is only allowed to view. The detial logic is described as following:
+1. User A is the local accountant, who opens 300000's local data for period 2016006. He can do CT, validation, and release.
+2. In the locak table, it is recorded in the UUSER field with user A, and in the UTIME with the last activity time, which is refreshed for every client to server request.
+3. Meanwhile, user B opens the same entry, however, she is informed that user A is now operation on it. User B sees buttons gray.
+4. If after 30 minutes there is no new activity, user B can take over the ownship from A. Then the UUSER is updated to user B, with the UTIME updated to the current time. 
 
 
 * Data Release Cockpit
 The Data Release Cockpit is designed for local accountants to collect data, validate data, and submit data for consolidation. However, group accountants can also use it to check, validate, and approve the local reported data.
 
 ** Data Release Cockpit Main Screen
+Data Release Cockpit is mainly designed for local accountants to validate, adjust, and release data to group consolidation. 
 #+CAPTION: Data Release Cockpit Reported Data
-[[../image/DataSubmitCockpit09.png]]
+[[../image/DataReleaseCockpit01.png]]
 
-The Data Release Cockpit is divided into 3 sections: 
-1. The permanent parameters in the upper area;
-2. The statuses area in the middle area;
-3. The package content in the lower area.
+#+CAPTION: Data Release Cockpit Reported Data
+[[../image/DataReleaseCockpit02.png]]
 
-*** Permanent Parameters
-The five permanent parameters are mandatory, which are used to boundary the context to:
-1. A consolidation model(Dimension if it is UC-CS);
-2. A consolidation version(BPC Category if it is for BPC);
-3. A consolidation Entity(Consolidation Unit if it is UC-CS);
-4. A group Fiscal Year;
-5. A group Fiscal Period.
+The Data Release Cockpit is divided into 2 pages:
+1. The search & list page, which contains filtering parameters and the package list; 
+2. The detail overview page, which contains the detail information of a package;
 
-The 5 parameters should be filled by default whenever possible. The model, version, and entity can be derived from users' authorizations or the personalization data. Fiscal year and period can be derived from the current time and fiscal year variant. Only all the 5 parameters' value are provided, can the package status and content be shown. 
+*** Filtering Parameters
+1. A consolidation model(Dimension if it is UC-CS), single and mandatory;
+2. A consolidation version(BPC Category if it is for BPC), multiple and mandatory;
+3. A consolidation Entity(Consolidation Unit if it is UC-CS), single and mandatory;
+4. Group Fiscal Year From, optional, if empty, from the big bang of the universe, default is the first period of current fiscal year;
+5. Group Fiscal Year To, optional, if empty, to current, default is the current fiscal year period.
+
+The 5 parameters should be filled by default whenever possible. The model, version, and entity can be derived from users' authorizations or the personalization data. Fiscal year and period can be derived from the current time and fiscal year variant.
  
 *** Statuses
 A package is the media on which the local accountants and group accountants communicate. Once the local accountant submits his reported data, it gets validated before the data arrives at the group accountant's hand. And the group accountant can also do validations before actually executing consolidation tasks. Thus there are various statuses to state. 
 
-1. *Package Status* indicates the stage of the data submission process;
-2. *Control Status* gives the last validation result, whether it is passed or failed;
-3. *Lock Status* shows if the current package is locked or not for the data submission;
-4. *System Status* returns the execution status from consolidation systems,like "in processing", "failed", "successfully";
-5. *Need Commit* will be shown if there is new changes in the staging area(via Flexible Upload) not commit to the formal area(with posting level equals "00");
-6. *Variation* detects if there is new data entered into ACDOCA/C after the package is approved and run.
+1. *Lock Status* shows if the current package is locked or not for the data release;
+2. *Variation* detects if there is new data entered into ACDOCA/C after the last execution time, which could be the last release time or last validation time.
+3. *Need Commit* will be shown if there is new changes in the staging area(via Flexible Upload) not commit to the formal area(with posting level equals "00");
+4. *Period Status* indicates the statuses for an entity of current period, which could be: to be initialized, initial, CT executed(success, error), validation executed(pass, fail, warning), released, approved, reject;
+5. *Delta Status* after the mandatory period release request, if there is any delta change, then the statues are desribed in delta section. The statues would be: CT executed(success, error), validation executed(pass, fail, warning), released, approved, reject, deferred;
+6. *System Status* returns the execution status from consolidation systems,like "in processing", "failed", "successfully";
 
-There are also 2 timestamps shown to tell users what's the last data release request's timestamp(if has), and what will be the current data release request's timestamp if you click the "Submit" button. Click the "Refresh" button will refresh "This Submit Time" to the latest.
+There are maximum 3 timestamps showed:
+1. The variation detected timestamp, which is usually the time when this APP is accessed/open. And the timestamp is refreshed to current when certain actions are triggered. This actions are run CT, run validation, release, and refresh.
+2. The period release request release timestamp.
+3. The delta adjustment request release timestamp.
+
+The variation is calculated by check if there are line items whose timestamp is between last execution time and current time. While the last execution time is the last request's(no matter it is a PRR or an ARR) timestamp, and the current time stands for the last refreshed timestamp. 
 
 *** Package Content
 A package contains contents like following:
@@ -483,9 +496,9 @@ In the attachment tab, you can upload or download attachments like word, ppt, pd
 
 In the left panel, you can view all the data release requests related to the (sub-)package for a certain period. A data release request is timestamp annotated. You can compare the difference between either 2 requests. In the right panel, from the drop-down box, you select the beginning. For example, you select "Opening", which is the start-point of the period, usually the first second of the period. Then you click any one of the item in the left list, it will show you the difference between the 2 timestamp. 
 
-** Data Submit Group View
+** Data Release Group View
 #+CAPTION: Data Submit Group View
-[[../image/DataSubmitGroupView.png]]  
+[[../image/DataApprove.png]]  
 
 The group view is a report for group accountants to view the data submit status for multiple entities. They can get an overview on the statuses for a certain group node or a bunch of entities. You can click an entity to navigate to the Data Release Cockpit, you can batch approve/reject, and you can batch lock/unlock. 
 

@@ -297,7 +297,35 @@ The posting API should ready at that time.
 
 ** Design Details Documentation
 *** Database Design
-*** Testability and Test Environment
+*** Performance Test
+#+BEGIN_SRC sql
+CALL "SAPQE6"."/RTCART/VINCE1TM100=>CORE_AMDP"(
+IV_ER_DATE => '20151231',
+IV_TGT_CUR => 'USD',
+IV_CONS_VERID => '00002',
+IV_DOCTYPE => '01',
+IV_FISCYEAR => '2015',
+IV_FISCPER => '012',
+IV_ENTITY => 'C1000',
+IV_ER_TYPE_1 => '1001',
+IV_ER_TYPE_2 => '1002',
+--IV_ER_TYPE_3 => '1003',
+IV_LCL_CUR => 'EUR',
+IV_TIMESTAMP => 20161231101010,
+IV_USER_NAME => 'ZHANGVIN',
+IV_CONS_LEDGER => 'CL',
+IV_VARIANT => '200',
+IV_BPC_CATG => 'PRELIM',
+IV_RTC_CATG => 'PREL',
+IV_APPLY_ANI => '',
+IV_CONS_ACCT_1 => '',
+IV_CONS_ACCT_2 => '',
+IV_TRANS_TYPE_1 => '',
+IV_TRANS_TYPE_2 => '',
+ET_ACDOCC => ?
+);
+#+END_SRC
+
 *** Complex Algorithms and Applied Patterns
 *** Design Alternatives and Trade-Offs
 *** Guide to the Implementation
