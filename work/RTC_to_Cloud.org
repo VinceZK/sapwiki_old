@@ -42,7 +42,7 @@ Borrowed ideas from BCS and EC-CS.
 *** Generate Cube v.s. Generate View
 Cube means data replication, view means real-time. 
 *** The Method Framework
-Currency Translation
+Currency Translation.
 *** Version Concept
 
 * Real-Time & Cloud

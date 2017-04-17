@@ -1,5 +1,5 @@
 #+PAGEID: 1829146305
-#+VERSION: 31
+#+VERSION: 32
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Data Release Request
@@ -149,7 +149,7 @@ The group accountant can start the data collection for a period, usually, close 
 | 0000004 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial |       | DR001  |    003 |
 | 0000005 | RTCCTB | FINAL | PRR  | 2016.01 | C100   | Initial |       | DR001  |    004 |
 
-*** The local accountant submits a sub-package
+*** The local accountant release a sub-package
 Once the period is opened, the local accountant can see the package in the data release cockpit. He now first submits the AP/AR data. The AP/AR data is first validated by validation method "DV110", and then released by changing the status of data release request =0000002= to "Released" and record the timestamp to =RTIME=. 
 | PullReq | Model  | BCATE | Type |  Period | Entity | Status   | RTIME               | DCMETH | DENTRY |
 |---------+--------+-------+------+---------+--------+----------+---------------------+--------+--------|
@@ -252,16 +252,16 @@ After consolidation is finished for a period, there is still possibility that da
 ** Data Release Request Status and Pseudo SQL
 The status of data release requests not only controls the data release process, but also controls the data visibility by BPC. BPC can only see the data pointed by data release requests which have status "Released" or "Approved". In other words, status code must larger equal than "30". So for those data release requests with status "Initial" or "Rejected" or "Deferred", BPC won't see the data they point to. 
 #+CAPTION: Status Code
-| User Status                  | Code | Comment                                          |
-|------------------------------+------+--------------------------------------------------|
-| Initial                      |   00 | Initial Stauts                                   |
-| Cancel                       |   01 | Permanent cancelled                              |
-| Currency Conversion Executed |   10 | 02~09 are reserved for activities before CT      |
-| Validation Executed          |   20 | 11~19 are reserved for activities before Release |
-| Rejected                     |   21 | Once rejected, no change is allowed              |
-| Deferred                     |   25 | 25 can be switched to 21                         |
-| Released                     |   30 | 30 can be reversed to 20                         |
-| Approved                     |   50 | Once approved, no change is allowed              |
+| User Status                  | Code | Comment                                                           |
+|------------------------------+------+-------------------------------------------------------------------|
+| Initial                      |   00 | Initial Stauts                                                    |
+| Cancel                       |   01 | Permanent cancelled                                               |
+| Currency Conversion Executed |   10 | 02~09 are reserved for activities before CT                       |
+| Validation Executed          |   16 | 11~15 are reserved for activities before Release                  |
+| Rejected                     |   17 | Once rejected, no change is allowed                               |
+| Deferred                     |   18 | 17 can be switched to 16                                          |
+| Released                     |   30 | 30 can be reversed to 20, 19~29 are for activities before release |
+| Approved                     |   50 | Once approved, no change is allowed                               |
 
 #+CAPTION: Pseudo SQL that controls visibility
 #+BEGIN_SRC sql
@@ -306,14 +306,14 @@ If the local accountant releases the DRR by mistake, then he can retrieve the DR
 
 If the group accountant Approve/Reject/Defer a DRR by mistake, she can still switch among these 3 statuses if consolidation tasks have not run. So the system status should be taken into account to decide whether the status switch is possible. 
 
-| System Status | Code       |
-|---------------+------------|
-|             0 | INITIAL    |
-|             1 | READY      |
-|             2 | WAITING    |
-|             3 | PROCESSING |
-|             4 | SUCCESS    |
-|             5 | ERROR      |
+| System Status | Code       | Description                                             |
+|---------------+------------+---------------------------------------------------------|
+|             0 | INITIAL    |                                                         |
+|             1 | READY      | The task is scheduled, and ready to run                 |
+|             2 | WAITING    | The task is waiting because of system resource limition |
+|             3 | PROCESSING | The task is running                                     |
+|             4 | SUCCESS    | The task is successfully finished                       |
+|             5 | ERROR      | The task is interupt due to unkonw error                |
 
 Only system status is less than 2 can the group accountant switch the status, and only for the last DRR. Even though, following cases should be considered separately:
 
@@ -345,21 +345,21 @@ Only "Initial" request can be canceled. For PRR/CRR, if there is no prior "Relea
 ** Data Release Lock
 There is also a business lock table for the group accountant lock certain periods to forbid local accountants raise data release requests in the periods. The lock table should look like this:
 #+CAPTION: Data Release Request Lock Table
-| Field       | Key | Description                                    |
-|-------------+-----+------------------------------------------------|
-| MANDT       | X   | SAP Client                                     |
-| MODEL       | X   | Consolidation Model                            |
-| VERID       | X   | Consolidation Version ID                       |
-| FYEAR       | X   | Group Fiscal Year                              |
-| FPERI       | X   | Group Fiscal Period                            |
-| ENTITY      | X   | Consolidation Entities: Company, Profit Center |
-| DR_METHOD   | X   | Data Release Method                            |
-| DR_PKG      | X   | Data Release Package                           |
-| STATUS      |     | Lock Status: 0:Open, 1:Locked                  |
-| ETIME       |     | Lock Effective Time                            |
-| UUSER       |     | Last Activity User                             |
-| UTIME       |     | Last Activity Time                             |
-| BPC_CATG    |     | BPC Category                                   |
+| Field     | Key | Description                                    |
+|-----------+-----+------------------------------------------------|
+| MANDT     | X   | SAP Client                                     |
+| MODEL     | X   | Consolidation Model                            |
+| VERID     | X   | Consolidation Version ID                       |
+| FYEAR     | X   | Group Fiscal Year                              |
+| FPERI     | X   | Group Fiscal Period                            |
+| ENTITY    | X   | Consolidation Entities: Company, Profit Center |
+| DR_METHOD | X   | Data Release Method                            |
+| DR_PKG    | X   | Data Release Package                           |
+| STATUS    |     | Lock Status: 0:Open, 1:Locked                  |
+| ETIME     |     | Lock Effective Time                            |
+| UUSER     |     | Last Activity User                             |
+| UTIME     |     | Last Activity Time                             |
+| BPC_CATG  |     | BPC Category                                   |
 
 The lock data is generated at the time the period is initialized. The default status is "Open", after the entity period local data is approved, it is changed to "Locked".
 
@@ -490,7 +490,7 @@ If you are in the comment tab of the main package, then you can view all the com
 
 In the attachment tab, you can upload or download attachments like word, ppt, pdf, and so on. Like comments, attachments can be attached to (sub-)package, submit request, and validation log. 
  
-** Data Release Cockpit Submit History
+** Data Release Cockpit Release History
 #+CAPTION: Data Release Cockpit Submit History 
 [[../image/DataSubmitCockpit14.png]]  
 

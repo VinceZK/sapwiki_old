@@ -1,5 +1,5 @@
 #+PAGEID: 1780309655
-#+VERSION: 13
+#+VERSION: 15
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Postings
@@ -175,6 +175,7 @@ Posting level classifies documents posted by different consolidation tasks. Duri
 |          23 |        23 | *Two-sided eliminating entries: Special logic*     |
 |          24 |        24 | *Two-sided eliminating entries: Cons group changes with special logic* |
 |          30 |        30 | *Consolidation of investments entries* In consolidation of investment postings, the consolidation unit, partner unit, and consolidation group are recorded in the data records. Reporting only considers the data records with the assigned consolidation group and the higher-level consolidation groups. |
+|             |        50 | *BPC Generated Data*, for genearic purpose.        |
 
 *Note:* Each posting level can be mapped to an audit type for the integration with BPC.  
 

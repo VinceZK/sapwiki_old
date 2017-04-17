@@ -1,5 +1,5 @@
 #+PAGEID: 1847350028
-#+VERSION: 8
+#+VERSION: 11
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Consolidation Version
@@ -93,10 +93,12 @@ Accounting Principle is the second version field which can be assigned with one 
 
 Accounting Principle doesn't exist in ACDOCC, however consolidation ledger exists. You can regard Accounting Principle as a group of consolidation ledgers. Versions with different accounting principle may share some result data, you achieve this through the shared consolidation ledgers.
 
-Unlike Data Category, Accounting Principle is assigned with consolidation rules rather than data. For example, you assign different currency translation methods to different accounting principles. It acts as a group of settings on how consolidation generates and share the result data. 
+Unlike Data Category, Accounting Principle is assigned with consolidation rules rather than data. For example, you assign different currency translation methods to different accounting principles. It acts a media for sharing  consolidation rules among different consolidation versions. 
 
 **** Variant
-Variant is the third version field. It acts as the additional dimension used to differentiate consolidation versions which have the same Data Category and Accounting Principle. There is no logic set on Variant. 
+Variant is the third version field. It acts as the additional dimension used to differentiate consolidation versions which have the same Data Category and Accounting Principle. 
+
+You can define customizations like exchange rate indicators on variant. Becides, there are also attributes alone with variants like data release mode, whether adjustment release request is needed.  
 
 **** BPC Category
 BPC Category has a 1 on 1 mapping to a version combination. It doesn't exist in ACDOCC. 
@@ -280,11 +282,11 @@ Defines what is the source data. You can also assign reference category for addi
 Defines what's the consolidation logic and how to post consolidation result.
 
 #+CAPTION: Account Principle Main Table
-| Model  | Acct. Principle | Description |
-|--------+-----------------+-------------|
-| RTCCTS | LGAAP           | Local GAAP  |
-| RTCCTS | UGAAP           | US GAAP     |
-| RTCCTS | IFRS            | IFRS        |
+| Acct. Principle | Description |
+|-----------------+-------------|
+| LGAAP           | Local GAAP  |
+| UGAAP           | US GAAP     |
+| IFRS            | IFRS        |
 
 #+CAPTION: Account Principle and Consolidation Ledger Assignment
 | Model  | Acct. Principle | Cons Ledger |
@@ -298,10 +300,15 @@ Defines what's the consolidation logic and how to post consolidation result.
 Further differentiate consolidation versions for the same Data Category and Account Principle combination. And also determines whether the local data requires submit control or not.
 
 #+CAPTION: Variant Main Table
-| Model  | Variant | Description | Submit? |
-|--------+---------+-------------+---------|
-| RTCCTS |     100 | Final       | Yes     |
-| RTCCTS |     200 | Preliminary | No      |
+| Variant | Description | Data Release Mode              | PP Depands |
+|---------+-------------+--------------------------------+------------|
+|     100 | Final       | 0:Data Release is Required     |            |
+|     200 | Preliminary | 9:Data Release is not Required |        100 |
+
+To keep the data consistency, there must have following assignment logic when Data Category and Account Principle are the same. 
+1. Variant 200 can only be assigned if its PP depands variant exist under the same Data Category and Account Principle;
+2. Variant 200 *cannot* be assigned if there exist more than one variants with mode "0"
+3. There could be multiple mode "9" variants with only one mode "0" variant under one Data Category and Account Principle combination. 
 
 **** BPC Category
 
@@ -327,7 +334,7 @@ Consolidation version is defined by combining Date Category, Account Principle, 
 |----------+-----------+------------+---------+---------------------------------|
 | FINAL1   | Actual1   | LGAAP      |     100 | Final cons for Local GAAP       |
 | PRELIM1  | Actual1   | LGAAP      |     200 | Preliminary cons for Local GAAP |
-| FINAL2   | Actual2   | USGAAP     |     100 | Final cons for US GAAP          |
+| FINAL2   | Actual2   | USGAAP     |     110 | Final cons for US GAAP          |
 | PRELIM2  | Actual2   | USGAAP     |     200 | Preliminary cons for US GAAP    |
 | FINAL3   | Actual3   | IFRS       |     100 | Final cons for IFRS             |
 | PRELIM3  | Actual3   | IFRS       |     200 | Preliminary cons for IFRS       |
@@ -405,29 +412,25 @@ For company *C200*, I give following CT methods for period 2016.08
 Assume the exchange rate of CNY:JPY = 1:6
 
 **** Run CT for C100
-
-When I run RTCCT under version *Actual1/LGAAP* for company *C100*, it will call CT method *CTM01* and generate following results in ACDOCA: 
+I first run RTCCT under version *Actual1/LGAAP/200* for company *C100*, it will call CT method *CTM01* and generate following results in ACDOCC:
 | Model  | D.Cate  | Ledger | Variant |  Period | Entity | LC CNY | GC JPY |
 |--------+---------+--------+---------+---------+--------+--------+--------|
-| RTCCTS | Actual1 | C1     |         | 2016008 | C100   | 8,000  | 48,000 |
+| RTCCTS | Actual1 | C1     |     200 | 2016008 | C100   | 8,000  | 48,000 |
 
-Both "FINAL1" and "PRELIM1" will read the same translated results. 
+~Notice: for preliminary categories, each time you re-run CT, it will delete the former CT documents.~
 
-Then next time, if I run RTCCT under *Actual1/LGAAP/200* for company *C100*, it will delete the former result and post a new one.
+Then next time, I run RTCCT under version *Actual1/LGAAP/100*, it will generate following results in ACDOCC:
+| Model  | D.Cate  | Ledger | Variant |  Period | Entity | LC CNY | GC JPY |
+|--------+---------+--------+---------+---------+--------+--------+--------|
+| RTCCTS | Actual1 | C1     |     200 | 2016008 | C100   | 8,000  | 48,000 |
+| RTCCTS | Actual1 | C1     |     100 | 2016008 | C100   | 8,010  | 48,060 |
+
+The BPC Category "FINAL1" and "PRELIM1" will read seperate data set of current period. But they share the same data set of prior periods. Then when open the next period (2016009), it should delete the lines under variant "200", and clear the value of variant "100". The data looks like bellow:
 | Model  | D.Cate  | Ledger | Variant |  Period | Entity | LC CNY | GC JPY | DEL |
 |--------+---------+--------+---------+---------+--------+--------+--------+-----|
-| RTCCTS | Actual1 | C1     |         | 2016008 | C100   | 8,000  | 48,000 | X   |
-| RTCCTS | Actual1 | C1     |     200 | 2016008 | C100   | 8,000  | 48,000 |     |
-
-Then BPC can only read "PRELIM1" data. If we set the Variant of the former result to 100 rather then delete them, then BPC can still read "FINAL1". Need further consideration. Also to be considered is in delta translation cases. 
-
-After running CT in all versions, it will generate following results in ACDOCC.
-| Model  | D.Cate  | Ledger | Variant |  Period | Entity | LC CNY  | GC JPY  |
-|--------+---------+--------+---------+---------+--------+---------+---------|
-| RTCCTS | Actual1 | C1     |         | 2016008 | C100   | 8,000   | 48,000  |
-| RTCCTS | Actual2 | C2     |         | 2016008 | C100   | 9,000   | 54,100  |
-| RTCCTS | Actual3 | C3     |         | 2016008 | C100   | 10,000  | 62,000  |
-| RTCCTS | PLAN    | C1     |         | 2016008 | C100   | 100,000 | 600,000 |
+| RTCCTS | Actual1 | C1     |     200 | 2016008 | C100   | 8,000  | 48,000 | X   |
+| RTCCTS | Actual1 | C1     |         | 2016008 | C100   | 8,010  | 48,060 |     |
+Now, "PRELIM1" and "FINAL1" share the same data of period 2016008.
 
 **** Run CT for C200
 

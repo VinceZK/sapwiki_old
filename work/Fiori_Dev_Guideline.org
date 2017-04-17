@@ -1,5 +1,5 @@
 #+PAGEID: 1865734207
-#+VERSION: 12
+#+VERSION: 17
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: Fiori Development Guideline
@@ -29,16 +29,13 @@
 #+CAPTION: Fiori Development Process 
 [[../image/FioriDevelopmentProcess.png]]  
 
-#+CAPTION: LOB Financial Fiori Landscape
-[[../image/FinFioriLandscape.png]]  
-
 | Purpose                          | GW  | UI Version   | Supply Rule          |
 |----------------------------------+-----+--------------+----------------------|
-| S/4 Hana OP and CE Infinity: Dev | UXT | 1.45snapshot | daily supply of 1.45 |
-| S/4 Hana OP and CE Infinity: QA  | UXR | 1.45snapshot | daily supply of 1.45 |
-| S/4 Hana OP and CE Infinity: PF  | U8P | 1.45snapshot | daily supply of 1.45 |
+| S/4 Hana OP and CE Infinity: Dev | UYT | 1.45snapshot | daily supply of 1.45 |
+| S/4 Hana OP and CE Infinity: QA  | UYR | 1.45snapshot | daily supply of 1.45 |
+| S/4 Hana OP and CE Infinity: PF  | U9P  | 1.45snapshot | daily supply of 1.45 |
 | S/4 Hana OP 1610 Delivery: Dev   | NMK | 1.44.3       | UI V3 SP00 + notes   |
-| S/4 Hana OP 1610 Delivery: QA    | UXV | 1.44.4       | UI V3 SP00 + notes   |
+| S/4 Hana OP 1610 Delivery: QA    | UYV | 1.44.4       | UI V3 SP00 + notes   |
 | S/4 Hana OP 1610 Delivery: PF    | M9P | 1.44.3       | UI V3 SP00 + notes   |
 
 There is a good tool which collects all the links: https://cpl.mo.sap.corp/launchpad/index.php?lds=OP1610&cat=S/4HANA
@@ -64,7 +61,7 @@ There is a good tool which collects all the links: https://cpl.mo.sap.corp/launc
 [[../image/JavaDevInfras.png]] 
 
 *** Fiori Launchpad Configuration
-This part introduce how you embed your applications into the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html?sap-client=902#Shell-home][Fiori Launchpad(UXT902)]], or vice verser, how you find an existing application from Launchpad to the backend services. 
+This part introduce how you embed your applications into the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html?sap-client=902#Shell-home][Fiori Launchpad(UYT902)]], or vice verser, how you find an existing application from Launchpad to the backend services. 
 
 1. If your applications are legacy SAPGUI or WebDynpro, then you should define your Backend Catalogs. Please use this [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500#][tool]] to create your Backend Catalogs and refer the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wikipage]] for detail;
 2. You may need to apply semantic objects;
@@ -72,7 +69,7 @@ This part introduce how you embed your applications into the [[https://wdciw04.w
 5. You create PFCG roles and assign launchpad catalogs and groups into the roles, *this task should be done in Frontend Server*;
 6. Finally, you assign SAP users to the PFCG role, and then open the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Launchpad Designer]] will see your tiles.
 
-You can find more details steps in the [[https://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] link. However, you will find you do not have the authorization to do user/role assignments. You have to apply Business Roles by using the DLM self service tool: https://vmw4958.wdf.sap.corp:44344/sap/bc/webdynpro/sap/zdlm_nav_role?sid=UXT&clnt=902. For example, you add the existing business role "SAP_BR_GL_ACCOUNTANT".
+You can find more details steps in the [[https://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] link. However, you will find you do not have the authorization to do user/role assignments. You have to apply Business Roles by using the DLM self service tool: https://vmw4958.wdf.sap.corp:44344/sap/bc/webdynpro/sap/zdlm_nav_role?sid=UYT&clnt=902. For example, you add the existing business role "SAP_BR_GL_ACCOUNTANT".
 
 In case you want to find the Fiori code and the backend service, you can process in following steps:
 
@@ -151,10 +148,10 @@ By following the [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1
 *** ABAP Package Structure
 | Artifacts          | System | Package                  | SC       | ACH     |
 |--------------------+--------+--------------------------+----------+---------|
-| Business Catalogs  | UXT    | UIFIN_COMMON             | UIAPFI70 | FIN     |
-| Technical Catalogs | UXT    | UIFI_IAM_TC              | UIAPFI70 | FIN     |
-| Fiori App          | UXT    | UIFIN_CONS               | UIAPFI70 | ?       |
-| Gateway            | UXT    | $TMP?                    |          |         |
+| Business Catalogs  | UYT    | UIFIN_COMMON             | UIAPFI70 | FIN     |
+| Technical Catalogs | UYT    | UIFI_IAM_TC              | UIAPFI70 | FIN     |
+| Fiori App          | UYT    | UIFIN_CONS               | UIAPFI70 | ?       |
+| Gateway            | UYT    | $TMP?                    |          |         |
 | OData              | ER9    | APPL_FIN_ODATA_CONS      | S4CORE   | FIN-RTC |
 | Backend Catalogs   | ER9    | APPL_FIN_APP_DESCRIPTORS | S4CORE   | FIN-RTC |
 
@@ -189,7 +186,7 @@ Technical catalog act as containers that group all delivered applications (Fiori
 + A separation between frontend (Fiori, UI) catalogs shipped with the frontend software components and and backend catalogs (WebDynpro, WebGUI, ...) shipped with the backend software components is used.
 + If the semantically same app (i.e. the same intent), has different navigation targets in different delivers, only one tile, but different navigation targets have to be created in the technical catalog. When building the business catalogs, the right navigation target has to be chosen as reference.
 
-Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UXT902) to define frontend catalogs; Use [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500&WDCONFIGURATIONID=SUI_TM_MM_APP#][Backend App Descriptors]](ER9500) to define your backend catalogs. For more detail, please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wiki-page]].
+Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UYT902) to define frontend catalogs; Use [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500&WDCONFIGURATIONID=SUI_TM_MM_APP#][Backend App Descriptors]](ER9500) to define your backend catalogs. For more detail, please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wiki-page]].
 
 *** Business Catalogs      :Sam:
 Business catalogs are the central object for UI and authorization assignment to business users and for structuring and organizing the authorization maintenance. If a user is assigned to a business catalog, he/she gets access to all apps included in the catalog and therefore requires the corresponding authorizations.
@@ -199,7 +196,7 @@ Business catalogs are the central object for UI and authorization assignment to 
 
 The visual part of a business catalog is represented as a Fiori catalog. Additional objects, i.e. business catalog role and restrictions, complement the Fiori catalog in the S/4HANA cloud editions to achieve automated lifecycle management for authorizations and extensibility.
 
-Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UXT902) to define your business catalogs. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Considerations]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
+Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UYT902) to define your business catalogs. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Considerations]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
 
 *** Business Group      :Sam:
 Business groups are defined in the Fiori Launchpad Designer. The represent edition (on-premise/cloud) specific grouping of visible apps from one or more business catalogs from the same business area in the Fiori Launchpad. The represent the end user point of view and should have unique titles within the related business roles.
@@ -230,7 +227,7 @@ Before you register your Fiori app, you need first apply your business roles.
 
 PO should maintain the Fiori Portfolio in OAM. In our case, we deliver in release op1709, which I suppose we should main OAM through this link: [[https://ifp.wdf.sap.corp/sap/bc/webdynpro/sps/wda_obt_variant?object_type_id=OBT_IFP_6CAE8B28C5DB1ED39A99A3948F2DC308?variant_id=6CAE8B26E4CB1ED6A9CAAF35ECB5B445?user_settings=X#][2017 / Q3 variant]]. All visible and editable columns should be fill. A short description of columns can be find [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1588149430][here]].
 
-You must pass the *Design Gate1* to get your Fiori ID. Without Fiori ID, you can not build and deploy your Fiori App into UXT system. Most of our Fiori UI5 apps are required to pass Design Gate 1. The purpose of Design Gate 1 is to ensure the optimal desirability, viability, and feasibility of the design. You can pass through this gate once the Global Design lead or a named substitute has reviewed the documents you prepared during the design phase. The sign-off is usually done via an email confirmation.
+You must pass the *Design Gate1* to get your Fiori ID. Without Fiori ID, you can not build and deploy your Fiori App into UYT system. Most of our Fiori UI5 apps are required to pass Design Gate 1. The purpose of Design Gate 1 is to ensure the optimal desirability, viability, and feasibility of the design. You can pass through this gate once the Global Design lead or a named substitute has reviewed the documents you prepared during the design phase. The sign-off is usually done via an email confirmation.
 
 For more detail please refer [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Fiori+App+Portfolio][Fiori App Portfolio]].
 
@@ -243,7 +240,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 *** Maintain Validation Rule                                          :Steve:
 | Artifacts                         | Name                                      |
 |-----------------------------------+-------------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_RULE       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_VALIDATION_RULE       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VALIDATION_RULE |
 | App name and ID in Project Portal | fin.cons.validationrule                   |
 | POM Artifact ID                   | fin.cons.validationrule                   |
@@ -255,7 +252,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 *** Maintain Validation Method                                       :Summer:
 | Artifacts                         | Name                                        |
 |-----------------------------------+---------------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_VALIDATION_METHOD       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_VALIDATION_METHOD       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VALIDATION_METHOD |
 | App name and ID in Project Portal | fin.cons.validationmethod                   |
 | POM Artifact ID                   | fin.cons.validationmethod                   |
@@ -267,7 +264,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 *** Consolidation Data Release Cockpit                                 :Lynn:
 | Artifacts                         | Name                          |
 |-----------------------------------+-------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_DRC       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_DRC       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_DRC |
 | App name and ID in Project Portal | fin.cons.drc                  |
 | POM Artifact ID                   | fin.cons.drc                  |
@@ -279,7 +276,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 *** Approve Financial Data for Consolidation                        :William:
 | Artifacts                         | Name                          |
 |-----------------------------------+-------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_DMA       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_DMA       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_DMA |
 | App name and ID in Project Portal | fin.cons.data.mass.approval   |
 | POM Artifact ID                   | fin.cons.data.mass.approval   |
@@ -288,13 +285,13 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 | Service Builder Project           | CONS_DATA_MASS_APPROVAL       |
 | Semantic Object                   | ConsolidationDataApproval     |
 
-*** Financial Statement for Consolidation Entity                       :Chang:
+*** Financial Statement for Consolidation Entity                      :Chang:
 | Artifacts                         | Name                                          |
 |-----------------------------------+-----------------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_ENTITY_FINSTATEMENT       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_ENTITY_FINSTATEMENT       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ENTITY_FINSTATEMENT |
-| App name and ID in Project Portal | fin.cons.entity.finstatement.display          |
-| POM Artifact ID                   | fin.cons.entity.finstatement.display          |
+| App name and ID in Project Portal | fin.cons.finstatement.display           |
+| POM Artifact ID                   | fin.cons.finstatement.display                 |
 | Fiori ID                          | F2627                                         |
 | BSP Application Name              | FIN_CONS_EFS                                  |
 | Service Builder Project           | CONS_ENTITY_FINANCIAL_STATEMENT               |
@@ -304,7 +301,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 A report can be drill-through from consolidation financial statements
 | Artifacts                         | Name                              |
 |-----------------------------------+-----------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_DOCLIST       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_DOCLIST       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_DOCLIST |
 | App name and ID in Project Portal | fin.cons.document.list            |
 | POM Artifact ID                   | fin.cons.document.list            |
@@ -313,11 +310,11 @@ A report can be drill-through from consolidation financial statements
 | Service Builder Project           | CONS_DOCLIST                      |
 | Semantic Object                   | DocumentList                      |
 
-*** Consolidation Used Financial Statement Library                   :Chang:
+*** Consolidation Used Financial Statement Library                    :Chang:
 Contains all reusable financial statement components, includes hierarchy display, drill-through reports, and search helps. 
 | Artifacts                         | Name                                       |
 |-----------------------------------+--------------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_LIB_FINSTATEMENT       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_LIB_FINSTATEMENT       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_LIB_FINSTATEMENT |
 | App name and ID in Project Portal | fin.cons.lib.finstatement                  |
 | POM Artifact ID                   | fin.cons.lib.finstatement                  |
@@ -325,11 +322,11 @@ Contains all reusable financial statement components, includes hierarchy display
 | BSP Application Name              | FIN_CONS_LIB_FS                            |
 | Service Builder Project           | CONS_LIB_FINANCIAL_STATEMENT               |
 
-*** Validation Result Library                                         :Chang:   
+*** Validation Result Library                                         :Chang:
 It is used in Validation Method and Data Release Cockpit.
 | Artifacts                         | Name                                            |
 |-----------------------------------+-------------------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_LIB_VALIDATION_RESULT       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_LIB_VALIDATION_RESULT       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_LIB_VALIDATION_RESULT |
 | App name and ID in Project Portal | fin.cons.lib.validationresult                   |
 | POM Artifact ID                   | fin.cons.lib.validationresult                   |
@@ -341,7 +338,7 @@ It is used in Validation Method and Data Release Cockpit.
 It is used in Validation Rule and Validation Method
 | Artifacts                         | Name                                            |
 |-----------------------------------+-------------------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_LIB_VALIDATION_ENGINE       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_LIB_VALIDATION_ENGINE       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_LIB_VALIDATION_ENGINE |
 | App name and ID in Project Portal | fin.cons.lib.validationengine                   |
 | POM Artifact ID                   | fin.cons.lib.validationengine                   |
@@ -353,7 +350,7 @@ It is used in Validation Rule and Validation Method
 Local accountants and group accountants can give comments on the validation results or packages.
 | Artifacts                         | Name                                    |
 |-----------------------------------+-----------------------------------------|
-| Package for Fiori App(UXT)        | UIFIN_CONS/FIN_CONS_LIB_RCOMMENTS       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_LIB_RCOMMENTS       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_LIB_RCOMMENTS |
 | App name and ID in Project Portal | fin.cons.lib.rcomments                  |
 | POM Artifact ID                   | fin.cons.lib.rcomments                  |

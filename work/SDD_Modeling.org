@@ -1,5 +1,5 @@
 #+PAGEID: 1821717599
-#+VERSION: 21
+#+VERSION: 22
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Modeling
@@ -19,7 +19,7 @@
 | Document Title    | Date             | Link          | Comments                       |
 |-------------------+------------------+---------------+--------------------------------|
 | EC-CS Modeling    | <2015-12-25 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/ab/cae87873fc11d2996b0000e8a5999a/content.htm?frameset=/en/05/b0a3c88a8b11d299830000e8a5999a/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=9&show_children=false][online help]]   | Modeling in EC-CS is actually configurations on consolidation master data and controlling. As EC-CS already has data container ECMCA & EMMCT. Modeling tasks could include definition of: Dimension, Cons Unit, Cons Group, Cons Chart of Account, Subassigment, Version, and Ledger. |
-| BCS Modeling      | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/25/dd833b36b0980fe10000000a11402f/content.htm?frameset=/en/9d/f4783b5fed4834e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=12&show_children=false][online help]]   | Modeling in BCS differs from EC-CS is the requirement to define =Data Basis=. Data basis is a bw cube (combine data sources as data streams), which consists of characteristics and key figures with their respective roles for consolidation. base on data basis, consolidation areas can be defined which are subsets of characteristics and key figures. besides, all the master data and configuration are quite same with EC-CS. |
+| BCS Modeling      | <2015-12-25 Fri> | [[https://help.sap.com/saphelp_erp60_sp/helpdata/en/ef/a5c6535e601e4be10000000a174cb4/frameset.htm][online help]]   | Modeling in BCS differs from EC-CS is the requirement to define =Data Basis=. Data basis is a bw cube (combine data sources as data streams), which consists of characteristics and key figures with their respective roles for consolidation. base on data basis, consolidation areas can be defined which are subsets of characteristics and key figures. besides, all the master data and configuration are quite same with EC-CS. |
 | BPC Modeling      | <2015-12-23 Wed> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/en/61/4248fcbed34a32b4e0637185fda206/content.htm?frameset=/en/99/3b45ce7bd64133ac81afd1698d93c5/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=126][online help]]   | BPC has 2 versions: Standard and Embedded. There are differences on modeling of the 2 products versions. RTC refers much more to its embedded version. In its embedded version, modeling means tie a BW virtual-provider and define fields role. |
 | Cons. Versions    | <2016-03-08 Tue> | [[http://help.sap.com/saphelp_470/helpdata/en/8c/cf7d7888f711d299810000e8a5999a/content.htm?frameset=/en/dc/f18b884efb11d39a350000e8a5999a/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=19][online help]]   | Version is rather a complicate concept in consolidation. As a lot of settings are based on version. There are also differences between EC-CS and BCS. In EC-CS, version is only a 3-char long code, while in BCS, the same 3-char long code is assigned with a combination of multiple characteristics. |
 | SAP SET           | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_46c/helpdata/en/c1/fcdf390ab90b35e10000000a11402f/content.htm?frameset=/en/c1/fcdf390ab90b35e10000000a11402f/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=3&show_children=true#jump3][online help]]   | Introduce what is SAP SET, different types of SET, and how it is used in SAP environment. |
@@ -295,9 +295,15 @@ You must assign:
 2. A *Consolidation Chart of Accounts* is used to present the group financial statements. 
 3. A *Consolidation Fiscal Year Variant* is used to distribute journal entries into the right group fiscal year period.
 
-In the "Integration Option", you set whether the model integrates with BPC. If yes, you have to give a "Default Flow Type" which is actually a transaction type. This is because transaction type in ACDOCA is mapped to BPC's flow dimension, and BPC requires every row have a flow type. In case lines in ACDOCA do not have the transaction type, then the default one is used.You can also decide whether currency translation happens in S/4HANA or in BPC. The integration options controls how the consolidation views are generated.  
+In the "Integration Option", you set whether the model integrates with BPC. If yes, you have to give a "Default Flow Type" which is actually a transaction type. This is because transaction type in ACDOCA is mapped to BPC's flow dimension, and BPC requires every row have a flow type. In case lines in ACDOCA do not have the transaction type, then the default one is used.
 
-There are others settings like "Default Translation Method", which is optional. You can assign a CT method as the default one for those entities who are not assigned with a dedicate CT method. "Model Name Abbreviation" is used as a prefix for the generated consolidation views. It is 2 characters long, and can be auto determined from the full model name. However, users can assign one by themselves. The Model Name Abbreviation should keep unique.
+You can also decide which currency translation mode you prefer. 
+1. CT in RTC;
+2. CT in G/L Accounting with Revaluation;
+3. CT in G/L Accounting w/o Revaluation, using RTC CT method to do the revaluation at month-end;
+4. CT in BPC.
+
+The integration options controls how the consolidation views are generated.  
  
 **** Data Source 
 #+Caption: Real-time Consolidation Modeling Tool: Data Source
@@ -551,26 +557,13 @@ New fields derivation is quite same with scenario 2. But in this case, as =BPC C
 | C1          | Consolidation Ledger 1 |
 | C2          | Consolidation Ledger 2 |
 
-*** Assign Accounting Ledgers and Company Codes to Consolidation Ledger
-#+CAPTION: RTC_LEDGER_ASGNMT
-| Cons Ledger | Acctg Ledger | Company Code |
-|-------------+--------------+--------------|
-| C1          | 0L           |         1000 |
-| C1          | 0L           |         1001 |
-| C1          | 0L           |         1002 |
-| C1          | 0L           |         1003 |
-| C1          | 0L           |         1004 |
-| C2          | 1L           |         2000 |
-| C2          | 1L           |         2001 |
-| C2          | 1L           |         2002 |
-| C2          | 1L           |         2003 |
-| C2          | 1L           |         2004 |
-| C2          | 1E           |         2000 |
-| C2          | 1E           |         2001 |
-| C2          | 1E           |         2002 |
-| C2          | 1E           |         2003 |
-| C2          | 1E           |         2004 |
-  
+*** Assign consolidation ledger to account principle
+#+CAPTION: RTC_ACCTP
+| Acct. P | Cons Ledger |
+|---------+-------------|
+| GAAP    | C1          |
+| GAAP    | C2          |
+
 *** Define a consolidation model
 Consolidation model "VINCE1" is created based on foundation view "C_FOUNDATION_VIEW". Two consolidation versions are defined:
 | Cons Ledger | Data Category | Variant |
