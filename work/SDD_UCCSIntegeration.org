@@ -1,0 +1,33 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD Integeration with UCCS
+
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer | Grace Zou     |
+| Quality Responsible   | Yao Cen       |
+| Developers            |               |
+
+*** References
+|                                  |                  |         | <30>                           |
+| Document Title                   | Date             | Link    | Comments                       |
+|----------------------------------+------------------+---------+--------------------------------|
+| Lifecycle Incompatibale Patterns | <2017-03-23 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Lifecycle+Incompatible+Patterns][sapwiki]] | From package build perspective the target is that all the IMG activities that are in cloud scope for the first time are recordable so that no new eCATTs for content activation need to be build and no tables need to be included into client 000 whitelist. Table content with delivery classes S, E, W has to be shipped with the application. |
+| Self Service Configuration UI    | <2017-03-29 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Self+Service+Configuration+UIs][sapwiki]] | This guideline is focussing on WebGUI SSC-UIs. Most of this guideline is also relevant for SSC-UIs in FIORI (apart from restrictions related to the new API).  Links in bold are important and should be read.  Each section includes checks that need to be done and identifies who should do these checks. |
+
+
+*** SSC-UI 
+SE54 V_SEPA_MND_CUST
+
+1. You have maintained IMG structure for selection
+2. Add an entry for RTC selection in table  /FTI/WEBUI_MAINT(SM30);
+3. 
+
+

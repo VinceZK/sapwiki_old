@@ -1,0 +1,80 @@
+#+PAGEID: 1882654948
+#+VERSION: 3
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Simple Upload
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer | Grace Zou     |
+| Quality Responsible   | Yao Cen       |
+| Developers            | Summer Xia    |
+
+*** References
+|                |                  |             | <30>                           |
+| Document Title | Date             | Link        | Comments                       |
+|----------------+------------------+-------------+--------------------------------|
+|                |                  |             |                                |
+
+** Design
+Simple Upload allows user upload *local financial* data into ACDOCC in a rather simple and straight forward way. Those external FI data can then be involved in consolidation process of a RTC model.
+
+A use case of Simple Upload can be described as bellow:
+1. Accountants(either local or group) prepare the local data according to a spreadsheet template;
+2. The spreadsheet template is generated according to the RTC model definition;
+3. She downloads the spreadsheet template from the Simple Upload APP and convert the data format according to the 
+4. She uploads the data using Simple Upload APP, the data is saved in ACDOCC and posted as a document;
+5. The data can then be translated, validated, and released in Data Release Cockpit.
+
+*** UI Mock-up
+#+Caption: Simple Upload Initial Screen
+[[../image/SimpleUpload01.png]]
+
+1. User must enter 3 mandatory parameters: Model, Data Category, and Fiscal Year Period.
+2. User can download a spreadsheet template. The fields of the template is derived from the model definition, that's the fields in the foundation view.
+3. Entity, Partner Entity, Local CoA, Local Accounts, HSL and RHCUR are mandatory, others characteristics are freely based on the model definition.
+4. Entity, Partner Entity, Local CoA, and Local Accounts should be checked for their existence in the system. If not, then the upload is aborted.
+5. Amount fields should check the validity, if not, aborted.
+
+#+Caption: Simple Upload Result Screen
+[[../image/SimpleUpload02.png]]
+1. User can upload data of multiple entities.
+2. The result is grouped by each entity, in other word, each entity will be given one document number.
+3. If one of them failed, only the failed one is aborted, and the reason is given.
+4. If the entity data is successfully uploaded, a document number is generated, by clicking it will navigate you to the document detail(RTCDT). 
+5. Meanwhile, a delta document is generated for each entity and each upload. You click the detail icon will popup a dialog which lists all the delta documents.
+6. If there is no delta occured, then no delta document is generated for the entity. 
+
+*** Data Simulation
+The prepared local FI data is like bellow:
+| Entity | P Entity | L CoA | L Account |    HSL | RHCUR | Trans Type |
+|--------+----------+-------+-----------+--------+-------+------------|
+| C1001  | C2001    | L001  |    100101 | 100.00 | EUR   |        100 |
+| C2001  |          | L002  |    100102 | 300.00 | USD   |            |
+
+The data in ACDOCC after it is successfully uploaded:
+| Model  | D Cate | BELNR | PLVL | RYEAR | POPER | KTOPL |  RACCT | RCOMP | RASSC |    HSL | RHCUR | CONS_SL | CONS_CUR | RMVCT |
+|--------+--------+-------+------+-------+-------+-------+--------+-------+-------+--------+-------+---------+----------+-------|
+| VINCE1 | Actual | 10001 |      |  2016 |   003 | L001  | 100101 | C1001 | C2001 | 100.00 | EUR   |  100.00 | LC       |   100 |
+| VINCE1 | Actual | 10002 |      |  2016 |   003 | L002  | 100102 | C2001 |       | 300.00 | USD   |  300.00 | LC       |       |
+| VINCE1 | Actual | 20001 |   00 |  2016 |   003 | RTC2  |   1001 | C1001 | C2001 | 100.00 | EUR   |  100.00 | LC       |   100 |
+| VINCE1 | Actual | 20002 |   00 |  2016 |   003 | RTC2  |   1001 | C2001 |       | 300.00 | USD   |  300.00 | LC       |       |
+
+The data is changed(100-->110) and re-uploaded:
+| Entity | P Entity | L CoA | L Account | HSL      | RHCUR | Trans Type |
+|--------+----------+-------+-----------+----------+-------+------------|
+| C1001  | C2001    | L001  |    100101 | *110.00* | EUR   |        100 |
+| C2001  |          | L002  |    100102 | 300.00   | USD   |            |
+
+The data in ACDOCC after it is successfully uploaded:
+| Model  | D Cate | BELNR | PLVL | RYEAR | POPER | KTOPL |  RACCT | RCOMP | RASSC |    HSL | RHCUR | CONS_SL | CONS_CUR | RMVCT |
+|--------+--------+-------+------+-------+-------+-------+--------+-------+-------+--------+-------+---------+----------+-------|
+| VINCE1 | Actual | 10001 |      |  2016 |   003 | L001  | 100101 | C1001 | C2001 | 110.00 | EUR   |  100.00 | LC       |   100 |
+| VINCE1 | Actual | 10002 |      |  2016 |   003 | L002  | 100102 | C2001 |       | 300.00 | USD   |  300.00 | LC       |       |
+| VINCE1 | Actual | 20001 |   00 |  2016 |   003 | RTC2  |   1001 | C1001 | C2001 | 100.00 | EUR   |  100.00 | LC       |   100 |
+| VINCE1 | Actual | 20002 |   00 |  2016 |   003 | RTC2  |   1001 | C2001 |       | 300.00 | USD   |  300.00 | LC       |       |
+| VINCE1 | Actual | 20003 |   00 |  2016 |   003 | RTC2  |   1001 | C1001 | C2001 |  10.00 | EUR   |   10.00 | LC       |   100 |

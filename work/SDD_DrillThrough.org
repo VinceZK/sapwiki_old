@@ -1,0 +1,48 @@
+#+PAGEID: 1870196804
+#+VERSION: 4
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Drill Through Report
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer | Ciaran        |
+| Quality Responsible   | Yao Cen       |
+| Developers            | Chang         |
+
+*** References
+|                |                  |               | <30>                           |
+| Document Title | Date             | Link          | Comments                       |
+|----------------+------------------+---------------+--------------------------------|
+| HANA Script    | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
+| AMDP Guide     | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
+
+** Context
+The drill through report here means drill through from the consolidation statements to the original financial journal entries. As consolidation statements are built upon group point of view, which means the Chart-of-Accounts, the Fiscal Year Variant, the Entity, and the Currency are all somehow converted. To navigate back to the original local data, we should reverse the conversion and find the return path.  
+
+Bearing in mind, the group currency amounts cannot be drill-through. As currency conversion is irreversible. So the only drill-through-able amount is the local currency amount of each entity. However, if currency conversion happens in G/L accounting module, which means the converted amounts are already saved in ACDOCA, then it is still possible to drill-through from the group currency amounts.
+
+It should also be noticeable that the timestamp should always be an important filtering parameter when drill-through. As the local data is controlled by the cut-off timestamp. 
+
+** Overall Design
+The conversion from local to group on Chart-of-Accounts, Fiscal Year Variant, and Entity is reversible. The revers logic is encapsulated in a CDS view which is generated along with model activation. The CDS view is also built upon foundation views, and has enough information to return back from the aggregated local amounts to the line item detail. Read SDD [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Consolidation+Views#SDD-Consolidation Views-4.9Report View][Consolidation Views]] for detail on the report view. 
+
+The drill-through happens on financial statements, which usually display total amounts of each group account. Like the mock-up bellow, the group account "11121100" has the local currency amount "1,000 EUR" for current amount and  "10,000 EUR" for the previous period. Then I can click the amounts which will navigate me to the journal entry list view, on which the total amount of every lines should be the exactly the same value. 
+
+#+Caption: Consolidation FI Statement 
+[[../image/DrillThroughReport01.png]]
+The above FI statement shows both the local amounts and group amounts of a single entity with current period set to 2016002. 
+ 
+You can only drill-through on amounts of the leaf nodes. It is supposed we only have one drill-through report, so a context menu with multiple drill-through reports is not necessary so far. 
+
+#+Caption: Drill-through Journal Entry Report
+[[../image/DrillThroughReport02.png]]
+The above report shows the journal entries after the user click the amount "10,000 EUR". It has 6 mandatory filter parameters, which are automatically filled during the navigation. In the list, you can click the journal entry number to open the entry detail. Of course, there are different case for the destinations, for example:
+1. If the journal entry comes from ACDOCA, then FB03 will be called;
+2. If the journal entry comes from ACDOCC, then RTCJD will be called;
+3. If others, then user can customize to a specific application. 
+

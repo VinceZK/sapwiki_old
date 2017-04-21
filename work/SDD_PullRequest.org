@@ -313,7 +313,7 @@ If the group accountant Approve/Reject/Defer a DRR by mistake, she can still swi
 |             2 | WAITING    | The task is waiting because of system resource limition |
 |             3 | PROCESSING | The task is running                                     |
 |             4 | SUCCESS    | The task is successfully finished                       |
-|             5 | ERROR      | The task is interupt due to unkonw error                |
+|             5 | Failed     | The task is interupt due to unkonw error                |
 
 Only system status is less than 2 can the group accountant switch the status, and only for the last DRR. Even though, following cases should be considered separately:
 

@@ -1,0 +1,126 @@
+#+PAGEID: 1880029220
+#+VERSION: 9
+#+STARTUP: align
+#+TITLE: SDD-Task Runtime
+#+OPTIONS: toc:1
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer | Grace Zou     |
+| Quality Responsible   | Yao Cen       |
+| Developers            | Sam Sun       |
+
+** Context
+Consolidation tasks like currency translation, validation, elimination, and so on usually run on a large volume of data. Most of the time, synchronize run of consolidation tasks may be not reasonable. Thus we need provide an synchronize runtime framework to allow consolidation tasks to handled in a user friendly and reasonable way. 
+
+#+Caption: Async Run Process
+[[../image/AsyncRunProcess.png]]
+
+** Design
+*** Class Design
+#+BEGIN_SRC abap
+data go_task_runtime type ref to CL_RTC_TASK_RUNTIME.
+
+create object go_task_runtime( iv_model = 'VINCE1'
+                               iv_version = '1'
+                               iv_ryear = '2016'
+                               iv_poper = '003' ).
+go_task_runtime->set_scope( it_entity = lt_entity_range ).
+go_task_runtime->add_step( 'RTC_CT' ).
+go_task_runtime->add_step( 'RTC_VALIDATION_AND_RELEASE' ).
+go_task_runtime->start_async( iv_test_run = abap_false
+                              iv_detail_log = abap_false ).
+#+END_SRC
+
+*** Task Implementation
+Each consolidation task should be implemented as an ABAP report which may have following parameters:
+1. Model: Single & Mandatory;
+2. Version: Single & Mandatory;
+3. Fiscal Year Period: Single & Mandatory;
+4. Entity: Multiple & Optional;
+5. Group: Multiple & Optional;
+6. First Step: Whether it is the first step in the task chain;
+7. Last Step: Whether it is the last step in the task chain.
+
+The ABAP report can then be submitted to either a background job or executed synchronously.
+#+BEGIN_SRC abap
+submit (report)
+  with selection-table para
+  user sy-uname
+   via job jobname number jobcount
+   and return.
+#+END_SRC
+
+Submit multiple times for multiple steps. For example, if you want to run CT first, then validation, you should
+#+BEGIN_SRC abap
+submit (CT_report)
+  with selection-table para
+  user sy-uname
+   via job jobname number jobcount
+   and return.
+
+submit (validation_report)
+  with selection-table para
+  user sy-uname
+   via job jobname number jobcount
+   and return.
+#+END_SRC
+
+The detail flow of a typical task report is described as following:
+#+Caption: Task Report Flow
+[[../image/AsyncTaskFlow.png]]
+
+1. The requestor initiate the request to run task reports. It should set the scope and step, and then kick start the task.
+2. During kicking start, it first try to lock the entity items. If all items are locked by another process, then response to the request. Else, submit and close the job.
+3. When the task report is called, it first parses the scope parameters into entity items. An entity item is the concatenation of MODEL/VERID/RYEAR/POPER/ENTITY. You need to select from RTC_ENTITY_M and BPC groups to get the list of entities involved.
+4. It then tries to lock the scope items to prevent concurrency running of the same entity items. If the same item exists under different jobname and jobcount(using FM GET_JOB_RUNTIME_INFO to get current jobname and jobcount), then it is already locked by another process. Otherwise, it is not locked or locked by own. 
+5. The entity items will be further filtered according to the DRR statues. So that only the necessary entity items are needed to be executed in the corresponding task.
+6. These available entity items is then passed to the APIs to execute the consolidation logic.
+7. Either the  APIs are successfully executed or not, the DRR user status and system status will be changed accordingly. However, if it is failed, the entity item should be unlocked.
+8. If it is the last step, then it need to unlock all the items.
+
+**** Initialize Package
+This ABAP report(RTC_INITIALIZE_PACKAGE) is used to initialize the (sub-)packages for each entity and each period. It does following things:
+1. Generate the period DRRs with initial status and empty cut-off timestamp;
+2. Check if the fiscal calendar mapping data(finsc_fisc_date) exists for the involved FYVs, if not then generate it;
+3. Check if there are variations of prior periods, and decides whether to copy these variation to current period.
+#+Caption: Initialize Period Task Report
+[[../image/AsyncTaskInitializeUI.png]]
+
+The report give a list result of each packages initialize status: initialized or not?
+
+**** Currency Translation(RTCCT)
+This report runs currency translation for multiple entities in multiple group currencies. It achieves parallelization as much as possible. 
+#+Caption: Currency Translation Task Report
+[[../image/AsyncTaskCTUI.png]]
+
+It provides following options:
+1. Entities and target group currencies are read from BPC ownership cube: if checked Entity, Group, and Group Currency filtering will not take effect;
+2. Test Run: if checked, translation journals are not posted into ACDOCC;
+3. Detail Log: if checked, detail log will be generated and saved.
+
+**** Local Validation
+This report(RTC_LOCAL_VALIDATION) runs local validation by each entities. 
+#+Caption: Local Validation Task Report
+[[../image/AsyncTaskLocalValidationUI.png]]
+
+It provides following options:
+1. Test Run: if checked, the validation result is not saved, nor the status in DRR;
+2. If Validation is Passed for the Entity, you can decide release or approve it. If not checked, then only run to the validation;
+3. Defer Adjustments, if checked and it is an ARR, then defer it to next period. If it is a PRR, then run to the options according to "If Validation is Passed for Entity".
+
+**** Task Scheduler
+This Dynpro acts as the main report which can schedule all available tasks in sequence. To be notice, it doesn't allow user to schedule using SM36, but it invokes background jobs by own. 
+  
+#+Caption: Task Scheduler
+[[../image/AsyncTaskAllUI.png]]
+
+In the "Option" block, user can choose to which user state he wants run. If "Initialize Package" is chosen, only the package initialize is executed. And only the option of this task is shown. 
+
+If for example, "Release" is chosen, then all the prerequisite tasks before release will be executed, as well as the corresponding options will be shown. 
+
+Click the "Schedule" button will popup a dialog to allow user setting background job options. If "Run Immediately" is checked, all others options are gray out. And the job will run immediately. User can also schedule a job at a future time. With "Periodic Job" is checked, user can choose a frequency. 

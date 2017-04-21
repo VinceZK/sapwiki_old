@@ -1,5 +1,5 @@
 #+PAGEID: 1865734207
-#+VERSION: 17
+#+VERSION: 18
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: Fiori Development Guideline
@@ -33,7 +33,7 @@
 |----------------------------------+-----+--------------+----------------------|
 | S/4 Hana OP and CE Infinity: Dev | UYT | 1.45snapshot | daily supply of 1.45 |
 | S/4 Hana OP and CE Infinity: QA  | UYR | 1.45snapshot | daily supply of 1.45 |
-| S/4 Hana OP and CE Infinity: PF  | U9P  | 1.45snapshot | daily supply of 1.45 |
+| S/4 Hana OP and CE Infinity: PF  | U9P | 1.45snapshot | daily supply of 1.45 |
 | S/4 Hana OP 1610 Delivery: Dev   | NMK | 1.44.3       | UI V3 SP00 + notes   |
 | S/4 Hana OP 1610 Delivery: QA    | UYV | 1.44.4       | UI V3 SP00 + notes   |
 | S/4 Hana OP 1610 Delivery: PF    | M9P | 1.44.3       | UI V3 SP00 + notes   |
@@ -114,7 +114,7 @@ How to start as a project owner: https://wiki.wdf.sap.corp/wiki/display/fiorisui
 Jenkins is used to build and package your Firoi applications/components. It is also connected with the translation system so that multi-language is supported. Your built Firoi applications/components will then stored in Nexus server as the central repository of artifacts. From the Nexus repository, your application is uploaded to the ABAP UI Frontend Server as a BSP application.  
 
 There are 5 Jenkins server used for different purposes:
-1. CI Jobs:  https://fiodevci03.wdf.sap.corp/
+1. CI Jobs:  https://fio-fin.wdf.sap.corp/
 2. Quality Jobs: https://fiochecks.wdf.sap.corp/jenkins/
 3. Translation Jobs: https://fio-trans.wdf.sap.corp/
 4. CheckMarx(Security Relvant): https://fio-cx.wdf.sap.corp/
@@ -290,7 +290,7 @@ This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPF
 |-----------------------------------+-----------------------------------------------|
 | Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_ENTITY_FINSTATEMENT       |
 | Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ENTITY_FINSTATEMENT |
-| App name and ID in Project Portal | fin.cons.finstatement.display           |
+| App name and ID in Project Portal | fin.cons.finstatement.display                 |
 | POM Artifact ID                   | fin.cons.finstatement.display                 |
 | Fiori ID                          | F2627                                         |
 | BSP Application Name              | FIN_CONS_EFS                                  |
