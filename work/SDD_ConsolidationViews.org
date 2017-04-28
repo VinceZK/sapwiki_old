@@ -1,5 +1,5 @@
 #+PAGEID: 1832374030
-#+VERSION: 21
+#+VERSION: 26
 #+STARTUP: align
 #+TITLE: SDD-Consolidation Views
 #+OPTIONS: toc:1
@@ -87,33 +87,31 @@ This section gives the pseduo sql scripts for all the consolidation views.
 |                           |        |      | <40>                                     | <5>   |
 | Consolidation View        | Group  | Type | Description                              | IsExpert |
 |---------------------------+--------+------+------------------------------------------+-------|
-| /RTCART/500VINCE1_ENTITY  | ENTITY | CDS  | Consolidation Entity Master Data View    | x     |
-| RTC_C_500VINCE1_ENTITY    | ENTITY | Calc | Consolidation Entity Master Data View    | x     |
-| /RTCART/500VINCE1_FSIM    | FSIM   | CDS  | Mapping Local Chart-of-Accounts to Group Chart-of-Accounts | x     |
-| RTC_C_500VINCE1_FSIM      | FSIM   | Calc | Mapping Local Chart-of-Accounts to Group Chart-of-Accounts | x     |
-| /RTCART/500VINCE1_FYVM    | FYVM   | CDS  | Mapping Calendar Date to Fiscal Year and Period | x     |
-| RTC_C_500VINCE1_FYVM      | FYVM   | Calc | Mapping Calendar Date to Fiscal Year and Period | x     |
-| /RTCART/500VINCE1_LRADRR  | DRR    | CDS  | Lastest Released and Approved DRR        | x     |
-| RTC_C_500VINCE1_LRADRR    | DRR    | Calc | Lastest Released and Approved DRR        | x     |
-| /RTCART/500VINCE1_F       | FNDN   | CDS  | Foundation view converted                | x     |
-| RTC_C_500VINCE1_F         | FNDN   | Calc | Foundation view converted                |       |
-| /RTCART/500VINCE1_A       | Base   | CDS  | Consolidation base view: on foundation views only | x     |
-| RTC_C_500VINCE1_A         | Base   | Calc | Consolidation base view: on foundation views only | x     |
-| /RTCART/500VINCE1_C       | Base   | CDS  | Consolidation base view: on ACDOCC only  | x     |
-| RTC_C_500VINCE1_C         | Base   | Calc | Consolidation base view: on ACDOCC only  | x     |
-| /RTCART/500VINCE1_U       | Base   | CDS  | Consolidation base view: union Foundation Views and ACDOCC | x     |
-| /RTCART/500VINCE1_U00     | Base   | CDS  | All Data with Cut-off Timestamp(Not Aggregated) | x     |
-| /RTCART/500VINCE1_U10     | Base   | CDS  | All Data of All Entities                 | x     |
-| /RTCART/500VINCE1_U11     | Base   | CDS  | Period Data of All Entities              | x     |
-| /RTCART/500VINCE1_U20     | Base   | CDS  | All Data of an Entity                    | x     |
-| /RTCART/500VINCE1_U21     | Base   | CDS  | Period Data of an Entity                 | x     |
-| RTC_C_500VINCE1_BPCFINALA | BPC    | Calc | Consolidation BPC view: Final on Foundation View |       |
-| RTC_C_500VINCE1_BPCFINALC | BPC    | Calc | Consolidation BPC view: Final on ACDOCC  | x     |
-| RTC_C_500VINCE1_BPCPRLIMA | BPC    | Calc | Consolidation BPC view: Preliminary on Foundation View | x     |
-| RTC_C_500VINCE1_BPCPRLIMC | BPC    | Calc | Consolidation BPC view: Preliminary on ACDOCC | x     |
+| /RTCART/500VINCE1_ENTITY  | ENTITY | CDS  | Consolidation Entity Master Data View    | X     |
+| RTC_C_500VINCE1_ENTITY    | ENTITY | Calc | Consolidation Entity Master Data View    | X     |
+| /RTCART/500VINCE1_FSI     | FSI    | CDS  | Group Account in Chart of Accounts       |       |
+| /RTCART/500VINCE1_FSIM    | FSI    | CDS  | Mapping Local Chart-of-Accounts to Group Chart-of-Accounts | X     |
+| RTC_C_500VINCE1_FSIM      | FSI    | Calc | Mapping Local Chart-of-Accounts to Group Chart-of-Accounts | X     |
+| /RTCART/500VINCE1_FYVM    | FYVM   | CDS  | Mapping Calendar Date to Fiscal Year and Period | X     |
+| RTC_C_500VINCE1_FYVM      | FYVM   | Calc | Mapping Calendar Date to Fiscal Year and Period | X     |
+| /RTCART/500VINCE1_LRADRR  | DRR    | CDS  | Lastest Released and Approved DRR        | X     |
+| RTC_C_500VINCE1_LRADRR    | DRR    | Calc | Lastest Released and Approved DRR        | X     |
+| /RTCART/500VINCE1_A       | Base   | CDS  | Consolidation base view: on foundation views only | X     |
+| /RTCART/500VINCE1_C       | Base   | CDS  | Consolidation base view: on ACDOCC only  | X     |
+| RTC_C_500VINCE1_C         | Base   | Calc | Consolidation base view: on ACDOCC only  | X     |
+| /RTCART/500VINCE1_U       | Base   | CDS  | Consolidation base view: union Foundation Views and ACDOCC |       |
+| /RTCART/500VINCE1_U00     | Base   | CDS  | All Data with Cut-off Timestamp(Not Aggregated) | X     |
+| /RTCART/500VINCE1_U10     | Base   | CDS  | All Data of All Entities                 | X     |
+| /RTCART/500VINCE1_U11     | Base   | CDS  | Period Data of All Entities              | X     |
+| /RTCART/500VINCE1_U20     | Base   | CDS  | All Data of an Entity                    | X     |
+| /RTCART/500VINCE1_U21     | Base   | CDS  | Period Data of an Entity                 | X     |
+| RTC_C_500VINCE1_BPCFINALA | BPC    | Calc | Consolidation BPC view: Final on Foundation View | X     |
+| RTC_C_500VINCE1_BPCFINALC | BPC    | Calc | Consolidation BPC view: Final on ACDOCC  | X     |
+| RTC_C_500VINCE1_BPCPRLIMA | BPC    | Calc | Consolidation BPC view: Preliminary on Foundation View | X     |
+| RTC_C_500VINCE1_BPCPRLIMC | BPC    | Calc | Consolidation BPC view: Preliminary on ACDOCC | X     |
 | RTC_C_500VINCE1_BPCUNION  | BPC    | Calc | Consolidation BPC view: Union View       |       |
-| /RTCART/500VINCE1_V10     | VALI   | CDS  | Validation view: 16 periods amounts for each currency |       |
-| /RTCART/500VINCE1_V20     | VALI   | CDS  | Validation view: 12 YTD amounts for each currency |       |
+| /RTCART/500VINCE1_V00     | VALI   | CDS  | Local Validation view: 16 Periods Amount in One line. | X     |
+| /RTCART/500VINCE1_V10     | VALI   | CDS  | Local Validation View: Opening, YTD, YTD-1, Period, and Prior Period Amount |       |
 | /RTCART/500VINCE1_R10     | REPO   | CDS  | Report View: Drill-through to item detail of Current Period |       |
 
 *** Consolidation Entity View
@@ -122,7 +120,16 @@ The entity view is version independent. Each model genreates one CDS view and on
 #+Caption: Entity Dimension CDS View /RTCART/500VINCE1_ENTITY
 #+BEGIN_SRC sql
 create view /RTCART/500VINCE1_ENTITY as 
-  select DIM, ENTITY, RCOMP, DIMLS, RELIM, REJNR, FXTYP, NAME, LOCAL_CURRENCY
+  select DIM, 
+         ENTITY, 
+         RCOMP,
+         DIMLS, 
+         RELIM, 
+         REJNR, 
+         FXTYP, 
+         NAME, 
+         LOCAL_CURRENCY, 
+         FLEXUP as IsExternal
     from RTC_ENTITY_M
    where MANDT = '820'
      and DIM = '100';
@@ -131,7 +138,16 @@ create view /RTCART/500VINCE1_ENTITY as
 #+Caption: Entity Dimension Calculation View RTC_C_500VINCE1_ENTITY
 #+BEGIN_SRC sql
 create view RTC_C_500VINCE1_ENTITY as 
-  select DIM,ENTITY,RCOMP, DIMLS, RELIM, REJNR, FXTYP, NAME, LOCAL_CURRENCY
+  select DIM, 
+         ENTITY, 
+         RCOMP,
+         DIMLS, 
+         RELIM, 
+         REJNR, 
+         FXTYP, 
+         NAME, 
+         LOCAL_CURRENCY, 
+         FLEXUP as IsExternal
     from RTC_ENTITY_M
    where MANDT = '820'
      and DIM = '100';
@@ -162,7 +178,16 @@ create view /RTCART/500VINCE1_LRADRR as
 *** FS Items View
 Financial Statement Item master data dimension view. It is optional assigned in data validation views and report views, so that user can filter data in dimension attributes. 
 
-We can re-use existing CDS views for that purpose, =I_GLAccountInChartOfAccounts= delivered by G/L accounting team should fit our purpose.
+The pre-delivered CDS view =P_CONSACCINCOA= is for this purpose. Each model will generate a seperate view based on it.
+#+BEGIN_SRC sql
+create view /RTCART/500VINCE1_FSI as 
+  select *
+    from P_CONSACCINCOA
+   where MANDT = '820'
+     and ChartOfAccounts = 'RTC4';
+#+END_SRC
+
+ =I_GLAccountInChartOfAccounts= is delivered by G/L accounting team which supports hierarchy.
 
 For BPC consumption, we can reuse the info-object =/ERP/GLACCT=.
 
@@ -285,19 +310,13 @@ Consolidation base views are the basis for other consolidation views to be built
 
 Now, through the consolidation base view, you see the FI journal data in the group view. 
 
-There are 6 consolidation base views generated if the model is also used by BPC. However, theroically, the number of based views is 3: 
-1. Base view on ACDOCC;
-2. Base view on foundation view(ACDOCA);
-3. Base view which union 1 and 2.
-
 I give all the pseduo sql of the 9 base views:
 
-**** Calculation View on Foundation Views only
+**** CDS View on Foundation Views only
 In case there are more than one data categories in the model, this view should union all the categories. For example, model "VINCE1" has 2 data categories, one is "ACTUAL" with source data from ACDOCA, the other is "PLAN" with source data from ACDOCP. Then the base view should union of the 2 data sources. 
 
-Fields "RCONGR1" and "AUDIT_TRA" only needed when it is BPC integrated model.
 #+BEGIN_SRC sql
-create view RTC_C_500VINCE1_A 
+create view /RTCART/500VINCE1_A 
 as select A.RCLNT,
           'VINCE1'  as MODEL,
           'ACTUAL'  as RTC_CATG,
@@ -305,35 +324,30 @@ as select A.RCLNT,
           ''        as RVERS,
           '00'      as PLEVEL,
           ''        as RTFLG,
-          'NONE'    as RCONGR1, --Only needed in BPC Integeration Mode
-          'INPUT'   as AUDIT_TRA, --Only needed in BPC Integeration Mode
           B.ENTITY,
           C.ENTITY as PENTITY,
-          --cast (COALESCE( c.entity, 'NONE') as rtc_p_entity) as PENTITY, --incase BPC
           D.FISCAL_YEAR_VARIANT as PERIV,
           D.FISCAL_YEAR as RYEAR,
           D.FISCAL_PERIOD as POPER,
           D.FISCYEARPER,
           E.KKTPL as KTOPL,
           E.RACCT,         
-          case A.RMVCT when '' then 'F15' else A.RMVCT end as RMVCT,
-          --cast (COALESCE( A.RMVCT, 'F15') as rmvct) as RMVCT,  --incase BPC
+          A.RMVCT
           A.RWCUR,
           A.RHCUR,
-          A.RHCUR as CONS_CUR, 
-          --'LC' as CONS_CUR, --incase BPC
+          'LC' as CONS_CUR, 
           A.WSL as WSL,
           A.HSL as HSL,
           A.HSL as CONS_SL,
           A.TIMESTAMP
-     from RTC_C_FOUNDATION as A
-     join RTC_C_500VINCE1_ENTITY as B
+     from P_FOUNDATIONA as A
+     join /RTCART/500VINCE1_ENTITY as B
        on A.RCOMP = B.RCOMP
-left join RTC_C_500VINCE1_ENTITY as C
+left join /RTCART/500VINCE1_ENTITY as C
        on A.RASSC = B.RCOMP
-     join RTC_C_500VINCE1_FYVM as D
+     join /RTCART/500VINCE1_FYVM as D
        on A.BUDAT = D.CALENDAR_DATE
-     join RTC_C_500VINCE1_FSIM as E
+     join /RTCART/500VINCE1_FSIM as E
        on A.KTOPL = E.KTOPL
       and A.RACCT = E.SAKNR
     where A.RCLNT = '500'
@@ -345,20 +359,18 @@ union all
           ''        as RVERS,
           '00'      as PLEVEL,
           ''        as RTFLG,
-          'NONE'    as RCONGR1,
-          'INPUT'   as AUDIT_TRA,
           ...
           A.WSL as WSL,
           A.HSL as HSL,
           A.HSL as CONS_SL,
           A.TIMESTAMP
-     from RTC_C_FOUNDATIONP as A 
+     from P_FOUNDATIONP as A 
     where A.RCLNT = '500'
 #+END_SRC
 
 In case the currency translation mode is set to "CT in G/L Accounting", the foundation view must contains 'HSL' and 'KSL',  then this view is generated in this way:
 #+BEGIN_SRC sql
-create view RTC_C_500VINCE1_A 
+create view /RTCART/500VINCE1_A 
 as select ...
           '00'      as PLEVEL,
           ''        as RTFLG,
@@ -369,7 +381,7 @@ as select ...
           0         as KSL,
           A.HSL as CONS_SL,
           ...
-     from RTC_C_FOUNDATION as A
+     from P_FOUNDATIONA as A
 union all
 as select ...
           '15'      as PLEVEL,
@@ -381,7 +393,7 @@ as select ...
           A.KSL,
           A.KSL     as CONS_SL,
           ...
-     from RTC_C_FOUNDATION as A
+     from P_FOUNDATIONA as A
 #+END_SRC
 
 All other fields and logic are the same, except:
@@ -389,14 +401,107 @@ All other fields and logic are the same, except:
 2. Local Amount has the posting level 00, empty translation indicator, empty KSL, and assign CONS_SL to HSL;
 3. Group Amount has the posting level 15, translation indicator 00, empty HSL, and assign CONS_SL to KSL;
  
-**** CDS View on Foundation Views only
-You must first create a table function on the calculation view, then create the CDS view on the table function. 
-#+BEGIN_SRC sql
-  create table function /RTCART/500VINCE1_ATF as 
-     select * from  RTC_C_500VINCE1_A;  
+**** Calculation View on Foundation Views only
+In BPC Integration model, you provide HANA calc foundation view. To allow ABAP to consume the data, you must first create a table function on the calculation view, then create the CDS view on the table function. 
 
-  create view /RTCART/500VINCE1_A as 
-    select * from /RTCART/500VINCE1_ATF;        
+In the table function, you implement an AMDP class to access the hana calc foundation views.
+#+BEGIN_SRC sql
+define table function /RTCART/500VINCE1_ATF
+implemented by method /RTCART/500VINCE1=>CALL_A
+as select A.RCLNT,
+          'VINCE1'  as MODEL,
+          'ACTUAL'  as RTC_CATG,
+          ''        as ACCTP,
+          ''        as RVERS,
+          'A'       as SRC,
+          'NONE'    as RCONGR1, 
+          'INPUT'   as AUDIT_TRA,
+          B.ENTITY,
+          cast (COALESCE( C.ENTITY, 'NONE') as rtc_p_entity) as PENTITY,
+          D.FISCAL_YEAR_VARIANT as PERIV,
+          D.FISCAL_YEAR as RYEAR,
+          D.FISCAL_PERIOD as POPER,
+          D.FISCYEARPER,
+          E.KKTPL as KTOPL,
+          E.RACCT,        
+          cast (COALESCE( A.RMVCT, 'F15') as rmvct) as RMVCT,
+          A.RWCUR,
+          A.RHCUR,
+          'LC' as CONS_CUR,
+          A.WSL,
+          A.HSL,
+          A.HSL as CONS_SL,
+          A.TIMESTAMP,
+          A.RLDNR,
+          A.GJAHR,
+          A.RBUKRS,
+          A.BELNR,
+          A.DOCLN,
+          A.RCOMP,
+          A.RASSC,
+          A.KTOPL as LKTOPL,
+          A.RACCT as LRACCT
+     from RTC_C_FOUNDATIONA as A
+     join RTC_C_500VINCE1_ENTITY as B
+       on A.RCOMP = B.RCOMP
+left join RTC_C_500VINCE1_ENTITY as C
+       on A.RASSC = B.RCOMP
+     join RTC_C_FINS_FISC_DATE as D
+       on A.RCLNT = D.MANDT
+      and A.BUDAT = D.CALENDAR_DATE
+     join RTC_C_500VINCE1_FSIM as E
+       on A.KTOPL = E.KTOPL
+      and A.RACCT = E.SAKNR
+    where A.RCLNT = '500'
+union all
+as select A.RCLNT,
+          'VINCE1'  as MODEL,
+          'PLAN'    as RTC_CATG,
+          ''        as ACCTP,
+          ''        as RVERS,
+          'P'       as SRC,
+          'NONE'    as RCONGR1, 
+          'INPUT'   as AUDIT_TRA,
+          ...
+     from RTC_C_FOUNDATIONP as P
+     join RTC_C_500VINCE1_ENTITY as B
+       on A.RCOMP = B.RCOMP
+left join RTC_C_500VINCE1_ENTITY as C
+       on A.RASSC = B.RCOMP
+     join RTC_C_FINS_FISC_DATE as D
+       on A.RCLNT = D.MANDT
+      and A.BUDAT = D.CALENDAR_DATE
+     join RTC_C_500VINCE1_FSIM as E
+       on A.KTOPL = E.KTOPL
+      and A.RACCT = E.SAKNR
+    where A.RCLNT = '500'        
+#+END_SRC
+
+Convert table function to CDS view
+#+BEGIN_SRC sql
+create view /RTCART/500VINCE1_A as
+  select RCLNT,
+         MODEL,
+         RTC_CATG,
+         ACCTP,
+         RVERS,
+         ENTITY,
+         PENTITY, 
+         PERIV,
+         RYEAR,
+         POPER,
+         FISCYEARPER,
+         KTOPL,
+         RACCT,        
+         RMVCT,
+         RWCUR,
+         RHCUR,
+         CONS_CUR,
+         WSL,
+         HSL,
+         CONS_SL,
+         TIMESTAMP
+from /RTCART/500VINCE1_ATF;        
 #+END_SRC
 
 **** Calculation View and CDS View on ACDOCC only
@@ -414,7 +519,9 @@ as select A.RCLNT,
           A.RCONGR1,   --Only needed in BPC Integeration Mode
           A.AUDIT_TRA, --Only needed in BPC Integeration Mode
           C.ENTITY as ENTITY,
-          case D.ENTITY when '' then 'NONE' else D.ENTITY end as PENTITY,
+          D.ENTITY as PENTITY,
+          -- In Case BPC:
+          -- cast (COALESCE( D.ENTITY, 'NONE') as rtc_p_entity) as PENTITY, 
           A.PERIV,
           A.RYEAR,
           A.POPER,
@@ -443,9 +550,7 @@ left join RTC_C_500VINCE1_ENTITY as D
       and B.MODEL = 'VINCE1'          
 #+END_SRC
 
-**** Calculation View and CDS View on union of ACDOCA and ACDOCC
-The calculation view and CDS view are similar. 
-
+**** CDS View on union of ACDOCA and ACDOCC
 Refer /RTCART/VINCE100
 #+BEGIN_SRC sql
   create view /RTCART/500VINCE1_U as 
@@ -470,8 +575,7 @@ as select * from  /RTCART/500VINCE1_U
       and (rvers    = :p_rvers or rvers = '')
       and ryear     = :p_ryear
       and poper     = :p_poper
-      and plevl     >= '00'
-      and plevl     <= '15'
+      and plevl     between '00' and '09'
       and timestamp <= :p_timestamp
 union all
    select * from /RTCART/500VINCE1_U as a
@@ -490,14 +594,13 @@ union all
       and b.fyear     = :p_ryear
       and a.poper     < :p_poper
       and b.fperi     < :p_poper  
-      and a.plevl     >= '00'
-      and a.plevl     <= '15'
+      and plevl       between '00' and '09'
 union all
    select * from /RTCART/500VINCE1_U as a
     where a.rtc_catg  = :p_rtc_catg
       and (a.acctp    = :p_acctp or a.acctp = '')
       and (a.rvers    = :p_rvers or a.rvers = '')
-      and a.plevl > '15'    
+      and a.plevl > '09'    
 #+END_SRC
 **** CDS View: All Data of All Entities
 This view is used as a base view to support Currency Translation. 
@@ -668,30 +771,38 @@ Generally, there is 2 types of BPC category: one needs the data cut-off, the oth
 This view gives out the submitted report data for these S/4 integrated entities. 
 #+BEGIN_SRC sql
 create view RTC_C_500VINCE1_BPCFINALA as 
-  select A.RCLNT,
-         A.MODEL,
-         'FINAL'   as BPC_CATG,
-         A.RCONGR1,
-         A.ENTITY,
-         A.PENTITY,
-         A.PERIV,
-         A.FISCYEARPER,
-         A.KTOPL,
-         A.RACCT,         
-         A.RMVCT,
-         A.AUDIT_TRA,
-         A.CONS_CUR,
-         SUM(A.CONS_SL) as CONS_SL
-    from RTC_C_500VINCE1_A as A
-    join RTC_C_LRADRR as B
-      on A.RCLNT = B.MANDT
-     and A.RYEAR = B.FYEAR
-     and A.POPER = B.FPERI
-     and A.ENTITY = B.ENTITY
-     and A.TIMESTAMP <= B.RTIME
-   where B.MODEL = 'VINCE1'
-     and B.BPC_CATG = 'FINAL'
-group by *;
+   select A.RCLNT,
+          A.MODEL,
+          'FINAL'   as BPC_CATG,
+          '100' as DIM,
+          B.ENTITY,
+          cast (COALESCE( C.ENTITY, 'NONE') as rtc_p_entity) as PENTITY,
+          D.FISCAL_YEAR_VARIANT as PERIV,
+          D.FISCYEARPER,
+          E.KKTPL as KTOPL,
+          E.RACCT,         
+          cast (COALESCE( A.RMVCT, 'F15') as rmvct) as RMVCT,
+          'INPUT'   as AUDIT_TRA,
+          'NONE'    as RCONGR1,
+          SUM(A.CONS_SL) as CONS_SL
+     from RTC_C_FOUNDATION as A
+     join RTC_C_500VINCE1_ENTITY as B
+       on A.RCOMP = B.RCOMP
+left join RTC_C_500VINCE1_ENTITY as C
+       on A.RASSC = B.RCOMP
+     join RTC_C_500VINCE1_FYVM as D
+       on A.BUDAT = D.CALENDAR_DATE
+     join RTC_C_500VINCE1_FSIM as E
+       on A.KTOPL = E.KTOPL
+      and A.RACCT = E.SAKNR
+     join RTC_C_LRADRR as F
+       on A.RYEAR = F.FYEAR
+      and A.POPER = F.FPERI
+      and A.ENTITY = F.ENTITY
+      and A.TIMESTAMP <= F.RTIME
+    where A.RCLNT = '500'
+      and F.BPC_CATG = 'FINAL'
+ group by *;
 #+END_SRC
 
 **** Final View C
@@ -703,6 +814,7 @@ The column "AUDIT_TRA" and "RCONGR1" should be fixed with values when doing Flex
          A.MODEL,
          'FINAL'   as BPC_CATG,
          A.RCONGR1,
+         '100' as DIM,
          C.ENTITY,
          C.PENTITY,
          A.PERIV,
@@ -714,27 +826,23 @@ The column "AUDIT_TRA" and "RCONGR1" should be fixed with values when doing Flex
          A.CONS_CUR,
          sum(A.CONS_SL) as CONS_SL
          from RTC_C_500VINCE1_C as A
-         join RTC_LEGER_GROUP as B
-           on A.RLDNR = B.RLDNR
-         join RTC_C_LRADRR as C
-           on A.RCLNT = C.MANDT
-          and A.RYEAR = C.FYEAR
-          and A.POPER = C.FPERI
-          and A.ENTITY = C.ENTITY
-          and A.TIMESTAMP <= C.RTIME
+         join RTC_C_LRADRR as B
+           on A.RYEAR = B.FYEAR
+          and A.POPER = B.FPERI
+          and A.ENTITY = B.ENTITY
+          and A.TIMESTAMP <= B.RTIME
         where A.DCATE   = 'Actual'
-          and B.MANDT = '500'
-          and B.MODEL = 'VINCE1'
-          and (B.ACCTP = '' or  B.ACCTP   = 'GAAP')
+          and B.DCATE   = 'Actual'
+          and (A.ACCTP = '' or  A.ACCTP   = 'GAAP')
           and (A.RVERS = '' or A.RVERS = '100')
-          and A.PLEVEL >= '00'
-          and A.PLEVEL <= '15' --Posting Level [00, 15] means local reported data and adjustments
+          and A.PLEVEL between '00' and '09'
      group by *
 union all
   select A.RCLNT,
          A.MODEL,
          'FINAL'   as BPC_CATG,
          A.RCONGR1,
+         '100' as DIM,
          C.ENTITY,
          C.PENTITY,
          A.PERIV,
@@ -746,36 +854,43 @@ union all
          A.CONS_CUR,
          sum(A.CONS_SL) as CONS_SL
          from RTC_C_500VINCE1_C as A
-         join RTC_LEGER_GROUP as B
-           on A.RLDNR = B.RLDNR
         where A.DCATE = 'Actual'
-          and B.MANDT = '500'
-          and B.MODEL = 'VINCE1'
-          and (B.ACCTP = '' or  B.ACCTP = 'CL')
+          and (A.ACCTP = '' or  A.ACCTP = 'CL')
           and (A.RVERS = '' or A.RVERS = '100')
-          and A.PLEVEL > '15' --Posting Level > 15 means consolidation engine generated data
+          and A.PLEVEL > '09' --Posting Level > 09 means consolidation engine generated data
      group by *
 #+END_SRC
 
 **** Preliminary View A
 The view gives out the up-to-time report data for S/4 integrated entities.
 #+BEGIN_SRC sql
-  select A.RCLNT,
-         A.MODEL,
-         'PRELIM'   as BPC_CATG,
-         A.RCONGR1,
-         A.ENTITY,
-         A.PENTITY,
-         A.PERIV,
-         A.FISCYEARPER,
-         A.KTOPL,
-         A.RACCT,         
-         A.RMVCT,
-         A.AUDIT_TARA,
-         A.CONS_CUR,
-         sum(A.CONS_SL) as CONS_SL
-    from RTC_C_500VINCE1_A
-group by *;
+create view RTC_C_500VINCE1_BPCPRELIMA as 
+   select A.RCLNT,
+          A.MODEL,
+          'PRELIM'   as BPC_CATG,
+          '100' as DIM,
+          B.ENTITY,
+          cast (COALESCE( C.ENTITY, 'NONE') as rtc_p_entity) as PENTITY,
+          D.FISCAL_YEAR_VARIANT as PERIV,
+          D.FISCYEARPER,
+          E.KKTPL as KTOPL,
+          E.RACCT,         
+          cast (COALESCE( A.RMVCT, 'F15') as rmvct) as RMVCT,
+          'INPUT'   as AUDIT_TRA,
+          'NONE'    as RCONGR1,
+          SUM(A.CONS_SL) as CONS_SL
+     from RTC_C_FOUNDATION as A
+     join RTC_C_500VINCE1_ENTITY as B
+       on A.RCOMP = B.RCOMP
+left join RTC_C_500VINCE1_ENTITY as C
+       on A.RASSC = B.RCOMP
+     join RTC_C_500VINCE1_FYVM as D
+       on A.BUDAT = D.CALENDAR_DATE
+     join RTC_C_500VINCE1_FSIM as E
+       on A.KTOPL = E.KTOPL
+      and A.RACCT = E.SAKNR
+    where A.RCLNT = '500'
+ group by *;
 #+END_SRC
 
 **** Preliminary View C
@@ -784,6 +899,7 @@ select A.RCLNT,
        A.MODEL,
        'PRELIM'  as BPC_CATG,
        A.RCONGR1,
+       '100' as DIM,
        A.ENTITY,
        A.PENTITY,
        A.PERIV,
@@ -795,12 +911,8 @@ select A.RCLNT,
        A.CONS_CUR,
        sum(A.CONS_SL) as CONS_SL
      from RTC_C_500VINCE1_C as A
-     join RTC_LEGER_GROUP as B
-       on A.RLDNR = B.RLDNR
     where A.DCATE = 'Actual'
-      and B.MANDT = '500'
-      and B.MODEL = 'VINCE1'  
-      and (B.ACCTP = '' or  B.ACCTP   = 'CL')
+      and (A.ACCTP = '' or  A.ACCTP   = 'CL')
       and (A.RVERS = '' or A.RVERS = '200')
       and A.PLEVEL >= '00'
  group by *;  
@@ -812,11 +924,11 @@ The union view merges all the views above with "Union all" operator. Which is th
 *** Validation View
 Validation Views are all CDS, which can be used by validation engine or others. Currently, the validation view is on entity base, which means it can only give data per entity.
 
-V10 is build upon U20 by spreading the amounts in a row with 17 periods(000~016).
+V00 is build upon U20 by spreading the amounts in a row with 17 periods(000~016). *It only showS the amount of CONS_SL*.
 
 Refer: ZVINCE120
 #+BEGIN_SRC sql
-create view /RTCART/500VINCE1_V10
+create view /RTCART/500VINCE1_V00
   with parameters p_rtc_catg:rtc_catg,
                   p_acctp:rtc_acctp,
                   p_rvers:rtc_rvers,
@@ -833,10 +945,10 @@ as select from  /RTCART/500VINCE1_U20(
                   p_poper:$parameters.p_poper,
                   p_timestamp:$parameters.p_timestamp)
 { 
-  --First include all characteristic fields except poper, rtflg, plevl
+  --First include all characteristic fields except poper, rtflg
   
-  --Then for each amount field, calculate its 16 periods' amounts
-  @Semantics.amount.currencyCode: 'RWCUR' 
+  --Then only for cons_sl, calculate its 16 periods' amounts
+  @Semantics.amount.currencyCode: 'CONS_CUR' 
   sum(case poper 
         when '000' then 
           cast(wsl as abap.dec( 23, 2 )) 
@@ -844,7 +956,7 @@ as select from  /RTCART/500VINCE1_U20(
           cast(0 as abap.dec( 23, 2 )) 
       end) as wslvt,
 
-  @Semantics.amount.currencyCode: 'RWCUR' 
+  @Semantics.amount.currencyCode: 'CONS_CUR' 
   sum(case poper 
         when '001' then 
           cast(wsl as abap.dec( 23, 2 )) 
@@ -852,22 +964,25 @@ as select from  /RTCART/500VINCE1_U20(
           cast(0 as abap.dec( 23, 2 )) 
       end) as wsl01,
    ...
+ @Semantics.currencyCode
+ cons_cur 
 }group by <all characteristic fields>
 #+END_SRC
 
-V20 is build upon V10 by caculate the YTD amounts of prior 3 periods.
+V10 is build upon V00 by caculating the Opening, YTD, YTD-1, Period, and PriorPeriod amounts. And it also adds an input parameter "p_curr", and only filter data between 00 and 09.
 
-Refer: ZVINCE140
+Refer: ZVINCE141
 #+BEGIN_SRC sql
-create view /RTCART/500VINCE1_V20
+create view /RTCART/500VINCE1_V10
   with parameters p_rtc_catg:rtc_catg,
                   p_acctp:rtc_acctp,
                   p_rvers:rtc_rvers,
                   p_entity:rtc_entity,
                   p_ryear:ryear,
                   p_poper:poper,
+                  p_curr:rtc_curr,
                   p_timestamp:timestamp
-as select from  /RTCART/500VINCE1_V10(
+as select from  /RTCART/500VINCE1_V00(
                   p_rtc_catg:$parameters.p_rtc_catg,
                   p_acctp:$parameters.p_acctp,
                   p_rvers:$parameters.p_rvers,
@@ -875,61 +990,116 @@ as select from  /RTCART/500VINCE1_V10(
                   p_ryear:$parameters.p_ryear,
                   p_poper:$parameters.p_poper,
                   p_timestamp:$parameters.p_timestamp)
-{ 
+association [1..1] to /RTCART/500VINCE1_ENTITY  as _Entity  on $projection.Entity =_Entity.entity  
+association [1..1] to /RTCART/500VINCE1_ENTITY  as _Pentity on $projection.pentity =_Pentity.entity   
+association [1..1] to /RTCART/500VINCE1_FSI as _Account on $projection.ktopl = _Account.ChartOfAccounts
+                                                and $projection.racct = _Account.GLAccount    
+{  
+   ktopl as ChartofAccounts,   
+   entity as Entity,   
+   pentity as PartnerEntity,   
+   racct as Account,   
+   rmvct as FlowType,
   --First include all characteristic fields
   
-  --Then for each amount field, calculate its 12 YTD amounts
+   @Semantics.amount.currencyCode: 'Currency' 
+   cast(
    case $parameters.p_poper
-     when '000' then wslvt
-     when '001' then wslvt
-     when '002' then wslvt
-     when '003' then wslvt
-     when '004' then wslvt
-     when '005' then wslvt
-     when '006' then wslvt
-     when '007' then wslvt
-     when '008' then wslvt
-     when '009' then wslvt
-     when '010' then wslvt
-     when '011' then wslvt
-     when '012' then wslvt
-     else (wslvt+wsl01)
-   end as wsl_ytd_pre12,
-  ...
+     when '000' then cons_slvt
+     else 0
+   end as abap.dec( 23, 2 )) as Opening,
+   @Semantics.amount.currencyCode: 'Currency' 
+   cast(
    case $parameters.p_poper
-     when '000' then wslvt
-     when '001' then (wslvt+wsl01)
-     when '002' then (wslvt+wsl01+wsl02)
-     when '003' then (wslvt+wsl01+wsl02+wsl03)
-     when '004' then (wslvt+wsl01+wsl02+wsl03+wsl04)
-     when '005' then (wslvt+wsl01+wsl02+wsl03+wsl04+wsl05)
-     when '006' then (wslvt+wsl01+wsl02+wsl03+wsl04+wsl05+wsl06)
-     when '007' then (wslvt+wsl01+wsl02+wsl03+wsl04+wsl05+wsl06+wsl07)
-     when '008' then (wslvt+wsl01+wsl02+wsl03+wsl04+wsl05+wsl06+wsl07+wsl08)
-     when '009' then (wslvt+wsl01+wsl02+wsl03+wsl04+wsl05+wsl06+wsl07+wsl08+wsl09)
-     when '010' then (wslvt+wsl01+wsl02+wsl03+wsl04+wsl05+wsl06+wsl07+wsl08+wsl09+wsl10)
-     when '011' then (wslvt+wsl01+wsl02+wsl03+wsl04+wsl05+wsl06+wsl07+wsl08+wsl09+wsl10+wsl11)
-     when '012' then (wslvt+wsl01+wsl02+wsl03+wsl04+wsl05+wsl06+wsl07+wsl08+wsl09+wsl10+wsl11+wsl12)
-     else (wslvt+wsl01+wsl02+wsl03+wsl04+wsl05+wsl06+wsl07+wsl08+wsl09+wsl10+wsl11+wsl12)
-  end as wsl_ytd,  
+     when '000' then cons_slvt
+     when '001' then (cons_slvt+cons_sl01)
+     when '002' then (cons_slvt+cons_sl01+cons_sl02)
+     when '003' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03)
+     when '004' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04)
+     when '005' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05)
+     when '006' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06)
+     when '007' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07)
+     when '008' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08)
+     when '009' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09)
+     when '010' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10)
+     when '011' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11)
+     when '012' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11+cons_sl12)
+     when '013' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11+cons_sl12+cons_sl13)
+     when '014' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11+cons_sl12+cons_sl13+cons_sl14)
+     when '015' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11+cons_sl12+cons_sl13+cons_sl14+cons_sl15)
+     when '016' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11+cons_sl12+cons_sl13+cons_sl14+cons_sl15+cons_sl16)         
+     else 0
+  end as abap.dec( 23, 2 )) as YTD,  
+    @Semantics.amount.currencyCode: 'Currency' 
+   cast(
+   case $parameters.p_poper
+     when '000' then 0
+     when '001' then cons_slvt
+     when '002' then (cons_slvt+cons_sl01)
+     when '003' then (cons_slvt+cons_sl01+cons_sl02)
+     when '004' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03)
+     when '005' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04)
+     when '006' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05)
+     when '007' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06)
+     when '008' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07)
+     when '009' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08)
+     when '010' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09)
+     when '011' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10)
+     when '012' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11)
+     when '013' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11+cons_sl12)
+     when '014' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11+cons_sl12+cons_sl13)
+     when '015' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11+cons_sl12+cons_sl13+cons_sl14)
+     when '016' then (cons_slvt+cons_sl01+cons_sl02+cons_sl03+cons_sl04+cons_sl05+cons_sl06+cons_sl07+cons_sl08+cons_sl09+cons_sl10+cons_sl11+cons_sl12+cons_sl13+cons_sl14+cons_sl15)    
+     else 0
+  end as abap.dec( 23, 2 )) as PriorYTD,  
+  @Semantics.amount.currencyCode: 'Currency'
+  cast(
   case $parameters.p_poper
-     when '000' then wslvt
-     when '001' then wsl01
-     when '002' then wsl02
-     when '003' then wsl03
-     when '004' then wsl04
-     when '005' then wsl05
-     when '006' then wsl06
-     when '007' then wsl07
-     when '008' then wsl08
-     when '009' then wsl09
-     when '010' then wsl10
-     when '011' then wsl11
-     when '012' then wsl12
-     else wsl12   --TO-DO: period 13~16 are ignored only for simplicity
-  end as wsl,     
---End of 12 periods WSL YTD amounts along with current period amount
-}
+     when '000' then cons_slvt
+     when '001' then cons_sl01
+     when '002' then cons_sl02
+     when '003' then cons_sl03
+     when '004' then cons_sl04
+     when '005' then cons_sl05
+     when '006' then cons_sl06
+     when '007' then cons_sl07
+     when '008' then cons_sl08
+     when '009' then cons_sl09
+     when '010' then cons_sl10
+     when '011' then cons_sl11
+     when '012' then cons_sl12    
+     when '013' then cons_sl13
+     when '014' then cons_sl14
+     when '015' then cons_sl15
+     when '016' then cons_sl16
+     else 0  
+  end as abap.dec( 23, 2 )) as Period,  
+  @Semantics.amount.currencyCode: 'Currency'
+  cast(
+  case $parameters.p_poper
+     when '000' then 0
+     when '001' then cons_slvt
+     when '002' then cons_sl01
+     when '003' then cons_sl02
+     when '004' then cons_sl03
+     when '005' then cons_sl04
+     when '006' then cons_sl05
+     when '007' then cons_sl06
+     when '008' then cons_sl07
+     when '009' then cons_sl08
+     when '010' then cons_sl09
+     when '011' then cons_sl10
+     when '012' then cons_sl11    
+     when '013' then cons_sl12
+     when '014' then cons_sl13
+     when '015' then cons_sl14
+     when '016' then cons_sl15
+     else 0  
+  end as abap.dec( 23, 2 )) as PriorPeriod,  
+  @Semantics.currencyCode
+  cons_cur as Currency
+}where cons_cur = $parameters.p_curr
+   and plevl between '00' and '09'
 #+END_SRC
 
 *** Report View
@@ -977,50 +1147,39 @@ Now, through the consolidation base view, you see the FI journal data in both th
 
 #+BEGIN_SRC sql
 create view /RTCART/500VINCE1_R10
-as select A.RCLNT,
-          'VINCE1'  as MODEL,
-          'ACTUAL'  as RTC_CATG,
-          ''        as ACCTP,
-          ''        as RVERS,
-          'ACDOCA'  as SRC,
-          B.ENTITY,
-          C.ENTITY as PENTITY,
-          D.FISCAL_YEAR_VARIANT as PERIV,
-          D.FISCAL_YEAR as RYEAR,
-          D.FISCAL_PERIOD as POPER,
-          D.FISCYEARPER,
-          E.KKTPL as KTOPL,
-          E.RACCT,        
-          case A.RMVCT when '' then 'F15' else A.RMVCT end as RMVCT,
-          A.RWCUR,
-          A.RHCUR,
-          A.RHCUR as CONS_CUR,
-          A.WSL,
-          A.HSL,
-          A.HSL as CONS_SL,
-          A.TIMESTAMP,
-          A.RLDNR,
-          A.GJAHR,
-          A.RBUKRS,
-          A.BELNR,
-          A.DOCLN,
-          A.RCOMP,
-          A.RASSC,
-          A.LKTOPL,
-          A.LRACCT
-     from RTC_C_FOUNDATION as A
-     join RTC_C_500VINCE1_ENTITY as B
-       on A.RCOMP = B.RCOMP
-left join RTC_C_500VINCE1_ENTITY as C
-       on A.RASSC = B.RCOMP
-     join RTC_C_FINS_FISC_DATE as D
-       on A.RCLNT = D.MANDT
-      and A.BUDAT = D.CALENDAR_DATE
-     join RTC_C_500VINCE1_FSIM as E
-       on A.RCLNT = E.MANDT
-      and A.KTOPL = E.KTOPL
-      and A.RACCT = E.SAKNR
-    where A.RCLNT = '500'
+as select RCLNT,
+          MODEL,
+          RTC_CATG,
+          ACCTP,
+          RVERS,
+          SRC,
+          ENTITY,
+          PENTITY,
+          PERIV,
+          RYEAR,
+          POPER,
+          FISCYEARPER,
+          KTOPL,
+          RACCT,        
+          RMVCT,
+          RWCUR,
+          RHCUR,
+          CONS_CUR,
+          WSL,
+          HSL,
+          CONS_SL,
+          TIMESTAMP,
+          RLDNR,
+          GJAHR,
+          RBUKRS,
+          BELNR,
+          DOCLN,
+          RCOMP,
+          RASSC,
+          LKTOPL,
+          LRACCT
+     from /RTCART/VINCE100_ATF --in case BPC
+     --from P_FOUNDATIONA 
 union all
    select A.RCLNT,
           A.MODEL,
@@ -1028,7 +1187,7 @@ union all
           A.ACCTP,
           A.RVERS,
           A.PLEVEL,
-          'ACDOCC'  as SRC,
+          'C'  as SRC,
           B.ENTITY,
           C.ENTITY as PENTITY,
           D.FISCAL_YEAR_VARIANT as PERIV,
@@ -1063,30 +1222,12 @@ left join RTC_C_500VINCE1_ENTITY as C
        on A.RCLNT = D.MANDT
       and A.BUDAT = D.CALENDAR_DATE
      join RTC_C_500VINCE1_FSIM as E
-       on A.RCLNT = E.MANDT
       and A.KTOPL = E.KTOPL
       and A.RACCT = E.SAKNR
     where A.RCLNT = '500' 
-      and A.PLEVEL = '' --Only flexible uploaded/roll-up data.
-union all
-   select A.RCLNT,
-          'VINCE1'  as MODEL,
-          'PLAN'    as RTC_CATG,
-          ''        as ACCTP,
-          ''        as RVERS,
-          'ACDOCP'  as SRC,
-          ...
-          A.TIMESTAMP,
-          A.RLDNR,
-          A.RYEAR as GJAHR,
-          A.RBUKRS,
-          A.BELNR,
-          A.DOCLN,
-          A.RCOMP,
-          A.RASSC,
-          A.KTOPL as LKTOPL,
-          A.RACCT as LRACCT
-     from RTC_C_FOUNDATIONP as A
+      and A.MODEL = 'VINCE1'
+      and A.DELFLG = ''
+      and (A.PLEVEL = '' or A.PLEVEL = '03') --Only flexible uploaded/roll-up data and defer.
 #+END_SRC
 
 The report structure is fixed as the ACDOCC + [LKTOPL, LRACCT, ACCTP]. Incase Integration with BPC, the above view is first utilized using calculation view, then convert to CDS using table function.

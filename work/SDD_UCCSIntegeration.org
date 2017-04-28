@@ -16,11 +16,12 @@
 | Developers            |               |
 
 *** References
-|                                  |                  |         | <30>                           |
-| Document Title                   | Date             | Link    | Comments                       |
-|----------------------------------+------------------+---------+--------------------------------|
-| Lifecycle Incompatibale Patterns | <2017-03-23 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Lifecycle+Incompatible+Patterns][sapwiki]] | From package build perspective the target is that all the IMG activities that are in cloud scope for the first time are recordable so that no new eCATTs for content activation need to be build and no tables need to be included into client 000 whitelist. Table content with delivery classes S, E, W has to be shipped with the application. |
-| Self Service Configuration UI    | <2017-03-29 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Self+Service+Configuration+UIs][sapwiki]] | This guideline is focussing on WebGUI SSC-UIs. Most of this guideline is also relevant for SSC-UIs in FIORI (apart from restrictions related to the new API).  Links in bold are important and should be read.  Each section includes checks that need to be done and identifies who should do these checks. |
+| <25>                      |                  |             | <30>                           |
+| Document Title            | Date             | Link        | Comments                       |
+|---------------------------+------------------+-------------+--------------------------------|
+| Lifecycle Incompatibale Patterns | <2017-03-23 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Lifecycle+Incompatible+Patterns][sapwiki]]     | From package build perspective the target is that all the IMG activities that are in cloud scope for the first time are recordable so that no new eCATTs for content activation need to be build and no tables need to be included into client 000 whitelist. Table content with delivery classes S, E, W has to be shipped with the application. |
+| Self Service Configuration UI | <2017-03-29 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Self+Service+Configuration+UIs][sapwiki]]     | This guideline is focussing on WebGUI SSC-UIs. Most of this guideline is also relevant for SSC-UIs in FIORI (apart from restrictions related to the new API).  Links in bold are important and should be read.  Each section includes checks that need to be done and identifies who should do these checks. |
+| Cloud Access Manager      | <2017-04-25 Tue> | [[https://rpc-cust002.dev.sapbydesign.com/sap/bc/webdynpro/a1sspc/cam_sup_central#][InternalAPP]] | Apply CC2/CCF User             |
 
 
 *** SSC-UI 

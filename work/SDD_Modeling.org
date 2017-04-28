@@ -3,7 +3,7 @@
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Modeling
-** General Information
+** Generalb Information
 *** Stakeholders and Roles
 | Role                  | Name                |
 |-----------------------+---------------------|

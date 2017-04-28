@@ -151,6 +151,7 @@ Document type is model dependent. Each model has its own document types and cann
 |        01 | Currency Translation           | Posting Level: 15; Balance Check: Check and report error; Biz Transaction Type: CT in S4; Posting:Automatic Posting; Number Range:00. Number range and clearing items can be changed, all other setting are frozen for changing. |
 |        02 | Data Release                   | Posting Level: 00; Balance Check: Check and report error; Biz Transaction Type: Data Submit; Posting:Automatic Posting; Number Range:00. Key figures and number range can be changed, all other setting are frozen for changing. |
 |        03 | BPC Write-back                 | Posting Level: 50; Balance Check: Check and report error; Biz Transaction Type: RTBP; Posting:Automatic Posting; Number Range:00. Number range can be changed, all other setting are frozen for changing. |
+|        04 | Defer from Prior Periods       | Posting Level: 03; Balance Check: Check and report error; Biz Transaction Type: RTRP; Posting:Automatic Posting; Number Range:00. Number range can be changed, all other setting are frozen for changing. |
 
 #+CAPTION: Document Type General Tab
 [[../image/DocTypeUI01.png]]  
@@ -164,10 +165,10 @@ Posting level classifies documents posted by different consolidation tasks. Duri
 |-------------+-----------+----------------------------------------------------|
 |       Space |     Space | *UC-CS: Reported data from realtime update or rollup* </br> *RTC: Flexible Uploaded Data before submitted* The data is in the staging area, which is provisioned by flexible upload and can be changed/deleted freely. There is also no balance check when the data is entering into ACDOCC. |
 |          00 |        00 | *Reported financial data* If reported financial data comes from flexible upload, a new document will be posted to copy data from staging area to formal area which is tagged with posting level 00. For data in ACDOCA, there is no need for the data copy, so no document is posted. |
-|             |        00 | *Defer from previous period*                       |
 |          01 |        01 | *Adjustments to reported financial data* If, after collecting the reported data of the consolidation units, you want to make changes to the data at corporate headquarters, we recommend doing this by posting adjustment entries with posting level 01. This has the benefit that your changes are documented. |
 |          02 |        02 | *Reported data: consolidation group changes*       |
-|        _08_ |      _08_ | *Item substitution and calculation of the retained earnings* |
+|          03 |        03 | *Defer Amounts from Prior Periods*: When drill through, whether the amount is from upload or deferred should be differentiated. |
+|        +08+ |      +08+ | *Item substitution and calculation of the retained earnings* |
 |          0T |        09 | *Currency Translation* Currency Translation in S4 also posts documents. The posting level is dedicate for the currency translation task before data is released to group. |
 |          10 |        10 | *Standardizing entries* You may need to standardize the reported data of consolidation units to comply with corporate policies or valuation rules. In data records with posting levels less than or equal to 10, the system posts only to the consolidation unit – not to the consolidation group. Reporting takes into account the data records for all consolidation groups. If currency translation is needed, then the translated result is posted into the same posting level. |
 |          12 |        12 | *Standardizing entries: consolidation group changes* |
