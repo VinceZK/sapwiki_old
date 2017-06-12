@@ -1,0 +1,13 @@
+#+TITLE: A Short Introduction to Real-time Consolidation Design and Implementation
+
+* About Real-time Consolidation
+
+* Modeling
+
+* Data Releasing
+
+* Currency Translation
+
+* Data Validation
+
+* Summary

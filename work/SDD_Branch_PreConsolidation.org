@@ -39,7 +39,9 @@ As the report only targets with a special requirement(for SwissRE), there are bo
 9. Every branch(company code) is treated as fully(100%) consolidated.
 
 *** Key Requirements and Design Goals
-The report can be developed using ABAP ALV technology. It first finds and aggregates journal entries in ACDOCA, run elimination based on offset accounts, and posts the results to an extension ledger in ACDOCA. By doing that, one can re-use existing FI reporting tools to view the elimination result, so that no additional group level reports need to be developed. 
+The report can be developed using ABAP ALV technology. It first finds and aggregates journal entries in ACDOCA, then run elimination based on the offset accounts settings. At last, decide to post the results to an extension ledger in ACDOCA. By doing that, one can re-use existing FI reporting tools to view the elimination result, so that no additional group level reports need to be developed. 
+
+*The assumption of existing Fiori Reports fulfill the requirement must be met.* Or if additional group level reports need to be developed, then the total cost would be very high. 
 
 **** Following Design Goals *MUST* be Met:
 1. A minimal configuration to assign offset accounts to operational accounts.
@@ -47,65 +49,107 @@ The report can be developed using ABAP ALV technology. It first finds and aggreg
 3. When decide posting, one can choose to which extension ledger he/she wants to post.
 4. When repeat posting, only delta amounts are posted.
 5. Error should be correctly handled during posting.
-6. The elimination result can be reported using existing Fiori APPS only company code level, like: Display Financial Statement, Display G/L Account Balances and so on.  
+6. The elimination result can be reported using existing Fiori APPS, like: Display Financial Statement, Display G/L Account Balances and so on.  
 
 **** Following Design Goals *SHOULD* be Met:
 1. The posted elimination documents can be reversed.
+2. Backgroud run mode should be supported in case  periodically schedules are necessary or dialog run takes too much time.
+3. Performance should be garanteed when executing on handerds of companys.
 
 *** Example
 1. Original lines in ACDOCA (The offset account is read from the account master data)
-| GL Account | Offset Account | Company | Trading Partner | Amount in Selected Currency |
-|------------+----------------+---------+-----------------+-----------------------------|
-|    1001001 |        1001999 |  100000 |          200000 |                        5000 |
-|    2001001 |        1001999 |  200000 |          100000 |                       -5100 |
-|    3001001 |           NONE |  100000 |          200000 |                        3000 |
+| Company | Trading Partner | GL Account | Offset Account | Amount in Selected Currency |
+|---------+-----------------+------------+----------------+-----------------------------|
+|  100000 |          200000 |    1001001 |        1001999 |                        5000 |
+|  200000 |          100000 |    2001001 |        1001999 |                       -5100 |
+|  100000 |          200000 |    3001001 |           NONE |                        3000 |
 
-2. Result after elimination run. The difference will be posted to the lower value side by default.
-In following case company 100000 has the amount 5000, which is lower than -5100(in absolute value), so the difference will be posted to company 100000.
-| GL Account | Company  | Trading Partner | Amount in Selected Currency |
-|------------+----------+-----------------+-----------------------------|
-| 1001001    | 100000   | 200000          | 5000                        |
-| _1001001_  | _100000_ | _200000_        | _-5000_                     |
-| ~1001999~  | ~100000~ | ~200000~        | ~5000~                      |
-| 2001001    | 200000   | 100000          | -5100                       |
-| _2001001_  | _200000_ | _100000_        | _5100_                      |
-| ~1001999~  | ~100000~ | ~200000~        | ~-5100~                     |
-| 3001001    | 100000   | 200000          | 3000                        |
+2. Result after elimination run. The difference will be posted to the side: lower/higher, negative/postive?
+| Company  | Trading Partner | GL Account | Amount in Selected Currency |
+|----------+-----------------+------------+-----------------------------|
+| 100000   | 200000          | 1001001    | 5000                        |
+| _100000_ | _200000_        | _1001001_  | _-5000_                     |
+| ~100000~ | ~200000~        | ~1001999~  | ~5000~                      |
+| 200000   | 100000          | 2001001    | -5100                       |
+| _200000_ | _100000_        | _2001001_  | _5100_                      |
+| ~100000~ | ~200000~        | ~1001999~  | ~-5100~                     |
+| 100000   | 200000          | 3001001    | 3000                        |
 
 3. Result after aggregation
-| GL Account |  Company | Trading Partner | Amount in Selected Currency |
-|------------+----------+-----------------+-----------------------------|
-|    1001001 |   100000 |          200000 |                           0 |
-|    2001001 |   200000 |          100000 |                           0 |
-|  ~1001999~ | ~100000~ |        ~200000~ |                      ~-100~ |
-|    3001001 |   100000 |          200000 |                        3000 |
+|  Company | Trading Partner | GL Account | Amount in Selected Currency |
+|----------+-----------------+------------+-----------------------------|
+|   100000 |          200000 |    1001001 |                           0 |
+|   200000 |          100000 |    2001001 |                           0 |
+| ~100000~ |        ~200000~ |  ~1001999~ |                      ~-100~ |
+|   100000 |          200000 |    3001001 |                        3000 |
 
 4. Journal entries posted to the extension ledger
-| Ledger | GL Account | Company  | Trading Partner | Amount in Selected Currency |
-|--------+------------+----------+-----------------+-----------------------------|
-| E1     | _1001001_  | _100000_ | _200000_        | _-5000_                     |
-| E1     | ~1001999~  | ~100000~ | ~200000~        | ~5000~                      |
-| E1     | _2001001_  | _200000_ | _100000_        | _5100_                      |
-| E1     | ~1001999~  | ~100000~ | ~200000~        | ~-5100~                     |
+| Ledger | Company  | Trading Partner | GL Account | Amount in Selected Currency |
+|--------+----------+-----------------+------------+-----------------------------|
+| E1     | _100000_ | _200000_        | _1001001_  | _-5000_                     |
+| E1     | ~100000~ | ~200000~        | ~1001999~  | ~5000~                      |
+| E1     | _200000_ | _100000_        | _2001001_  | _5100_                      |
+| E1     | ~100000~ | ~200000~        | ~1001999~  | ~-5100~                     |
 
-*** Major Building Blocks
+** Detail Design
+
+*** Offset Accounting Customization 
+The offset accounting customization can re-use existing RTCGLA.
+
 #+Caption: Elimination Overall Context
 [[../image/EliminationOverall.png]] 
 
- Elimination runs after currency translation. Because each entity can be assigned with a dedicate CT method, to converted all the data, CT methods should be run sequentially entity by entity. Local data is read from ACDOCA or ACDOCC, converted, and then saved into the global temporal table GT_ACDOCC, which has the similar structure with ACDOCC. 
+*** Elimination Report
 
-The On-The-Fly CT runables and Reconciliation Runables can read the translated data and produce On-The-Fly CT Report and Reconciliation Report directly. 
+**** SQL Logic
 
-Elimination runables read the translated data and produce auto-adjustment lines, which will then inserted into GT_ACDOCC. During elimination, group hierarchy information is read, so that the system know which entities belong to the same group(or super group). Till now, GT_ACDOCC contains the eliminated data for group reporting.
+#+CAPTION: Read Data with Trading Partner is Not Empty
+#+BEGIN_SRC sql
+create view P_SOURCE as 
+  select * from ACDOCA as A
+           join T883 as B
+             on A.RBUKRS = B.BUKRS
+          where B.RCOMP in [100000, 200000]
+            and RLDNR = '0L' 
+            and RASSC != ''; 
+#+END_SRC
 
-On-The-Fly elimination runables converts the data in GT_ACDOCC to structured group reporting format. Besides, posting method read the data from GT_ACDOCC and then persist into ACDOCC. It Can be chosen to only post the currency translated result or also the elimination result. 
+We must join ledger configuration table to know which amount field and which ledgers should be filterred in. 
 
-User can also define their own reporting, as all the data needed are either in the global temporary table, or persisted in ACDOCC. 
+#+CAPTION: Eliminate Amounts of Accounts which have offset Accounts
+#+BEGIN_SRC sql
+create view P_ELIMINATE as 
+  select ...
+         0 - Amount as Amount,
+         ...
+    from P_SOURCE AS A
+    join RTC_ACCT_EXT as B
+      on A.RACCT = B.RACCT
+   where B.ELIMACCT != ''; 
+#+END_SRC
 
-Based on the diagram, following building blocks should be given:
+#+CAPTION: Record Differences to The Offset Account
+#+BEGIN_SRC sql
+create view P_DIFF as 
+  select ...
+         (case when Amount > 0 then RCOMP else RASSC) as RCOMP,
+         (case when Amount < 0 then RCOMP else RASSC) as RASSC,
+         ELIMACCT as RACCT,
+         Amount,
+         ...
+    from P_SOURCE AS A
+    join RTC_ACCT_EXT as B
+      on A.RACCT = B.RACCT
+   where B.ELIMACCT != ''; 
+#+END_SRC
 
-** Detail Design
-*** Elimination Method
-
-
-*** Examples & Deduction
+#+CAPTION: Union of All the Sets
+#+BEGIN_SRC sql
+create view P_UNION as 
+  select * from P_SOURCE
+    union all
+  select * from P_ELIMINATE
+    union all
+  select * from P_DIFF
+#+END_SRC
+*** Posting

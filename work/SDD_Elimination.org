@@ -18,7 +18,7 @@
 |                     |                  |              | <30>                           |
 | Document Title      | Date             | Link         | Comments                       |
 |---------------------+------------------+--------------+--------------------------------|
-| BPC US Elimination  | <2016-10-07 Fri> | [[http://help.sap.com/saphelp_bopacnw101/helpdata/EN/9a/cb23d5c32047fbbeb625dbcaccb42a/content.htm?frameset=/EN/c1/f9f0830a51409f90490ebe5de1584d/frameset.htm&current_toc=/en/82/f51cf12cfc48c58975b9b5e6fba9aa/plain.htm&node_id=181][online help]]  | The help doc describes the US elimination rules in BPC. |
+| BPC US Elimination  | <2016-10-07 Fri> | [[https://help.sap.com/viewer/a2049170bfeb4178ace32222842c3ec1/10.1/en-US/469816cc7cf8422fa09a4e5546f7c02c.html][online help]]  | The help doc describes the US elimination rules in BPC. |
 | BCS Elimination     | <2016-10-07 Fri> | [[https://help.sap.com/saphelp_sem40bw/helpdata/en/f3/b06f3bb4983863e10000000a11402f/content.htm?frameset=/en/a3/6d723b784b1400e10000000a114084/frameset.htm&current_toc=/en/67/f7e73ac6e7ec28e10000000a114084/plain.htm&node_id=134&show_children=false][online help]]  | The help doc describes detail on how BCS run elimination and reconciliation. |
 | EC-CS Elimination   | <2016-10-07 Fri> | [[http://help.sap.com/saphelp_470/helpdata/en/5c/c1bcd4445f11d189f00000e81ddfac/content.htm?frameset=/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=125&show_children=false][online help]]  | The help doc describes detail on the Inter-Unit Elimination in EC-CS |
 | Parent Company      | <2016-10-09 Sun> | [[https://en.wikipedia.org/wiki/Parent_company][wikipedia]]    | A parent company is a company that owns enough voting stock in another firm to control management and operation by doing and influencing or electing its board of directors. The second company is deemed a subsidiary of the parent company. |
@@ -811,12 +811,6 @@ The default elimination logic does the following:
 The default elimination logic searches in the first hierarchy of the entity dimension. This can be modified to have the elimination performed in all hierarchies existing in the entity dimension. If no common parent is found, no elimination occurs. If no elimination entity is found below the first common parent, the next common parent is searched.
 
 **** US Elimination
-#+Caption: US Elimination Header
-[[../image/Elimination01_BPC.png]]  
-
-#+Caption: US Elimination Detail
-[[../image/Elimination02_BPC.png]]  
-
 When reporting the financial results of a group of entities, you may want to see the results for the group net all Intercompany activity within the group. Therefore, the system identifies Intercompany activities and balances and posts entries so these activities and balances are fully eliminated when looking at the overall results for the group. US eliminations functionality addresses the posting of Intercompany eliminations in scenarios where a full legal consolidation model is not required, such as within a standard financial model. When utilizing a legal consolidation model, Intercompany eliminations are normally handled as part of an eliminations and adjustments function.
 
 Intercompany elimination entries should be reflected only in groups in which both the entity and the partner entity are part of the group. To address this, US eliminations uses a concept known as posting at first common parent.
@@ -826,12 +820,13 @@ US eliminations are normally used in financial models as opposed to legal consol
 The US eliminations business rules define the audit members to eliminate. For each of these audit members you then define the corresponding destination audit member under which the system should post the elimination postings.
 
 The values entered in the following properties determine default elimination logic:
-| Dimension    | Property  | Content                                                                                         |
-|--------------+-----------+-------------------------------------------------------------------------------------------------|
+|              |           | <50>                                               |
+| Dimension    | Property  | Content                                            |
+|--------------+-----------+----------------------------------------------------|
 | Account      | ELIMACC   | A valid account against which the actual Intercompany account to be eliminated should be offset |
-| Entity       | ELIM      | Y or blank                                                                                      |
-| Intercompany | ENTITY    | The entity ID corresponding to this Intercompany member                                         |
-| Currency     | REPORTING | Y or blank                                                                                      |
+| Entity       | ELIM      | Y or blank                                         |
+| Intercompany | ENTITY    | The entity ID corresponding to this Intercompany member |
+| Currency     | REPORTING | Y or blank                                         |
 
 The default elimination logic does the following:
 1. Scans all base level non-elimination entities (entities having the property ELIM <> Y).
@@ -842,6 +837,34 @@ The default elimination logic does the following:
    + The system searches in a selected entity hierarchy for the first member that has both entities as descendants. This is the common parent.
    + Then the system searches in the immediate descendants of the common parent for a valid elimination entity (an entity having the property ELIM=Y). This is the entity where the results of the elimination are stored.
 The default elimination logic does its searches in the first organizational structure (hierarchy) of the entity dimension. This can be modified to have the elimination performed in all hierarchies existing in the entity dimension. If no common parent is found, no elimination occurs. If no elimination entity is found below the first common parent, the next common parent is searched.
+
+**** Eliminations and Adjustments Rule for Legal Consolidation
+#+Caption: US Elimination Header
+[[../image/Elimination01_BPC.png]]  
+
+#+Caption: US Elimination Detail
+[[../image/Elimination02_BPC.png]]  
+
+You use this type of business rule when performing a legal consolidation process to generate adjustments and postings that integrate results from subsidiary reporting entities into consolidated financial statements in accordance with Generally Accepted Accounting Principles.
+
+Eliminations and adjustments are executed as a separate task using a Data Manager package. They can also be executed from the Consolidation Monitor in the Consolidation Central area.
+
+The most important of the necessary adjustments for legal consolidation relate to the elimination of intercompany activity between the various reporting units, and reclassifications and supporting the model of the applicable rules for the accounting of long-term investments. Eliminations and adjustments rules support the calculation and generation of these postings.
+
+Eliminations and adjustments rules are applicable only to a legal consolidation model to which you attach a corresponding ownership model.
+
+When eliminations and adjustments rules are executed for a given group, the system performs the following:
+
+1. Reads from the ownership model which entities make up the group, the applicable consolidation method, and the ownership and consolidation percentages.
+
+2. Determines for each elimination and adjustment defined in the business rules the base amount upon which the elimination and adjustment is to be calculated based on the source data.
+
+3. Identifies for each elimination and adjustment the corresponding method-based multiplier from the business rules.
+
+4. Based on the identified method-based multiplier and the method of consolidation assigned to a given entity, determines the formulas to apply in calculating the amounts to post. Ownership and consolidation percentages can be applied in the calculations.
+
+5. Posts the calculated amounts based upon the posting rules defined in the Eliminations and Adjustments business rules tables.
+
 
 **** Other Business Rules
 #+Caption: Currency Translation 

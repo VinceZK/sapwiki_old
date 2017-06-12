@@ -1,0 +1,10 @@
+# Created by .ignore support plugin (hsz.mobi)
+.gitignore
+.idea/
+TAGS
+sapjira-test.elc
+sapjira.elc
+sapwiki-test.elc
+sapwiki.elc
+work/#*
+work/*~
