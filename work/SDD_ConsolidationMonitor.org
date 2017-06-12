@@ -1,0 +1,91 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+TITLE: SDD-Consolidation Monitor
+#+OPTIONS: toc:1
+** References
+|                        |                  |            | <30>                           |
+| Document Title         | Date             | Link       | Comments                       |
+|------------------------+------------------+------------+--------------------------------|
+| Fiori Design Guideline | <2017-02-15 Wed> | [[https://experience.sap.com/fiori-design-web/overview/][experience]] | The following controls provide an SAP Fiori extending framework for components that serve complex use cases in the area of tools and technologies. The purpose of these controls is to ensure that user interfaces in the tools area are consistent, and that applications and tools are implemented with a common design language based on SAP Fiori. |
+
+** BCS Design
+
+#+Caption: BCS Consolidation Monitor
+[[../image/BCSConsMonitor.png]]
+
+*** Task Hierarchy
+#+Caption: BCS Task Hierarchy
+[[../image/BCSTaskHierarchy.png]]
+
+*** Task Group
+
+*** Task
+#+Caption: BCS Currency Translation Task
+[[../image/BCSCTTask.png]]
+
+#+Caption: BCS Elimination Task
+[[../image/BCSElimTask.png]]
+
+** BPC Design
+#+Caption: BPC Consolidation Monitor
+[[../image/BPCConsMonitor.png]]
+
+#+Caption: BPC Business Rule
+[[../image/BPCBizRule.png]]
+
+#+Caption: BPC Ownership Manager
+[[../image/BPCOwnershipManager.png]]
+
+#+Caption: BPC Control Monitor
+[[../image/BPCControlMonitor.png]]
+
+** FC Design
+There is no consolidation monitor thing in FC because of the design phylosophy is quite different:
+1. There is no group hierarchy, instead, FC uses scopes to include reporting units;
+2. Consolidation rules are grouped by rule sets, with each consolidation definition be assigned a rule set;
+3. At runtime, consolidation rules runs together, rather than step-by-step;
+4. The task monitor is used to monitor the running processes, rather than each step. 
+
+#+Caption: FC Consolidation Definition
+[[../image/FCConsDef.png]]
+
+A consolidation definition is category and period dependent, and can be run either immediately or scheduled as a task. Following objects are included in a consolidation definition:
+- scope
+- category senario
+- a set of rules
+- conversion rates
+- ...
+
+#+Caption: FC Task Monitor
+[[../image/FCTaskMonitor.png]]
+
+You can use task monitor to check if a consolidation definition is processed successfully. Bearing in mind, there is no sub-steps of a consolidation definition. The task is only a technical point of view to see a whole consolidation run successful or not. Just like the OS task monitor. 
+
+#+Caption: FC Rule Assignment
+[[../image/FCRuleAssignment.png]] 
+
+Consolidation rules like reconciliation, elimination, rollup, and so on are grouped in rule sets. A rule set can be assigned to a consolidation definition. 
+
+#+Caption: FC Consolidation Rule
+[[../image/FCConsRule.png]]
+You can define multiple rules and assign them to a rule set. A rule set can be hierarched with sub-sets. The rules are excuted with sequence defined here.
+ 
+#+Caption: FC Category Builder
+[[../image/FCCategoryBuilder.png]]
+You use category builder to define a category senario, which provides other meta for a consolidation definition. 
+
+Concept mapping between RTC and FC
+|             |                          | <50>                                               |
+| RTC         | FC                       | Difference                                         |
+|-------------+--------------------------+----------------------------------------------------|
+| Model       | Category Senario         |                                                    |
+| Methods     | Rule Set                 | Actually, a rule set equals all the methods in a consolidation run |
+| Method Step | Rule                     | Method step is defined under a method, while rules are defined seperately |
+|             | Consolidation Definition | RTC defines a consolidation run in the consolidation monitor through dynamically assign context parameters: model, version, period, and so on. There is no saved version of a consolidation definition. |
+|             | Task Monitor             | FC regard task as a whole consolidation run.       |
+| Task        |                          | A Task groups methods, and can be excuted serperately |
+| Monitor     |                          | Show group hierarchy and task hierarchy. Run and monitor methods |
+
+** RTC Design
+

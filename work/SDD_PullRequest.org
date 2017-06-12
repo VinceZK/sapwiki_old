@@ -254,13 +254,13 @@ The status of data release requests not only controls the data release process, 
 #+CAPTION: Status Code
 | User Status                  | Code | Comment                                                           |
 |------------------------------+------+-------------------------------------------------------------------|
-| Initial                      |   00 | Initial Stauts                                                    |
-| Cancel                       |   01 | Permanent cancelled                                               |
-| Currency Conversion Executed |   10 | 02~09 are reserved for activities before CT                       |
+| Initial                      |    1 | Initial Stauts                                                    |
+| Cancel                       |    2 | Permanent cancelled                                               |
+| Currency Conversion Executed |   10 | 3~9 are reserved for activities before CT                         |
 | Validation Executed          |   16 | 11~15 are reserved for activities before Release                  |
 | Rejected                     |   17 | Once rejected, no change is allowed                               |
-| Deferred                     |   18 | 17 can be switched to 16                                          |
-| Released                     |   30 | 30 can be reversed to 20, 19~29 are for activities before release |
+| Deferred                     |   18 | 18 can be switched to 17                                          |
+| Released                     |   30 | 30 can be reversed to 1, 19~29 are for activities before release  |
 | Approved                     |   50 | Once approved, no change is allowed                               |
 
 #+CAPTION: Pseudo SQL that controls visibility
@@ -318,29 +318,29 @@ If the group accountant Approve/Reject/Defer a DRR by mistake, she can still swi
 Only system status is less than 2 can the group accountant switch the status, and only for the last DRR. Even though, following cases should be considered separately:
 
 *** Approve -> Reject
-1. If it is a PRR/CRR, then change the request to "Reject" and create a new PRR/CRR with "Initial";
+1. If it is a PRR, then change the request to "Reject" and create a new PRR/CRR with "Initial";
 2. If it is an ARR, then change then ARR to "Reject".
 
 *** Approve -> Defer
-1. CRR/PRR cannot be deferred;
+1. PRR cannot be deferred;
 2. If it is an ARR, then change the ARR to "Deferred", and copy the delta amounts to the next period.
 
 *** Reject -> Approve
-1. If it is a PRR/CRR, then change the request to "Approved" and change the existing "Initial" to "Cancel";
+1. If it is a PRR, then change the request to "Approved" and change the existing "Initial" to "Cancel";
 2. If it is an ARR, then change the ARR to "Approved".
 
 *** Reject -> Defer
-1. CRR/PRR cannot be deferred;
+1. PRR cannot be deferred;
 2. If it is an ARR, then change the ARR to "Deferred", and copy the delta amounts to the next period.
 
 *** Defer -> Approve
-Only ARR has the "Deferred" Status. Besides change the status to "Approved", the corresponding deferred documents should be marked as deleted.   
+Only ARR has the "Deferred" Status. Besides changing the status to "Approved", the corresponding deferred documents should be marked as deleted.   
 
 *** Defer -> Reject
-Only ARR has the "Deferred" Status. Besides change the status to "Approved", the corresponding deferred documents should be marked as deleted. 
+Only ARR has the "Deferred" Status. Besides changing the status to "Approved", the corresponding deferred documents should be marked as deleted. 
 
 *** Initial -> Cancel
-Only "Initial" request can be canceled. For PRR/CRR, if there is no prior "Released/Approved" PRR/CRR, it cannot be canceled. 
+Only "Initial" request can be canceled. For PRR, if there is no prior "Released/Approved" PRR, it cannot be canceled. 
 
 ** Data Release Lock
 There is also a business lock table for the group accountant lock certain periods to forbid local accountants raise data release requests in the periods. The lock table should look like this:

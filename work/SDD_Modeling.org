@@ -1,9 +1,9 @@
 #+PAGEID: 1821717599
-#+VERSION: 22
+#+VERSION: 24
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Modeling
-** Generalb Information
+** General Information
 *** Stakeholders and Roles
 | Role                  | Name                |
 |-----------------------+---------------------|
@@ -40,7 +40,7 @@ A Consolidation Model defines the boundary for a kind of consolidation purposes 
 3. Financial Statement Items, and Consolidation Chart of Accounts(Hierarchy);
 4. Subassigments and Breakdown Categories;
 5. Consolidation Units and Groups;
-6. Define Data Foundation Views and Consolidation Version;
+6. Define Data Foundation Views and Consolidation Views;
 7. Define Consolidation Methods, Document Types, and Consolidation Tasks;
 
 **** Following Design Goals *MUST* be Met:
@@ -298,10 +298,8 @@ You must assign:
 In the "Integration Option", you set whether the model integrates with BPC. If yes, you have to give a "Default Flow Type" which is actually a transaction type. This is because transaction type in ACDOCA is mapped to BPC's flow dimension, and BPC requires every row have a flow type. In case lines in ACDOCA do not have the transaction type, then the default one is used.
 
 You can also decide which currency translation mode you prefer. 
-1. CT in RTC;
-2. CT in G/L Accounting with Revaluation;
-3. CT in G/L Accounting w/o Revaluation, using RTC CT method to do the revaluation at month-end;
-4. CT in BPC.
+1. CT in Consolidation: Currency is translated in consolidation systems(like RTC or BPC);
+2. CT in G/L Accounting: Currency is translated in G/L Accounting system, and conventially, happens during document posting.
 
 The integration options controls how the consolidation views are generated.  
  
@@ -331,7 +329,7 @@ You define consolidation data sources in this tab. Consolidation data sources ar
 
 The data stream "FI Journal" and "FS Item" are 2 mandatory stream types. Others are optional. If the model is set to integrate with BPC, then you have to assign HANA calculation views to this stream type, CDS view is not allowed. This is also known as the foundation view.
 
-~You must first enter the HANA package where the foundation view resides. To be in mind, the HANA DB user "SAP<SID>" must have the read/write access to the HANA package of FI Journal. As later on, it will generate HANA Calculation views into the same package.~ 
+~You must first enter the HANA package where the foundation view resides. Bear in mind, the HANA DB user "SAP<SID>" must have the read/write access to the HANA package of FI Journal. As later on, it will generate HANA Calculation views into the same package. And the HANA package length should not exceed 40 characters.~ 
 
 The data category can be added from existing templates. SAP delivers following 2 templates:
 | <10>       |                       |
@@ -398,7 +396,7 @@ The =BPC Integration= tab is only shown if you choose the "Integration with BPC"
 
 =Admin= tab contains administrative data of the consolidation model. All these fields cannot be changed as it generates automatically along with other operations on the model. The last field =Current Active Version= indicates the version number of the model. It is used to check the consistency of the design time objects, and the consolidated data in ACDOCC. 
 
-**** Modeling Validation Log
+**** Model Validation Log
 #+Caption: Real-time Consolidation Modeling Tool: Validation Log
 [[../image/RTCModelingToolUI90.png]]
 
@@ -407,26 +405,40 @@ Following criterias must be fulfilled before generating consolidation views:
 1. Consolidation Dimension exists;
 2. Consolidation Chart of Accounts exists;
 3. Fiscal Year Variant exist;
-4. Default Flow Type exists;
+4. Default Flow Type exists(in case BPC integeration);
 6. You must at least add one data category so that foundation views can be assigned.;
 7. A foundation view must be assigned to the stream type "FI Journals";
 8. The foundation view comply with the protocol of "FI Journals";
 9. If other stream types are assigned with CDS views, they must also comply with the corresponding protocol;
 10. The foundation view must contain all the fields defined in the consolidation dimension;
 11. You must at least create one consolidation version;
-12. A consolidation version must at least has a data category and a variant, Accounting Principle can be optional, however, each combination must be unique;
-13. If the model is BPC integrated, a BPC category must be mapped to a consolidation version;
+12. A consolidation version must at least has a data category, a ledger, and a variant, each combination must be unique;
+13. If the model is BPC integrated, a unique BPC category must be mapped to each consolidation version;
 
 Following criterias must be additionally fulfilled before activating the model:
-1. You must assign a BPC environment and model to the RTC model;
+1. In case BPC Integration, a BPC environment and model must be given;
 2. The assigned BPC environment and model must not be assigned to other RTC model;
-3. The settings between the BPC model and RTC model must be consistent, however, if the model is created using BPC integrated web client, the consistency is already permitted;
-4. The posting API exists;
-5. The global temporary table of ACDOCC exists;
-6. The default number range interval '00' of RTCJOURN exists;
+3. The settings between the BPC model and RTC model must be consistent;
 
-When activating the model, besides generating consolidation views, there are default document types and BRF+ Application generated.
+**** Model Activation
+When activating a model, model validation should be run before following stuff could be generated:
+1. Consolidation views;
+2. Default document types and number range interval 00;
+3. BRF+ Application(/RTCART/<model name>) and add validation views into it. 
  
+Once model is activated, following fields cannot be changed again:
+1. Currency translation mode;
+2. Dimension;
+3. Group Chart of Accounts;
+4. Group Fiscal Year Variant;
+5. Default Flow Type;
+
+Following changes need view regeneration when activating:
+1. Add a new consolidation version;
+2. Change foundation views;
+
+Data Category cannot be deleted if it is already used in a consolidation version. 
+
 *** TODO Database Design                       
 *** Data Flow & Design Time
 Here describes how data is read, calculated, and write back during a consolidation. It is divided into 3 scenarios:
@@ -647,3 +659,4 @@ Exchange Rate Indicator should also be maintained under Data Category. You can a
 4. You must have "ledger" and "company code" in the foundation view, even if your consolidation dimension is built upon others, like segment, cost center, and so on.
 5. If you want union other data sources(for example: ACDOCP) in the foundation view, you have to make sure the leger mapping is correctly defined. If you want ACDOCP with ledger '2E', however you also want ACDOCA with ledger '0L'+'1E', then you have to maintain all the mappings to the 3 ledgers. If '2E' happens to be used in ACDOCA, then it is very hard to coordinate.
 6. With "Ledger"+"Data Category", you can only achieve reported data re-use, you can not re-use the consolidated data in ACDOCC. For example, if you want release the translated data to group level, then you have to run CT for each consolidation version even the source data and tranlation logic are the same. 
+

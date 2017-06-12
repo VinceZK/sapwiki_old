@@ -1,5 +1,5 @@
 #+PAGEID: 1865734207
-#+VERSION: 18
+#+VERSION: 20
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: Fiori Development Guideline
@@ -61,13 +61,13 @@ There is a good tool which collects all the links: https://cpl.mo.sap.corp/launc
 [[../image/JavaDevInfras.png]] 
 
 *** Fiori Launchpad Configuration
-This part introduce how you embed your applications into the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html?sap-client=902#Shell-home][Fiori Launchpad(UYT902)]], or vice verser, how you find an existing application from Launchpad to the backend services. 
+This part introduce how you embed your applications into the [[https://wdciw29.wdf.sap.corp:1303/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html?sap-client=902#Shell-home][Fiori Launchpad(UYT902)]], or vice verser, how you find an existing application from Launchpad to the backend services. 
 
 1. If your applications are legacy SAPGUI or WebDynpro, then you should define your Backend Catalogs. Please use this [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500#][tool]] to create your Backend Catalogs and refer the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wikipage]] for detail;
 2. You may need to apply semantic objects;
-3. You create your catalogs and business groups in [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](FLP Designer). Please follow the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/UI+-+Related+Naming+Conventions%252C+Packages+and+Software+Components][naming conventions]];
+3. You create your catalogs and business groups in [[https://wdciw29.wdf.sap.corp:1303/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](FLP Designer). Please follow the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/UI+-+Related+Naming+Conventions%252C+Packages+and+Software+Components][naming conventions]];
 5. You create PFCG roles and assign launchpad catalogs and groups into the roles, *this task should be done in Frontend Server*;
-6. Finally, you assign SAP users to the PFCG role, and then open the [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Launchpad Designer]] will see your tiles.
+6. Finally, you assign SAP users to the PFCG role, and then open the [[https://wdciw29.wdf.sap.corp:1303/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Launchpad Designer]] will see your tiles.
 
 You can find more details steps in the [[https://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] link. However, you will find you do not have the authorization to do user/role assignments. You have to apply Business Roles by using the DLM self service tool: https://vmw4958.wdf.sap.corp:44344/sap/bc/webdynpro/sap/zdlm_nav_role?sid=UYT&clnt=902. For example, you add the existing business role "SAP_BR_GL_ACCOUNTANT".
 
@@ -176,7 +176,71 @@ P2 Area: FIN; P3 Area: CONS
 | Business Group               | SAP_FIN_BCG_CONS_LOCAL     | Local Accountants for Financial Consolidation |
 | Business Group               | SAP_FIN_BCG_CONS_GROUP     | Group Accountants for Financial Consolidation |
 | Business Role(R0248)         | SAP_BR_CONSLDTN_SPECIALIST | Financial Consolidation Specialist |
+ 
+**** SAP_FIN_BC_CONS_MODELING
+| Sequence | Tcode/APP                 | Description                        |
+|----------+---------------------------+------------------------------------|
+|        1 | RTCMD                     | Model                              |
+|        2 | RTCTM                     | Currency Translation Method        |
+|        3 | RTCRM                     | Rounding Method                    |
+|        4 | fin.cons.validationmethod | Validation Method                  |
+|        5 | RTCMA                     | Method Assignment                  |
+|        6 | RTCDT                     | Document Type                      |
+|        7 | RTCNR                     | Document Number Range              |
+|        8 | RTCWB                     | Doc Type Assignment for Write-back |
+|        9 | RTCBCT                    | BPC Category                       |
+|       10 | RTCLM                     | Consolidation Ledger               |
+|       11 | RTCVAR                    | Define Variants                    |
+|       12 | RTCER                     | Exchange Rate Indicator            |
+|       13 | RTCSEL                    | Selection                          |
 
+**** SAP_FIN_BC_CONS_MASTER_DAT
+| Sequence | Tcode/APP | Description                   |
+|----------+-----------+-------------------------------|
+|        1 | RTCENT    | Consolidation Entity          |
+|        2 | RTCTTP    | Transaction Type              |
+|        3 | RTCBCT    | BPC Category                  |
+|        4 | RTCGLA    | G/L Account for Consolidation |
+|        5 | RTCENTD   | Delete Consolidation Entity   |
+|        6 | OB08      | Exchange Rates                |
+
+**** SAP_FIN_BC_CONS_VALIDATION
+| Sequence | Tcode/APP      | Description                   |
+|----------+----------------+-------------------------------|
+|        1 | ValidationRule | Validation Rule               |
+|        2 | BRF+           | BRF+ Workbench                |
+
+**** SAP_FIN_BC_CONS_PREPARE
+| Sequence | Tcode/APP    | Description                                 |
+|----------+--------------+---------------------------------------------|
+|        1 | massApproval | Manage Data Release                         |
+|        2 | RTCSU        | Upload Financial Data for External Entities |
+|        3 | RTCAFD       | Investment/Equity History Data              |
+|        4 | RTCCT        | Currency Translation Single Run             |
+|        5 | OB08         | Exchange Rates                              | 
+  
+**** SAP_FIN_BC_CONS_DATA_REL
+| Sequence | Tcode/APP    | Description                                 |
+|----------+--------------+---------------------------------------------|
+|        1 | DRC          | Data Release Cockpit                        |
+|        2 | RTCSU        | Upload Financial Data for External Entities |
+|        3 | RTCAFD       | Investment/Equity History Data              |
+|        4 | RTCCT        | Currency Translation Single Run             |
+
+**** SAP_FIN_BC_CONS_CONSOLE 
+| Sequence | Tcode/APP     | Description               |
+|----------+---------------+---------------------------|
+|        1 | BPC WebClient | BPC Consolidation Monitor |
+|        2 | BPC WebClient | BPC Control Monitor       |
+|        3 | BPC WebClient | Ownership Manager         |
+|        4 | BPC WebClient | Journal Entry             |
+
+**** SAP_FIN_BC_CONS_REPORTS
+| Sequence | Tcode/APP    | Description                   |
+|----------+--------------+-------------------------------|
+|        1 | DocumentList | Drill-through Report          |
+|        2 | RTCDL        | Consolidation Document List   |
+|        3 | RTCJD        | Consolidation Journal Display |
 
 ** Identity & Access Management(IAM)
 *** Technical Catalogs     :Sam:
@@ -186,7 +250,7 @@ Technical catalog act as containers that group all delivered applications (Fiori
 + A separation between frontend (Fiori, UI) catalogs shipped with the frontend software components and and backend catalogs (WebDynpro, WebGUI, ...) shipped with the backend software components is used.
 + If the semantically same app (i.e. the same intent), has different navigation targets in different delivers, only one tile, but different navigation targets have to be created in the technical catalog. When building the business catalogs, the right navigation target has to be chosen as reference.
 
-Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UYT902) to define frontend catalogs; Use [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500&WDCONFIGURATIONID=SUI_TM_MM_APP#][Backend App Descriptors]](ER9500) to define your backend catalogs. For more detail, please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wiki-page]].
+Use [[https://wdciw29.wdf.sap.corp:1303/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UYT902) to define frontend catalogs; Use [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500&WDCONFIGURATIONID=SUI_TM_MM_APP#][Backend App Descriptors]](ER9500) to define your backend catalogs. For more detail, please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wiki-page]].
 
 *** Business Catalogs      :Sam:
 Business catalogs are the central object for UI and authorization assignment to business users and for structuring and organizing the authorization maintenance. If a user is assigned to a business catalog, he/she gets access to all apps included in the catalog and therefore requires the corresponding authorizations.
@@ -196,7 +260,7 @@ Business catalogs are the central object for UI and authorization assignment to 
 
 The visual part of a business catalog is represented as a Fiori catalog. Additional objects, i.e. business catalog role and restrictions, complement the Fiori catalog in the S/4HANA cloud editions to achieve automated lifecycle management for authorizations and extensibility.
 
-Use [[https://wdciw04.wdf.sap.corp:1301/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UYT902) to define your business catalogs. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Considerations]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
+Use [[https://wdciw29.wdf.sap.corp:1303/sap/bc/ui5_ui5/sap/arsrvc_upB_admn/main.html?sap-client=902scope=CUST][Fiori LaunchPad Designer]](UYT902) to define your business catalogs. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Considerations]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
 
 *** Business Group      :Sam:
 Business groups are defined in the Fiori Launchpad Designer. The represent edition (on-premise/cloud) specific grouping of visible apps from one or more business catalogs from the same business area in the Fiori Launchpad. The represent the end user point of view and should have unique titles within the related business roles.
@@ -207,7 +271,7 @@ The following rules apply for the title of business groups:
 + Use the plural by default. Example: "Recipes" and "Supplier Accounts".
 + Use gerunds to indicate activities. Example:"Maintenance Planning".
 
-*** Business Roles      :Sam:Carol:
+*** Business Roles      :Sam:
 Business roles denote a role of a persona. For example "Administrator" or "Supply Chain Planner". They are an aggregation of the applications contained in one or more business catalogs under a common name. The title of business roles must comply with the content of the Fiori Role Portfolio. That list is currently still subject to changes and cleanup activities. Therefore you may see error reported for things that have already been aligned with the IAM team and are not yet reflected on the Wiki or programmatic checks.
 
 In the S/4HANA on-premise edition, business roles are technically represented by PFCG single roles which have the corresponding business catalogs assigned. The naming convention is "SAP_BR_<PERSONA>_<VARIANT>[_<COUNTRY>]". Because business roles are business driven their IDs must not include any area prefixes but shall reflect the description. For example "SAP_PLM_BOM_ENGINEER" is wrong while "SAP_BR_BOM_ENGINEER" is correct. _They exist in the frontend server and do not contain any authorizations._ They serve demo and trial use cases. Customers would typically create their own business roles are PFCG single or composite roles in the transaction PFCG. Assigning the required backend authorizations is a separate step performed by the customer in the transaction PFCG of the corresponding backend clients.

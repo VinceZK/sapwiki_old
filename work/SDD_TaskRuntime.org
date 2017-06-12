@@ -1,5 +1,5 @@
 #+PAGEID: 1880029220
-#+VERSION: 9
+#+VERSION: 10
 #+STARTUP: align
 #+TITLE: SDD-Task Runtime
 #+OPTIONS: toc:1
@@ -78,8 +78,11 @@ The detail flow of a typical task report is described as following:
 2. During kicking start, it first try to lock the entity items. If all items are locked by another process, then response to the request. Else, submit and close the job.
 3. When the task report is called, it first parses the scope parameters into entity items. An entity item is the concatenation of MODEL/VERID/RYEAR/POPER/ENTITY. You need to select from RTC_ENTITY_M and BPC groups to get the list of entities involved.
 4. It then tries to lock the scope items to prevent concurrency running of the same entity items. If the same item exists under different jobname and jobcount(using FM GET_JOB_RUNTIME_INFO to get current jobname and jobcount), then it is already locked by another process. Otherwise, it is not locked or locked by own. 
-5. The entity items will be further filtered according to the DRR statues. So that only the necessary entity items are needed to be executed in the corresponding task.
-6. These available entity items is then passed to the APIs to execute the consolidation logic.
+5. The entity items will be further filtered according to the DRR statuses. So that only the valid entity items need to be executed. The logic is like bellow:
+   1. If there is variation, then check if current DRR is released/approved/deferred; 
+   2. If DRR is still before releasing, then the item should be executed; else, an ARR should be generated before the execution.
+   3. If there is no variation, then check if DRR status for current step is in error. If yes, then the item should be executed, else, omit the item.
+6. These executable  entity items is then passed to the APIs to execute the consolidation logic.
 7. Either the  APIs are successfully executed or not, the DRR user status and system status will be changed accordingly. However, if it is failed, the entity item should be unlocked.
 8. If it is the last step, then it need to unlock all the items.
 

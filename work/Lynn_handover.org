@@ -1,0 +1,41 @@
+* Data Release Cockpit Worklist
+** UI Search Option                                                    :Chang:
+1. Testing       8h
+2. Default value for "From Period" to "To Period"    4h
+
+** Version Dropdown list                :William: 
+Filter out inactive verions and version without data release
+
+** Get variation is very low in the list view     :Chang:
+need change to async mode      8h 
+
+** Status formater  in the list                                       :Chang:
+
+** Initialization                                      :Vincent:
+Error handling during package intialization 
+
+** Remove group feature in the list                        :Chang: 
+
+* Data Release Cockpit Detail
+
+** Status formater        :Chang:
+After run CT or Validation, the status should be set in processing, and combine user status and system status.    4h
+
+** Combine statuses check before release                        :Vincent: 
+User status, system status, validation result should be combined 
+
+Add the check logic in method: CL_RTC_DRR->SUBMIT_DRR_FROM_ID
+
+12h
+
+** Post FI Docs                              :Chang:
+Navigation need to be tested     4h
+
+** Reverse to Initial Status                                        :Vincent:
+Check method: CL_RTC_DRR->reverse_drr, set system status to 0
+
+* CL_RTC_DRR
+1. BPC Interface
+2. Defer of multiple prior variation. 
+3. Authorization check
+4. Data migration

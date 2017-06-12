@@ -1,0 +1,18 @@
+* Validation Rule
+** Input Parameters
+Rule Name, Model, State, Business Enable/Disable, Rule ID, Created-by, Modified-by.
+** Reduce the height of attachment
+** Remove border in display mode 
+** Remove star in display mode
+** Add model to the technique settings
+** Cancel to worklist
+** Edit->Display mode, work protect
+** Back to worklist after Save/Active? 
+** Message pattern should following guideline.
+* Validation Method
+** Add default sort by model, modified-by
+** Add method name search
+** Invisible Parameter Set
+** ID and Name display position
+** The first column has 5 lines
+** Delete Confirmation
