@@ -713,6 +713,7 @@ where rtc_catg  = :p_rtc_catg
   and poper     = :p_poper
   and timestamp >  :p_timestamp_fr
   and timestamp <= :p_timestamp_to
+  and plevl     >= '00'
 group by *
 #+END_SRC
 Refer: ZVINCE113 
@@ -796,6 +797,7 @@ where rtc_catg  = :p_rtc_catg
   and poper     = :p_poper
   and timestamp > :p_timestamp_fr 
   and timestamp <= :p_timestamp_to 
+  and plevl     >= '00'
 group by * 
 #+END_SRC
 Refer: ZVINCE111

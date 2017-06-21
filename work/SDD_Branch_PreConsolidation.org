@@ -1,5 +1,5 @@
-#+PAGEID: 1852751018
-#+VERSION: 5
+#+PAGEID: 
+#+VERSION: 1
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Branch Pre-Consolidation Report
@@ -20,12 +20,12 @@
 |------------------------+------------------+--------------+--------------------------------|
 | Branch Accounting      | <2017-06-12 Mon> | [[http://www.investopedia.com/terms/b/branch-accounting.asp][investopedia]] | Branch accounting is an accounting system in which separate accounts are maintained for each branch of a corporate entity or organization. |
 | Accounting Posting API | <2016-10-07 Fri> |              |                                |
+| Fiori Analytical Table | <2017-06-13 Tue> | [[https://experience.sap.com/fiori-design-web/analytical-table-alv/][Fiori-Design]] | An analytical table contains a set of data that is structured in rows and columns. It provides several powerful possibilities for working with the data, including advanced grouping and aggregations. |
 
 ** Concept
-The report is used for branch consolidation, or a very simple preview of consolidated financial statements.
-Each branch is represented as a company code in SAP accounting system. The company codes share the same chart of accounts, and fiscal year variant. 
+The report is used for branch consolidation, or a very simple preview of consolidated financial statements. Each branch is represented as a company code in SAP accounting system. The company codes share the same chart of accounts, and fiscal year variant. 
 
-As the report only targets with a special requirement(for SwissRE), there are boundary conditions must be met. 
+As the report only targets with a special requirement(for Swiss-RE), there are boundary conditions must be met.
 
 *** Boundary Conditions
 1. All company codes share the same Chart-of-Accounts and FYV.
@@ -47,14 +47,14 @@ The report can be developed using ABAP ALV technology. It first finds and aggreg
 1. A minimal configuration to assign offset accounts to operational accounts.
 2. A report can show transient elimination result before posting.
 3. When decide posting, one can choose to which extension ledger he/she wants to post.
-4. When repeat posting, only delta amounts are posted.
+4. When repeat posting, previous document should be reversed.
 5. Error should be correctly handled during posting.
 6. The elimination result can be reported using existing Fiori APPS, like: Display Financial Statement, Display G/L Account Balances and so on.  
 
 **** Following Design Goals *SHOULD* be Met:
-1. The posted elimination documents can be reversed.
-2. Backgroud run mode should be supported in case  periodically schedules are necessary or dialog run takes too much time.
-3. Performance should be garanteed when executing on handerds of companys.
+1. The posted elimination documents can be reversed manually.
+2. Background run mode should be supported in case  periodically schedules are necessary or dialog run takes too much time.
+3. Performance should be guaranteed when executing on hundreds of companies.
 
 *** Example
 1. Original lines in ACDOCA (The offset account is read from the account master data)
@@ -64,7 +64,7 @@ The report can be developed using ABAP ALV technology. It first finds and aggreg
 |  200000 |          100000 |    2001001 |        1001999 |                       -5100 |
 |  100000 |          200000 |    3001001 |           NONE |                        3000 |
 
-2. Result after elimination run. The difference will be posted to the side: lower/higher, negative/postive?
+2. Result after elimination run. The difference will be posted to the side: lower/higher, negative/positive?
 | Company  | Trading Partner | GL Account | Amount in Selected Currency |
 |----------+-----------------+------------+-----------------------------|
 | 100000   | 200000          | 1001001    | 5000                        |
@@ -93,28 +93,55 @@ The report can be developed using ABAP ALV technology. It first finds and aggreg
 
 ** Detail Design
 
-*** Offset Accounting Customization 
+*** Offset Account Customization 
 The offset accounting customization can re-use existing RTCGLA.
 
-#+Caption: Elimination Overall Context
-[[../image/EliminationOverall.png]] 
+#+Caption: Offset Account Customization
+[[../image/OffsetAcctCust.png]] 
 
 *** Elimination Report
+The elimination report is used for a pre-check before posting. So it only displays the relevant account(with elimination account set) in a flat format. It has little ability to do analyzing, and analyzing should be done in G/L Accounting's existing report tools. 
 
-**** SQL Logic
+The report is better to be developed using ABAP ALV. Fiori is not recommended considering the cost and limitations on its table control.
+
+#+Caption: Selection Screen
+[[../image/BranchEliminationReport01.png]] 
+1. Source Ledger is mandatory, it shouldn't be an extension ledger because if source data is combined with an extension ledger and a leading ledger, then you just can't combine another extension ledger using existing report tools.
+2. Fiscal Year Period is mandatory. Each time the report only deal with one fiscal year period.
+3. Company is a select-option, if it is not entered, it means all.
+4. A currency field must be chosen, to tell the report on which currency amount field the elimination logic would run.
+5. If the checkbox of "Post Directly to" is checked, then the "Extension Ledger" will be shown. And user has to give an extension ledger so that the elimination result can be posted to. This is mainly used in background mode.
+
+#+Caption: List Screen
+[[../image/BranchEliminationReport02.png]] 
+1. The list header display the selections. The involved companies are listed separated by comma.
+2. The list is sorted and grouped by Company, Trading Partner, Offset Account.
+3. The field "Elim Amount" is dynamically decided based on the currency field chosen in the selection screen.
+4. The red lines are eliminated lines, the green lines are differences posted to the offset account, the source lines are displayed in normal colors.
+5. The field "Posting Status" indicates whether the elimination result lines are posted or not. It has following status: Initial(no posting has ever been done), Posted(The latest document is posted successfully), Reversed(The latest document is reversed), Error(The latest post fails), Empty(The line doesn't require posting).
+6. "Doc Number" always display the latest successful document number.
+7. When the button "Post" is clicked, a dialog popup to allow user enter an extension ledger. If the extension ledger is given in the selection screen, the dialog can be omitted. In case posting is repeatedly clicked, the previous document will be reversed first, then new document will be posted. 
+8. When the button "Reverse" is clicked, all the companies listed will be reversed by posting a reverse document. If some companies' posting status are already reversed or initial, then they will be omitted.
+9. "Refresh" button gives out the latest result.
+10. "Posting Log" navigates to a dialog which display the posting history for the selected companies, grouped by Source Ledger, Fiscal Year Period, Target Extension Ledger, and Company.
+    
+**** SQL Logic to Read and Calculate Data
+*It would be difficult or impossible to use CDS or pure select statements to describe the elimination logic.* This is mainly because the G/L Leger customization is complicate, and hard to represent using SQL scripts. This needs further investigation and testing. 
+
+However, combined with ABAP logic, the read and calculation can be easily achieved.
 
 #+CAPTION: Read Data with Trading Partner is Not Empty
 #+BEGIN_SRC sql
 create view P_SOURCE as 
   select * from ACDOCA as A
-           join T883 as B
+           join T880 as B
              on A.RBUKRS = B.BUKRS
           where B.RCOMP in [100000, 200000]
             and RLDNR = '0L' 
             and RASSC != ''; 
 #+END_SRC
 
-We must join ledger configuration table to know which amount field and which ledgers should be filterred in. 
+We must join ledger configuration tables(FINSC_LEDGER and FINSC_LD_CMP) to know which amount field and which ledgers should be filterred in. 
 
 #+CAPTION: Eliminate Amounts of Accounts which have offset Accounts
 #+BEGIN_SRC sql
@@ -152,4 +179,17 @@ create view P_UNION as
     union all
   select * from P_DIFF
 #+END_SRC
+
+**** Existing Report Tool in G/L Accounting
+#+Caption: Display Financial Statement
+[[../image/DisplayFinancialStatement.png]] 
+
+This report supports multiple company codes. The ledger also supports extension ledger. It supposes we can leverage it to report both company and group level eliminated result. 
+
 *** Posting
+Posting and reverse should be supported. If posting to an extension ledger, which currency amount fields are filled should be consistent with the source ledger. For example, OSL is used as the elimination amount field in source ledger 0L. The extension ledger E1 must also be configured to use OSL as the target posting amount with same currency key.   
+
+Processing the extension ledger behaves like a standard ledger. You can use the same BAPIs which can be used for a ledger specific posting eg. BAPI_ACC_DOCUMENT_CHECK / POST.  A ledger specific posting can be triggered if you specific  an  accounting principle in the header structure of the BAPI (BAPIACHE09-ACC_PRINCIPLE) which is assigned to ledger group ((extension-)ledger). 
+
+Reversal can be triggered using bapi bapi_acc_document_rev_post .
+
