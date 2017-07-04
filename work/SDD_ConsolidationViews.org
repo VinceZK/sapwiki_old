@@ -1,5 +1,5 @@
 #+PAGEID: 1832374030
-#+VERSION: 36
+#+VERSION: 37
 #+STARTUP: align
 #+TITLE: SDD-Consolidation Views
 #+OPTIONS: toc:1
@@ -18,7 +18,7 @@
 |                |                  |               | <30>                           |
 | Document Title | Date             | Link          | Comments                       |
 |----------------+------------------+---------------+--------------------------------|
-| HANA Script    | <2016-02-21 Sun> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
+| HANA Script    | <2016-02-21 Sun> | [[https://help.sap.com/viewer/de2486ee947e43e684d39702027f8a94/2.0.01/en-US][online help]]   | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
 | AMDP Guide     | <2016-02-21 Sun> | [[http://help.sap.com/abapdocu_740/en/index.htm?file=abenamdp.htm][ABAP Keywords]] | All about AMDP: Keywords and Syntax. |
 
 
@@ -618,6 +618,7 @@ union all
       and b.rtc_rvers = :p_rvers
       and a.ryear = b.fyear
       and a.poper = b.fperi
+      and b.fperi < :p_poper
       and a.entity = b.entity
       and a.timestamp <= b.rtime
     where a.rtc_catg  = :p_rtc_catg
@@ -625,15 +626,14 @@ union all
       and (a.rvers    = :p_rvers or a.rvers = '')
       and a.ryear     = :p_ryear
       and b.fyear     = :p_ryear
-      and a.poper     < :p_poper
-      and b.fperi     < :p_poper  
       and plevl       between '00' and '09'
 union all
    select * from /RTCART/500VINCE1_U as a
     where a.rtc_catg  = :p_rtc_catg
       and (a.acctp    = :p_acctp or a.acctp = '' or a.acctp is null)
       and (a.rvers    = :p_rvers or a.rvers = '')
-      and a.plevl > '09'    
+      and ( (a.poper > '000' and a.plevl > '09') or
+            (a.poper = '000' and a.plevl >= '00') )    
 #+END_SRC
 
 Refer ZVINCE109.
@@ -910,7 +910,8 @@ union all
         where A.DCATE = 'Actual'
           and (A.ACCTP = '' or  A.ACCTP = 'CL')
           and (A.RVERS = '' or A.RVERS = '100')
-          and A.PLEVEL > '09' --Posting Level > 09 means consolidation engine generated data
+          and ((A.POPER  > '000' and A.PLEVEL > '09') or 
+               (A.POPER  = '000' and A.PLEVEL >= '00'))
      group by *
 #+END_SRC
 

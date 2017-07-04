@@ -1,0 +1,51 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+TITLE: SDD-Selection
+#+OPTIONS: toc:1
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer | Grace Zou     |
+| Quality Responsible   | Yao Cen       |
+| Developers            |               |
+
+** Context
+Selection is used to define filters on potential data sources(HANA Views). During runtime, Selection is applied to SQL select statements to boundry the data for further processing. Selection is a base component in Real-time Consolidation, which is mainly used in RTC Methods. Besides, Selection can also be reused in validation rule and data mapping rules. 
+
+** Design
+Selection is model dependent. It needs the CDS view genereated by the model, so that a valid sql-where condition can be checked and applied. Details are explained bellow. 
+
+#+Caption: Selection Architecture
+[[../image/SelectionArchitecture.png]]
+
+After a model is activated, it generates a bunch of consolidation views, among which only the view with suffix "_U" is picked as the *only default base view* for Selections so far. However, Selections based on the "_U" view indicates it can also be applied on all the views with suffix "_UXX" (_U00, _U10, _U11, _U20, _U21). 
+
+A Selection has one base view and contains one or more selection characteristics, which are derived from the base view, as well as the corresponding DDIC information. The DDIC information is very useful as length check and search help can be derived and reuse.  
+
+#+Caption: Selection UI: Filter Characteristic
+[[../image/SelectionUI01.png]]
+
+Once a characteristic is chosen, it grays out to indicate as an already chosen one. Some characteristic are excluded from the availabe list, as they are non-sense or illegal to be filtering fields. These excluded fields are: MODEL, RTC_CATG, ACCTP, RVERS, PLEVEL, ENTITY, PENTITY, PERIV, KTOPL, RTFLG. 
+
+#+Caption: Selection UI: Filter Expression
+[[../image/SelectionUI02.png]]
+
+Filter expression is based on a chosen characteristic, represented as a range. And the string representation is an array like: [from value, to value], value1, value2, ... Currently, the exclude option is not supported. 
+
+#+Caption: Selection UI: Filter Expression Maintain
+[[../image/SelectionUI03.png]]
+
+Doulbe click the expression string will popup a dialog allow you maintain the expression. 
+
+*** Table Design
+
+*** Life Cycle Management
+
+** Program Detail
+#+Caption: Selection Program Building Block
+[[../image/SelectionProgramBlock.png]]

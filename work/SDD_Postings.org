@@ -1,5 +1,5 @@
 #+PAGEID: 1780309655
-#+VERSION: 15
+#+VERSION: 17
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: SDD-Postings
@@ -147,11 +147,13 @@ Document type is model dependent. Each model has its own document types and cann
 |           | <30>                           | <40>                                     |
 | Doc. Type | Description                    | Customization                            |
 |-----------+--------------------------------+------------------------------------------|
-|        00 | Flexible Upload                | Posting Level: null; Balance Check: No Check; Biz Transaction Type: Flexible Upload; Posting:Manually; Number Range:00. Only number range can be changed, all other setting are frozen for changing. |
-|        01 | Currency Translation           | Posting Level: 15; Balance Check: Check and report error; Biz Transaction Type: CT in S4; Posting:Automatic Posting; Number Range:00. Number range and clearing items can be changed, all other setting are frozen for changing. |
-|        02 | Data Release                   | Posting Level: 00; Balance Check: Check and report error; Biz Transaction Type: Data Submit; Posting:Automatic Posting; Number Range:00. Key figures and number range can be changed, all other setting are frozen for changing. |
-|        03 | BPC Write-back                 | Posting Level: 50; Balance Check: Check and report error; Biz Transaction Type: RTBP; Posting:Automatic Posting; Number Range:00. Number range can be changed, all other setting are frozen for changing. |
-|        04 | Defer from Prior Periods       | Posting Level: 03; Balance Check: Check and report error; Biz Transaction Type: RTRP; Posting:Automatic Posting; Number Range:00. Number range can be changed, all other setting are frozen for changing. |
+|        00 | For Flexible Upload and Simple Upload | Posting Level: 00; Balance Check: No Check; Biz Transaction Type: Flexible Upload; Posting:Manually; Number Range:00. Only number range can be changed, all other setting are frozen for changing. |
+|        01 | Real-time Consolidation: Currency Translation | Posting Level: 09; Balance Check: No Check; Biz Transaction Type: RTCT; Posting:Automatic Posting; Number Range:00. Number range and clearing items can be changed, all other setting are frozen for changing. |
+|        02 | Submit/Release Local Report Data | Posting Level: 00; Balance Check: Check and report error; Biz Transaction Type: RTRP; Posting:Manual Posting; Number Range:00. Key figures and number range can be changed, all other setting are frozen for changing. |
+|        03 | BPC Write-back                 | Posting Level: 50; Balance Check: No Check ; Biz Transaction Type: RTBP; Posting:Automatic Posting; Number Range:00. Number range can be changed, all other setting are frozen for changing. |
+|        04 | Defer from Prior Periods       | Posting Level: 03; Balance Check: No Check; Biz Transaction Type: RTRP; Posting:Automatic Posting; Number Range:00. Number range can be changed, all other setting are frozen for changing. |
+|        05 | Uploaded Data Before Commit    | Posting Level: NULL; Balance Check: No Check; Biz Transaction Type: RTFU; Posting:Automatic Posting; Number Range:00. Number range can be changed, all other setting are frozen for changing. |
+|        06 | Initial Upload Data w/o Releasing | Posting Level: 10; Balance Check: No Check; Biz Transaction Type: RTFU; Posting:Automatic Posting; Number Range:00. Number range can be changed, all other setting are frozen for changing. |
 
 #+CAPTION: Document Type General Tab
 [[../image/DocTypeUI01.png]]  
@@ -172,13 +174,14 @@ Posting level classifies documents posted by different consolidation tasks. Duri
 |          0T |        09 | *Currency Translation* Currency Translation in S4 also posts documents. The posting level is dedicate for the currency translation task before data is released to group. |
 |          10 |        10 | *Standardizing entries* You may need to standardize the reported data of consolidation units to comply with corporate policies or valuation rules. In data records with posting levels less than or equal to 10, the system posts only to the consolidation unit – not to the consolidation group. Reporting takes into account the data records for all consolidation groups. If currency translation is needed, then the translated result is posted into the same posting level. |
 |          12 |        12 | *Standardizing entries: consolidation group changes* |
+|             |        15 | *Currency Translation* Currency Translation in S4 also posts documents. The posting level is dedicate for the currency translation task after data is released to group. |
 |          20 |        20 | *Two-sided elimination entries* Inter-unit elimination, the elimination of inter-unit profit/loss in inventory, and reclassification are examples of two-sided elimination entries. Here, both the consolidation unit and the partner unit are recorded in the data records. Reporting takes into account the data records for all consolidation groups in which both the consolidation unit and the partner unit are posted. |
 |          22 |        22 | *Two-sided elimination entries: consolidation group changes* |
 |          23 |        23 | *Two-sided eliminating entries: Special logic*     |
 |          24 |        24 | *Two-sided eliminating entries: Cons group changes with special logic* |
 |          30 |        30 | *Consolidation of investments entries* In consolidation of investment postings, the consolidation unit, partner unit, and consolidation group are recorded in the data records. Reporting only considers the data records with the assigned consolidation group and the higher-level consolidation groups. |
 |             |        50 | *BPC Generated Data*, for genearic purpose.        |
-
+               
 *Note:* Each posting level can be mapped to an audit type for the integration with BPC.  
 
 **** Balance Check
@@ -208,7 +211,7 @@ Business Transaction Type also controls the layout of document type customizatio
 | BTTYPE | Available Settings on Doc Type UI                  |
 |--------+----------------------------------------------------|
 | RTFU   | General tab without Deferred Taxes                 |
-| RTDS   | General tab without Deferred Taxes                 |
+| RTRP   | General tab without Deferred Taxes                 |
 | RTCT   | General tab without Deferred Taxes, Clearing Items tab without Clearing - Consolidation Entity |
 | RTBP   | General tab without Key Figures and Deferred Taxes |
 | RTEL   | General tab, Clearing Items tab, and Deferred Taxes tab |
