@@ -40,9 +40,101 @@ Filter expression is based on a chosen characteristic, represented as a range. A
 #+Caption: Selection UI: Filter Expression Maintain
 [[../image/SelectionUI03.png]]
 
-Doulbe click the expression string will popup a dialog allow you maintain the expression. 
+Doulbe click the expression string will popup a dialog allow you to maintain the expression. Mulitple "from to" lines can be maintained, and sanity check should be made to check for example: the "from" value should less than the "to" value, different lines should not conflict with each other, and so on. 
+
+To be aware, for boolean values, use "!" as the false. This is because empty value already stands for empty, not the false. 
+
+#+Caption: Selection UI: Filters Overview
+[[../image/SelectionUI03.png]]
+
+A Selection can contain multiple filters on different characteristics, which are combined with "AND" operator. For example, in case the Selection has 2 filters: CharA = 'AA' , CharB = 'BB', then they will be interepted as "CharA = 'AA' and CharB = 'BB'". 
+
+Just like other RTC objects, Selection has 2 states, "SAVED" and "ACTIVE", which may exist simultaneously. When there is "SAVED" copy, the owner of the copy will see the "SAVED" copy by default, while others still see the "ACTIVE" copy.After the owner activate the "SAVED" copy again, the existing "ACTIVE" copy is replaced with "SAVED" copy, and the "SAVED" copy is then deleted.  
+
+*** 4 Selection Types
+There are 4 Selection types to cope with different use cases. 
+
+**** Default Selection
+Default Selection is as introduced as above, which is composed by filter expressions. You can define "from to" on each chosen characteristic. 
+
+**** Based on SET
+Selection based on SET is used in case there are existing SETs maintained in the ERP, which then can be reused in RTC context. Each characteristic can only be assigned with one SET. And only the SET with the same data element or data domain can be assigned. 
+
+#+Caption: Selection UI: Based on SET
+[[../image/SelectionUI03.png]]
+
+**** Free Style 
+Free style type allows user to write SQL (only the where conditions) as freely as they can. However, syntax check will be done before the Selection is activated. Free style can cope with situations that default type cannot eslily handle. 
+
+*Free Style Selection is not implemented yet.* 
+
+**** Composite Selection
+Composite Selection can combine multiple default Selections to compose filter condition connected with "OR" operator. Only Selections with the same base view can be combined in a composite selection. 
+
+#+Caption: Selection UI: Composite Selection
+[[../image/SelectionUI03.png]]
+
 
 *** Table Design
+
+RTC_SELECTION: Selection Head Table
+| Field   | isKey | Data Type | Description                |
+|---------+-------+-----------+----------------------------|
+| MANDT   | X     | CHAR3     | Client                     |
+| MODEL   | X     | CHAR6     | Model                      |
+| STATE   | X     | CHAR1     | State                      |
+| SELNM   | X     | CHAR20    | Selection Name             |
+| SELTY   |       | CHAR1     | Selection Type             |
+| BVIEW   |       | CHAR30    | Selection Base View        |
+| WHSTR   |       | STRING    | Selection SQL Where String |
+| CREATOR |       | CHAR12    | Created by                 |
+| CTIME   |       | TIMESTAMP | Create timestamp           |
+| UPDATOR |       | CHAR12    | Changed by                 |
+| UTIME   |       | TIMESTAMP | Change timestamp           |
+
+RTC_SELECTIONT: Selection Text Table
+| Field    | isKey | Data Type | Description    |
+|----------+-------+-----------+----------------|
+| MANDT    | X     | CHAR3     | Client         |
+| MODEL    | X     | CHAR6     | Model          |
+| STATE    | X     | CHAR1     | State          |
+| LANGU    | X     | CHAR1     | Language Key   |
+| SELNM    | X     | CHAR20    | Selection Name |
+| DESCRIPT |       | CHAR80    | Description    |
+
+RTC_SEL_FLDCOL: Filter Characteristics of a Selection
+| Field    | isKey | Data Type | Description                        |
+|----------+-------+-----------+------------------------------------|
+| MANDT    | X     | CHAR3     | Client                             |
+| MODEL    | X     | CHAR6     | Model                              |
+| STATE    | X     | CHAR1     | State                              |
+| SELNM    | X     | CHAR20    | Selection Name                     |
+| FLDNM    | X     | CHAR30    | Filter Characteristic Name         |
+| SETCLASS |       | CHAR4     | SET Class                          |
+| SUBCLASS |       | CHAR12    | Orgnizational Unit as SET Subclass |
+| SETNAME  |       | CHAR24    | SET Name                           |
+
+RTC_SEL_COLF: Characteristic Filter Expression
+| Field  | isKey | Data Type | Description                    |
+|--------+-------+-----------+--------------------------------|
+| MANDT  | X     | CHAR3     | Client                         |
+| MODEL  | X     | CHAR6     | Model                          |
+| STATE  | X     | CHAR1     | State                          |
+| SELNM  | X     | CHAR20    | Selection Name                 |
+| FLDNM  | X     | CHAR30    | Filter Characteristic Name     |
+| LOW    | X     | CHAR100   | Lower Value                    |
+| HIGH   |       | CHAR100   | Higher Value                   |
+| SIGN   |       | CHAR1     | Range Sign: Include or Exclude |
+| SELOPT |       | CHAR2     | Range Option                   |
+
+RTC_SEL_SGLSEL: Single Selection in a Composite Selection
+| Field  | isKey | Data Type | Description           |
+|--------+-------+-----------+-----------------------|
+| MANDT  | X     | CHAR3     | Client                |
+| MODEL  | X     | CHAR6     | Model                 |
+| STATE  | X     | CHAR1     | State                 |
+| SELNM  | X     | CHAR20    | Selection Name        |
+| SGLSEL | X     | CHAR20    | Single Selection Name |
 
 *** Life Cycle Management
 
