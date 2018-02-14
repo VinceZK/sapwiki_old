@@ -1,0 +1,23 @@
+#+PAGEID: 1891727085
+#+VERSION: 2
+#+STARTUP: align
+#+TITLE: 1709 Known Defects
+#+OPTIONS: toc:0
+
+** RTC CT cannot read previous periods data if consolidation version is set to without data releasing
+RTC CT reads previous periods data from view U10, which joins the approved DRR. For consolidation version without data releasing, there is no DRR. So it always get 0 for the previous periods. 
+
+Possible solutions:
+1. Generate DRRs with RTIME = 99991231000000 and USTATUS = 50; The generation logic can be triggered in period/package initialization. 
+2. Refer a preliminary version to a final version, so that the perivous period data can be shared from a final version to a preliminary version.
+3. Copy is not a good idea, as consolidation views now also cover local amount data in ACDOCA.
+
+** RTC CT and Validation cannot be run on preliminary category
+RTC CT and Validation now runs on DRR, while preliminary category doesn't generates DRR. 
+
+There is also no frontend UI to trigger run CT and validation. 
+
+** Comments and attachments can be deleted after their DRR is approved 
+User can still change or delete comments and attachments even the DRR is already approved/rejected/deferred.
+
+

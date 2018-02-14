@@ -1,0 +1,85 @@
+#+PAGEID: 1897303408
+#+VERSION: 5
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1897303408][Code Review Process]]
+
+* Target
+1. Improve product quality;
+2. Standardize code style and lower maintenance cost;
+3. Improve development skill;
+4. Knowledge transfer.
+
+* Team Status
+It's just a very common situation that code review becomes a mere formality. This mainly depends on what's type, status, and target of the team. To avoid this, we need know ourselves:
+ 
+1. Lack of Testing: the testing time and resource is limit, which brings the risk of quality after produce is released.
+2. Intensive New Hand: Among all the developers, above half are new hands regarding on the web development,  ABAP development, and business knowledge as well.
+3. Struggling to meet the delivery: developers are struggling to meet the delivery target, there is little time to improve.
+
+* How to Code Review
+
+** Define Code Standards
+The code standard is the general rule during code reviews. 
+
+The [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1928176894][ABAP Code Standards]] is already there. 
+
+The [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Develope+Guideline+for+VEC][Fiori Code Standards]] needs to be enhanced on the naming rules, security, message handling, best practice, performance, and so on. 
+
+** Code Review Checklist
+As not all the developer has experience on code review, a review checklist is necessary. I need to compile an initial checklist, which would be further improved/enhanced after each review meeting. 
+
+*** Avoid deep hierarchy of "if else" block
+Deep hierarchy of conditional branches causes the code hard to understand. Good encapsulation and organization can reduce the code indent hierarchy. 
+
+*** Remove unnecessary comments
+Some comments are meaningless and unnecessary. In most cases, developers leave large blocks of commented codes, which should be avoided. 
+
+*** Remove redundancy logic
+Avoid redundancy or duplicate logic, make the code simple and concise. 
+
+*** Good naming of variable and routines
+Based on the ABAP Code Standards and naming rule.
+
+*** Code intent and pretty format
+Always using "Pretty Printer".
+
+*** Using exception class for exception errors
+For those APIs that are not consumed by UI directly, using exception class for exception errors. Using a error message table is not recommended as those kind of exception errors are technical oriented, thus there is no need to expose to end user or wasting cost for the translations
+
+For APIs that are directly consumed by UI, it is recommended using exception class with T100 message table. 
+
+*** Mix update DB operations with internal table operations are not recommended.
+For the performance and readability reason, the update DB operations(insert, delete, modify, update) are not recommended to be mixed with internal table operations, like loop and read.
+
+*** "Check" statement is not recommended for existing a procedure.
+The statement RETURN is used to exit procedures and always has this result. The behavior of the EXIT and CHECK statements (conditional exit), in contrast, is context- dependent: Within a loop, only the loop is exited; outside a loop, the surrounding procedure is exited. This ambiguity limits the legibility of source code. Therefore, EXIT and CHECK should only be used to exit loops, and RETURN only to exit procedures. Only RETURN enables you to exit a procedure in a loop context.
+
+The statement RETURN is used to exit procedures and always has this result. The behavior of the EXIT and CHECK statements (conditional exit), in contrast, is context- dependent: Within a loop, only the loop is exited; outside a loop, the surrounding procedure is exited. This ambiguity limits the legibility of source code. Therefore, EXIT and CHECK should only be used to exit loops, and RETURN only to exit procedures. Only RETURN enables you to exit a procedure in a loop context. 
+
+*** Using sy-subrc to check whether a "read" statement return value or not.
+Do not use the target data object to check whether a data item is read or not, using sy-subrc instead.
+
+*** Set method visibility correctly, DO NOT always use "Public".
+Too much openness of the methods has potential risks for consumption. 
+
+*** "is initial" vs "is not bound".
+If you "type ref to object", then both are OK. If you "type ref to data", then "bound" is preferred.
+
+
+** Summarize and Optimize 
+Regular summarization and optimization are necessary. Code standards, checklist, and review process would be adjusted according to the practice. 
+
+The meeting is called team review meeting, which is hold monthly. Team review meeting is hosted by Vincent and Clare, who is also responsible for summarizing and updating the standards. 
+
+** Incentives 
+?
+
+* Forms of Code Review
+There are 2 forms of code review. 
+
+** Pair Review
+Pair review is suggested to happen 2 times a takt. The reviewer should review all codes the developer has done in the takt. Usually, a lync meeting or on seat talk can be taken, which may cost 30 minutes. Reviewee can find themselves a reviewer they preferred to take the reviewing process. The output is an issue and suggestion list proposed by the reviewer.  
+
+** Team Review Meeting
+On the monthly team review meeting, reviewers present the pair review results. Team should go through the lists and discuss to conclude the goods and bads. The experience and knowledge will be summarized and add to the standards based on consensus. The reviewee should then adapt the changes accroding to the review result.  

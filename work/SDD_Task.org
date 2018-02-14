@@ -1,0 +1,207 @@
+#+PAGEID: 1925578915
+#+VERSION: 9
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1925578915][SDD-Task]]
+
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+*** References
+| <25>                      |                  |             | <30>                           |
+| Document Title            | Date             | Link        | Comments                       |
+|---------------------------+------------------+-------------+--------------------------------|
+| SEM-BCS Task              | <2017-07-12 Wed> | [[https://help.sap.com/saphelp_globext607_10/helpdata/en/4d/c9001742d35f14e10000000a15822b/frameset.htm][online help]] | SEM-BCS task is a powerful object that represents consolidation step. It has informations like assignments, frequency, workflow, log, and task type specific parameters. |
+
+** Context
+A task defines how a Validation method is executed. For example, for which entities, in what frequency, and in what context. Task is also an basic visualization element in the task monitor. You can organize tasks into groups and sequences. Tasks are then performed with status updated coordinately. 
+
+** Design
+
+*** Validation Run Reports
+There are totally 3 reports as listed bellow. They are ABAP reports which act as interfaces for running 3 kinds of UC-UC validation in background jobs. 
+
+#+Caption: Validation Run Reports (refer CXV1)
+[[../image/VEC_ValidationRunReport.png]]
+
+According to experience, each validation executes a validation method which may contains more than 100 rules, takes 20 seconds. So all validation run is supposed to be executed asynchronously in background mode. Or the Firoi APP will timeout. 
+
+Each report has common parts like which validation method and options. If "Save Result" is checked, the validation result will be saved into specific result tables. If "Display Result" is checked, the report output (ALV) list view of the validation result into SPOOL.
+
+There are standard context parameters for for UC-CS validation which are also the same for the 3 report. Which includes: "Dimension", "Version", "Fiscal Year", "Fiscal Period", and "Chart of Accounts". Besides, each report has some variance:
+1. Reported Data Validation: The report has "Unit" in range input, and the Cut-off Time. Cut-off time is used to filter in data before the timestamp given.
+2. Standardized Data Validation: The report has "Unit" in range input, but without the Cut-off Time(See question 5). The standardized data includes all the reported data plus additional standardized entries(plevel = '10'). The rules for standardized validation should also include all the rules in the reported data validation.
+3. Consolidated Data Validation: The report has "Group" in range input, but without the Cut-off Time.
+
+**** UC-CS Status Check and Update
+When run task types for UC-CS, the statuses from UC-CS monitor should be checked and updated. Following 2 function modules must be embeded in the validation run reports: 
+1. FC_STATUS_CHECK: must be called before validation actually run, using 03/06 for field FC_CACTT.
+2. FC_STATUS_TRANST: must be called after validation run, based on the validation result to update different value. 
+
+**** Asynchronize Run Framework
+As described above, the validation reports will be scheduled as background jobs to achieve an asynchronize run. The simlar framework is already introduced in RTC 1709. Please refer this wikipage: https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Task+Runtime. 
+
+We can refer the objects from RTC 1709 for the validation engine. Following ABAP objects are related:
+|              |                         | <50>                                               |
+| Objects Type | Object                  | Comments                                           |
+|--------------+-------------------------+----------------------------------------------------|
+| Table        | RTC_ASYNC_STATUS        | Table to store asynchronize task status, and deal with concurrency |
+| Class        | CL_RTC_TASK_RUNTIME     | Main logics and APIs                               |
+| Report       | RTC_UNLOCK_ASYNC_STATUS | An ABAP report to unlock the statuses(RTCAM)       |
+
+*** Task Maintenance
+You define a task in a dedicate APP called "Task Maintenance". Task ID is 8 characters long with short and medium descriptions. A task is firstly a visualization object in the monitoring tool. It is scenario dependant. Meanwhile, a task contains context information which is used to determine the assignment of validation methods to entities.   
+
+#+Caption: Task Maintenance
+[[../image/VEC_Task.png]]
+
+In the first release, VEC is only used by UC-CS. There are following limitations:
+1. 3 validation tasks are delivered as content(with sample method assignments), but Q2P is not required.
+2. User cannot create new tasks for UC-CS scenario. This is because the method assignment in UC-CS is not bound to task. 
+3. User cannot change the predelivered tasks, not even the descriptions.
+4. User of course cannot delete a validation task.
+
+**** Task Type
+Task types are predefined which not only maps to a underlying _Validation Run Report_, but also controls content in the context section. For example, if "01:Cons Rpt Validation for UC-CS" is chosen, then the "Context" part will present the context parameters as above.
+
+**** Context
+The "Context" section is determined by "Task Type". The fields in context section are required to determine the method assignements. In this case, "Entity Dimension" and "Version" are needed. In UC-CS, the method assignments depends on "Dimension", "Version", and "Period Category". As UC-CS task is dimension dependant, so after a task is firstly created, value in "Dimension" can be never changed anymore. However, the value in version field should be allowed to change. By switching to a different version, the method assignment may also be switched to a different one.  
+
+There are other context parameters in this case. For example, "Group", "Chart-of-Account", "Fiscal Year Period", and "Currency Type". These parameters are also mandatory, and will be filled at runtime. 
+
+There could be no "Context" section required in other scenarios. For example, in Accounting scenario, there is no "Dimension" and "Version" concept. Whether there are context parameters to determine the method assignments needs further research. 
+
+**** Validation Method Assignment
+A Validation Method can be assigned to entities with period dependency. For example, method "RPTV01" is assigned to a range of entities only for period 1, 4, 7, 10, 13, 16. If you want a different assignment for the left periods, click the button "Add Assignment", which will create another instance of assignment block. The already assigned periods are grayed in the newly added block. Overlapping checks will be done for each assignment block. That is for each assignment block, you *cannot* have an entity be assigned with more than 2 different methods.
+
+When the version is switched to a different one, the assignment blocks may be refreshed to a different one accordingly. In UC-CS, different versions can have different method assignments. However, what really determines the assignment is the special version. Refer [[https://help.sap.com/saphelp_470/helpdata/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm?frameset=/en/5c/c1bba4445f11d189f00000e81ddfac/frameset.htm&current_toc=/en/5c/c1c25f445f11d189f00000e81ddfac/plain.htm&node_id=104&show_children=true#jump104][EC-CS Online Help]] for detial. 
+
+**** Saving
+Besides saving all the task definition data into own tables, it also synchronizes the information to UC-CS. Only task type "01:Cons Rpt Validation for UC-CS", "02:Cons Std Validation for UC-CS", and "03: Cons Cnsltd Validation for UC-CS" will do the UC-CS synchronization. 
+
+To avoid inconsistency, information synced to UC-CS shouldn't be changed in the UC-CS side. It must be changed in the _Task_Maintenance_ and synced to UC-CS again. 
+
+**** Sync Period Category to UC-CS
+Period category in UC-CS is used to define period dependency for the method assignments. It acts as a kind of reusable master data which is cross dimension. The data element "FC_PERTP" only has 4 characters long. All the generated period category has the naming prefix "$", started from "$001" to "$999". 
+
+#+Caption: Period Category (CXC9)
+[[../image/ECCS_PeriodCategory.png]]
+
+To avoid generated too much period categories in UCCS, we must achieve to reuse existing ones. As each period category is defined as a string of numbers separated by commas, we can easily compare whether 2 period categories are the same. If a new period category is attempt to generated, it first check if there is existing one. If yes, don't generate, else, generate with the subsequent ID. 
+
+**** Sync Task to UC-CS
+Tasks in UC-CS are grouped by task group, so that in the _Data Monitor_ or _Consolidation Monitor_, it can be shown as a task bar with corresponding status.
+
+#+Caption: Assign Task to Task Group (CXE0)
+[[../image/ECCS_Task2Group.png]]
+
+Task is generated into the tables "TF540" and "TF541" under the corresponding dimension and  task category. The task ID has the naming prefix '$', which means all the tasks synced from _Task Maintenance_. Short and Medium Text are also be matched with multiple language support.
+
+In UC-CS Cloud, user is not allowed to create validation tasks. Validation tasks are predelivered as contents, and they are fixed in the data/consolidation monitor. As a consequence, we will also predeliver following 3 tasks as contents:
+1. SRPTDATA: Consolidation Reported Data Validation for UC-CS
+2. SSTDDATA: Consolidation Standardized Data Validation for UC-CS
+3. SCONDATA: Consolidation Consolidated Data Validation for UC-CS
+
+The above 3 tasks will then be synced to UC-CS with the following 3 names: $SRPTDATA, $SSTDDATA, and $SCONDATA. And they will be added to the monitor configurations. 
+
+#+Caption: Task in EC-CS (CX5TB)
+[[../image/ECCS_Task.png]]
+
+The task category are mapped in bellow table:                    
+| Task Type                            | Task Category                             |
+|--------------------------------------+-------------------------------------------|
+| 01:Cons Rtp Validation for UC-CS     | Validation of Reported Financial Data     |
+| 02:Cons Std Validation for UC-CS     | Validation of Standardized Financial Data |
+| 03:Cons Cnsldtd Validation for UC-CS | Validation of Consolidated Values         |
+
+**** Sync Method assignments
+UC-CS needs this information to manually perform the task from the Monitor. For example, when you click a task, it pops up a report with correct context inputs and the method assigned. 
+
+#+Caption: Assign Method to Unit (CX1O)
+[[../image/ECCS_Method2Unit.png]]
+
+The method assignments should be along with the period category. As in the _Task_Assignment_, we define period category ad-hocly on the tasks. However, in UC-CS, period category is regarded as a kind of master data. We should manage to avoid generate too much redundant period categories. See details in the section "Sync Period Category to UC-CS".
+
+If task type is "01:Cons Rtp Validation for UC-CS", then the right method will be filled in the column "Val.ID rptd data" under the correct "Cons.Unit" and with the correct "Period category". 
+
+If task type is " 02:Cons Std Validation for UC-CS", then the right method will be filled in the column "Val.ID std. data" under the correct "Cons.Unit" and with the correct "Period category". 
+The method assignment in UCCS is version dependency, or more correctly, special version dependency. If 2 consolidation versions(under the same dimension) has the same special version for "Data Entry", then they must share the same method assignments. 
+
+**** Schedule Background Jobs
+A task can be scheduled as a periodic background job. There is a corresponding ABAP report for a task which can be used for background job scheduling. The ABAP report has task name as the input value together with some runtime context input parameters.
+
+Refer following link  https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Job+Scheduling+and+Monitoring for Cloud job definition. 
+
+*** DDIC Table Design
+
+#+CAPTION: Validation Task (VEC_TASK)
+|     |           |               |       |     | <40>                                     |
+| Key | Field     | DTEL          | DType | Len | Comments                                 |
+|-----+-----------+---------------+-------+-----+------------------------------------------|
+| X   | MANDT     | MANDT         | CLNT  |   3 | Client                                   |
+| X   | SCEN_ID   | VEC_SCEN_ID   | CHAR  |   5 | Scenario ID                              |
+| X   | TASK_ID   | VEC_TASK_ID   | CHAR  |   8 | Consolidation task ID                    |
+|     | TASK_TYPE | VEC_TASK_TYPE | CHAR  |   2 | Consolidation task type                  |
+|     | UCCS_DIM  | VEC_DIMEN     | CHAR  |   2 | UC-CS Consolidation Dimension            |
+
+The field "UCCS_DIM" is only used for UC-CS scenario. 
+
+#+CAPTION: Period Category (VEC_PERIODC)
+|     |                 |               |       |     | <40>                                     |
+| Key | Field           | DTEL          | DType | Len | Comments                                 |
+|-----+-----------------+---------------+-------+-----+------------------------------------------|
+| X   | MANDT           | MANDT         | CLNT  |   3 | Client                                   |
+| X   | PC_ID           | VEC_PC_ID     | CHAR  |   3 | Period category ID                       |
+|     | PERIV           | PERIV         | CHAR  |   2 | Fiscal Year Variant                      |
+|     | PERIOD_CATEGORY | VEC_PERI_CATG | CHAR  |  50 | Period category                          |
+
+#+CAPTION: Validation Method Assignment by Period and Entity (VEC_ASSIGNMENT)
+|     |                |                    |       |     | <35>                                |
+| Key | Field          | DTEL               | DType | Len | Comments                            |
+|-----+----------------+--------------------+-------+-----+-------------------------------------|
+| X   | MANDT          | MANDT              | CLNT  |   3 | Client                              |
+| X   | SCEN_ID        | VEC_SCEN_ID        | CHAR  |   5 | Scenario ID                         |
+| X   | TASK_TYPE      | VEC_TASK_TYPE      | CHAR  |   2 | Consolidation task type             |
+| X   | ASSIGNMENT     | VEC_ASSIGNMENT_ID  | CHAR  |  32 | ID of Validation Method Assignment by Period and Entity |
+| X   | PC_ID          | VEC_PC_ID          | CHAR  |   3 | Period category ID                  |
+| X   | METHOD         | VEC_METHOD         | CHAR  |   5 | Validation method                   |
+| X   | EFFECTIVE_FROM | VEC_EFFECTIVE_FROM | CHAR  |   7 | Effective From                      |
+|     | SELECTION      | VEC_SELECTION      | CHAR  |  20 | Validation Engine: Selection        |
+
+The value of field "ASSIGNMENT", so far, is concatenated by $<Dimension><Special Version>. When open a UC-CS task, you should get all the assignments that belongs to the task. That is all the assignments contain the same UC-CS dimension. The UC-CS version list is also compiled from the assignment name. 
+
+EFFECTIVE_FROM indicates when the assignment starts to be effective. As UC-CS doesn't have this attribute, so the value should be always '0000000'. This field is reserved for future use. 
+
+#+CAPTION: Validation Engine: Task Type (VEC_TASKTYPE)
+|     |              |                  |       |     | <40>                                     |
+| Key | Field        | DTEL             | DType | Len | Comments                                 |
+|-----+--------------+------------------+-------+-----+------------------------------------------|
+| X   | SCEN_ID      | VEC_SCEN_ID      | CHAR  |   5 | Scenario ID                              |
+| X   | TASK_TYPE    | VEC_TASK_TYPE    | CHAR  |   2 | Consolidation task type                  |
+|     | RUN_REPORT   | PROGRAMM         | CHAR  |  40 | ABAP Program Name                        |
+|     | ENTITY_CDS   | DDLNAME          | CHAR  |  40 | Name of a DDL Source                     |
+|     | ENTITY_FIELD | VEC_ENTITY_FIELD | CHAR  |  30 | The Entity Field Name                    |
+|     | REF_TABLE    | LVC_RTNAME       | CHAR  |  30 | ALV Control: Reference Table Name for Internal Table Field |
+|     | REF_FIELD    | LVC_RFNAME       | CHAR  |  30 | ALV control: Reference field name for internal table field |
+
+** Appendix
+
+*** Task in SEM-BCS
+#+Caption: Task in SEM-BCS
+[[../image/BCS_Task.png]]
+
+
+
+
+
+
+
+

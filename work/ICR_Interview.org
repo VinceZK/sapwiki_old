@@ -1,0 +1,92 @@
+* <2017-08-17 Thu>
+** Company Backgroud
+*** Please briefly introduce your company, in the following areas
+Fonterra, 
+
+Craig: Manager of record reporting department, working on project of Central Finance and Real-time Consolidation
+Sally: Involing in CF and RTC project, specially be responsible for ICR 
+Andrea: Manger for consolidation and ICR
+Grant: Finance system manager
+Paul: Functional Consultant of Central Finance
+Lucas: Fuctional Consultant of Central Finance, specially for RTC
+
+1. Business Area: Global Nutrition Company
+2. Company Size: 20,000
+3. Number of Subsidiaries: 150 
+
+*** What is your company's finance system strategy?
+Central finance in S4HANA. 
+
+Transactional level intercompany.
+
+** Business Process Related
+
+*** Which roles do you have in your company which participate in the intercompany process?
+1. 60 accountants involved in monthly ICR processes in the share service center.
+2. 20~30 people are doing AP/AR.
+3. Also other group of people like sales will be involved, which could double the number of people mentioned.
+   
+*** Please define how many types of intercompany transactions do you have in your company?
+1. Sales activities among different SAP platforms 
+2. Automatic intercompany journal processes for companies in New Zeland
+3. Intercompany recharging occuring
+4. All possible financial transactions 
+
+*** Exceptional cases and How often do these happen
+matching on transactional currency. 
+
+*** What is the most challenging part in the intercompany transaction process?
+1. The volume is large
+2. They are in different AR pay
+3. Different currencies produce amount differences
+4. Manual adjustments for managment level reporting
+5. 200~300 journals need to be approved
+
+
+*** The result of which step do you think is most valuable in the intercompany transaction process?
+an easy view of what the exceptions are?
+Ealier visibilitiy of the matching will be helpful
+
+*** How often do you need to create ICR reports?
+1. 5 times before month-end to see what the differences are.
+2. AP reports runs regularly in much high frequency
+
+
+*** What are the pain points regarding the intercompany process?
+1. Quantity blocks: sent quantity is different with the received quantity.
+2. Communication is difficult caused by different timezones, different lanages, and so on.
+
+** Intercompany Transactions System
+*** How many products do you use for your intercompany process?
+matching code JDA system, doesn't cover all the entities. 
+A lot of EXCEL
+
+*** Is there any sub-system involved in the intercompany process?
+
+
+*** How do you interact with those products throughout the intercompany process?
+uploading is slow. low value
+
+*** What are the pain points with current products?
+transactional level matching is important.
+
+*** From your experience, what was the most difficult part to implement intercompany solutions?
+
+
+** Future Business and Product
+*** Can you already imagine or foresee, what will be changed in the future regarding intercompany transaction business?
+automation.
+Intercompany tool in the transaction systems. Matching in the source.
+
+*** With these changes, what should a typical work day look like?
+
+
+*** What are the most important requirements for choosing future intercompany products?
+1. 
+
+
+
+
+
+
+

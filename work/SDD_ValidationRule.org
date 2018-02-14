@@ -1,0 +1,71 @@
+#+PAGEID: 1928198561
+#+VERSION: 3
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1928198561][SDD-Validation Rule]]
+
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+*** References
+| <25>                      |                  |             | <30>                           |
+| Document Title            | Date             | Link        | Comments                       |
+|---------------------------+------------------+-------------+--------------------------------|
+| EC-CS Rules and Validation | <2017-11-09 Thu> | [[https://help.sap.com/saphelp_470/helpdata/en/27/06e23954d9035de10000000a114084/content.htm?frameset=/en/5b/d2318e43c611d182b30000e829fbfe/frameset.htm&current_toc=/en/c4/74da3889432f48e10000000a114084/plain.htm&node_id=223&show_children=false][online help]] | Enterprise Controlling (EC) provides a generic tool for Validations, Substitutions, and Rules. FI-SL, EC-CS, and other SAP systems can use this kind of validation tool. It seems quite a old technology, but still have some reference value. |
+| HANA Rules Framework on scn | <2017-11-09 Thu> | [[http://scn.sap.com/docs/DOC-63159][HRF guides]]  | This guide is on scn, it is opened to public. it is an index page maintained by hrf develop team, which includes videos and latest guides of all about hrf. |
+| BRF+ Online Help          | <2017-11-09 Thu> | [[http://help.sap.com/saphelp_dsm10/helpdata/en/9a/6b67ce7c26446483af079719edf679/frameset.htm][online help]] | This help doc gets all you need to working with BRF+, but lack the API Reference. |
+
+** Context
+In consolidation, a validation rule ususally means comparing 2 amounts. For example: 
+
+/sum/ amount /where/ account = '100101' *is equal to* /sum/ amount /where/ account = '200101'
+
+The retruning is a boolean value that indicates whether the rule is passed or not. Mostly, there are many rules running together(in parallel) to give an overall evaluation for a set of financial data.  
+
+** Design
+Following design goals must be met:
+1. Validation Rules are compiled into HANA scripts, which allows validation run in HANA(parallel exectuion) and achieve maxium performance benfits.
+2. Validation Rule supports context input parameters.
+3. The vocabulary of validation rule is customizable, which allows rules can be defined on different contexts.
+4. 
+The main reason why we choose temporary leave ERM is that it has a lot of gaps with our requirements. We want to release our first consolidation validation in the 1808 release.  However, what ERM's current focus is very architecture oriented. Like: connection with S4HANA, and the content lifecycle management for the rules. Not until 1805 they won't touch those very business specific issues, just list a few:  
+1. Compile rules into HANA scripts to achieve push-down to HANA (Very important to us, as we usually want hundreds of rules run in parallel). Currently, they only compile rules to JAVA codes (Not even ABAP).  
+2. Support CDS views with input parameters. (Very important to our case)
+3. Support Group-by. For example, the validation result can be grouped by different currency codes
+
+As you can find, it is wizard based.  According to the feedback, wizard-based is more appeal for business users who occasionally define rules; Expression-based is more efficient for experienced users.  As you can also imagine, our design has limitations for those very complex rules. But based on internal discussions, and reference to our existing consolidation solutions, in most cases, the simplified design would be OK. As most of the validation rules are to compare 2 amounts, like: 
+         
+"sum of amount where account = '100101' is equal to sum of amount where account = '200101'"
+
+The roadmap is when ERM has the features we want, we will then switch to ERM for its comprehensive rule expressions and unified framework. But we my still retain the wizard. Instead of generating HANA SQL directly, we first generate ERM rule expressions, and let ERM to generate the runtime artifacts.  We are still connecting with ERM team, and exchanging ideas
+
+*** Validation Rule Maintenance UI
+Validation rule name, descriptions, and other attributes are omitted in the following mock-ups.
+
+#+Caption: Validation Rule Maintenance UI
+[[../image/VEC_Rule.png]]
+
+1. The initial screen for creating a new rule already separates the "Upper Operand" and "Lower Operand". This is for the user to have a draft idea on how he composes his rules. Meanwhile, it gives a simple feeling that not terrify the user by some complex rule pattern. 
+2. The complexity of the rule will gradually unfold by each choice the user made in the dropdown boxes.
+3. Now when the user edit an existing rule, much content is shown.  Besides the function for the whole "Upper Operand" or "Lower Operand", each SUM operand can have its own function.
+4. "Sign" function can be only assigned to SUM operand.
+5. Element operand (Sum, Number, Amount) can be concatenated by calculation operators, which are +,-,*,/.
+6. Amount operand has currency code. If the rule compares a sum operand with an amount operand, then currency translation will be conducted.
+7. Tolerance can be a fix amount or a percentage. If a fix amount is given, then the currency code is automatically determined based on the runtime information.
+
+
+*** Tagged Amount
+#+Caption: Tagged Amount
+[[../image/VEC_TaggedAmount.png]]
+
+*** Selection
+#+Caption: Tagged Amount
+[[../image/VEC_Selection.png]]

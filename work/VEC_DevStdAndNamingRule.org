@@ -1,0 +1,208 @@
+#+PAGEID: 1928176894
+#+VERSION: 2
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: Development Standards & Naming Rules for VEC
+
+** General
+Please follow the SAP wide programming guideline, which you can find: https://wiki.wdf.sap.corp/display/SAPGuide/SAP+Programming+Guidelines+-+Home. 
+
+For all objects:
++ All objects must have *EN* as original language. The most easiest way to do so is to logon in EN. Otherwise, the original language has to be changed manually.
++ All texts must be written in EN, e.g. methods short texts and program comments.
++ Use *glossary* terms when possible (for example, CL_COMPANY_CODE instead of BUKRS).
++ In compound names, use the underscore character (_) as a separator. Since names are not case-sensitive, this is the only character that you can use to separate names.
++ Names should describe the *action*, not the implementation of the action. Example: PRINT_RECTANGLE, not RECTANGLE_TO_SPOOL
++ All the object names should contain the project prefix or namespace. For Validation Engine, the global prefix is *VEC*.
+
+** Package
+
+*** ABAP Package
+A newly created package *FIN_VE* in ER9, and it is the main and only package for all the ABAP objects. No sub-package is defined. The software component is *S4CORE* (with transport layer SCE2). The application component is not yet applied, so we temporary use *FIN-RTC*. 
+
+Another package *FIN_CS_VVIEW* is only for CDS views that will be registered as validation views. 
+
+*** OData Package
+OData package is *APPL_FIN_ODATA_VE* (to be created), and it is also in ER9. 
+
+*** Fiori UI Package
+Fiori UI package in UYT is *UIFIN_VE* (to be created), and it is in UYT.
+
+** Naming Rules
+
+*** Class and Interface
+| Global Class & Interface | Prefix    |
+|--------------------------+-----------|
+| Standard Class           | CL_VEC_   |
+| Exception Class          | CX_VEC_   |
+| Interface                | IF_VEC_   |
+| Interaction Layer Class  | CL_VEC_IL |
+| Persistent Class         | CL_VEC_PS |
+
+*** Class Attribute
+| Attribute Level  | Prefix |
+|------------------+--------|
+| Global Constant  | MC_    |
+| Variable         | MV_    |
+| Structure        | MS_    |
+| Table            | MT_    |
+| Reference Data   | MR_    |
+| Reference Object | MO_    |
+
+*** Class Method
+Method names should begin with a verb.
++ GET_INSTANCE
++ ADD_MESSAGE_INTERNAL
++ CHECK_BO
++ ON_<event_name>
++ AS_<new_type>
++ IS_<adjective>
+
+Method Signature
+| Parameter Type | Object Kind | Prefix |
+|----------------+-------------+--------|
+| Importing      | Value       | IV_    |
+|                | Structure   | IS_    |
+|                | Table       | IT_    |
+|                | Reference   | IR_    |
+|                | Object      | IO_    |
+| Exporting      | Value       | EV_    |
+|                | Structure   | ES_    |
+|                | Table       | ET_    |
+|                | Reference   | ER_    |
+|                | Object      | EO_    |
+| Changing       | Value       | CV_    |
+|                | Structure   | CS_    |
+|                | Table       | CT_    |
+|                | Reference   | CR_    |
+|                | Object      | CO_    |
+| Receiving      | Value       | RV_    |
+|                | Structure   | RS_    |
+|                | Table       | RT_    |
+|                | Reference   | RR_    |
+|                | Object      | RO_    |
+
+*** Class Event
+Event names should have the form <noun>_<participle>. Examples:
++ COMPANY_CODE_CHANGED
++ BUSINESS_PARTNER_PRINTED
+ 
+Event parameters are the same as method's.
+
+*** Class Type
+| Type Kind | Prefix |
+|-----------+--------|
+| Value     | TY_    |
+| Structure | TY_S_  |
+| Table     | TY_T_  |
+
+*** Local Class
+All local classes have the prefix *LCL_*.
+
+*** Local Test Class & Test Double
+| Local Test Class  | Prefix |
+|-------------------+--------|
+| Local Test Class  | LTC_   |
+| Local Test Double | LTD_   |
+
+*** Message Class
+Validation Engine has one message class *VEC01*.
+
+*** Number Range Object
+Start with prefix *VEC*.
+
+*** Authorization Object
+The object class shall be FVEC. The authorization objects shall be created by using the naming convention: F_VEC_xxx
+
+*** ABAP DDIC Objects
+| Object Type          | Prefix     |
+|----------------------+------------|
+| Structure            | VEC_S_     |
+| Structure for Dynpro | VEC_S_DYN_ |
+| Data Element         | VEC_       |
+| Type Group           | VEC_       |
+| Domain               | VEC_       |
+| DB Table             | VEC_       |
+| View                 | V_VEC_     |
+| View Cluster         | VC_VEC_    |
+| Search Help          | VEC_       |
+| Enqueue Object       | EVEC_      |
+| Table Type           | VEC_T_     |
+| Sorted Table         | VEC_TS_    |
+| Hashed Table         | VEC_TH_    |
+
+*** Program Local Object
+| Object                     | ABAP Statement | Prefix |
+|----------------------------+----------------+--------|
+| Constants                  | CONSTANTS      | LC_    |
+| Table                      | TYPE           | LT_    |
+| Structure                  | TYPE           | LS_    |
+| Variable                   | TYPE, LIKE     | LV_    |
+| Reference Object           | TYPE REF TO CL | LO_    |
+| Reference Data             | TYPE REF TO IF | LR_    |
+| Field Symbol               |                | FS_    |
+| Class Definition           |                | LCL_   |
+| Class Interface Definition |                | LIF_   |
+
+*** Program Global Object
+| Object                     | ABAP Statement | Prefix |
+|----------------------------+----------------+--------|
+| Constants                  | CONSTANTS      | GC_    |
+| Table                      | TYPE           | GT_    |
+| Structure                  | TYPE           | GS_    |
+| Variable                   | TYPE, LIKE     | GV_    |
+| Reference Object           | TYPE REF TO CL | GO_    |
+| Reference Data             | TYPE REF TO IF | GR_    |
+| Class Definition           |                | GCL_   |
+| Class Interface Definition |                | GIF_   |
+
+*** Select Screen
+| Object        | Prefix |
+|---------------+--------|
+| Parameter     | P_     |
+| Select-Option | S_     |
+
+*** Subroutine(Form)
+ABAP form names should begin with a verb, just the same as class method. 
++ GET_INSTANCE
++ ADD_MESSAGE_INTERNAL
++ CHECK_BO
++ ON_<event_name>
++ AS_<new_type>
++ IS_<adjective>
+
+The parameters of the form should also be the same as class method.
+
+*** CDS View
+For the naming convention of CDS, Please Refer to the [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Naming+Guidelines][wiki]], According to the development guideline  the name of the DDL Source and the CDS View have to be identical.
++ DDL Source & CDS View Name: Prefixed with P_, I_ or C (30 char length restriction)  e.g. I_RTCAccount 
++ SQL View Name: Begins with P, I or C (sqlViewName must be length<=16 )  e.g. IRTCACCT
+
+*** Gateway Service Project
+In SEGW, create the Gateway service project with the naming: VEC_<name>.
+
+In SEGW data model, follow the naming convention:
++ Entity type / entity type set: follow VDM naming, e.g. HouseBank, HouseBankSet
++ Attribute in the entity type: follow VDM naming, e.g. CompanyCode, Country
++ Runtime artifacts & service registration: use the default system suggested name
+
+*** Fiori APP
+Please follow the following guideline:
++ General JavaScirpt and UI5 naming convention: https://github.com/SAP/openui5/blob/master/docs/guidelines.md
++ Naming conventions for Fiori UI: https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Naming+Conventions
+
+** Unit Test
+
+*** ABAP 
+The ABAP unit test must be created as a local test class within the original class. So the naming convention for an ABAP unit test class shall follow the local class naming convention: LTC_<name>. 
+
+e.g. LTC_VEC_UI_SERVICES this is an ABAP unit test local class for the original class CL_VEC_UI_SERVICES.
+
+For more detail guideline of ABAP unit test, you can refer to the wiki page: https://wiki.wdf.sap.corp/wiki/display/TWB/ABAP+Unit+Tests
+
+*** Fiori 
+
+** Code Review 
+Please refer this [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Code+Review+Process][wiki]] for the code review process. 
+
+ 

@@ -1,0 +1,126 @@
+#+PAGEID: 1910768103
+#+VERSION: 4
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-ERM Integeration
+
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+*** References
+| <25>                      |                  |              | <30>                           |
+| Document Title            | Date             | Link         | Comments                       |
+|---------------------------+------------------+--------------+--------------------------------|
+| Enterprise Rule Model (ERM) | <2017-07-12 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/RULES/ERM][sapwiki]]      | The Enterprise Rule Model (ERM) is a model for the definition and exchange of business rules regardless of stack or execution language. It is implemented in SAP Cloud Platform Business Rules and in BRFplus (incl. DSM) on the ABAP stack. |
+| SCP Business Rule         | <2017-07-12 Wed> | [[https://help.sap.com/viewer/9d7cfeaba766433eaea8a29fdb8a688c/Cloud/en-US/5cc7262630614ce791cbb8a228028bac.html][online help]]  | SAP Cloud Platform Business Rules is a service that enables a cloud application developer to embed decisions in their cloud extension applications and workflow applications. This is achieved by encapsulating the business logic from the application logic by embedding hooks to this service from the application. |
+| BRF+ online Help          | <2017-07-10 Mon> | [[https://help.sap.com/viewer/DRAFT/9d5c91746d2f48199bd465c3a4973b89/1709%2520000/en-US/e282e2b3c027434aa3ec5722b4c8ffb0.html][online help]]  | Business Rule Framework plus (BRFplus) provides a comprehensive application programming interface (API) and user interface (UI) for defining and processing business rules. It allows you to model rules in an intuitive way and to reuse these rules in different applications. |
+| Cloud Access Manager      | <2017-04-25 Tue> | [[https://rpc-cust002.dev.sapbydesign.com/sap/bc/webdynpro/a1sspc/cam_sup_central#][Internal APP]] | Apply CC2/CCF User             |
+| Adaptation Transport Organizer (ATO) | <2017-07-11 Tue> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1682782491][sapwiki]]      | In order to transport adaptation objects to the production system they must be grouped in a collection. The project manager is responsible for creating the collection in the test system and assigning adaptation objects to it. Adaptation objects may be assigned to a collection from a list of unassigned adaptation objects. |
+| Business Configuration Sets | <2017-07-14 Fri> | [[https://wiki.scn.sap.com/wiki/display/Basis/Business+Configuration+Sets+%2528BC+Sets%2529+and+their+use][scnwiki]]      | BC Set is a management tool that allows user to record, save and share customization settings. BC sets are snapshot of customization settings that can be used later as template or customization backup. BC sets can also be used in group rollouts where the customization settings can be compiled for pilot and passed on in a structured way to other rollout locations. SAP also provides pre packaged BC sets for selected industry sectors. |
+| SAP Cloud Platform Portal | <2017-09-06 Wed> | [[https://help.sap.com/viewer/3ca6847da92847d79b27753d690ac5d5/Cloud/en-US/20bc06451c0a46b39cd4166cb245b86b.html][online help]]  | You use SCP Portal service to build your Fiori Launchpad, and other sites. SAP Cloud Platform Portal enables you to create and publish SAP Fiori Launchpad or freestyle business sites that serve as a central access point to applications, reports, web content, videos, and more. |
+| SAP CP Cockpit            | <2017-10-17 Tue> | [[https://accounts.sap.com/saml2/idp/sso/accounts.sap.com][Fiori App]]    | Test SCP Biz Rule in my trail account |
+
+** Context
+Validation Engine(VE in short) originally designed for OP needs to be migrated to support the Cloud. The migration happens on the concept level. All the codes and tables in the OP release won't be used any more. 
+
+The new Validation Engine for Cloud(VEC in short) is built upon the Enterprise Rule Model(ERM in short), which is a new rule framework that will replace the old BRFplus and HRF. We cannot reuse the VE OP codes as ERM is totally re-architected. And we also need to support Cloud content lifecycle management, which requires validation rules can be delivered as contents, as well as the supporting of Q2P process. 
+
+The modeling concept is split off. Unlike the OP release, we won't generate CDS views based on a model definition. We manually deliver CDS views as the vocabularies of validation rules. The following diagram shows more in detail.
+
+#+Caption: Architecture of Validation Engine for Cloud
+[[../image/ValidationEngineCloud.png]]
+
+1. The CDS views are manually created and registered in the BRFplus application as data objects. The model concept has been eliminated. 
+2. The BRFplus application is also pre-defined for consolidation only.
+3. Validation rules are defined through our own Fiori APP, and reflected in BRFplus as decision tables. Each rules will also generate a ruleset which only contains the rule itself. The ruleset is then assigned to a BRFplus function which afterwords generate a DB procedure.
+4. Validation method corresponds to a ruleset in BRFplus, which is used to include multiple rules. The ruleset is also assigned to a function and the DB procedure as the executable for multiple rules running in parallel.
+
+** Developing Validation Rule in ABAP or JAVA
+
+*** Develop in ABAP
+#+Caption: Develop in ABAP
+[[../image/VEC_ABAP.png]]
+
+1. Validation Rule maintenance UI(Fiori) is deployed in S/4HANA.
+2. Validation Rule OData service is developed and run in ABAP.
+3. Call OData service in SCP for the ERM rule compilation and persistence.
+4. ERM will synchronizes the runtime objects into S/4HANA, represented as BRFplus objects.
+5. Validation Rule's own attributes will be persisted in S/4HANA.
+6. As such, a validation rule is split into 2 parts: ERM objects and own attributes. With ERM's design-time objects and run-time objects be persisted in SCP, and BRFplus run-time objects and own attributes be persisted in S/4HANA. Data consistency cannot be guarantee, for example, if calling ERM OData services are succeeded, but calling ABAP OData service is failed, then the data in S/4HANA side is lost.  
+7. Content and lifecycle management of ERM rules are handled in SCP side.
+8. Content and lifecycle management of Validation Rule's own attributes are separately handled from ERM. However, it is supposed that changing on these attributes doesn't require the rule complication.
+9. To mitigate the potential data inconsistency, we should also persist own attributes in SCP. Then JAVA development is unavoidable, see next section.
+
+*** Develop in JAVA
+#+Caption: Develop in JAVA
+[[../image/VEC_JAVA.png]]
+
+1. Validation Rule maintenance UI(UI5) is deployed in SCP.
+2. Validation Rule OData service is developed and run in JAVA. The OData services may merge the APIs of ERM rule with own attributes CRUDA to achieve data atomic. 
+3. ERM is responsible for synchronizing run-time objects to S/4HANA, Validation Rule should also be responsible for synchronizing own attributes to S/4HANA.
+4. In other words, Validation Rule's own attributes are double persisted in both SCP and S/4HANA. And if data inconsistency happens, it only believes SCP's persistency, and refresh the persistency in S/4HANA side.
+5. The Validation Run APP still resides in S/4HANA side, which can invoke the run-time objects.
+
+*** Development Landscape
+The development landscape should be the same with ERM. Questions to Carsten:
+1. What will be ERM's development landscape? Considering the SCP and S4HANA integration.
+2. How ERM release its product to SCP?
+3. How Consolidation Validation achieve dependecny on ERM so that they can be enabled together?
+
+*** How to Embed Business Rule UI?
+The old HRF UI control in XSC is not allowed anymore. For Cloud APPs who need to embed the new UI control, they must use SCP Business Rule UI control. However, how to embed the new UI control is still not clear. 
+1. There is no documentation on the new UI control yet.
+2. How the service is deployed and consumed is not clear. If the UI control service is in SCP, our APP resides in S4HANA, and they are in different domain. What's the deployment and configuration?
+
+I should say this part is a high risk for us. Without the readiness of this part from ERM site, we can hardly continue solid design.  
+
+Refer: https://wiki.wdf.sap.corp/wiki/display/RULES/ERM+-+UIs
+
+*** Integrate Own Attributes into ERM Meta-data
+How to integrate our own attributes into ERM meta-data for a streamline content and lifecycle management?
+
+**** Save Own Attributes in Own Table
+Data Consistency Issue
+
+**** Extent ERM tables
+1. ERM Extension currently doesn't exist.
+2. How Extensions are delivered? Extensions should be delivered as standard program, or content deliver team can do nothing.
+3. Table structure extension is not allowed.
+
+**** Eliminate own attributes
+Check if it is possible to fully reuse ERM without any own attributes.
+
+| Validation Engine Object | ERM Object | Missing Attributes                |
+|--------------------------+------------+-----------------------------------|
+| Method                   | Service    | Rule group hierarchy              |
+| Rule                     | Rule       | Drill-through reports, ctrl level |
+ 
+*** Questions
+
+**** Whether we can call the JAVA API of ERM?
+SCP rest 
+ABAP API --> OData
+
+**** What's ERM's tenancy approach?
+
+**** The readiness of ERM Proxy should be put in higher priority
+Should be ready in 1805 together with formular rule. 
+
+**** The ERM extensibility concept should be confirmed in more detail
+Like if the extended attributes can be synced to runtime repository? How extensions are delivered to customer considering the content and transportation
+
+There is actually no extensiblity on rules, but extensibiltiy on data objects, projects.
+** UI
+
+*** Fiori Launchpad on SCP
+Besides S/4HANA's Fiori Launchpad definition, you can also define Fiori Launchpad objects in SCP with the so-called FaaS. 
+
+You must enable the "Portal" service in the SAP Cloud Platform cockpit. Then your configure the Portal service by assigning roles and create a site. For details, refer [[https://help.hana.ondemand.com/cloud_portal_flp/frameset.htm?10b3611a95434f4da08c0781974ef82d.html][online help]]. 

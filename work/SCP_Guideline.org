@@ -1,0 +1,78 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+TITLE: SCP Guidelines
+#+OPTIONS: toc:1
+
+** References
+|                               |                  |            | <30>                           |
+| Document Title                | Date             | Link       | Comments                       |
+|-------------------------------+------------------+------------+--------------------------------|
+| SAP Cloud Platform            | <2017-08-09 Wed> | [[https://help.sap.com/viewer/65de2977205c403bbc107264b8eccf4b/Cloud/en-US/a8d6db47b1714a8d87f043a3546962c9.html][onlinehelp]] | SAP Cloud Platform is an open platform as a service for developing and running business applications in a fully-provisioned cloud environment. |
+| Step-by-Step using Cloud SCP  | <2017-08-07 Mon> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1852748635][sapwiki]]    | Go through the steps required to install the SDK and corresponding tools to use it for the development of your SAP Cloud Platform application. |
+| Continuous Delivery Pipelines | <2017-08-10 Thu> | [[https://github.wdf.sap.corp/pages/ContinuousDelivery/piper-doc/][Github]]     | Continuous Delivery Pipelines provide the infrastructure for development, build and deployment of Cloud services by orchestrating the different steps of the E2E delivery process. The pipeline is the one and only delivery channel for any modifications of the code, be it bug fixes, new features or new releases. |
+
+Contact Henning Heitkotter<henning.heitkoetter@sap.com>,
+ Sander Wozniak (D061519)
+
+** Getting Start
+Go through the steps in the wiki-page: https://wiki.wdf.sap.corp/wiki/display/RAApps/Step+1%3A+Set+up+the+SDK. Also notice the following commends as complementary:
+
+1. Using IntelliJ IDE, download the 2017 Ultima version. Reqeust license through following link: https://sri.wdf.sap.corp/Search/Details/16478.
+2. Cloud SDK is installed through Maven(DONOT install it manually).
+3. NEO CLI tool should be installed manually. Add the executable to external tool of IntelliJ.
+4. Login server "hanatrial.ondemand.com" with your corporate account. When deploy using CLI, make sure the user should the email address, not the i<number>.
+
+*** Github
+We use SAP's enterprise GitHub: https://github.wdf.sap.corp/. You register your account with SAP i<number> and email address. Request to join the orgnization ICR. 
+
+You can create a new reposiotry, or clone the existing ones. You use IntelliJ to do the cloning by choosing VCS->Check out from Version Control->Github.  
+
+You may encounter the SSL certificate error when doing git clone/push. To fix it, you should edit the file "C:\Program Files (x86)\git\bin\curl-ca-bundle.crt" by appending the following certificate:
+
+-----BEGIN CERTIFICATE-----
+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
+-----END CERTIFICATE-----
+
+Then set your ssl certifcate repository to the file by following command:
+
+$git config --system http.sslcainfo "C:\Program Files (x86)\git\bin\curl-ca-bundle.crt"
+
+*** Jenkins
+Use [[https://jenx.int.sap.hana.ondemand.com/api/][Jenkins as a service]] to get a managed Jenkins instance and then use [[https://github.wdf.sap.corp/pages/ContinuousDelivery/piper-doc/][piper]] to create your pipeline.
+
+** Questions
+1. Should I join the Partner Program so that I can have a cloud deveploment and test environment?

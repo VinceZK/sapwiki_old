@@ -1,0 +1,93 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: Cloud Badi for Posting Validation
+
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+*** References
+| <25>                      |                  |          | <30>                           |
+| Document Title            | Date             | Link     | Comments                       |
+|---------------------------+------------------+----------+--------------------------------|
+| Howto: BAdI for Cloud     | <2017-08-14 Mon> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/HowTo%253A+Provide+a+BAdI+Definition+for+Cloud+Extensibility][sapwiki]]  | S/4HANA provides Customers with multiple Apps to enhance their system. The Custom Field and Logic Extensibility App (CFL) lets Customers add their own business logic to SAP business processes. It relies on Extension Points (BAdIs) provided by the SAP Business Applications that make up S/4HANA. The CFL App therefore depends on the availibility of appropriate BAdIs. Applications are strongly encouraged to provide such extension points. |
+| Enhancements using BAdI   | <2017-08-16 Wed> | [[https://help.sap.com/doc/abapdocu_740_index_htm/7.40/en-US/index.htm?file=abenamdp.htm][abaphelp]] | BAdIs are created in Enhancement Builder as a part of the enhancement concept of ABAP Workbench. These BAdIs, together with their calling points in ABAP programs, form explicit enhancement points of these programs and are assigned to enhancement spots. |
+| Filters of BAdI           | <2017-08-16 Wed> | [[https://wiki.scn.sap.com/wiki/display/ABAP/Business+Add-ins+-+Filter+BADI+-+Application+for+displaying+customer+data+based+on+filter+value+-+Country+code][scnwiki]]  | Business Add-Ins may be implemented on the basis of a filter value. If an enhancement for country-specific versions is provided for in the standard version, it is likely that different partners will want to implement this enhancement. The individual countries can create and activate their own implementation. |
+
+** Context
+Cloud BAdI is used for adding custom logic for those custom fields. However, it can be anyway used for customers' own business logics, like validation and substitution before posting journal entries.  
+
+** Implement a Cloud BAdI
+
+*** Test System Environment
+QJE/381 S/4HANA Cloud Delivery Extensibility Sandbox 
+
+Create a user with muster01/saptest, assign role: SAP_BCR_CORE_EXT.
+
+Access Fiori: https://qje-381.wdf.sap.corp/ui?sap-client=381&sap-language=EN#Shell-home
+
+Enter tool: Custom Fields and Logic
+
+*** Create an Enhancement Spot 
+Using SE20 create an enhancement spot. Refer ZKLEE_ES01.
+
+*** Create a BAdI Definition
+Under the enhancement spot, create a BAdI definition. Refer ZJOURNAL_POSTING_VALIDATION.
+
+Create a BAdI interface. It must include "IF_BADI_INTERFACE", and only contain one method definition. The method should only have "Importing" and "Changing" signatures, with "CX_BLE_RUNTIME_ERROR" as the only exception class. Refer ZIF_JOURNAL_POSTING_VALIDATION.
+
+Create a BAdI filter, which is used to filter BAdI implementations according to conditions. 
+
+Create an implement example class. The class must be set to "2 ABAP for Key Users" for its ABAP language version.  
+
+*Please be aware, all the ABAP objects, include BAdI, Interface, Class, and DDIC object should be set to "Released"* You can only do the setting in the ADT.
+
+*** Register the BAdI to Business Context
+Use transaction SCFD_REGISTRY. Create a new Business Context "ZCONS_JOURNAL_POSTING". Create a BAdI registration "ZJOURNAL_POSTING_VALIDATION".
+
+*** Create a BAdI Implementation
+Open Fiori App "Custom Fields and Logic", switch to tab "Custom Logic". Create a new implementation
+by assignning the business context, enhancement option, and a name(or identifier). Define the filter value for the implementation and write your logic. Test and publish. 
+
+*** Add the BAdI to the invokation point. 
+Refer ABAP report: ZKLEE_JOURNAL_POSTING_BADI
+#+BEGIN_SRC abap
+REPORT zklee_journal_posting_badi.
+
+DATA lr_badi_posting_validation TYPE REF TO zjournal_posting_validation.
+DATA lt_journal_entries TYPE zjournal_entry_t.
+DATA ls_journal_entry TYPE zjournal_entry_s.
+DATA lt_message TYPE zbadi_message.
+
+lt_journal_entries = VALUE #(
+    ( gjahr = '2017' poper = '001' rcomp = 'C1011' racct = '100100' hsl = '100.00' rhcur = 'CNY' )
+    ( gjahr = '2017' poper = '001' rcomp = 'C1011' racct = '100100' hsl = '100.00' rhcur = 'CNY' )
+).
+
+GET BADI lr_badi_posting_validation FILTERS country = 'CN'.
+*GET BADI lr_badi_posting_validation FILTERS country = 'DE'.
+
+CALL BADI lr_badi_posting_validation->validation_before_posting
+  EXPORTING
+    journal_entries = lt_journal_entries
+  CHANGING
+    message         = lt_message.
+
+loop at lt_message into data(ls_message).
+  write:/2 ls_message-msgty,
+         6 ls_message-msgv1.
+endloop.
+#+END_SRC
+
+
+** Check G/L Accounting's Cloud Badi
+Enhancement Spot: FIN_ACDOC_VALIDATION
