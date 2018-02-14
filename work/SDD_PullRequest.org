@@ -252,16 +252,16 @@ After consolidation is finished for a period, there is still possibility that da
 ** Data Release Request Status and Pseudo SQL
 The status of data release requests not only controls the data release process, but also controls the data visibility by BPC. BPC can only see the data pointed by data release requests which have status "Released" or "Approved". In other words, status code must larger equal than "30". So for those data release requests with status "Initial" or "Rejected" or "Deferred", BPC won't see the data they point to. 
 #+CAPTION: Status Code
-| User Status                  | Code | Comment                                                           |
-|------------------------------+------+-------------------------------------------------------------------|
-| Initial                      |    1 | Initial Stauts                                                    |
-| Cancel                       |    2 | Permanent cancelled                                               |
-| Currency Conversion Executed |   10 | 3~9 are reserved for activities before CT                         |
-| Validation Executed          |   16 | 11~15 are reserved for activities before Release                  |
-| Rejected                     |   17 | Once rejected, no change is allowed                               |
-| Deferred                     |   18 | 18 can be switched to 17                                          |
-| Released                     |   30 | 30 can be reversed to 1, 19~29 are for activities before release  |
-| Approved                     |   50 | Once approved, no change is allowed                               |
+| User Status                  | Code | Comment                                                          |
+|------------------------------+------+------------------------------------------------------------------|
+| Initial                      |    1 | Initial Stauts                                                   |
+| Cancel                       |    2 | Permanent cancelled                                              |
+| Currency Conversion Executed |   10 | 3~9 are reserved for activities before CT                        |
+| Validation Executed          |   16 | 11~15 are reserved for activities before Release                 |
+| Rejected                     |   17 | Once rejected, no change is allowed                              |
+| Deferred                     |   18 | 18 can be switched to 17                                         |
+| Released                     |   30 | 30 can be reversed to 1, 19~29 are for activities before release |
+| Approved                     |   50 | Once approved, no change is allowed                              |
 
 #+CAPTION: Pseudo SQL that controls visibility
 #+BEGIN_SRC sql
@@ -319,7 +319,7 @@ Only system status is less than 2 can the group accountant switch the status, an
 
 *** Approve -> Reject
 1. If it is a PRR, then change the request to "Reject" and create a new PRR/CRR with "Initial";
-2. If it is an ARR, then change then ARR to "Reject".
+   1. If it is an ARR, then change then ARR to "Reject".
 
 *** Approve -> Defer
 1. PRR cannot be deferred;

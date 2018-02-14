@@ -1,5 +1,5 @@
 #+PAGEID: 1894949410
-#+VERSION: 1
+#+VERSION: 3
 #+STARTUP: align
 #+TITLE: SDD-Selection
 #+OPTIONS: toc:1
@@ -173,7 +173,7 @@ Both solutions need a smart way to check what's the dependency, and only activat
 #+Caption: Selection Program Building Block
 [[../image/SelectionProgramBlock.png]]
 
-Selection is designed under the pattern MVCC(Model, View, View Controller, and Model Controller). 
+Selection is designed under the pattern MVVM(Model, View, and View Model). 
 
 *** Model Layer
 The model layer is utilized using ABAP persistent classes, which are auto-generated based on DDIC tables/views. The ABAP persistent class is leveraged as we use an OO pattern to support the component level reusibility. 
@@ -238,9 +238,6 @@ Interaction layer class(CL_RTC_IL_SELECTION) is built upon persistent classes. I
 #+END_SRC
 In the methods, it calls persistent classes, and raise exceptions to UI.
 
-*** View Controller(aka Component Layer)
-The view controller operates on the interaction layer to provide multiple instances on the same UI. For example, one CT Method can have multiple Selections. These Selections would be handled as a single unit. The component layer provides the isolation, it has attributes to store the transient data for the UI display, and synchronize the changes between UI and IL. Besides, it has similar method structure as the IL class. 
-
 *** View 
 The view layer here stands for the ALV GRID. In general, Selection is composed with 3 ALV Grids:
 
@@ -248,15 +245,18 @@ The view layer here stands for the ALV GRID. In general, Selection is composed w
 |----------------+--------------------------------------------------------------------|
 | MO_COL_GRID    | The Overview grid to display filter columns and expressions        |
 | MO_SELOPT_GRID | The grid is used to maintain filters(from, to) for a single column |
-| MO_SGLSEL_GRID | The grid is used in composite  Selection to list single Selections  |
+| MO_SGLSEL_GRID | The grid is used in composite  Selection to list single Selections |
 
 This layer mainly contain logic to initialize and operate ALV Grids. 
 | Method                   | Description                   |
 |--------------------------+-------------------------------|
 | CREATE_COL_GRID          | Create a column grid instance |
-| REGISTER_COL_GRID_EVENTS | Register ALV grid events        |
+| REGISTER_COL_GRID_EVENTS | Register ALV grid events      |
 | BUILD_COL_GRID_FLDCAT    | Build grid field category     |
 |                          |                               |
+
+*** View Model(aka Component Layer)
+The view model operates on the interaction layer to provide multiple instances on the same UI. For example, one CT Method can have multiple Selections. These Selections would be handled as a single unit. The component layer provides the isolation, it has attributes to store the transient data for the UI display, and synchronize the changes between UI and IL. Besides, it has similar method structure as the IL class. 
 
 *** RTCSEL
 RTCSEL(Function Group: RTC_SELECTION) is the general Selection maintenance transaction. It is in standard GUI Dynpro which is built upon CL_RTC_CP_SELECTION and CL_RTC_GRID_SELECTION. There is no additional business logic in RTCSEL, except the Dynpro flow. It also acts as an example on how to embed Selection component into other applications. 

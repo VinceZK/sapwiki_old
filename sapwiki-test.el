@@ -175,3 +175,11 @@
     (unless dk-sapwiki-current-page-version
       (setq dk-sapwiki-current-page-version (dk-sapwiki-get-attribute-value "VERSION")))
     (dk-increase-page-version (current-buffer)))) 
+
+(ert-deftest dk-get-title ()
+  (with-current-buffer "SDD_HDIMigration.org"
+   (setq title (dk-sapwiki-get-title-literal))
+   (message "Title with link: %s, and title: %s"
+	    dk-sapwiki-title-link
+	    title)
+ )) 

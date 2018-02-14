@@ -15,6 +15,7 @@
 | S/4 Fiori Release FAQ       | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Fiori+%2528sFIN%2529+Release+Process+FAQ][sapwiki]]     | Do you have questions on what an MRC, FRB or a Maintenance Branch is? Have a look at the Release Build FAQ: |
 | SAP Gateway Help            | <2016-12-16 Fri> | [[http://help.sap.com/saphelp_gateway20sp12/helpdata/en/2d/f2caab316446d49c05ec12407ad284/content.htm?frameset=/en/60/de45e3754f4eca83e02727236064e2/frameset.htm&current_toc=/en/57/a41787789c4eca867d9a09696fc42c/plain.htm&node_id=53&show_children=false][online help]] | SAP Gateway online help, well introduce gateway from customer implementation perspective |
 | SAP Fiori Help              | <2016-12-22 Thu> | [[http://help.sap.com/fiori_bs2013/helpdata/en/14/966753a4834e3fe10000000a441470/content.htm?current_toc=/en/6b/966753a4834e3fe10000000a441470/plain.htm&show_children=true][online help]] | SAP Fiori online help, well introduce how to implement Fiori from customer perspective |
+| Programming Model for Fiori | <2017-07-07 Fri> | [[https://help.sap.com/saphelp_nw75/helpdata/en/d9/bc687d35fa42ccbb0b9256ce786d51/frameset.htm][online help]] | Introduces the ABAP development infrastructure, which includes technologies such as Core Data Services (CDS), BOPF, SADL, and SAP Gateway. |
 | SAP Fiori Launchpad         | <2016-12-23 Fri> | [[http://help.sap.com/saphelp_uiaddon10/helpdata/en/f9/51b50a07ce41deb08ced62711fe8b5/content.htm?current_toc=/en/bd/e12a271f0647e799b338574cda0808/plain.htm&show_children=true][online help]] | On how to configure and use Launchpad from customer perspective |
 | Fiori Development Guideline | <2016-12-16 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][sapwiki]]     | The content of this development guideline portal is structured in specific topics like setting up the development environment, stateless applications, value help or others. Most of these topics are described in detail in separate guidelines on other Wiki pages. This portal is an entry point to deep dive information. |
 | IAM Development Guideline   | <2017-01-05 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][sapwiki]]     | What's Technical Catalog, Biz Catalog, Biz Roles, Semantic Objects, and so on and on. How to create them? |
@@ -205,10 +206,10 @@ P2 Area: FIN; P3 Area: CONS
 |        6 | OB08      | Exchange Rates                |
 
 **** SAP_FIN_BC_CONS_VALIDATION
-| Sequence | Tcode/APP      | Description                   |
-|----------+----------------+-------------------------------|
-|        1 | ValidationRule | Validation Rule               |
-|        2 | BRF+           | BRF+ Workbench                |
+| Sequence | Tcode/APP      | Description     |
+|----------+----------------+-----------------|
+|        1 | ValidationRule | Validation Rule |
+|        2 | BRF+           | BRF+ Workbench  |
 
 **** SAP_FIN_BC_CONS_PREPARE
 | Sequence | Tcode/APP    | Description                                 |
@@ -217,15 +218,15 @@ P2 Area: FIN; P3 Area: CONS
 |        2 | RTCSU        | Upload Financial Data for External Entities |
 |        3 | RTCAFD       | Investment/Equity History Data              |
 |        4 | RTCCT        | Currency Translation Single Run             |
-|        5 | OB08         | Exchange Rates                              | 
+|        5 | OB08         | Exchange Rates                              |
   
 **** SAP_FIN_BC_CONS_DATA_REL
-| Sequence | Tcode/APP    | Description                                 |
-|----------+--------------+---------------------------------------------|
-|        1 | DRC          | Data Release Cockpit                        |
-|        2 | RTCSU        | Upload Financial Data for External Entities |
-|        3 | RTCAFD       | Investment/Equity History Data              |
-|        4 | RTCCT        | Currency Translation Single Run             |
+| Sequence | Tcode/APP | Description                                 |
+|----------+-----------+---------------------------------------------|
+|        1 | DRC       | Data Release Cockpit                        |
+|        2 | RTCSU     | Upload Financial Data for External Entities |
+|        3 | RTCAFD    | Investment/Equity History Data              |
+|        4 | RTCCT     | Currency Translation Single Run             |
 
 **** SAP_FIN_BC_CONS_CONSOLE 
 | Sequence | Tcode/APP     | Description               |
