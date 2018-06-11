@@ -89,6 +89,14 @@
   :package-version '(sapwiki . "1.0")
   :type 'string)
 
+(defcustom dk-sapwiki-link-url
+  (concat dk-sapwiki-main-url "pages/viewpage.action")
+  "The url used to updated the wikipage"
+  :group 'sapwiki
+  :version "1.0"
+  :package-version '(sapwiki . "1.0")
+  :type 'string)
+
 (defcustom dk-sapwiki-user
   "i046147" "SAP i<number>"
   :group 'sapwiki
@@ -105,6 +113,7 @@
 
 (defvar dk-sapwiki-pageID nil)
 (defvar dk-sapwiki-title nil)
+(defvar dk-sapwiki-title-link nil)
 (defvar dk-sapwiki-version-comment nil)
 (defvar dk-sapwiki-attachments nil)
 (defvar dk-sapwiki-attachment-comments nil)
@@ -130,7 +139,7 @@
     (sapwiki-login)
     (return nil))
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
-  (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
+  (setq dk-sapwiki-title (dk-sapwiki-get-title-literal))
 
   (message "Get the lastest version...")
   (dk-url-http-get
@@ -143,7 +152,7 @@
   (unless (dk-sapwiki-check-logged)
     (sapwiki-login))
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
-  (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
+  (setq dk-sapwiki-title (dk-sapwiki-get-title-literal))
   (setq dk-sapwiki-current-page-version (dk-sapwiki-get-attribute-value "VERSION"))
   
   (message "Get the lastest version number...")
@@ -173,7 +182,7 @@
     (sapwiki-login))
   
   (setq dk-sapwiki-pageID (dk-sapwiki-get-attribute-value "PAGEID"))
-  (setq dk-sapwiki-title (dk-sapwiki-get-attribute-value "TITLE"))
+  (setq dk-sapwiki-title (dk-sapwiki-get-title-literal))
   (setq dk-sapwiki-current-page-version (dk-sapwiki-get-attribute-value "VERSION"))
 
   (message "Get the lastest version...")
@@ -316,6 +325,14 @@
 	  (buffer-substring (match-beginning 2) (match-end 2))
 	nil))))
 
+(defun dk-sapwiki-get-title-literal ()
+  "Get the title literal string in case it is a link"
+  (setq dk-sapwiki-title-link (dk-sapwiki-get-attribute-value "TITLE"))
+  (if (string-match "\\(\\]\\[\\)\\([^\]]+\\)" dk-sapwiki-title-link)
+	(match-string 2 dk-sapwiki-title-link)
+      dk-sapwiki-title-link)
+  )
+				 
 (defun dk-sapwiki-fetch-internal (status)
   (message "Fetch Successfully, converting to org-mode...")
   (set-buffer (current-buffer))
@@ -397,6 +414,7 @@
 	     'dk-sapwiki-process-attchments))
     
     (dk-increase-page-version work-buffer)
+    (dk-add-title-link work-buffer)
     (message "Pushed!")))
 
 (defun dk-increase-page-version (work-buffer)
@@ -406,6 +424,13 @@
 	dk-sapwiki-current-page-version)
   (dk-update-page-version work-buffer))
 
+(defun dk-add-title-link (work-buffer)
+  (unless (string-match "\\[\\[" dk-sapwiki-title-link)
+    (setq dk-sapwiki-title-link (concat "[[" dk-sapwiki-link-url
+					"?pageId=" dk-sapwiki-pageID
+					"][" dk-sapwiki-title "]]"))
+    (dk-update-page-title work-buffer)))
+    
 (defun dk-merged-with-latest-version ()
   (with-current-buffer result-org-buffer (erase-buffer))
   (setq dk-sapwiki-current-page-version dk-sapwiki-latest-page-version)
@@ -427,11 +452,11 @@
   (with-current-buffer work-buffer
     (goto-char 1)
     (if (re-search-forward "\\(+TITLE: \\)\\([^\n\r]+\\)" nil t)
-	(replace-match dk-sapwiki-title nil nil nil 2)
+	(replace-match dk-sapwiki-title-link t nil nil 2)
       (goto-char 1)
       (re-search-forward "+VERSION: [^\n\r]+")
       (insert ?\n)
-      (insert "#+TITLE: " dk-sapwiki-title))))  
+      (insert "#+TITLE: " dk-sapwiki-title-link))))
 
 (defun dk-sapwiki-process-push (status work-buffer)
   "The function is called only if post is not successfully"
@@ -1036,7 +1061,7 @@ of contents as a string, or nil if it is empty."
 			 (org-export-get-relative-level headline info)))
 		 (org-export-collect-headlines info depth scope))))
     (when toc-entries
-      "<h1><img class=\"editor-inline-macro\" src=\"https://wiki.wdf.sap.corp/wiki/plugins/servlet/confluence/placeholder/macro?definition=e3RvY30&amp;locale=en_GB&amp;version=2\" data-macro-name=\"toc\" data-macro-id=\"d3fd2cf9-db86-4ae0-95b0-bc542e8a1cfe\" data-macro-schema-version=\"1\"></h1>")))
+      "<p><strong><span style=\"color: black;\"><img class=\"editor-inline-macro\" src=\"/wiki/plugins/servlet/confluence/placeholder/macro?definition=e3RvY30&locale=en_GB&version=2\" data-macro-name=\"toc\" data-macro-id=\"d3fd2cf9-db86-4ae0-95b0-bc542e8a1cfe\" data-macro-schema-version=\"1\"></span></strong></p>")))
 
 (defun dk-sapwiki-headline (headline contents info)
   "Derive function org-html-headline"
@@ -1113,7 +1138,7 @@ of contents as a string, or nil if it is empty."
 	    text
 	    (and tags
 		 (format
-		  "<span style=\"color:#006400; margin-left:80px\">%s</span>"
+		  "<span style=\"color:#006400; margin-left:80px\"> %s </span>"
 		  tags)))))
 
 ;;;; TODO
@@ -1121,8 +1146,8 @@ of contents as a string, or nil if it is empty."
   "Format TODO keywords into HTML."
   (when todo
     (if (member todo org-done-keywords)
-	(format "<span style=\"color:#85981C; margin-right:10px\">%s</span>" todo)
-      (format "<span style=\"background:red; margin-right:10px\">%s</span>" todo))))
+	(format "<span style=\"color:#85981C; margin-right:10px\">%s </span>" todo)
+      (format "<span style=\"background:red; margin-right:10px\">%s </span>" todo))))
 
 ;;;; Priority
 (defun dk-sapwiki--priority (priority info)
@@ -1130,9 +1155,9 @@ of contents as a string, or nil if it is empty."
 PRIORITY is the character code of the priority or nil.  INFO is
 a plist containing export options."
   (case priority
-    (65  "<span style=\"color:gray; font-style:italic; margin-right:10px\">[#A]</span>")
-    (66  "<span style=\"color:gray; font-style:italic; margin-right:10px\">[#B]</span>")
-    (67  "<span style=\"color:gray; font-style:italic; margin-right:10px\">[#C]</span>")
+    (65  "<span style=\"color:gray; font-style:italic; margin-right:10px\"> [#A] </span>")
+    (66  "<span style=\"color:gray; font-style:italic; margin-right:10px\"> [#B] </span>")
+    (67  "<span style=\"color:gray; font-style:italic; margin-right:10px\"> [#C] </span>")
     ('otherwise "")))
   ;; (and priority
   ;;      (format

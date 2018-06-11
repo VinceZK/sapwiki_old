@@ -1,0 +1,96 @@
+* RTCMD
+** I copy create a foundation view tmp.fi.rtc.vince.RTC_C_FOUNDATION
+There is no "RCOMP" field in ACDOCA, so we join T001 on PBUKRS to get the RCOMP field. This join is now automatically done by Steve's generation function. Which I don't think it is the right way. Because in the dimension configuration, we set 100 to RCOMP and RASSC, now RCOMP is not appeared in the foundation view, we do the join under the hood. This produce confusion comparing with other dimensions. We should not do the special case for company dimension. Also considering in ACDOCC we have RCOMP field. At programing level, we should provide the same logic to all dimension and to both ACDOCA and ACDOCC. 
+
+So my suggestions is we do join with T001 on foundation view so that RCOMP is appeared in foundation view. 
+
+** I created model =VINCE1=
+After I entered the version fields and click save, there is no successful message showed up.
+
+** Look at the content of the CDS view "/RTCART/VINCE100"
+Remove columns: RCOMP, GLACCOUNT_TYPE, RASSC, RBUKRS
+
+RMVCT doesn't have the default value, the default value should be utilized in _FF.
+
+** Performance data perparation
+
+Here, I list some rough specification for the test data preparation, please add your opinions to further complete it:
+1.	2 million line items (in ACDOCA)
+2.	3 operational chart of accounts with 500 account numbers
+3.	2 consolidation chart of accounts with 200 account numbers
+4.	3 fiscal year variants with one of them can be chosen as the group fiscal year variant
+5.	10 company codes with 5 of them in ACDOCA, others are used for flexible upload
+6.	3 currency key with one of them can be chosen as the group currency key
+7.	2 level groups: The root contains 2 sub-groups, each sub-group contains 5 companies with 2(or 3) are flexible uploaded entities.
+
+According to the above specification, we can get a rough estimation that each company code should have 400, 000 lines in ACDOCA. If we only involve 6 periods, for example: 2015012, 2016000, 2016001, 2016002, 2016003, 2017000. We can omit the periods from 004~012 for the simplicity.  Then for each period, we should generate  almost 70,000 line items. The general solution to get this test data is to first manually post some documents,  then using a program to copy and magnify the data volume. The challenge is how to make the data close to real use cases. 
+
+I believe this task is required and worth with some effort. After finish the specification, we should add those related tasks into the scrum takts. 
+
+** Document Type auto-generation
+1. The default number range interval should be from 1000000000~1999999999.
+
+
+* RTCTM
+1. Currency Translation Key Description is not accurate, should not mix with exchange rate indicator.
+2. In "Entry Detail" tab, if it is the last entry, the "next" navigation button should be gray.
+3. In "Entry List" tab, if the number of entries exceeded to 10, then the order is not right.
+4. Exchange Rate Indicator Text is not cleared after I change CT key from 05 to 03.
+
+* RTCCT
+** DONE transaction type is  missing in message text
+If there is AFD data needed, there will be a pop-up to show the missing configuration. However, the message text doesn't show transaction type information, which is mandatory in the RTCAFD maintenance. The message looks like:
+
+"Group amount not found in investment(AFD) for C1000:C2000 in 12350000A/ with USD"
+
+It should be:
+
+"Group amount not found in investment(AFD) for C1000:C2000 in 12350000A/F15 with USD"
+
+** DONE CT is blocked event after AFD data is maintained
+Maybe the same reason as above. 
+
+** Run Performance Test in HANA Stuido
+#+BEGIN_SRC sql
+CALL "SAPQE6"."/RTCART/VINCE1TM100=>CORE_AMDP"(
+IV_ER_DATE => '20151231',
+IV_TGT_CUR => 'USD',
+IV_CONS_VERID => '00002',
+IV_DOCTYPE => '01',
+IV_FISCYEAR => '2015',
+IV_FISCPER => '012',
+IV_ENTITY => 'C1000',
+IV_ER_TYPE_1 => '1001',
+IV_ER_TYPE_2 => '1002',
+--IV_ER_TYPE_3 => '1003',
+IV_LCL_CUR => 'EUR',
+IV_TIMESTAMP => 20161231101010,
+IV_USER_NAME => 'ZHANGVIN',
+IV_CONS_LEDGER => 'CL',
+IV_VARIANT => '200',
+IV_BPC_CATG => 'PRELIM',
+IV_RTC_CATG => 'PREL',
+IV_APPLY_ANI => '',
+IV_CONS_ACCT_1 => '',
+IV_CONS_ACCT_2 => '',
+IV_TRANS_TYPE_1 => '',
+IV_TRANS_TYPE_2 => '',
+ET_ACDOCC => ?
+);
+
+END;
+#+END_SRC
+
+
+* RTCAFD
+
+** The investment row cannot be added
+When maintain investment data, if the line item exceeded 10 rows, then I cann't add new empty lines. Only after saving, new empty lines will be shown. This is awkward, it should be allow user to add new empty lines directly. 
+
+SELECT * FROM /RTCART/VINCE100 WHERE
+ ( RACCT BETWEEN '25730000A' AND '25730000L'
+  OR RACCT BETWEEN '25740000A' AND '25740000L'
+  OR RACCT BETWEEN '25711000A' AND '25711000L'
+  OR RACCT = '0025730000'
+  OR RACCT = '0025740000'
+  OR RACCT = '0025710000' )

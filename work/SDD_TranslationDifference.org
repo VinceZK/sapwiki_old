@@ -1,8 +1,8 @@
 #+PAGEID: 1852158416
-#+VERSION: 8
+#+VERSION: 9
 #+STARTUP: align
 #+OPTIONS: toc:1
-#+TITLE: SDD-Translation Difference
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1852158416][SDD-Translation Difference]]I
 ** Business Case
 It is common that different companies under a group report their local data in different local currencies. These currencies should be translated into the group currency during consolidation. Differences would be generated due to different aspects of the balance sheet and income statement have to be translated with different exchange rates. For example, we usually apply following exchange rates: Average Rates, Current Rates, Spot Rates, and Historic Rates to different accounts. 
 

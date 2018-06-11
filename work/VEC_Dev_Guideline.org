@@ -1,0 +1,198 @@
+#+PAGEID: 1929962424
+#+VERSION: 3
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: Develope Guideline for VEC
+
+** References
+| <25>                      |                  |             | <30>                           |
+| Document Title            | Date             | Link        | Comments                       |
+|---------------------------+------------------+-------------+--------------------------------|
+| S/4HANA Development Environment | <2017-11-10 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1821163325][sapwiki]]     | This Wiki should answer all your questions related to the S/4 development landscapes and the delivery architecture. Feedback to improve the content is highly appreciated. |
+| Development Guideline     | <2017-11-10 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1658296866][sapwiki]]     | The Development Guideline describes the general boundary conditions as well as detailed rules, procedures, classes, methods, tables and views for the current state of the development for every architecture topic. |
+| SAP Gateway Foundation for OData V4 Developer Guide | <2017-11-15 Wed> | [[https://help.sap.com/viewer/68bf513362174d54b58cddec28794093/7.5.6/en-US/1bbc4ecf0da94f358b1355fcbffa3363.html][online help]] | The OData version 4 (V4) standard combines the requirements from existing SAP applications built with the OData version 2 (V2) protocol. |
+| S/4 Fiori UI Infrastructure | <2017-11-15 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Infrastructure][sapwiki]]     | UI System Landscape and Development Processes |
+| Lifecycle Incompatible Patterns | <2017-03-23 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Lifecycle+Incompatible+Patterns][sapwiki]]     | From package build perspective the target is that all the IMG activities that are in cloud scope for the first time are recordable so that no new eCATTs for content activation need to be build and no tables need to be included into client 000 whitelist. Table content with delivery classes S, E, W has to be shipped with the application. |
+| Self Service Configuration UI | <2017-03-29 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Self+Service+Configuration+UIs][sapwiki]]     | This guideline is focussing on WebGUI SSC-UIs. Most of this guideline is also relevant for SSC-UIs in FIORI (apart from restrictions related to the new API).  Links in bold are important and should be read.  Each section includes checks that need to be done and identifies who should do these checks. |
+| Cloud Access Manager      | <2017-04-25 Tue> | [[https://rpc-cust002.dev.sapbydesign.com/sap/bc/webdynpro/a1sspc/cam_sup_central#][InternalAPP]] | Apply CC2/CCF User             |
+| Correct code generating programs for shared cloud usage | <2017-07-10 Mon> | [[https://wiki.wdf.sap.corp/wiki/display/WhiteBird/Correct+code+generating+programs+for+shared+cloud+usage][sapwiki]]     | Consequently, any code generating program that creates or modifies programs, function modules, interfaces, classes and the like based on customer configuration cannot produce "shared content", but must write into the respective tenant container only. For this purpose we must distinguish "shared content" and the "tenant specific" complement. This is based on the object catalog (TADIR) attribute "GENFLAG" which indicates a generated object. Any object listed in the object catalog with an initial (space) GENFLAG is a sharable object and will be stored in the shared container, thus cannot be modified from an application. |
+| Adaptation Transport Organizer (ATO) | <2017-07-11 Tue> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1682782491][sapwiki]]     | In order to transport adaptation objects to the production system they must be grouped in a collection. The project manager is responsible for creating the collection in the test system and assigning adaptation objects to it. Adaptation objects may be assigned to a collection from a list of unassigned adaptation objects. |
+| Business Configuration Sets | <2017-07-14 Fri> | [[https://wiki.scn.sap.com/wiki/display/Basis/Business+Configuration+Sets+%2528BC+Sets%2529+and+their+use][scnwiki]]     | BC Set is a management tool that allows user to record, save and share customization settings. BC sets are snapshot of customization settings that can be used later as template or customization backup. BC sets can also be used in group rollouts where the customization settings can be compiled for pilot and passed on in a structured way to other rollout locations. SAP also provides pre packaged BC sets for selected industry sectors. |
+
+** Development Environment
+
+#+CAPTION: Development Landscape and Timeline
+[[../image/VEC_DevLandscapeTimeline.png]] 
+
+Refer [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-SAPS/4HANA-Financials(S4CORE)][Development Artifacts and Clients]] for where to develop what.
+
+*** ER6 Cloud Specific Development
++ OData Service Activations
++ Entries in SU22
++ Configuration IAM Instance Authorizations
++ Job Definitions
++ S/4HANA Extensions: Configuration and additional processing code
++ S/4HANA specific configuration settings (SBEE user handling)
++ role content (Fiori & IAM related work not done in UYT)
++ business catalogues and groups (Fiori & IAM related work not done in UYT)
+
+** Fiori UI
+
+Fiori UI development is exactly the same as what we did in OP. Please refer [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Fiori+Development+Guideline#FioriDevelopmentGuideline-3.1FioriLaunchpadConfiguration][Quick Start of Fiori Development]]. The only difference is Fiori BSP applications resides in different SWCs in UYT and ER6. In UYT, it is *UIAPFI70*; in ER6, it is in *SPSCORE*. 
+
+The following naming are refer the guideline of [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Naming+Conventions+for+Development+Objects][S4HANA Naming Conventions for Development Objects]].
+
+This page tells you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Leaf+ABAP+Packages+for+FIN+AT1+Fiori+Apps][Leaf ABAP Packages]].
+
+*** Maintain Validation Rule                                          :Chang:
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecrule 
+| Artifacts                         | Name                               |
+|-----------------------------------+------------------------------------|
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_VECRULE        |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VECRULE  |
+| App name and ID in Project Portal | fin.cons.vecrule                   |
+| POM Artifact ID                   | fin.cons.vecrule                   |
+| Fiori ID                          | F2627                              |
+| BSP Application Name              | FIN_VECRULE                        |
+| Service Builder Project           | CONS_VERULE                        |
+| Semantic Object                   | FinancialValidationRule            |
+
+*** Maintain Validation Method                                        :Steve:
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecmethod 
+| Artifacts                         | Name                                |
+|-----------------------------------+-------------------------------------|
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_VECMETHOD       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VECMETHOD |
+| App name and ID in Project Portal | fin.cons.vecmethod                  |
+| POM Artifact ID                   | fin.cons.vecmethod                  |
+| Fiori ID                          | F2655                               |
+| BSP Application Name              | FIN_VECMETHOD                       |
+| Service Builder Project           | CONS_VECMETHOD                      |
+| Semantic Object                   | FinancialValidationMethod           |
+
+*** Display Validation Result                                         :William:
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecresult
+| Artifacts                         | Name                                |
+|-----------------------------------+-------------------------------------|
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_VECRESULT       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_VECRESULT |
+| App name and ID in Project Portal | fin.cons.vecresult                  |
+| POM Artifact ID                   | fin.cons.vecresult                  |
+| Fiori ID                          | F2653                               |
+| BSP Application Name              | FIN_VECRESULT                       |
+| Service Builder Project           | CONS_VERESULT                       |
+| Semantic Object                   | FinancialValidationResult           |
+** IAM
+Please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/UI+-+Related+Naming+Conventions%252C+Packages+and+Software+Components][wikipage]] for the naming conventions.
+
+P2 Area: FIN; P3 Area: VE
+
+|                              |                               | <30>                           |
+| Artifacts Type               | Name                          | Description                    |
+|------------------------------+-------------------------------+--------------------------------|
+| Technical Catalog (Frontend) | SAP_TC_FIN_VE_COMMON          | SAP: Financial - Validation Engine |
+| Technical Catalog (Backend)  | SAP_TC_FIN_VE_BE_APPS         | Backend application: Tcodes.   |
+| Business Catalog(OP)         | SAP_FIN_BC_VE_RULE            | Validation Rule Maintenance    |
+| Business Catalog(OP)         | SAP_FIN_BC_VE_METHOD          | Validation Method Maintenance  |
+| Business Catalog(OP)         | SAP_FIN_BC_VALIDATION_RUN     | Run Validation                 |
+| Business Catalog(Cloud)      | SAP_FIN_BC_VE_RULE_PC         | Validation Rule Maintenance    |
+| Business Catalog(Cloud)      | SAP_FIN_BC_VE_METHOD_PC       | Validation Method Maintenance  |
+| Business Catalog(Cloud)      | SAP_FIN_BC_VALIDATION_RUN_PC  | Run Validation                 |
+| Business Catalog Role        | SAP_FIN_BCR_VE_RULE_PC        | Validation Rule Maintenance    |
+| Business Catalog Role        | SAP_FIN_BCR_VE_METHOD_PC      | Validation Method Maintenance  |
+| Business Catalog Role        | SAP_FIN_BCR_VALIDATION_RUN_PC | Run Validation                 |
+| Business Group               | SAP_FIN_BCG_VE_RULE_PC        | Validation Rule Maintenance    |
+| Business Group               | SAP_FIN_BCG_VE_METHOD_PC      | Validation Method Maintenance  |
+| Business Group               | SAP_FIN_BCG_VALIDATION_RUN_PC | Run Validation                 |
+| Business Role()              | SAP_BR_VALIDATION_RULE_ADMIN  | Validation Rule Administrator who is reponsible for maintaining validation rules and methods. |
+| Businees Role()              | SAP_BR_VALIDATION_SPECIALIST  | Validation Specialist who run validation |
+
+*** Technical Catalogs  
+Technical catalog act as containers that group all delivered applications (Fiori, UI5, WebDynpro, WebGUI, ...) along application area and software components. They act as the repository of delivered content from which the tiles are picked to create catalogs which are then used in the Fiori Launchpad. Every application that is in the functional scope of the product shall be represented as a tile in a technical catalog. The following rules apply:
+
++ No separation between "transactional", "factsheet" and "analytical" catalogs is used.
++ A separation between frontend (Fiori, UI) catalogs shipped with the frontend software components and and backend catalogs (WebDynpro, WebGUI, ...) shipped with the backend software components is used.
++ If the semantically same app (i.e. the same intent), has different navigation targets in different delivers, only one tile, but different navigation targets have to be created in the technical catalog. When building the business catalogs, the right navigation target has to be chosen as reference.
+
+Use [[https://uyt902-er9500.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CONF&sap-client=902&sap-language=EN][Fiori LaunchPad Designer]](UYT902) to define frontend catalogs; Use [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500&WDCONFIGURATIONID=SUI_TM_MM_APP#][Backend App Descriptors]](ER9500) to define your backend catalogs. For more detail, please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wiki-page]].
+
+*** Business Catalogs 
+Business catalogs are the central object for UI and authorization assignment to business users and for structuring and organizing the authorization maintenance. If a user is assigned to a business catalog, he/she gets access to all apps included in the catalog and therefore requires the corresponding authorizations.
+
++ *On-premise*, business catalogs are defined by customers by composing the relevant apps based on their specific requirements. Authorizations are determined via the Fiori-PFCG integration when entering the catalog into the PFCG role menu. SAP delivers business catalogs as templates which customers may copy to create their own content.
++ *In the cloud*, business catalogs are defined by SAP and authorizations are delivered out-of-the-box with the corresponding business catalog roles. The customer key user bundles business catalogs in business roles and defines the instance-based authorizations via restrictions, however can not change the composition of the catalog. The right cut of business catalogs is therefore of utmost importance.
+
+The visual part of a business catalog is represented as a Fiori catalog. Additional objects, i.e. business catalog role and restrictions, complement the Fiori catalog in the S/4HANA cloud editions to achieve automated lifecycle management for authorizations and extensibility.
+
+Use [[https://uyt902-er9500.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CONF&sap-client=902&sap-language=EN][Fiori LaunchPad Designer]](UYT902) to define your business catalogs for OP, and [[https://er6-100-adm.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CUST&sap-client=200&sap-language=EN][Fiori LaunchPad Designer]](ER6200) for the Cloud. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Considerations]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
+
+*** Business Catalog Roles
+For S/4HANA cloud edition, SAP deliveres exactly one business catalog role for each business catalog. Business catalog roles are the basis for the authorizations of all business users. Business catalog roles have to be provided as PFCG single roles. In addition, business catalog roles have to be registered for the usage by customers. This registration is the basis for automatic generation of profiles in the target clients. A business catalog role must contain:
++ The reference to a single business catalog. This will result in the following references being added automtically, based on the target mappings in the business catalog.
++ The reference to a single business group.
++ The reference to additional objects required for using generic UIs like application job, application logs etc. See the corresponding section in Generic UIs - Authorizations for details.
++ Additional authorizations required beyond the authorization default values maintained for OData backend services.
++ *No profile name or generated profile*. A yellow status icon on the tab "Authorizations" indicates the correct status in the customizing client of the development system.
+
+Business Category Roles are created in PFCG in *ER6100*. For details refer https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Business+Catalog+Roles
+
+*** Business Groups 
+Business groups are defined in the Fiori Launchpad Designer. The represent edition (on-premise/cloud) specific grouping of visible apps from one or more business catalogs from the same business area in the Fiori Launchpad. The represent the end user point of view and should have unique titles within the related business roles.
+
+The following rules apply for the title of business groups:
++ Use short business group titles. If possible with less than 20-30 characters. Longer titles will not work correctly as tab captions esp. on mobile devices.
++ Use titles that are unique within the business roles that use the business group. As apposed to business catalog titles, business group titles don't have to be globally unique.
++ Use the plural by default. Example: "Recipes" and "Supplier Accounts".
++ Use gerunds to indicate activities. Example:"Maintenance Planning".
+
+Use [[https://uyt902-er9500.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CONF&sap-client=902&sap-language=EN][Fiori LaunchPad Designer]](UYT902) to define your business groups for OP, and [[https://er6-100-adm.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CUST&sap-client=200&sap-language=EN][Fiori LaunchPad Designer]](ER6200) for the Cloud. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Considerations]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
+
+*** Business Roles           :Ying:
+Business roles denote a role of a persona. For example "Administrator" or "Supply Chain Planner". They are an aggregation of the applications contained in one or more business catalogs under a common name. The title of business roles must comply with the content of the Fiori Role Portfolio. That list is currently still subject to changes and cleanup activities. Therefore you may see error reported for things that have already been aligned with the IAM team and are not yet reflected on the Wiki or programmatic checks.
+
+In the S/4HANA on-premise edition, business roles are technically represented by PFCG single roles which have the corresponding business catalogs assigned. The naming convention is "SAP_BR_<PERSONA>_<VARIANT>[_<COUNTRY>]". Because business roles are business driven their IDs must not include any area prefixes but shall reflect the description. For example "SAP_PLM_BOM_ENGINEER" is wrong while "SAP_BR_BOM_ENGINEER" is correct. _They exist in the frontend server and do not contain any authorizations._ They serve demo and trial use cases. Customers would typically create their own business roles are PFCG single or composite roles in the transaction PFCG. Assigning the required backend authorizations is a separate step performed by the customer in the transaction PFCG of the corresponding backend clients.
+
+In the S/4HANA cloud editions, business roles are technically a new cloud specific master data entity which is created by the customer using a cloud specific Fiori UI. Besides the assignment of the business catalogs and business users, the business role also contains restriction on activities (read-only/read-write) and instances (company "1010", "my team"). The generation of the required PFCG roles including both the frontend and the backend authorizations is an automated process. See Business Role for the complete design. The current collection of S/4HANA cloud edition business roles is document in S4HANA IAM Content. The assignment to the business role ID there is used as structuring information for SET content, generic test users and related test cases (see test user and test case per business role). *The counter part of the PFCG single roles delivered as business roles in on-premise are the business role templates in the cloud*. They are the basis for creating business roles and generic test users in cloud systems.
+
+Please refer this [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Fiori+Role+Portfolio][sapwiki]] on how to apply a business role in [[https://ifp.wdf.sap.corp/sap/bc/webdynpro/sps/wda_obt_ro_variant?object_type_id=OBT_IFP_6CAE8B26E4CB1ED5808C27D93BB8DD84?variant_id=6CAE8B26E4CB1ED6B1BA05D3A39EE0C0?user_settings=X#][OAM]](Object Attribute Manager).
+
+Refer this page https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Business+Roles on how to create business rules in *UYT902*.
+
+*** Business Rule Template
+Business Rule Template is only for Cloud. Using Tcode SSIA8 in ER6001. Detail refer: https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-BusinessRoles
+
+*** Semantic Objects     :Ying:
+Semantic objects are used for role-based navigation within the Fiori Launchpad. A semantic object is defined using the Semantic Object catalog following the naming rules of the virtual data model (VDM). In addition to the definition, a *registration* needs to be done centrally in U00. Use [[https://gtnc-w0211397f.dispatcher.int.sap.hana.ondemand.com/webapp/index.html][Global Technical Name Catalog]] to register your semantic object.
+
+For more information on semantic objects, please refer:https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Semantic+Objects+for+Navigation
+
+For more information on Global Technical Name Catalog, please refer: https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+Global+Term+Catalog+Application
+*** Fiori App ID          :Ying:
+Before you register your Fiori app, you need first apply your business roles. 
+
+PO should maintain the Fiori Portfolio in OAM. In our case, we deliver in release op1709, which I suppose we should main OAM through this link: [[https://ifp.wdf.sap.corp/sap/bc/webdynpro/sps/wda_obt_variant?object_type_id=OBT_IFP_6CAE8B28C5DB1ED39A99A3948F2DC308?variant_id=6CAE8B26E4CB1ED6A9CAAF35ECB5B445?user_settings=X#][2017 / Q3 variant]]. All visible and editable columns should be fill. A short description of columns can be find [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1588149430][here]].
+
+You must pass the *Design Gate1* to get your Fiori ID. Without Fiori ID, you can not build and deploy your Fiori App into UYT system. Most of our Fiori UI5 apps are required to pass Design Gate 1. The purpose of Design Gate 1 is to ensure the optimal desirability, viability, and feasibility of the design. You can pass through this gate once the Global Design lead or a named substitute has reviewed the documents you prepared during the design phase. The sign-off is usually done via an email confirmation.
+
+For more detail please refer [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Fiori+App+Portfolio][Fiori App Portfolio]].
+
+** OData
+https://wiki.wdf.sap.corp/wiki/display/SimplSuite/OData+Services
+
+** DDIC
+*** [OC-MT-3] Should: Eliminate "cross client data access" in business applications
+Every new implementation should use a client independent table of delivery class "S" for shipping the system default and merge the effective value during read with a value from an ABAP client dependent table of delivery class "C".
+** Background Job
+SAPJ to define a Cloud Job.
+https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Job+Scheduling+and+Monitoring
+
+Refer Group: SAP_SFIN_BCG_GL_PERIOD_ACT for the tile "Schedule General Ledger Jobs" in ER9 500:
+
+/h4screen=GL.SCHEDULE.JOBS.DOCU&JobCatalogEntryName=SAP_FIN_BAL_SHEET_SUPPL,SAP_FIN_DOC_LIST_DISPLAY,SAP_FIN_EC_SALES_LIST,SAP_FIN_GL_ANNUAL_TAX_RETURN,SAP_FIN_GL_AUTO_CLR,SAP_FIN_GL_COMP_CODE_TRANS,SAP_FIN_GL_DISP_CHG_GLACC,SAP_FIN_GL_EC_SALELIST,SAP_FIN_GL_FOR_CURR_VAL,SAP_FIN_GL_FOR_FIN_STATEMENT,SAP_FIN_GL_INTEREST_SCALE,SAP_FIN_GL_IR_CLR_ACQ_TX,SAP_FIN_GL_REV_ACC_DEF,SAP_FIN_GL_RJET_POST_DUE,SAP_FIN_TAX_INFORMATION,SAP_FIN_TAX_PREPARE_TAX_REP,SAP_FIN_TAX_RFUMSV00,SAP_FIN_TRANSFER_POSTING,SAP_FIN_WITHHOLDING_TAX_REPORT,SAP_SFIN_BC_GL_PARKED_DOC,SAP_SFIN_BC_GL_PROV_DOU_RECV,SAPF080
+
+Refer job template "SAP_FIN_TAX_RFUMSV00", and job catalog entry "SAP_FIN_TAX_RFUMSV00"
+** Workflow
+https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Workflow
+
+Step-by-step guide on create Flex Workflow: https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1830627167
+

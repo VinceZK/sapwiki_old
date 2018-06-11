@@ -1,0 +1,60 @@
+| Entity | #items before | #items after | Fixed Cost | Translation | Posting | Rollup |
+|--------+---------------+--------------+------------+-------------+---------+--------|
+|  60010 |       1980589 |       108071 |          1 |         7.3 |     2.1 |    8.4 |
+|  60012 |        294222 |        26183 |          1 |         1.6 |     0.1 |    2.3 |
+|  60013 |        376744 |       156353 |          1 |         2.5 |     1.2 |    4.2 |
+
+* #items before    
+Number of items returned from the foundation view, before processed in CT.
+* #items after
+Number of items returned by CT.
+
+* For 1000 entities with each has 2 million items run in sequencial
+Total Cost = (1 + 7.3 + 2.1 + 8.4)*1000 = 20,000 = 5.56(hrs) 
+
+5.56/10 
+
+* For 1000 entities with each has 2 million items run in parallel
+Total Cost(estimation) = 2 + (7.3 + 2.1 + 8.4) * 3 = 60 = 1(min)
+1. Assume HANA hardware resourse is ample.
+2. "3" is the factor that indicates the cost of HANA parallization. 
+
+
+
+
+
+A0(CH,10)       = 'FINAL'
+A1(CH,2)        = 'C1'
+A2(CH,5)        = '00001'
+A3(CH,2)        = '01'
+A4(CH,32)       = '60010'
+A5(CH,8)        = '20161130'
+A6(CH,4)        = 'HYBS'
+A7(NU,3)        = '004'
+A8(NU,4)        = '2017'
+A9(CH,5)        = 'NZD'
+A10(CH,10)      = 'ACTUAL'
+A11(CH,5)       = 'NZD'
+A12(DE,14)      = 20170929084245
+A13(CH,12)      = 'OSS_CFIN'
+A14(CH,3)       = '200'
+
+  A0(CH,10)       = 'FINAL'
+  A1(CH,2)        = 'C1'
+  A2(CH,5)        = '00001'
+  A3(CH,2)        = '01'
+  A4(CH,32)       = '60013'
+  A5(CH,8)        = '20161130'
+  A6(CH,4)        = 'HYBS'
+  A7(NU,3)        = '004'
+  A8(NU,4)        = '2017'
+  A9(CH,5)        = 'NZD'
+  A10(CH,10)      = 'ACTUAL'
+  A11(CH,5)       = 'NZD'
+  A12(DE,14)      = 20170929084245
+  A13(CH,12)      = 'OSS_CFIN'
+  A14(CH,3)       = '200'
+* Model Adjustment for 1610
+#+BEGIN_SRC sql
+select 
+#+END_SRC

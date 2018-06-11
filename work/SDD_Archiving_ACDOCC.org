@@ -1,0 +1,85 @@
+#+PAGEID: 1896235806
+#+VERSION: 4
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-Data Archiving for ACDOCC
+
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Shi Ying      |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+*** References
+| <25>                      |                  |             | <30>                           |
+| Document Title            | Date             | Link        | Comments                       |
+|---------------------------+------------------+-------------+--------------------------------|
+| Data Archiving            | <2017-03-23 Thu> | [[https://help.sap.com/viewer/DRAFT/f0944a4717b5464f8d2343f9a44ff65b/1709%2520000/en-US/4d8c783b910b154ee10000000a42189e.html][online help]] | You use data archiving to remove from the database data from completed business transactions that are no longer relevant for operational business. You store the archived data in archive files to which the system has read-only access. You have the following options for archiving data from SAP application systems: |
+| DPP Checker Tool          | <2017-07-13 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/appsec/DPP+Checker+Tool+for+ABAP][sapwiki]]     | The motivation for the DPP Checker tool is to reduce the manual efforts to identify and classify the tables for deletion requirement which store personal data, by automating the foresaid steps and also enabling the transport of the classified tables between systems. With this tool, most of the data elements which store personal data were already identified and stored. If you make use of a custom data element to store the personal data, then you may need to maintain the same with the tool. |
+| Optimizing Data Archiving | <2017-07-13 Thu> | [[https://launchpad.support.sap.com/#/notes/577847][sapnote]]     | You are planning data archiving projects to reduce the load on the database and organize the operation of your SAP system more efficiently. T |
+| Developing Data Archiving Solution | <2017-07-13 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Data+Archiving+for+ACDOCC?preview=%252F1896235806%252F1896235889%252FDeveloping+Data+Archiving+Solutions+.doc][worddoc]]     | How to develope data archiving Object |
+| Enable Archiving Object for ILM | <2017-08-14 Mon> | [[https://sap-my.sharepoint.com/personal/vincent_zhang_sap_com/_layouts/15/guestaccess.aspx?guestaccesstoken=VmZteHUPr%252b0p5rHl1pdcnvg8fwGPRs2cJ0684M7Bh1c%253d&docid=2_1a3455f5cd8bb4b538643ebf5a7372a63&rev=1][onedrive]]    | How to Enable Archiving Objects for the ILM Product Standard |
+
+** Archiving Object 
+Using AOBJ to create a archiving object. 
+
+Involved Tables:
+| Table Name    | Descirption                      |
+|---------------+----------------------------------|
+| ACDOCC        | Consolidation Journal            |
+| RTC_DRR       | Data Release Request             |
+| RTC_DRL       | Data Release Period Lock         |
+| RTC_CTRL_RST  | Data Release Request Rule Result |
+| RTC_CMT       | Comment                          |
+| RTC_TASK_LOG  | Task Log                         |
+| RTC_TASK_DOCS | Task Generated Documents         |
+
+*** Write Program
+Write data from database to archive files.
+
+Preprocessing is utilized as the test run. 
+ 
+The ILM functions are implemented as enhancements of the data archiving write program (assuming that the write programs already use the standard includes for selection options). If this is not the case for your write program, carry out the standardization of your program as decribed in note 577847.
+
+The options "Snapshot" and "Desctruction" would be added. 
+
+*** Delete Program
+Delete data from database according to the entries in the archive files.
+
+*** Read Program
+A simple read program is enough. 
+
+Sequential read program will be used. 
+
+Reload program would also be considerred. (Secondary Priority)
+
+*** Relationship with ACDOCP
+Consoldiatin on planning data, and planning on consolidation data is a support feature, if we should maintain network graphic with each other?
+
+*** Archiving Class
+Application log and background job Log
+
+*** Maintain Table ADMI_CRIT
+This table is required for currency conversions, for example, the changeover to the euro. It is used to specify which functions of an archiving object are seen as critical with regard to the currency conversions about to take place. In the case of new archiving objects this table still needs to be maintained. By default, all the functions (write, delete, reload, etc.) of a new archiving object are marked as critical. This may result in certain error messaging during the use of the archiving object.
+
+To avoid this remove the indicators for the functions of your archiving object in table ADMI_CRIT using transaction HOSH, however, you must be sure that the archiving object does not interfere with currency conversions.
+
+*** Note Delivery Approach is recommanded. 
+Earlier, and easy downport. 
+
+1610 can not be considerred. 
+
+*** ILM Data Destruction. 
+Archiving object actually is not mandatory, but the ILM data Destruction. 
+
+** ILM Object
+Registration of archiving object to ILM
+
+The write program should also be adapted so that retention rules can be used to determine the storage location of the data.
+
+

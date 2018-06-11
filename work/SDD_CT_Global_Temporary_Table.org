@@ -1,8 +1,8 @@
 #+PAGEID: 1846180014
-#+VERSION: 5
+#+VERSION: 6
 #+STARTUP: align
 #+OPTIONS: toc:1
-#+TITLE: SDD-CT Using Global Temporary Table
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1846180014][SDD-CT Using Global Temporary Table]]
 
 ** References
 |                                 |                  |               | <30>                           |
