@@ -98,9 +98,9 @@ The headlines in Org start with one or more stars, on the left margin
 ```
  * Top level headline
  ** Second level
- ### 3rd level
+ *** 3rd level
      some text
- ### 3rd level
+ *** 3rd level
      more text
      
  * Another top level headline
