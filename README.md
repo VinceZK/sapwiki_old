@@ -6,7 +6,7 @@ long articles on websites is not always the favor of many
 experienced writers. 
 
 For those who write wiki without the bothering of using mouse, 
-anywhere and anytime without the internal, and 
+anywhere and anytime without the Internet, and 
 most importantly, who dislike MS Word or other sophistic editor tools, 
 **this one is for you!**
 
@@ -198,10 +198,10 @@ Insert following lines in the head of your Org file:
   #+TITLE: SDD-XXXX
 ```
 
-1. `PAGEID` is the ID of the wiki page you just created in the first step. The Org file is wired with the wiki page via =PAGEID=.
+1. `PAGEID` is the ID of the wiki page you just created in the first step. The Org file is wired with the wiki page via `PAGEID`.
 2. `VERSION` is current version of the wiki page.
 3. `STARTUP` `align` means the file will be nested when opening. It is optional.
-4. `OPTIONS` `toc:1` means generating table of contents when uploading to SAPWiki; Use =toc:nil= to suppress TOC.
+4. `OPTIONS` `toc:1` means generating table of contents when uploading to SAPWiki; Use `toc:nil` to suppress TOC.
 5. `TITLE` is the title of your wiki page.
 
 ### Login and Push to SAPWiki
@@ -216,12 +216,12 @@ This is one-time customization. Next time Emacs will remember your ID.
 5. Click "Apply and Save" in the upper area.
 #### Login SAPWiki
 Switch back to your working buffer, and type:
-`M-x sapwiki-login*` <RET> Enter your wiki password (used to login your windows system), 
+`M-x sapwiki-login <RET>`Enter your wiki password (used to login your windows system), 
 <RET> and Emacs will print message "Login Successfully" if you type the right credential.
 
 The password is remembered by Emacs if you do not close it. 
 #### Push to SAPWiki
-Type: `M-x sapwiki-push` <RET>. Enter version comments if you want, and press <RET> again. 
+Type: `M-x sapwiki-push <RET>`. Enter version comments if you want, and press `<RET>` again. 
 All your content will be converted to SAPWiki HTML format and then uploaded to SAPWiki site. 
 
 If you have image links in your article and the images are placed in folder c:/SAP/sapwiki/image/, these images will be uploaded together.
@@ -249,46 +249,46 @@ Besides you can use following key combination to speed-up your writing and organ
 10. *C-x C-f*: Open file.
 11. *C-x C-s*: Save file.
 12. *C-x C-w*: Save file as.
-13. *C-<SPC>*: Set region mark.
+13. *C-`<SPC>`*: Set region mark.
 14. *C-s*: Search forwards
 15. *C-r*: Search backwards
-16. *C-<left>*: Move one word left
-17. *C-<right>*: Move one word right
-18. *C-<up>*: Move one paragraph up
-19. *C-<down>*: Move one paragraph down
+16. *C-`<left>`*: Move one word left
+17. *C-`<right>`*: Move one word right
+18. *C-`<up>`*: Move one paragraph up
+19. *C-`<down>`*: Move one paragraph down
 
 ### Headlines Operation 
-1. *<TAB>*: Subtree cycling, rotate current subtree among the states.
-2. *S-<TAB>*: Global cycling, rotate the entire document among the states.
-3. *M-<RET>*: Insert a new headline with the same level.
-4. *C-<RET>*: Insert a new headline below the current heading.
-5. *M-<left>*: Promote current heading by one level.
-6. *M-<right>*: Demote current heading by one level.
-7. *M-S-<left>*: Promote the current subtree by one level.
-8. *M-S-<right>*: Demote the current subtree by one level.
-9. *M-S-<up>*: Move subtree up
-10. *M-S-<down>*: Move subtree down
+1. *`<TAB>`*: Subtree cycling, rotate current subtree among the states.
+2. *S-`<TAB>`*: Global cycling, rotate the entire document among the states.
+3. *M-`<RET>`*: Insert a new headline with the same level.
+4. *C-`<RET>`*: Insert a new headline below the current heading.
+5. *M-`<left>`*: Promote current heading by one level.
+6. *M-`<right>`*: Demote current heading by one level.
+7. *M-S-`<left>`*: Promote the current subtree by one level.
+8. *M-S-`<right>`*: Demote the current subtree by one level.
+9. *M-S-`<up>`*: Move subtree up
+10. *M-S-`<down>`*: Move subtree down
 
 ### Table
-1. *C-c <SPC>*: Blank the field at point.
-2. *<TAB>*: Re-align the table, move to the next field. Creates a new row if necessary.
-3. *S-<TAB>*: Re-align, move to previous field.
-4. *<RET>*: Re-align the table and move down to next row. Creates a new row if necessary. At the beginning or end of a line, <RET> still does NEWLINE, so it can be used to split a table.
-5. *M-<left>/M-<right>*: Move the current column left/right.
-6. *M-S-<left>*: Kill the current column.
-7. *M-S-<right>*: Insert a new column to the left of the cursor position.
-8. *M-<up>/M-<down>*: Move the current row up/down.
-9. *M-S-<up>*: Kill the current row or horizontal line.
-10. *M-S-<down>*: Insert a new row above the current row. With a prefix argument, the line is created below the current one.
+1. *C-c `<SPC>`*: Blank the field at point.
+2. *`<TAB>`*: Re-align the table, move to the next field. Creates a new row if necessary.
+3. *S-`<TAB>`*: Re-align, move to previous field.
+4. *`<RET>`*: Re-align the table and move down to next row. Creates a new row if necessary. At the beginning or end of a line, <RET> still does NEWLINE, so it can be used to split a table.
+5. *M-`<left>`/M-`<right>`*: Move the current column left/right.
+6. *M-S-`<left>`*: Kill the current column.
+7. *M-S-`<right>`*: Insert a new column to the left of the cursor position.
+8. *M-`<up>`/M-`<down>`*: Move the current row up/down.
+9. *M-S-`<up>`*: Kill the current row or horizontal line.
+10. *M-S-`<down>`*: Insert a new row above the current row. With a prefix argument, the line is created below the current one.
 11. *C-c -*: Insert a horizontal line below current row. With a prefix argument, the line is created above the current line.
-12. *C-c <RET>*: Insert a horizontal line below current row, and move the cursor into the row below that line.
+12. *C-c `<RET>`*: Insert a horizontal line below current row, and move the cursor into the row below that line.
 
 ### Date/Time
 1. *C-c .*: Prompt for a date and insert a corresponding timestamp. When the cursor is at an existing timestamp in the buffer, the command is used to modify this timestamp instead of inserting a new one. When this command is used twice in succession, a time range is inserted.
 2. *C-c !*: Like C-c ., but insert an inactive timestamp that will not cause an agenda entry.
 3. *C-u C-c .*: Like C-c . and C-c !, but use the alternative format which contains date and time. The default time can be rounded to multiples of 5 minutes.
-4. *S-<left>/S-<right>*: Change date at cursor by one day. These key bindings conflict with shift-selection and related modes.
-5. *S-<up>/S-<down>*: Change the item under the cursor in a timestamp. The cursor can be on a year, month, day, hour or minute. When the timestamp contains a time range like "15:30-16:30", modifying the first time will also shift the second, shifting the time block with constant length. To change the length, modify the second time. Note that if the cursor is in a headline and not at a timestamp, these same keys modify the priority of an item. 
+4. *S-`<left>`/S-`<right>`*: Change date at cursor by one day. These key bindings conflict with shift-selection and related modes.
+5. *S-`<up>`/S-`<down>`*: Change the item under the cursor in a timestamp. The cursor can be on a year, month, day, hour or minute. When the timestamp contains a time range like "15:30-16:30", modifying the first time will also shift the second, shifting the time block with constant length. To change the length, modify the second time. Note that if the cursor is in a headline and not at a timestamp, these same keys modify the priority of an item. 
 
 ### Link
 1. *C-c C-o*: Open link at point.
