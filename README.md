@@ -57,14 +57,14 @@ Emacs commands generally involve the CONTROL key (sometimes labeled
 CTRL or CTL) or the META key (sometimes labeled EDIT or ALT).  Rather than
 write that in full each time, we'll use the following abbreviations:
 
-1. *C-<chr>*  means hold the CONTROL key while typing the character <chr>
+1. *C-<chr>*  means hold the CONTROL key while typing the character `<chr>`
    Thus, C-f would be: hold the CONTROL key and type f.
 
-2. *M-<chr>*  means hold the META or EDIT or ALT key down while typing <chr>.
+2. *M-<chr>*  means hold the META or EDIT or ALT key down while typing `<chr>`.
    If there is no META, EDIT or ALT key, instead press and release the
-   ESC key and then type <chr>.  We write <ESC> for the ESC key.
+   ESC key and then type `<chr>`.  We write `<ESC>` for the ESC key.
 
-3. *S-<chr>* means hold the SHIFT key down while typing <chr>.
+3. *S-<chr>* means hold the SHIFT key down while typing `<chr>`.
 
 ## Writing Your First Emacs Wiki page
 When you writing in Emacs, you are using the Org mode. 
@@ -106,7 +106,7 @@ The headlines in Org start with one or more stars, on the left margin
  * Another top level headline
 ``` 
 
-You can fold/unfold headlines. Place the cursor on the headlines, and then press <TAB> or S-<TAB>. 
+You can fold/unfold headlines. Place the cursor on the headlines, and then press `<TAB>` or `S-<TAB>`. 
 
 ### Ordered/Unordered List
 Within an entry of the outline tree, hand-formatted lists can provide additional structure. 
@@ -142,8 +142,8 @@ Any line with "|" as the first non-whitespace character is considered part of a 
 | Anna  |  4321 |  25 |
 ```
 
-A table is re-aligned automatically each time you press <TAB> or <RET> or C-c C-c inside the table. 
-<TAB> also moves to the next field (<RET> to the next row) 
+A table is re-aligned automatically each time you press `<TAB>` or `<RET>` or C-c C-c inside the table. 
+`<TAB>` also moves to the next field (`<RET>` to the next row) 
 and creates new table rows at the end of the table or before horizontal lines. 
 The indentation of the table is set by the first line. 
 Any line starting with "|-" is considered as a horizontal separator line 
@@ -217,7 +217,7 @@ This is one-time customization. Next time Emacs will remember your ID.
 #### Login SAPWiki
 Switch back to your working buffer, and type:
 `M-x sapwiki-login <RET>`Enter your wiki password (used to login your windows system), 
-<RET> and Emacs will print message "Login Successfully" if you type the right credential.
+`<RET>` and Emacs will print message "Login Successfully" if you type the right credential.
 
 The password is remembered by Emacs if you do not close it. 
 #### Push to SAPWiki
@@ -297,7 +297,7 @@ Besides you can use following key combination to speed-up your writing and organ
 ### Column width and alignment
 The width of columns is automatically determined by the table editor. And also the alignment of a column is determined automatically from the fraction of number-like versus non-number fields in the column.
 
-Sometimes a single field or a few fields need to carry more text, leading to inconveniently wide columns. Or maybe you want to make a table with several columns having a fixed width, regardless of content. To set 25 the width of a column, one field anywhere in the column may contain just the string "<N>" where "N" is an integer specifying the width of the column in characters. The next re-align will then set the width of this column to this value.
+Sometimes a single field or a few fields need to carry more text, leading to inconveniently wide columns. Or maybe you want to make a table with several columns having a fixed width, regardless of content. To set 25 the width of a column, one field anywhere in the column may contain just the string "`<N>`" where "N" is an integer specifying the width of the column in characters. The next re-align will then set the width of this column to this value.
 
 ```
 |       | <6>    |
@@ -336,7 +336,7 @@ Ediff will be called when run `sapwiki-pull` and `sapwiki-push`. The 2 commands 
 
 Differences are marked, you can do merging by typing `a` or `b`. `a` means you accept the local version snippet, while `b` means you accept the remote version one. 
 
-After all the differences are compared and merged, you type <q> followed by <y> to finish. The local version number is then set to the remote version number. You can then do push again.
+After all the differences are compared and merged, you type `<q>` followed by `<y>` to finish. The local version number is then set to the remote version number. You can then do push again.
 
 My only suggestion is when you run Ediff, you should use a big desktop monitor, larger then 27". 
 
