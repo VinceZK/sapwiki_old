@@ -119,8 +119,22 @@ Like if the extended attributes can be synced to runtime repository? How extensi
 
 There is actually no extensiblity on rules, but extensibiltiy on data objects, projects.
 ** UI
-
 *** Fiori Launchpad on SCP
 Besides S/4HANA's Fiori Launchpad definition, you can also define Fiori Launchpad objects in SCP with the so-called FaaS. 
 
 You must enable the "Portal" service in the SAP Cloud Platform cockpit. Then your configure the Portal service by assigning roles and create a site. For details, refer [[https://help.hana.ondemand.com/cloud_portal_flp/frameset.htm?10b3611a95434f4da08c0781974ef82d.html][online help]]. 
+
+** Content Managment
+VEC has 3 objects: Rule, Tagged Amount, and Selection. The relationship of them is Selection is used by Tagged Amount, and Tagged Amount is used by Rule. VEC follows following steps to integerate with the Content framework.
+
+(D=Content Development System, Q=Quality System, P=Production System)
+
+*** D: VEC Rule, Tagged Amount, and Selection Creation
+Rule, Tagged Amount, and Selection are created using Fiori APP. Use ABAP class "/FTI/CL_WEBGUI_SSCUI" to record contents.
+
+#+BEGIN_SRC abap  
+go_fti_webgui_sscui = /fti/cl_webgui_sscui=>create_instance(
+                      iv_activity_id   = gc_activity_id
+                      iv_object_name   = gc_object_id
+                      iv_cust_obj_type = gc_object_type ).
+#+END_SRC

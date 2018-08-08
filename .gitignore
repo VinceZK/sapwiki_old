@@ -8,3 +8,6 @@ sapwiki-test.elc
 sapwiki.elc
 work/#*
 work/*~
+work/.*
+image/#*
+image/.*

@@ -55,8 +55,8 @@ Eliminate all HANA Attribute views. Migrate scripted-based view to HANA table fu
 *** DONE [#A] Migrate standard delivered HANA calc views to HDI   :William:
 Migrate current(1709) delivered HANA calc views to HDI views and test through all the related BW objects. 
  
-*** TODO [#A] Change the HANA calculation view generation API       :Jin:
-Refer report ZKLEE_HDI_TEST in QJ9.
+*** DONE [#A] Change the HANA calculation view generation API         :Jin:
+Refer report ZKLEE_HDI_TEST in ER9.
 
 Use report SCTS_HTA_DISPLAY_HDI_OBJECT to view the generated HDI objects' source
 
@@ -117,7 +117,7 @@ You use this API to read the XML source of the foundation views and copy them in
 
 *This feature maybe not necessary*
 
-*** TODO [#A] Table Function generation API                           :Jin:
+*** DONE [#A] Table Function generation API                           :Jin:
 Refer class  ZHDI_F500VINCE1 in ER9. 
 #+BEGIN_SRC abap
 METHOD CALL_A
@@ -173,7 +173,7 @@ on A.KTOPL = E.KTOPL
 ENDMETHOD.
 #+END_SRC
 
-*** TODO [#A] Adjust RTCMD UI                                         :Jin:
+*** DONE [#A] Adjust RTCMD UI                                         :Jin:
 As HDI displaces the HANA repository concept, there is no package concept, as well as calculation view or attribute view. You can regard HANA package as a name prefix in the HDI context, calculation view and attribute view are all concluded into HANA views. 
 
 RTC cannot leverage the standard 2 HDI containers: SAPS4H_RT and SAPS4H_RT_GEN. This is because SAPS4H_RT is not allowed for any customer changes. So customers have to create 2 HDI containers: one for the manually created foundation views and the other for the generated views. So when creating a model, they have to assign the 2 HDI container names to the model (as illustrated bellow).
@@ -199,7 +199,7 @@ In the dialog box "Copy Data Category from Template", we need to remove the opti
 
 We delivered 2 Data Category templates in the system table "RTC_DC_VIEW". It is not necessary to add HDI container to the delivered templates, as all the delivered HANA views are also stored in the container "SAPS4H_RT".
 
-*** TODO [#A] Run an end-2-end test from customer perspective for the HDI migration :Vince:
+*** DONE [#A] Run an end-2-end test from customer perspective for the HDI migration :Vince:
 As a customer, they need to create 2 HDI containers: one for the manually created foundation view, the other is for the generated HDI views. WebIDE is required for manually creating the foundation view, so how to set WebIDE will also go through. The process end is successfully generating consolidation views.
 
 1. Create a HDI container(ZRTC_RT) for foundation views in ER9/500. The activation takes 5 minutes.
@@ -243,6 +243,19 @@ Aggregation First vs Aggregation Last. *Aggregation Last maybe a better option*
 |                   | Execution        | 302.1ms   | 280.8ms  |
 |                   | Memory           | 23.9mb    | 24.6mb   |
 
+#+BEGIN_SRC sql
+select * from "tmp.rtc::RTC_C_VINCE1_BPCFINALA_MC"('PLACEHOLDER' = ('$$client$$', '500'))
+where entity = 'C1011'   
+and fiscyearper = '2017001'  
+and cons_cur = 'LC'  
+and RACCT = '0011121101';  
+
+select * from "tmp.rtc::RTC_C_VINCE1_BPCPRELIMA"('PLACEHOLDER' = ('$$client$$', '500'))
+where entity = 'C1011'   
+and fiscyearper = '2017001'  
+and RACCT = '0011121101';
+
+#+END_SRC
 *** DONE [#A] Remove fixed client filtering and client number in the generated views :Vince:
 Currently, all generated CDS views and Calc views have SAP Client number in their names. Besides, in the script, we also literally add client filtering on both where and join clauses. There are 2 reasons:
 1. All the generated views are scripted views which don't support session client.
@@ -266,26 +279,26 @@ Refer CDS views and table functions begin with "ZHDI_500VINCE1".
 Refer following help on how to handle client for table functions:
 https://help.sap.com/doc/abapdocu_751_index_htm/7.51/en-US/index.htm?file=abencds_func_client_handling.htm
 
-ABAP reports need to be adjust as the client number is removed. Use report RPR_ABAP_SOURCE_SCAN to scan. 
+ABAP reports need to be adjusted as the client number is removed. Use report RPR_ABAP_SOURCE_SCAN to scan. 
 1. Classes begin with "CL_RTC_CDS_MD" which is used to generate CDS view
-2. Utility method cl_rtc_comm_util=>get_view_name
-3. RTC_SELECTION_MIGRATION
-4. CL_RTC_CT_ART_ADAPTER=>GET_ABAP_CLASS_NAME
-5. CL_RTC_HDB_CALC_BPC_C=>BUILD_COLUMNS
-6. CL_RTC_IL_MODELING=>DELETE_CDS_VIEWS
-7. CL_RTC_IL_MODELING=>DELETE_AMDP_CLASS
-8. CL_RTC_IL_MODELING=>GENERATE_BRF
-9. CL_RTC_IL_MODELING=>GET_VIEWNAME_SUFFIX
-10. FM: RTC_DUMMY_SELECTION_ON_V10
-*** TODO [#A] Development adjustment on the currency translation and data release process. :Vince:
+2. Utility method cl_rtc_comm_util=>get_view_name done
+3. RTC_SELECTION_MIGRATION done
+4. CL_RTC_CT_ART_ADAPTER=>GET_ABAP_CLASS_NAME  done
+5. CL_RTC_HDB_CALC_BPC_C=>BUILD_COLUMNS  done
+6. CL_RTC_IL_MODELING=>DELETE_CDS_VIEWS   done
+7. CL_RTC_IL_MODELING=>DELETE_AMDP_CLASS  done
+8. CL_RTC_IL_MODELING=>GENERATE_BRF  done
+9. CL_RTC_IL_MODELING=>GET_VIEWNAME_SUFFIX done
+10. FM: RTC_DUMMY_SELECTION_ON_V10 done
+*** DONE [#A] Development adjustment on the currency translation and data release process. :Vince:
 As the names of the consolidation views are changed, the affected consuming programs need to be adjusted. 
-*** TODO [#B] Customer migration documentation and tool         :Vince:Jin:
+*** DONE [#B] Customer migration documentation and tool         :Vince:Jin:
 Migrate existing 1709 model to HDI compatible. Check if there is standard migration tool to migrate static HANA calc views into container "SAPS4H_RT".
 
-*** TODO [#B] Support Audit Trail in Foundation View
+*** DONE [#B] Support Audit Trail in Foundation View
 If in the foundation view, user already provide the field AUDIT_TRA, then during view generation, we will not add the field with fixed value 'INPUT'.
 
-*** TODO [#C] Support Multiple Group Amounts in CT Mode Accounting?
+*** DONE [#C] Support Multiple Group Amounts in CT Mode Accounting?
 In case the currency translation mode is set to "CT in G/L Accounting", the foundation view must at least contains 'HSL' and 'KSL'. If you have multiple group currencies, then you should map the group currency fields to 'KSL1', 'KSL2', and so on. The corresponding currency code field should also be 'RKCUR1','RKCUR2', and so on. Then this view is generated in this way:
 #+Caption: CDS View to Convert Foundation View from Local to Group with Group Amount
 #+BEGIN_SRC sql
@@ -324,3 +337,29 @@ as select ...
 *All KSL fields need to be removed from the generated view.*
 
 
+** Test
+
+#+BEGIN_SRC sql
+select * from "sap.erp.sfin.rtc::RTC_C_VINCE1_BPCUNION"('PLACEHOLDER' = ('$$client$$', '500'))
+where entity = 'C1011'
+and fiscyearper = '2017001'
+and BPC_CATG = 'FINAL';
+
+select * from "sap.erp.sfin.rtc::RTC_C_VINCE3_BPCUNION"('PLACEHOLDER' = ('$$client$$', '500'))
+where entity = 'C1011'
+and fiscyearper = '2017001'
+and BPC_CATG = 'FINAL';
+
+
+select * from "sap.erp.sfin.rtc::RTC_C_VINCE5_BPCUNION"('PLACEHOLDER' = ('$$client$$', '500'))
+where entity = 'C1011'
+and fiscyearper = '2017001'
+and cons_cur = 'CNY'
+and BPC_CATG = 'FINAL';
+
+SELECT * 
+FROM "SYS"."CS_VIEW_COLUMNS"  
+WHERE SCHEMA_NAME = 'ZRTC_RT_9451'   
+AND VIEW_NAME = 'sap.erp.sfin.rtc::RTC_CG_FOUNDATIONA'   
+#+END_SRC
+                                                                                                                               

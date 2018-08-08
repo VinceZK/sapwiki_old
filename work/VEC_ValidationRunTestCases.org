@@ -1,0 +1,191 @@
+#+PAGEID: 1977278508
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: Validation Run Test Cases
+
+#+CAPTION: Validation Run
+[[../image/ValidationRun.png]] 
+
+** DONE Initial Run
+First time run vailidation for an entity at a specific period. 
+
+*** DONE Run reported data validation for an entity 
+In ER9/500
+| Input Parameter | Value |
+|-----------------+-------|
+| Task ID         | RPT   |
+| Fiscal Year     | 2015  |
+| Fiscal Period   | 012   |
+| Version         | Y10   |
+| CoA             | Y1    |
+| Cons Group      | CG30  |
+| Cons Unit       | S3004 |
+
+*** DONE Run reported data validation for a group
+In ER9/500
+| Input Parameter | Value |
+|-----------------+-------|
+| Task ID         | RPT   |
+| Fiscal Year     | 2015  |
+| Fiscal Period   | 012   |
+| Version         | Y10   |
+| CoA             | Y1    |
+| Cons Group      | CG30  |
+
+*** DONE Simulate submit job error
+Give a non-exist group "CGXXX", it popups an error message:
+
+"The dependent char. Consolidation Group contains an invalid value (CGXXX) (see the Dimension)"
+
+*** DONE Simulate waiting job exceding 100 seconds
+1. Set the job to be actived in 2 minutes.
+2. The job is in released status for 2 minutes.
+3. The parameter dialog is open and a waiting dialog is shown.
+4. After 100 seconds, a popup warning message to tell the user check later.
+
+*** DONE Simulate waiting job within 100 seconds
+1. Set the job to be actived in 60 seconds.
+2. The job is in released status for 60 seconds.
+3. The parameter dialog is open and a waiting dialog is shown.
+4. After 60 seconds, dialogs are closed, the list is shown. 
+
+*** DONE Simulate authority check error
+The list is not shown, instead, the background job log is shown to tell authorization error. 
+
+*** DONE Simulate blocking error
+Cons Unit S3006 is blocked in 2015/012. 
+
+*** DONE Simulate missing validation method error
+Cons Unit S3000 is not assigned a method. 
+
+*** DONE Simulate DRR inserting error
+
+*** DONE Simulate validation method dump
+
+** Re-Run
+DRR is already inserted, re-run validation.
+
+*** TODO Re-run reported data validation for a group by clicking revalidation
+In ER9/500
+| Input Parameter | Value |
+|-----------------+-------|
+| Task ID         | RPT   |
+| Fiscal Year     | 2015  |
+| Fiscal Period   | 012   |
+| Version         | Y10   |
+| CoA             | Y1    |
+| Cons Group      | CG30  |
+
+**** TODO Simulate job waiting 2 minutes
+Background list gets refreshed with waiting dialog is still open. It is supposed that nothing is changeing when waiting dialog is open.
+
+Once I close the "Waiting too long" window, if I click "go" again, then it gets refreshed with an empty list. 
+
+**** DONE Simulate job waiting 10 seconds
+
+*** TODO Re-run reported data validation for a group by invoking the parameter dialog
+**** TODO Simulate job waiting 2 minutes
+
+**** DONE Simulate job waiting 10 seconds
+
+*** DONE Re-run reported data validaton for an entity by clicking revalidation
+In ER9/500
+| Input Parameter | Value |
+|-----------------+-------|
+| Task ID         | RPT   |
+| Fiscal Year     | 2015  |
+| Fiscal Period   | 012   |
+| Version         | Y10   |
+| CoA             | Y1    |
+| Cons Group      | CG30  |
+| Cons Unit       | S3004 |
+
+*** DONE Re-run reported data validaton for an entity by invoking the parameter dialog
+
+*** TODO Re-run reported data validaiton for an entity in detail page
+
+**** TODO Simulate job waiting 2 minutes
+When the waiting time exceeds the threshold, there is a popup to tell that the system is busy. However, when I close the popup, the page is endless waiting. It should close the waiting dialog, and leave the page as is. 
+
+**** DONE Simulate job waiting 10 seconds
+
+** Mix-Run
+
+*** DONE Mix with first run and second run
+
+*** TODO Simulate job submitting error
+
+*** DONE Simulate waiting job exceding 100 seconds
+
+*** TODO Simulate waiting job within 100 seconds
+
+*** TODO Simulate block error on old entry and missing method on new entry
+
+** Concurrency Run
+
+*** TODO Run in 2 parallel background job with overlaps
+
+*** TODO Simulate job submitting error in one parallel job
+
+*** TODO Simulate waiting job exceding 100 seconds 
+
+*** TODO Simulate waiting job within 100 seconds
+
+*** TODO Simulate blocking error
+
+*** TODO Submit job with all entries are already in processing
+
+*** TODO Check 2 simulatanously jobs competing.
+
+** Test Run
+
+*** TODO Run single entity in worklist
+
+*** TODO Run multiple entities in worklist
+
+*** TODO Re-run entities in worklist
+
+*** TODO Re-run single entity in detail page
+
+*** TODO Mix-run first run and second run entities
+
+** Integration Run with UCCS
+
+** Performance Test
+
+#+BEGIN_SRC sql
+DROP PROCEDURE "ZHANGVIN"."TEST_VEC_RULE";
+
+CREATE PROCEDURE "ZHANGVIN"."TEST_VEC_RULE"( 
+  out   "ET_ERROR_MSG" "SAPER9"."/1VEC/500FINCSRSRULE005=>RUN=>P00001#ttyp",
+  out   "ET_RST" "SAPER9"."/1VEC/500FINCSRSRULE005=>RUN=>P00002#ttyp" )
+LANGUAGE SQLSCRIPT
+SQL SECURITY INVOKER
+DEFAULT SCHEMA SAPER9
+READS SQL DATA
+AS BEGIN
+
+DECLARE LT_LEAD_TABLE "SAPER9"."/1VEC/500FINCSRSRULE005=>RUN=>P00000#ttyp";
+LT_LEAD_TABLE = select 'S3004' as ENTITY, 'USD' as CURR_CODE, '20180101' as CT_REF_DATE from dummy;
+       
+call "SAPER9"."/1VEC/500FINCSRSRULE005=>RUN"(
+  IT_LEAD_TABLE => :LT_LEAD_TABLE,
+  P_POPER => '012',
+  P_PYEAR => '2014',
+  P_RDIMEN => 'Y1',
+  P_RITCLG => 'Y1',
+  P_RLDNR => 'Y1',
+  P_RVERS => 'Y10',
+  P_RYEAR => '2015',
+  P_TASK_TYPE => '01',
+  ET_ERROR_MSG => :ET_ERROR_MSG,
+  ET_RST => :ET_RST );
+ 
+END;
+
+SET 'CDS_CLIENT' = '500';
+
+call "ZHANGVIN"."TEST_VEC_RULE"(ET_ERROR_MSG => ?, ET_RST => ?);
+#+END_SRC
+

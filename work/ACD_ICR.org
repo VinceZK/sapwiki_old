@@ -1,0 +1,321 @@
+#+PAGEID: 1991879673
+#+VERSION: 6
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1991879673][ACD of InterCompany Reconciliation]]
+* Revision Log 
+[[https://wiki.wdf.sap.corp/wiki/pages/viewpreviousversions.action?pageId=1774869651][Wikipage History]]
+
+* Stakeholders and Roles
+| Role                               | Name              |
+|------------------------------------+-------------------|
+| Development Management             | Schlueter, Ulrich |
+| Lead Architect                     |                   |
+| Program Architect                  |                   |
+| Product Team Architect             | Holthoff, Helmut  |
+| Architect (Implementation Team)    | Vincent, Zhang    |
+| Product Owner                      | Ying, Shi         |
+| Solution Management Representative |                   |
+| Program Quality Manager            |                   |
+| IMS Representative                 |                   |
+| User Interface Representative      |                   |
+
+* Abstract
+Intercompany accounting is the process of one affiliate billing another, recording the associated accounting entries and settling the resulting Intercompany balances.
+ 
+* Background and Context
+
+** Number of customers expected with release now in development
+
+** Underlying platform/application server 
+SAP Cloud Platform Integeration based on SCP NEO.
+
+S/4 HANA both Cloud and OP.
+
+** Product type
+Financial application.
+
+** Delivery
+Both On-Premise and Cloud.
+
+** Business case
+
+** Main use cases/functional scope
+
+*** Intercompany Reconciliation
+
+*** InterCompany transaction posting
+
+*** Netting and Settlement
+
+** List all required SAP products/product versions to support the main use cases
+
+** Relevant product line architecture guideline
+Specific development guideline:
+- [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Develope+Guideline+for+VEC][Develop Guideline for VEC]]
+
+Generic guidelines are:
+- [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Development+Guideline][CDS Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/fioritech/Development+Guideline+Portal][Fiori Overall Guideline]]
+- [[https://ux.wdf.sap.corp/fiori-design/foundation/get-started/][Firoi Design Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/sFIN+UX+Fiori+Guidelines][sFIN UX Fiori Guideline]]
+  
+** Deviations from product line architecture and product experience requirements
+| <10>       | <l40>                                    | <l20>                |
+| Rule ID    | Deviation                                | Approval Status      |
+|------------+------------------------------------------+----------------------|
+| OC-BRMS-1  | If business rule capabilities are required, use BRFplus. Do not use any other comparable technology. Usages of other rule engines or similar tools need to be migrated to BRFplus. As currenctly BRFplus is migrating to ERM, a lot of architecture working is on-going. We will first development a simplified version of rule composer to catch the 1808 release. Afterwards, when ERM has the features we want, we will migrate to ERM. | Approved. Inform Christian Klensch and get possitive feedback. |
+
+
+* Boundary Conditions
+
+** Quality Attribute Scenarios
+
+** Product Standards
+~Ensure compliance with product standards. To do so, go through the product standard requirements of category "architecture & technology" in the Product Standard Compliance tool (PSC) before you start defining your architecture and describe in this section how product standard requirements influence the architecture to be defined.~
+
+~Add a link to the PS planning in PSC or describe deviations within this chapter.~
+
+~For further information on product standards~ See [[https://portal.wdf.sap.corp/wcm/ROLES://portal_content/cp/roles/cto/DevelopmentResources/Idea-To-Market/Infocenters/WS%2520Office%2520of%2520the%2520CTO/Development%2520Resources/I2M/I2M%2520Product%2520Standards][go/productstandards]]
+
+** Technology Decisions
+Define which technologies / frameworks are used in which architecture area and for specific topics:
+
+| Architecture                           | Technologies to be Used             |
+|----------------------------------------+-------------------------------------|
+| Clients                                | S/4HANA Applications                |
+| Presentation Layer /  User Interface   | Fiori, SAPGUI                       |
+| Business Logic Layer                   | ABAP, AMDP, CDS                     |
+| Analytics / Reporting                  | CDS view, Fiori App                 |
+| Integration Middle-ware                | Null                                |
+| Business Process Management / Workflow | SAP Business Workflow for Cloud     |
+| Data Persistence                       | HANA Relational Database            |
+| Development Environment                | ABAP ADT, HANA Studio, Fiori WebIDE |
+| Life-cycle Management                  | ABAP CTS, Fiori CI                  |
+
+** Reuse
+General Principles for Reuse
+- Take reuse into account in every architecture definition. Well planned reuse has a big positive influence on stability, quality, common look and feel, TCO and TCD of the complete application.
+- But consider the costs in relationship to the benefits when reusing a function or feature from others. In especially check if the prerequisites (system, hardware, licenses, implementation and customizing efforts, etc) which are required to use the reuse functions are acceptable for customers. If you answer one of the following questions with yes please consult with your local reuse expert
+- Does the used service or functionality force the customer to install an additional system?
+- Does the usage of a service or functionality force the customer to implement and customize a new application or technology hub?
+- Does the new framework or functionality which is planned exist in a similar version in other areas (Examples are rules engines, business object frameworks, master data, ...)?
+
+The following reuse components *must/should/mustnot* be used within this development:
+
+| <15>            | <15>            | <5>   | <6>    | <30>                           |
+| Reuse Component | Owned by        | Maintenance Guaranteed? | Usage  | Remark / Explanation           |
+|-----------------+-----------------+-------+--------+--------------------------------|
+| CDS 1.0         | CDS team        | Yes   | must   | Use CDS for modeling when ever possible. CDS is SAP's future business script targets to Cloud. Although it has function limitation and not mature enough, but we should use it as much as possible. |
+| Fiori 1.0       | Fiori team      | Yes   | must   | Fiori must be used for all the UI. Fiori is the future S4HANA UI that targets to Cloud. RTC must not use any other Web UI framework, or develop its own framework. Traditional SAPGUI(including HTML GUI) is only allowed for intermediate purpose. |
+
+** Cross-Release Compatibility
+~Describe boundary conditions to ensure smooth upgrade / migration.~
+
+~General Principles for Cross-Release Compatibility~
+
+~A new release of an SAP application can always be integrated with any release of any other SAP application that is still in mainstream and extended maintenance. After an upgrade of an SAP application, all previously used scenarios are still available.~
+
+~Release Synchronization schema to be followed~ (Details see[[https://portal.wdf.sap.corp/wcm/ROLES://portal_content/cp/roles/cto/DevelopmentResources/ReleaseStrategyTransparency/Infocenters/WS%2520PTG/PTG/Operations%2520%2526%2520Program%2520Office/Release%2520Management][/go/releasemanagement]])
+
+VEC will replaces the existing valdiation of UC-CS. How to switch and migrate is still under discussion.
+
+** Other External Forces / Constraints and Assumptions
+~Describe other external forces, constraints and assumptions, which influence or restrict your architecture. This could also be resource, skill set and time line constraints, etc.~
+
+* Architecture Definition
+The architecture chapter describes the main building blocks of the architecture and their relationships. Depict also how the building blocks are integrated with building blocks outside the program/topic.
+
+~For conceptual and technical architecture diagrams use~ [[http://ency.wdf.sap.corp:1080/Modeling/Standard][Technical Architecture Modeling (TAM)]]. 
+
+** Architecture Context and Overview
+#+CAPTION: Overall Architecture Diagram
+[[../image/ICR_Architecture.png]]
+
+1. The InterCompany Hub is developed in S/4HANA(both Cloud and OP).
+2. SAP Cloud Platform Integration(CPI in short) is leveraged to integrate other ERP/Accounting systems, both SAP or non-SAP. CPI is on SCP, it provides basic business message hub capabilities like connectivities, message routing, and security.
+3. The Application Interface Framework(AIF in short) is a middle-ware that targets to a business point of view. 
+4. The Seller ERP and the Buyer ERP is reciprocal. In the diagram above, let's assume the seller ERP sends an AR document to the IC Hub through CPI and AIF. The buyer ERP will receive a AP document from IC Hub through AIF and CPI.
+5. When CPI receive the AR message, it does message processing like convert soap based message format to OData, and send it to AIF.
+6. AIF gets the AR message, does business mapping, substitutions, and enhancements. It then calls the posting hub with the processed message.
+7. The posting hub decides how to post the AR document in the context of IC hub. For example, if the AR document should be posted into ACDOCA, then go through the RWIN interfaces. If the AR document is only used for reconciliation purpose, then may be post to ICR specific table(like ACDOCU) is good choice. Or if Central Finance is adopted, then no need to post, as CF will finally sync this AR to ACDOCA.
+8. Besides posting, the posting hub decides the business routing. After successfully posted the AR, it converts the AR to an AP document and decides who is the right receiver. It again post the AP in its own context, then generate a message to send to the buyer ERP through AIF and CPI.
+9. It suppose the returned AP message should contain the logical receiver name. When the message arrives at the CPI, the CPI determines the physical destination from the logical receiver. So CPI has the mapping information between logical receiver and physical connection.
+10. There is no direct connection between the seller ERP and the buyer ERP during the message processing flow. Any error happened during the processing flow should be properly handled. It's suppose both CPI and AIF have the right error handling mechanism. The error happened in posting hub will be propagated into AIF.
+11. The right master data and configuration data are necessary to support the message flow. For example, the chart-of-accounts, vendor and customer, document types, the organization chart, the logic system landscape, and so on. Master data comes from the satellite ERP systems through existing solutions like master data governance and Central Finance. However, if not, IC Hub also provides all needed master interfaces to populate all necessary master data into it. The Master Data & Configuration Management module provides management and check capabilities for IC Hub.
+12. IC Service Agreement manages the agreements between two inter-companies. It creates and saves the services agreements to the ICR table also through the posting hub.
+13. The Matching and Reconciliation module can reads the data from the existing document stores and run matching and reconciliation rules pre-configured. It also post reconciliation/clearing documents through the posting hub. The posting hub again decides whether to raise a message back to the satellite systems.
+14. Upon all the data processing, there are cockpit, monitor, reports, workflow, and collaboration tools to support and give users a clear view of the IC data and processes.  
+
+** Main Architecture Challenges and Decisions
+
+The communication senario "SAP_COMM_0002" already exists for following scenarios:
+1. Targets to finance opertional, and external system pass data before valuation. The valuation takes place in the S/4HANA.
+2. A serperate interface maybe needed for ICR to accecpt those valuated items and post in IC Hub as simple postings without valuation.
+
+*** Compile rule expression into SQL scripts
+| <15>            | <50>                                               |
+| *Decision*      | The rule expressions should be compiled into SQL scripts |
+| *By*            | Vincent Zhang                                      |
+| *Date*          | <2017-11-06 Mon>                                   |
+| *Description*   | Experienced in RTC 1709op, by translating rules into HANA sql scripts has great benfits on performance. VEC will stick to generate SQL scripts during design time, rather than interpreting during runtime. |
+
+** Integration with Other Systems
+
+*** With SAP Cloud Platform Integration
+SAP Cloud Platform Integration (Cloud Integration) supports end-to-end process integration across cloud-based and on-premise applications (cloud-cloud and cloud-on-premise integration). The leverated features from SAP CPI are:
+1. Out-of-the-box connectivity support (IDoc, SFTP, SOAP/HTTPS, SuccessFactors, OData, HTTPS).
+2. Message routing to one or more receivers.The platform supports routing that depends on the content of the message (content-based routing). For example, the tenant detects that a message has a particular field value, and forwards it to the specific receiver participant that handles requests from the sender participant.
+3. Standard integration contents can be deliverred.
+4. Message can be persisted in case the connected party is offline. Once the party is online again, the message sending can be resumed.
+5. Message monitoring, alert, and audit. (Seems alert is not there)
+6. Security features such as content encryption and certificate-based communication
+
+Data Center regions of CPI can be find here:
+https://help.sap.com/doc/aa1ccd10da6c4337aa737df2ead1855b/Cloud/en-US/3b642f68227b4b1398d2ce1a5351389a.html
+
+
+*** With FI/CO
+We will invoke RWIN interfaces to posting journal entries which may rely on the configuration of relevant FI/CO master data and customerization. 
+
+** Security
+Security will follow S4HANA security guideline and standards. There is no special security aspects for Real-time Consolidation. 
+
+** Deployment and Operations
+*** Deployed Component Structure and Deployment Options
+VEC is embeded in software component S4CORE. The Fiori UI part is in software component UI7
+
+*** System Landscape
+#+CAPTION: Typical Production System Landscape at Customer Site 
+[[../image/ICR_SysLandscape.png]]
+If you use Real-Time Consolidation as a complete consolidation solution, then the embedded BPC must be combined. In ideal cases, the local FI data is already in G/L Accounting, or it is synchronized to the Central Finance system using real-time replication. For those external entities that are not integrated in S4HANA, flexible upload is needed. In either case, data collection component is needed for data release control. Validation may be always necessary to keep the data quality. And if you want to combine planning and consolidation, IBPF is the best choice. 
+
+*** Operation Concept
+Real-time Consolidation is fully contained in S4CORE, and follows all the S4HANA operation standards. Besides, it is based on "Activate-to-Use" concept which provides good flexibility. Real-time means real-time modeling and real-time data, it is aimed to allow multi tenancy to fast deploy and adjust their consolidation processes.
+  
+** Testing
+~Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.~
+
+*** Posting Journal API
+There is an existing communication senario [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1617462332][Finance - Posting Integration (SAP_COM_0002)]] allows posting. The corresponding artifacts are:
+1. SPROXY: namespace: http://sap.com/xi/SAPSCORE/SFIN, service provider: JournalEntryBulkCreationRequest_In
+2. /AIF/CUST: namespace:/FINAC, interface: JRNLENTRIN
+3. Proxy class->method: CL_FINS_ESR_JE_CREATION_REQ->JOURNAL_ENTRY_BULK_CREATION_RE
+4. SOAMANAGER: publish service (Web Service Configuration)
+5. SoapUI to simulate the request(download SoapUI https://www.jianshu.com/p/078076c64045)
+6. SRT_LOG: check soap framework logs
+7. /AIF/ERR: check AIF logs
+
+WSDL of ER9: http://ldcier9.wdf.sap.corp:50000/sap/bc/srt/wsdl/flv_10002A111AD1/bndg_url/sap/bc/srt/xip/sap/journalentrybulkcreationreques/500/journalentrybulkcreationrequest_/journalentrybulkcreationrequest_in?sap-client=500
+
+**** Test Sample Data 
+| Attribute    | Seller     | Buyer      |
+|--------------+------------+------------|
+| Company Code | E3         | E1         |
+| Customer     | C00001     |            |
+| Vendor       |            | V00003     |
+| FI Doc       | 100000000  | 1900000000 |
+|              | 5100000000 | 5100000000 |
+| Fiscal Year  | 2018       | 2018       |
+| Tcode        | FBL5N      | FBL1N      |
+
+**** Tables Involvoed in AR posting
+|                  |                       | <40>                                     |
+| Tables           | Program Name          | Comments                                 |
+|------------------+-----------------------+------------------------------------------|
+| BKPF             | SAPLF005              |                                          |
+| BSEG             | SAPLF005              | BSEG is still used in case document is posted from FB01,FB50,FB60,FB70 |
+| FAGL_SPLINFO     | SAPLFAGL_SPL_SERVICES |                                          |
+| FAGL_SPLINFO_VAL | SAPLFAGL_SPL_SERVICES |                                          |
+| ACDOCA           | SAPLFINS_ACDOC_UPDATE |                                          |
+
+*** SAP Platform Integration
+Refer the internal incident: https://support.wdf.sap.corp/sap/support/message/1880294150
+
+The CPI instance for testing:
+
+Tenant Managment(Adding user and role): https://account.hana.ondemand.com
+
+Account: VLAB 
+Cloud Integration VLAB - v0619 
+
+Web UI URL (Access via web browser):
+https://v0619-tmn.avt.eu1.hana.ondemand.com/itspaces 
+
+Management URL (Access via Eclipse plugin):
+https://v0619-tmn.avt.eu1.hana.ondemand.com 
+
+Runtime URL (Webservice url to be configured in backend systems):
+https://v0619-iflmap.avtsbhf.eu1.hana.ondemand.com
+
+*** Cloud Connector
+https://dlmscc.wdf.sap.corp:8443/
+
+How to gain access:
+1. Join the DLM https://profiles.wdf.sap.corp/groups/5886fab45f99b7393a0000cb/users?page=1
+2. Wait for 2 hours
+3. Re-open the above link, and logon with your i<number> and global password.
+
+Also check the DLM wiki-page: https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1994118292#DLMServiceofferingsforSAPCloudPlatform(SCP)
+
+**** Connect to CPI
+1. Get the subaccount name of v0619, "acc3fed2a"
+2. In the Cloud Connector, add a subaccount by giving region and subaccount name. The user and password should be your global account. Leave location ID empty.
+3. Switch to subaccount v0619, it should be connected.
+4. In Cloud To On-Premise, create a connection to the backend OP system, and add a root URL path. 
+
+Till now, the OP system can receive requests from CPI. For the other direction, that is OP to CPI, it is unnecessary to go through the Cloud Connector.
+
+*** Performance Test
+
+** Architecture Risks
+~Explain your view on architecture-related risks and give hints about potential upcoming problems. Risks can arise for example from changes in the scope, from work-around necessary, from dependencies on other components, or from immature technologies/concepts. Fill in the table for each risk.~	
+*** Scope is not clearly enough
+| <20>                 | <70>                                                                   |
+| Description          | Scope is not clear enough. It is intercompany accounting or intercompany reconcilation? If it is the former one, then the topic is too big for a team of 10. If it is the latter, then focus on integration part is not the right direction. |
+| Impact(for customer) | Product doesn't hit the right target and even may not be deliverred in time |
+| Impact Rating        | High                                                                   |
+| Risk Probability     | High                                                                   |
+| Mitigation Activity  | Define the scope clearly and realisticly                               |
+| Responsible Person   | PO, Developers, and Arch                                               |
+| Due Date             | null                                                                   |
+
+
+** Planned Design Documents
+
+1. [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1996014537][ICR Communcation Scenario]]
+
+* Glossary
+** SAP API Business Hub
+
+|                      |                                          | <30>                           |
+| Hub Instance         | Short URL                                | Used For                       |
+|----------------------+------------------------------------------+--------------------------------|
+| API Hub Test Staging | https://go.sap.corp/apihub-s4hanastaging | Self testing after publishing  |
+| API Hub Test Public  | https://go.sap.corp/apihub-s4hanapublic  | Visible to all SAP after publishing |
+| API Hub Public       | https://api.sap.com                      | APIs visible here after RTC date for the API. (Customer/Partner access) |
+
+Documentation of [[https://help.sap.com/viewer/53d48a2a603e41e9b0b1e825ded17742/1805.500/en-US/f5c8d0579212c525e10000000a4450e5.html][Post Journal Entries from External Systems]], and its API link: https://api.sap.com/api/JOURNALENTRYCREATEREQUESTCONFI/documentation.
+
+** References
+| <25>                      |                  |             | <30>                           |
+| Document Title            | Date             | Link        | Comments                       |
+|---------------------------+------------------+-------------+--------------------------------|
+| SAP Cloud Integration(SCI) | <2018-04-19 Thu> | [[https://help.sap.com/viewer/368c481cd6954bdfa5d0435479fd4eaf/Cloud/en-US/2fb0aa4dc5194b589adcd1c5534901e3.html][online help]] | SAP Cloud Platform Integration (Cloud Integration) for process integration facilitates the integration of business processes spanning different companies, organizations, or departments within an organization. |
+| SAP Cloud Platform Integration (f.k.a. HCI) | <2018-06-08 Fri> | [[https://jam4.sapjam.com/groups/1OAwL01xpv0Aoc1jIp4MsM/overview_page/pQQyPcnAQknR4ZOqB8y2ag][SAPJAM]]      | Knowledge and contacts can be found here |
+| CPI FAQ                   | <2018-06-08 Fri> | [[https://jam4.sapjam.com/wiki/show/ESZDMHqYZLVu5VioSn87Bb][SAPJAM]]      | In the following FAQ we use abbreviations for simplicity. Beside the official name 'SAP Cloud Platform Integration', we use 'Cloud Integration' and 'CPI'. Please have in mind that the latter one is unofficial and we must not be use outside of SAP! |
+| Avatar - SAP Netweaver Cloud Integration Services | <2018-06-08 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/CloudOps/Avatar+-+SAP+Netweaver+Cloud+Integration+Services][sapwiki]]     | Avatar is an application developed on JPaaS platform to provide integration services between different applications. The official name of this application is "SAP HANA Cloud Integration Services". This Integration Services is provided on the cloud infrastructure. |
+| AIF Cookbook              | <2018-06-07 Thu> | [[https://www.sap.com/documents/2015/07/7081b5b2-567c-0010-82c7-eda71af511fa.html][sap.com]]     | The SAP Application Interface Framework provides interface developers with the possibility to create interfaces in a structured way. The cookbook provides information about the different customizing activities needed to set up interfaces in the SAP Application Interface Framework |
+| AIF Adoption Guideline    | <2018-06-07 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/AIF+Adoption+Guideline][sapwiki]]     | All communication scenarios within S4 HANA Cloud have to be AIF enabled. An adoption guide for the configuration of a  monitoring scenario can be found here: |
+| Smart Data Integration available for the SAP Cloud Platform | <2018-08-06 Mon> | [[https://blogs.sap.com/2016/06/22/smart-data-integration-available-for-hcp/][scn]]         | HANA smart data integration (SDI) is a native technology part of your HANA database to handle all styles of data integration. It can do data federation (aka smart data access), |
+| Integration Development Guideline | <2018-04-19 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Integration+Development+Guideline][sapwiki]]     | How to register an integration scenario and how to develop |
+| Application Integration (on-prem) | <2018-06-08 Fri> | [[https://jam4.sapjam.com/groups/06mSqXBEEohr5DCtLNfecc/overview_page/hjYION9sVrtwcQg9AdkJBG][SAPJAM]]      | SAP Process Orchestration and AIF |
+| Finance - Posting Integration | <2018-06-19 Tue> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1617462332][sapwiki]]     | This is a sample communication scenario: Finance - Posting Integration (SAP_COM_0002) |
+| Interface Development from Marvin | <2018-06-21 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/FINCONSCLD/API+-+Reported+Financial+Data][sapwiki]]     | Development process example    |
+| Cloud Connector           | <2018-06-22 Fri> | [[https://help.sap.com/viewer/cca91383641e40ffbe03bdc78f00f681/Cloud/en-US/e6c7616abb5710148cfcf3e75d96d596.html][online help]] | The Cloud Connector serves as a link between SAP Cloud Platform applications and on-premise systems. It combines an easy setup with a clear configuration of the systems that are exposed to the SAP Cloud Platform. |
+| SCP Identity Authentication | <2018-07-16 Mon> | [[https://help.sap.com/viewer/6d6d63354d1242d185ab4830fc04feb1/Cloud/en-US/27882717f44b445fa287936c6f43dc1f.html][online help]] | SAP Cloud Platform Identity Authentication service is a cloud solution for identity lifecycle management for SAP Cloud Platform applications, and optionally for on-premise applications. It provides services for authentication, single sign-on, and on-premise integration as well as self-services such as registration or password reset for employees, customer partners, and consumers. For administrators, Identity Authentication provides features for user lifecycle management and application configurations. |
+| User Management in S/4    | <2018-07-17 Tue> | [[https://blogs.sap.com/2017/07/26/user-management-overview-in-sap-s4hana-cloud/][scn blog]]    | Identity and authentication management can be a little confusing for new customers who are getting started with SAP S/4HANA Cloud deployments or currently deploying S/4HANA Cloud. |
+| ERM Integration Scenarios | <2018-04-19 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1901570587][sapwiki]]     | References of ERM Integration Scenarios |
+| How to Integrate S4Hana Cloud and On-premise System Using SAP Cloud Platform Integration | <2018-06-13 Wed> | [[https://blogs.sap.com/2018/06/12/how-to-integrate-s4hana-cloud-and-on-premise-system-using-sap-cloud-platform-integration-part1/][scn]]         | This blog explains each step in detail on how to integrate S4Hana cloud and on premise systems using SAP Cloud Platform Integration |
+| Communication Arrangement | <2018-07-03 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Communication+Arrangement][sapwiki]]     | A Communication Arrangement describes a communication scenario with a remote system during Configuration Time. |

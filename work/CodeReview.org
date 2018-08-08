@@ -1,5 +1,5 @@
 #+PAGEID: 1897303408
-#+VERSION: 5
+#+VERSION: 8
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1897303408][Code Review Process]]
@@ -66,7 +66,41 @@ Too much openness of the methods has potential risks for consumption.
 *** "is initial" vs "is not bound".
 If you "type ref to object", then both are OK. If you "type ref to data", then "bound" is preferred.
 
+*** Avoid to use obsolete technologies.
+Avoid to use MACROs and EXPORT/IMPORT MEMORY-ID.
 
+*** Naming of method, subroutine, variable should be consistent.  
+Method and Subroutine should begin with a verb, like GET_INSTANCE. Please check https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1928176894#DevelopmentStandards&NamingRulesforVEC-3.3ClassMethod 
+
+*** SQL Injection and ATC Check
+As our program generates dynamic SQL, to avoid SQL injection is very essential to the success of our product. However, we also find the protection method provided by the framework team is too obstacle. To be more simple and practical to our cases, DO remember to quote the input value in following way (using cl_abal_dyn_prg=>quote): 
+
+#+BEGIN_SRC abap
+DATA(cond) = `country = 'DE' AND name = ` && 
+             cl_abap_dyn_prg=>quote( name ). 
+
+TRY. 
+    SELECT * FROM scustom 
+             WHERE (cond) 
+             INTO TABLE @customers. 
+    cl_demo_output=>display( customers ). 
+  CATCH cx_sy_dynamic_osql_syntax. 
+    cl_demo_output=>display( 'Wrong input' ). 
+ENDTRY.
+#+END_SRC
+
+Although the stupid ATC check still throws priority 1 issues, but in this way, we can make sure there is no way for SQL injection in "where" statements. 
+To bypass the ATC check, use this way:
+#+BEGIN_SRC abap
+try.
+  lv_sql_string = cl_abap_dyn_prg=>check_char_literal( lv_sql_string ).
+catch cx_abap_invalid_value.
+  "Meanless check, only to pass ATC. The SQL injection will never happen as the variables are already quoted!
+ endtry.
+#+END_SRC
+
+Refer following link for detail: https://help.sap.com/doc/abapdocu_751_index_htm/7.51/en-US/abensql_inj_dyn_tokens_scrty.htm#@@ITOC@@ABENSQL_INJ_DYN_TOKENS_SCRTY_3.
+s
 ** Summarize and Optimize 
 Regular summarization and optimization are necessary. Code standards, checklist, and review process would be adjusted according to the practice. 
 

@@ -86,11 +86,12 @@ SELECT SESSION_CONTEXT('CDS_CLIENT') FROM DUMMY;
 
 SELECT 
  *
-FROM "SAPER9"."PRTCREPTDT"( 
+FROM "SAPER9"."PVECUCCSUNION"( 
+   P_TASK_TYPE => '01',
    P_RDIMEN => 'Y1' , 
    P_RITCLG => 'Y1', 
    P_RVERS => 'Y10', 
-   P_CONGR => 'CGT0', 
+   P_RLDNR => 'Y1', 
    P_RYEAR => '2015', 
    P_PYEAR => '2014', 
    P_POPER => '012' );
@@ -171,3 +172,5 @@ VEC should provide an API to be called by Data/Cons moniotr to popup the validat
 *** Embed the popup API into Data/Cons Moniotr                         :UCCS: 
 UC-CS should embed the popup API in the correct places so that the monitors can open the Validaiton Result APP. 
 
+** OP Migration
+1. Check with Joachim to sync on how to switch between Cloud and OP with regarding on transportation.

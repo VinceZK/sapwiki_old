@@ -72,6 +72,7 @@ Both On-Premise and Cloud.
 ** Relevant product line architecture guideline
 Specific development guideline:
 - [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Develope+Guideline+for+VEC][Develope Guideline for VEC]]
+- [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1928176894][Development Standards & Naming Rules for VEC]]
 
 Genaric guidelines are:
 - [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
@@ -84,7 +85,7 @@ Genaric guidelines are:
 | <10>       | <l40>                                    | <l20>                |
 | Rule ID    | Deviation                                | Approval Status      |
 |------------+------------------------------------------+----------------------|
-| OC-BRMS-1  | If business rule capabilities are required, use BRFplus. Do not use any other comparable technology. Usages of other rule engines or similar tools need to be migrated to BRFplus. As currenctly BRFplus is migrating to ERM, a lot of architecture working is on-going. We will first development a simplified version of rule composer to catch the 1808 release. Afterwards, when ERM has the features we want, we will migrate to ERM. | Approved. Inform Christian Klensch and get possitive feedback.  |
+| OC-BRMS-1  | If business rule capabilities are required, use BRFplus. Do not use any other comparable technology. Usages of other rule engines or similar tools need to be migrated to BRFplus. As currenctly BRFplus is migrating to ERM, a lot of architecture working is on-going. We will first development a simplified version of rule composer to catch the 1808 release. Afterwards, when ERM has the features we want, we will migrate to ERM. | Approved.            |
 
 
 * Boundary Conditions
@@ -196,7 +197,7 @@ The main reason why we choose temporary leave ERM is that it currenctly has gaps
 | *Date*          | <2017-11-20 Mon>                                   |
 | *Description*   | Rules and Methods are more master data oriented. We can maybe only deliver some examples rather some contents that can be directly used by our customers. |
 
-*** Develope own Fiori UI control for the rule definition
+*** Develop own Fiori UI control for the rule definition
 | <15>            | <50>                                               |
 | *Decision*      | The default Fiori layout is not suitable for our wizard-based rule composer, so we need to develop our own UI control. |
 | *By*            | Vincent Zhang                                      |
@@ -227,44 +228,22 @@ Security will follow S4HANA security guideline and standards. There is no specia
 VEC is embeded in software component S4CORE. The Fiori UI part is in software component UI7
 
 *** System Landscape
-#+CAPTION: Typical Production System Landscape at Customer Site 
-[[../image/TypicalProdLandscape.png]]
-If you use Real-Time Consolidation as a complete consolidation solution, then the embedded BPC must be combined. In ideal cases, the local FI data is already in G/L Accounting, or it is synchronized to the Central Finance system using real-time replication. For those external entities that are not integrated in S4HANA, flexible upload is needed. In either case, data collection component is needed for data release control. Validation may be always necessary to keep the data quality. And if you want to combine planning and consolidation, IBPF is the best choice. 
 
-#+CAPTION: Minimal Production System Landscape at Customer Site 
-[[../image/MinimalProdLandscape.png]]
-For the minimal usage, Real-time Consolidation can be used as a simple and effective group reporting tool. Thus, you only need the foundation and data collection components. Of course, G/L Accounting is always a good companion.  
 
 *** Operation Concept
-Real-time Consolidation is fully contained in S4CORE, and follows all the S4HANA operation standards. Besides, it is based on "Activate-to-Use" concept which provides good flexibility. Real-time means real-time modeling and real-time data, it is aimed to allow multi tenancy to fast deploy and adjust their consolidation processes.
+
   
 ** Testing
 ~Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.~
 
 *** Integration Test with UC-CS
-We already did PoC that technically proves BPC can directly consume data in ACDOCA through BW virtual info-provider. If we want to do further testings, we need establish a complete testing environment. The environment should synchronize with BPC code pool in a high frequency and have a complete set of data for testing.  
+Check [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-UCCS+Integration][SDD-UCCS Integeration]].
 
-The current situation is RTC and BPC are in 2 different code lines. BPC is developed in KIW, and RTC is in ER9. BPC code is synchronized to ER9 in a 2-weeks frequency, which is far beyond our testing requirements. We cannot test in KIW, as KIW is not a S/4 HANA system, and transport our codes from ER9 to KIW is impossible.  
-
-If RTC and BPC own a dedicate testing environment(I give it a name TST), that is to buy and install a new S/4 environment. Then how code from both ER9 and KIW is synchronized to TST, and then merged into the main line still needs lots of configuration and operational effort. 
-
-There is a solution that I think is most feasible. The solution is to request BPC developers to do double maintenance in KIW and ER9. Suppose the BPC main code is already synchronized to ER9, if bug or issues are tested out, then BPC developer do fix directly in ER9, and record the changes in a special change request, which will be excluded in the final release. Meanwhile, these fixes will be re-typed in KIW. Then next time, along with the new features, these fixes will be transported to ER9 and overwrite the existing ones. 
+*** Validation Functional Test
+Check [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Validation+Run+Test+Cases][Validation Run Test Cases]].
 
 *** Performance Test
-Performance tests should be done before the initial release. We want get a general idea of how much fast RTC can achieve, and whether we can improve. The main output could be a matrix like bellow:
-
-| Scenarios/Num-of-Items | 100,000 | 1,000,000 | 10,000,000 | 100,000,000 | 1,000,000,000 |
-|------------------------+---------+-----------+------------+-------------+---------------|
-| Data Validation        | 100ms   | 500ms     |            |             |               |
-| Currency Translation   |         |           |            |             |               |
-| Inter-unit Elimination |         |           |            |             |               |
-| Reporting on-the-fly   |         |           |            |             |               |
-
-The first column contains scenarios we think is performance relevant during consolidation; The first row is the data volume that represented by number of items of ACDOCA. Started from 100,000 lines, and ended with 1 billion lines(we can increase the end value if in real cases, there will be more line items in ACDOCA). The cells are filled with time spent in executing a scenario. Time should be differentiated by DB time, ABAP time, UI time, and the overall response time that end-user can feel. 
-
-Besides, the corresponding memory and CPU consumption should be recorded in other tables. 
-
-The performance result help us to understand the bottleneck, and know how to improve. Meanwhile, according to this discrete data, we could derive a performance formula which can be used to estimate the response time and do hardware sizing in a given data volume. 
+Check [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-UCCS+Integration][SDD-UCCS Integeration]].
 
 ** Architecture Risks
 ~Explain your view on architecture-related risks and give hints about potential upcoming problems. Risks can arise for example from changes in the scope, from work-around necessary, from dependencies on other components, or from immature technologies/concepts. Fill in the table for each risk.~	
@@ -312,120 +291,9 @@ The performance result help us to understand the bottleneck, and know how to imp
 
 1. [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Task][Validation Task]]
 2. [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD-Validation+Rule][Validation Rule]]
+3. [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/SDD+-+Validation+Result+UI][Validation Result]]
 
 * Glossary
-** Code Generation 
-
-Real-time Consolidation generates following runtime artifacts for each model. 
-| <15>            | <30>                           | <45>                                          |
-| Artifact Type   | Naming Example                 | Comment                                       |
-|-----------------+--------------------------------+-----------------------------------------------|
-| CDS View        | /RTCART/500VINCE2_U            | They are generated by RTC modeling tool. The namespace "/RTCART/" can only hold generated objects. All the generated CDS views are in $tmp package and won't be involved in transportation. All CDS views can be re-generated in the target system. |
-| AMDP            | /RTCART/500VINCE2TM100         | Model will generate table function on calc view, and currency translation method AMDP CT runables. |
-| Calc View       | com.customer.RTC_C_500VINCE2_A | In case RTC model needs to be integrated with BPC, then HANA calculation views are also generated under a customer specific HANA package. |
-| DB Procedure    | /1BCAMDP/40F2E9AFBE781EE788B20B66A0326146#500VINCE2MQ001#PERIOD | Currency Translation method also generates HANA DB procedure under namespace "/1BCAMDP/". This is the BASIS namespace for AMDP generated stuff. With this namespace, objects can be accessed in AMDP. Because currency translation generated DB procedures are allowed to be accessed by AMDP, so we must generate them under this namespace. |
-| HANA Global Temporary Table | /1BCAMDP/40F2E9AFBE781ED78895A5FB488CBDF6#500VINCE2#CT | Global temporary table is needed to hold intermediate data during currency translation. It is also generated in namespace "/1BCAMDP/" to allow AMPD access. |
-| BRF+ Application | ZRTC_VINCE2                    | A BRF+ application is generated for each RTC model. The application's storage type is master data, which means you cannot transport. The application level is "application", which means objects under it cannot be shared among applications. |
-| BRF+ Rules      | R1000000000S, R1000000000A     | BRF+ rules (aka functions), context, expression, and so on are all subobjects of BRF+ application. They are managed under the application. |
-
-
-*** CDS View and AMDP 
-CDS views are generated by TCode "RTCMD" as consolidation views. AMDP are mainly generated by Method, like CT and Rounding Method. If the Model is for the integration with BPC, RTCMD also generates table functions which is also regarded as AMDP. 
-
-Does Cloud support CDS View and AMDP generation? The answer from "Derwand, Guido" who is from the Core Platform Management Team said:
-
-~It is not "prohibited" to generate objects in the S/4HANA Cloud. There are only a few rules to be observed. Unfortunately, we have not finished a Wiki page. We can gladly times briefly together with the colleagues on CC.~
-
-While the colleagues on CC(Gebhard, Markus) said: 
-
-~Very well - I hope I may use you, Helmut, as a test rabbit: I am writing straight at a corresponding description and would be very interested in "intelligibility" and appropriate feedback. So would be great if we could go through this together. Https: //wiki.wdf.sap.corp/wiki/display/WhiteBird/On+correcting+code+generating+programs+for+shared+cloud+usage - still missing, how to do is to get a correct TADIR Entry (garkeiner would also be OK).~
-
-The link Markus provided is to ask us to set the GENFLAG, which seems to be all we need to do to be Cloud ready. And we have already follow the guideline to set the flag. 
-
-To my understanding, at least, the RTC Modeling can be to Cloud without any exception.
-
-**** Posting API exception
-The posting API can be regenerated when ACDOCC table is extended. As the posting API resides in class "CL_RTC_CORE_CONS_JOURNAL" which is SAP standard delivered, so the generator have to be adjusted. 
-
-Only class has the TADIR entry, methods belong to the class donot have the TADIR entry. Thus the whole class must be genereated under /RTCART/. Refer [[https://wiki.wdf.sap.corp/wiki/display/WhiteBird/Correct+code+generating+programs+for+shared+cloud+usage][Correct code generating programs for shared cloud usage]].
-
-*** Transportation of the Generated Objects
-There are 2 options: 
-1. Transport the generated objects along with the meta;
-2. Transport the meta, and generate objects in the target system.
-
-Option 1 may not be compatiable with content framework. Because the solution builder cannot deal with the generated AMDP scripts. 
-
-Option 2 requires to implement an After Import Method, which should apply the "AIM Governance Process", according to note 1429180. 
-
-~Please address to following colleagues with a short description about the purpose of the After Import Method you are trying to create. This team will help you to decide if it is necessary to do so or if there is an alternative solution. For Systems related to NetWeaver and Business Suite please contact: Stefan Elfner              D002632    (Business Suite and S/4HANA)~
-
-*** Calculation View
-The Calc View generation only happens when the model is integrated with BPC. As this never happens in the Cloud landscape, so we can just omit.
-
-*** DB Procedure
-DB Procedure here stands for the pure HANA DB procedures which reside in the same SAPERP schema. It is neither an ABAP object, nor a HANA repository object. Whether it is allowed to generate in Cloud is still under discussion. 
-
-Kemmler Andreas,  who is in the S4 Central Architect Team, said:
-
-~Currently there is still an official exception for Fin to work with non-ABAP-managed HANA content (calc views, procedures) and in the context of this exception it is at least theoretically also allowed to generate native HANA content. But if we are talking about a cloud scenario several additional aspects have to be considered:  How is it possible to generate HANA content in a S/4H Cloud system in a secure and lifecycle stable way, if this is triggered from the outside and bypassing ABAP? Is the generation done in Q and P systems? If a tenant gets moved from one HANA system to another one (in the upcoming multitenancy setup with 1711) how would this affect your scenario? How do you update/correct the generated objects? How do you prevent that such updates happen while a LM event takes place in the ABAP system (HFC, EP installation, upgrades)? To assess all such questions properly this should probably be handled as a stack extension / landscape extension request? All the required experts would be involved and could provide their input  @Elfner, Stefan, what do you mean?~
-
-There is still no open discussion yet. Maybe we should push Elfner Stefan to organize such discussions.
-
-Why we need pure DB procedure, not AMDP? There are 2 reasons:
-1. AMDP cannot access CDS views who are converted from a table function.
-2. Pure DB procedures can be easily migrated to non-ABAP platforms. 
-
-To be aware, the DB procedures are generated under naming space "/1BCAMDP/", so that AMDP can consume these procedures directly. 
-
-Update at <2017-07-24 Mon>
-As all the pure HANA artifact, DB procedure should be genereated at a seperate customer container which is flaged as container only for artifacts generation. 
-
-*** HANA Global Temporary Table
-Here the global temporary table is pure HANA table, without ABAP DDIC. The generated GTT is used to pre-compile the data structure first, so that performance can be gained during Method execution.
-
-It is still considerable to use ABAP GTT, however, this may cause generation sequence complexity(you have to generate ABAP GTT first, then DB procedures). As well as DDIC information redundancy.  
-
-*** BRF+ Application and Rule
-BRF+ will leverage SET as the Cloud content deliverly concept. SET convers the SAP standard delivery content. Shadow tables are introduced to store BRF+ Application and Decision Table in XML format. Then, during import, the xml format will be converted to actual BRF+ tables. But if customer transport changes from Q to P, then whether SET or conventional CTS is still under discussion.
-
-It is support to be GA 1802. 
-
-Based on above assumptions, following conclusions are made:
-1. RTC Model generates BRF+ Application and CDS views, thus it cannot be compatiable with the planned BRF+/HRF transportation concept.
-2. Validation Engine can be splitted off from the RTC Model, thus, only BRF+ Application, Decision Table, and Validation Rule meta need to be combined as a transportation unit. There is no code generation produced by RTC.
-3. The Validation Rule meta should be enhanced to support SET.
-4. Validation Method can be either leveraged or a new rule collection concept should be developed, both need to be SET compatiable. In case CTS is chosen 
-5. RTC Selection may be leveraged as a reusable rule expression. Thus a dummy model(only a reserved string, no actual Model meta) should be given, and also it should support SET.
-
-**** SAP Cloud Platform Business Rules
-SAP Cloud Platform Business Rules is a service that enables a cloud application developer to embed decisions in their cloud extension applications and workflow applications. 
-
-There is already a FIORI APP under developing which allows end user to maintain rules and deploy to both JAVA or ABAP runtime. However, from the existing roadmap, there is no planned readiness on whether approcieate APIs are ready for the requriements from Validation Engine.  
-#+Caption: SCP Business Rule APP 
-[[../image/SCP_BizRule.png]]
-
-Actually, there is no overall architecture design on how Validation Engine supports both SCP and S4HANA. And the dependecy also comes the truth that there is no clear detail requirements on what's the business process, how the rules are distruted. I think there should be still a lot of internal discussions missing, after which, we can align roadmap with BRF+. 
- 
-1. There is 2 types of design time repository: BRFpluse and SAP CP Biz Rules. If I choose the first one, how the rules are maintained? Is it a new Fiori APP, or BRFplus workbench?
-2. Is WEBIDE used to define ERM project and rules?
-3. Which design time repository to use, BRFplus or SAP CP Biz Rules?
-4. If SAP CP Biz Rules repository are chosen, then do we need our own rule definition UI?
-5. If we need our own rule definition UI, should it be SAP CP compatiable? Then we need use JAVA, and access data storages like Redis and AWS S3.
-6. What is our rule distribution architecture? Are the rules maintained in a central system, then only distributed runtime objects to the subsidiary systems; Or subsidary system can also allowed to create local rules?
-7. Which one should be the central rule distribution system, S/4HANA or SAP CP? Or both?
-8. How the rules are used in consolidation tasks?
-
-**** Three Types of BRF+ applications
-
-1. System application (default)
-2. Master data application
-3. Customizing application
-
-Depending on the storage type, the system behaves differently when it comes to system transports. System and customizing applications can be local while master data applications are always local. The storage type as well as the locality setting of an application is inherited by all objects that are assigned to that application. All three types of application can be assigned to a development package.
-
-Customizing applications delivered by SAP are always installed in client 000 in systems located at the customer site. If you need to copy such an application into a system client that is used for development, you can accomplish this with the help of a transport request of type Customizing.
-
 ** Build Rule Framework 
 There is another option in case BRF+/HRF cannot fulfill the consolidation requirements, then we can consider to build our own rule framework. However, building a rule framework needs huge cost and effort, which should be regarded as a seperated topic. I list some of the topics:
 
@@ -451,46 +319,6 @@ If you see EC-CS and BCS, they both leverage existing rule framework. BPC actual
 As you can find, this simpler solution cannot fulfill all the logic SET operations, but it can dramtiaclly simplify the implementation. Bearing in mind, as BPC is already verified by customers for a long time, maybe Control is already enough for the consoldiation validaiton purpose. 
 
 Even apply BPC's way, the engineering effort is still very strong. I can imagine, instead of cube, our solution should be based on CDS views(has input parameters). The context and columns are dynamic based on user's settings. The runable should still be compiled into SQL scripts, but the compilation logic may be simpler than expression languages. 
-
-** RTC Model Transportation
-Learned from BRF+/HRF, RTC may also leverage ATO as the future Cloud transportation concept. Further meeting with Dehmann Kai is planned. 
-
-Thus, I suppose SSC-UI is not necessary, as it only deal with simple customization. 
-
-** SSC-UI 
-SE54 V_SEPA_MND_CUST
-
-1. You have maintained IMG structure for selection
-2. Add an entry for RTC selection in table  /FTI/WEBUI_MAINT(SM30);
-#+Caption: WEBGUI Register for RTC Selection
-[[../image/WebGUIRegisterForSelection.png]]
-
-
-*** Effort Estimation
-Based on the effort on RTC selection, I can give an estimation on enhancing all other RTC objects to support SSCUI. 
-
-|                         |               |                | <35>                                |
-| RTC Object              | Est Dev Hours | Est Test Hours | Comment                             |
-|-------------------------+---------------+----------------+-------------------------------------|
-| Model                   |            20 |             20 | Individual object which need carefully embedding SSCUI APIs, and test the transaction and persistency still work properly |
-| Selection               |             5 |              5 | Individual object which need carefully embedding SSCUI APIs, and test the transaction and persistency still work properly |
-| CT Method               |            20 |             20 | Individual object which need carefully embedding SSCUI APIs. |
-| Rounding Method         |            10 |             10 | Similar with CT method, effort can be reduced if the same developer does the enhancement. |
-| Validation Method       |            40 |             20 | Fiori APP, which may require additional care for recording changes. New popup UI and interaction logic may be added. |
-| Validation Rules        |            40 |             40 | Fiori APP, also should consider the BRF+ persistency part. |
-| Document Type           |            10 |             10 | Individual object, much simpler versus method |
-| Method Assignment       |            10 |             10 | Standard Maintenance view           |
-| Exchange Rate Indicator |            10 |              5 | Standard Maintenance view           |
-|-------------------------+---------------+----------------+-------------------------------------|
-| Total Hours             |         *165* |          *135* |                                     |
-
-Besides, additional effort should be considered:
-1. Activation after transportation. Once changes are transported to Q, how to trigger the activation? Manually or Automatically? This is mainly because most of the RTC objects will generated HANA artifacts after activation.
-2. Activation chain must be supported. As now we support transport individual RTC objects, we must also consider the dependencies and relationships among objects. For example, if I transport a changed Selection, while the Selection is already used by multiple methods, then these methods should require re-activation. 
-3. What if error occurs during activation? If error occurs, then the generated runtime stuff would be jeopardized. Rollback mechanism should be given. 
-4. Version management. Each time a RTC object is changed, a new version is generated, the old version will be archived in its version repository. 
-
-The above non-functional requirements are very important, and may cost tremendous development effort. We must carefully balance.  
 
 ** Cloud Job Scheduling
 https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Cloud+Job+Scheduling
