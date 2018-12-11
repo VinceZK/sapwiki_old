@@ -2,7 +2,7 @@
 #+VERSION: 6
 #+STARTUP: align
 #+OPTIONS: toc:1
-#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1991879673][ACD of InterCompany Reconciliation]]
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1991879673][ACD of InterCompany Accounting]]
 * Revision Log 
 [[https://wiki.wdf.sap.corp/wiki/pages/viewpreviousversions.action?pageId=1774869651][Wikipage History]]
 

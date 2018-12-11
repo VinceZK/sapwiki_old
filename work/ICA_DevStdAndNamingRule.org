@@ -1,0 +1,235 @@
+#+PAGEID: 2017195303
+#+VERSION: 3
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2017195303][Development Standards & Naming Rules for ICA]]
+
+** General
+Please follow the SAP wide programming guideline, which you can find: https://wiki.wdf.sap.corp/display/SAPGuide/SAP+Programming+Guidelines+-+Home. 
+
+For all objects:
++ Use ABAP Class to encapsulate components as much as possible. Avoid to use function group/modules unless Dynpro is involved.
++ All objects must have *EN* as original language. The most easiest way to do so is to logon in EN. Otherwise, the original language has to be changed manually.
++ All texts must be written in EN, e.g. methods short texts and program comments.
++ Use *glossary* terms when possible (for example, CL_COMPANY_CODE instead of BUKRS).
++ In compound names, use the underscore character (_) as a separator. Since names are not case-sensitive, this is the only character that you can use to separate names.
++ Names should describe the *action*, not the implementation of the action. Example: PRINT_RECTANGLE, not RECTANGLE_TO_SPOOL
++ All the object names should contain the project prefix or namespace. For Validation Engine, the global prefix is *ICA*.
+
+** Package
+
+*** ABAP Package
+The main package is *FIN_ICA*, under which *FIN_ICA_MATCH* is our development package for the 1908/1909 release. All the ABAP objects except OData and IAM are packaged in *FIN_ICA_MATCH*. The application component *FIN-ICA* is not applied yet, so we temporary use *FIN-CS*.
+
+*** OData Package
+All OData packages should be created under *APPL_FIN_ODATA_CONS* in ER9. 
+
+*** Fiori UI Package
+Fiori UI packages in UYT should be created under *UIFIN_CONS*. 
+
+** Naming Rules
+
+*** Class and Interface
+| Global Class & Interface | Prefix    |
+|--------------------------+-----------|
+| Standard Class           | CL_ICA_   |
+| Exception Class          | CX_ICA_   |
+| Interface                | IF_ICA_   |
+| Interaction Layer Class  | CL_ICA_IL |
+| Persistent Class         | CL_ICA_PS |
+
+*** Class Attribute
+| Attribute Level  | Prefix |
+|------------------+--------|
+| Global Constant  | MC_    |
+| Variable         | MV_    |
+| Structure        | MS_    |
+| Table            | MT_    |
+| Reference Data   | MR_    |
+| Reference Object | MO_    |
+
+*** Class Method
+Method names should begin with a verb.
++ GET_INSTANCE
++ ADD_MESSAGE_INTERNAL
++ CHECK_BO
++ ON_<event_name>
++ AS_<new_type>
++ IS_<adjective>
+
+Method Signature
+| Parameter Type | Object Kind | Prefix |
+|----------------+-------------+--------|
+| Importing      | Value       | IV_    |
+|                | Structure   | IS_    |
+|                | Table       | IT_    |
+|                | Reference   | IR_    |
+|                | Object      | IO_    |
+| Exporting      | Value       | EV_    |
+|                | Structure   | ES_    |
+|                | Table       | ET_    |
+|                | Reference   | ER_    |
+|                | Object      | EO_    |
+| Changing       | Value       | CV_    |
+|                | Structure   | CS_    |
+|                | Table       | CT_    |
+|                | Reference   | CR_    |
+|                | Object      | CO_    |
+| Receiving      | Value       | RV_    |
+|                | Structure   | RS_    |
+|                | Table       | RT_    |
+|                | Reference   | RR_    |
+|                | Object      | RO_    |
+
+*** Class Event
+Event names should have the form <noun>_<participle>. Examples:
++ COMPANY_CODE_CHANGED
++ BUSINESS_PARTNER_PRINTED
+ 
+Event parameters are the same as method's.
+
+*** Class Type
+| Type Kind | Prefix |
+|-----------+--------|
+| Value     | TY_    |
+| Structure | TY_S_  |
+| Table     | TY_T_  |
+
+*** Local Class
+All local classes have the prefix *LCL_*.
+
+*** Local Test Class & Test Double
+| Local Test Class  | Prefix |
+|-------------------+--------|
+| Local Test Class  | LTC_   |
+| Local Test Double | LTD_   |
+
+*** Message Class
+| Message Class | Description                         |
+|---------------+-------------------------------------|
+| ICA01         | For design time objects maintenance |
+| ICA02         | For run time                        |
+
+*** Number Range Object
+Start with prefix *ICA*.
+
+*** Authorization Object
+The object class shall be FICA. The authorization objects shall be created by using the naming convention: F_ICA_xxx
+
+*** ABAP DDIC Objects
+| Object Type          | Prefix     |
+|----------------------+------------|
+| Structure            | ICA_S_     |
+| Structure for Dynpro | ICA_S_DYN_ |
+| Data Element         | ICA_       |
+| Type Group           | ICA_       |
+| Domain               | ICA_       |
+| DB Table             | ICA_       |
+| View                 | V_ICA_     |
+| View Cluster         | VC_ICA_    |
+| Search Help          | ICA_       |
+| Enqueue Object       | EICA_      |
+| Table Type           | ICA_T_     |
+| Sorted Table         | ICA_TS_    |
+| Hashed Table         | ICA_TH_    |
+
+*** Program Local Object
+| Object                     | ABAP Statement | Prefix |
+|----------------------------+----------------+--------|
+| Constants                  | CONSTANTS      | LC_    |
+| Table                      | TYPE           | LT_    |
+| Structure                  | TYPE           | LS_    |
+| Variable                   | TYPE, LIKE     | LV_    |
+| Reference Object           | TYPE REF TO CL | LO_    |
+| Reference Data             | TYPE REF TO IF | LR_    |
+| Field Symbol               |                | FS_    |
+| Class Definition           |                | LCL_   |
+| Class Interface Definition |                | LIF_   |
+
+*** Program Global Object
+| Object                     | ABAP Statement | Prefix |
+|----------------------------+----------------+--------|
+| Constants                  | CONSTANTS      | GC_    |
+| Table                      | TYPE           | GT_    |
+| Structure                  | TYPE           | GS_    |
+| Variable                   | TYPE, LIKE     | GV_    |
+| Reference Object           | TYPE REF TO CL | GO_    |
+| Reference Data             | TYPE REF TO IF | GR_    |
+| Class Definition           |                | GCL_   |
+| Class Interface Definition |                | GIF_   |
+
+*** Select Screen
+| Object        | Prefix |
+|---------------+--------|
+| Parameter     | P_     |
+| Select-Option | S_     |
+
+*** Subroutine(Form)
+ABAP form names should begin with a verb, just the same as class method. 
++ GET_INSTANCE
++ ADD_MESSAGE_INTERNAL
++ CHECK_BO
++ ON_<event_name>
++ AS_<new_type>
++ IS_<adjective>
+
+The parameters of the form should also be the same as class method.
+
+*** CDS View
+For the naming convention of CDS, Please Refer to the [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+CDS+Naming+Guidelines][wiki]], According to the development guideline  the name of the DDL Source and the CDS View have to be identical.
++ DDL Source & CDS View Name: Prefixed with P_, I_ or C (30 char length restriction)  e.g. I_RTCAccount 
++ SQL View Name: Begins with P, I or C (sqlViewName must be length<=16 )  e.g. IRTCACCT
+
+*** Gateway Service Project
+In SEGW, create the Gateway service project with the naming: ICA_<name>.
+
+In SEGW data model, follow the naming convention:
++ Entity type / entity type set: follow VDM naming, e.g. HouseBank, HouseBankSet
++ Attribute in the entity type: follow VDM naming, e.g. CompanyCode, Country
++ Runtime artifacts & service registration: use the default system suggested name
+
+*** Fiori APP
+Please follow the following guideline:
++ General JavaScirpt and UI5 naming convention: https://github.com/SAP/openui5/blob/master/docs/guidelines.md
++ Naming conventions for Fiori UI: https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Naming+Conventions
+
+** Message Handling
+Message handling or validity checks can be divided into 3 categories: UI Consistency Check, Business Consistency Check, and Model Consistency Check. 
+
+*** UI Consistency Check
+You utilize it using JavaScript and most of the time there is no communication(sometimes, a little, like duplicate key check) between the backend. Examples are data type check, work protection, mandatory field check, and so on. The error message should be given using on-field red mark or Message Toast.
+
+#+CAPTION: UI Consistency Check Example
+[[../image/UIConsistencyCheck.png]]
+
+*** Business Consistency Check
+The business consistency check logic should be implemented either in API or OData Classes. Examples of business consistency check are: Authority Check and all kinds of non-natural logics. The OData class should raise exception "/iwbep/cx_mgw_busi_exception" which can be captured by Fiori. All message texts should be maintained in SE91, if possible with long texts.  
+
+Since backend APIs raise their own exception class, it is quite bother to convert other exception classes into "/iwbep/cx_mgw_busi_exception". So, there should be a utility method which does the conversion. Please refer the RTC way: "cl_rtc_comm_util=>handle_message_from_exception( lo_exc )".
+
+The messages should be displayed in Fiori standard Message View, like this:
+
+#+CAPTION: Business Consistency Check Example
+[[../image/BizConsistencyCheck.png]]
+
+*** Model Consistency Check
+Model Consistency Check means those nature or mathematic logics which can be applied to all the thing. Like primary key check, foreign key check, underlying dynamic SQL syntax check, code level consistency check, and so on and on. This kinds of check sometimes can be converted to Business Consistency Check, and can be processed in the same way. But most of time, they are regarded as un-expected errors which cause an abortion of a transaction. Business users can hardly interpret and handle them. In these cases, a message box should popup, like this:
+
+#+CAPTION: Model Consistency Check Example
+[[../image/ModelConsistencyCheck.png]]
+
+** Unit Test
+
+*** ABAP 
+The ABAP unit test must be created as a local test class within the original class. So the naming convention for an ABAP unit test class shall follow the local class naming convention: LTC_<name>. 
+
+e.g. LTC_ICA_UI_SERVICES this is an ABAP unit test local class for the original class CL_ICA_UI_SERVICES.
+
+For more detail guideline of ABAP unit test, you can refer to the wiki page: https://wiki.wdf.sap.corp/wiki/display/TWB/ABAP+Unit+Tests
+
+*** Fiori 
+
+** Code Review 
+Please refer this [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Code+Review+Process][wiki]] for the code review process. 
+
+ 

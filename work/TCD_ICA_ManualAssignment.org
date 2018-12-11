@@ -1,0 +1,272 @@
+#+PAGEID: 2033155580
+#+VERSION: 4
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2033155580][TCD Manual Assignment]]
+
+* General Information
+** Stakeholders and Roles
+| Role                  | Name                  |
+|-----------------------+-----------------------|
+| Author(s)             | Vincent Zhang         |
+| Architect             | Vincent Zhang         |
+| Product Owner         | Ying Shi              |
+| Information Developer |                       |
+| Quality Responsible   | Cen Yao               |
+| Developers            | William Wu, Jin Huang |
+
+** References
+|                       |                  |         | <30>                           |
+| Document Title        | Date             | Link    | Comments                       |
+|-----------------------+------------------+---------+--------------------------------|
+| SDD Manual Assignment | <2018-11-08 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/FINCONSCLD/SDD-ICA+Matching+Engine#SDD-ICAMatchingEngine-5.4TODO%5B#A%5DUI-430ManualAssignment:William:Jin][sapwiki]] | Software design documentation for manual assignment |
+
+* Business Background
+After automatic matching run, there could be still items left unassigned. Besides, even those assigned items may need further manual processing(Communication, Workflow, Confirmation, and so on). The Manual Assignment APP is used to show the assignment result and provide follow-ups. 
+
+* Features
+1. Leading Unit and mandatory filtering fields are determined by the method chosen.
+2. Unassigned items of the leading unit are shown in the up-left table.
+3. Unassigned items of partner units are shown in the up-right table.
+4. Assigned items are shown in the bottom table with out-of-box filters.
+5. The 3 tables layout can be switched to expend either one or two.
+6. Each table's columns can be personalized and saved as personal variants for a certain method.
+7. You can manually assign items from the 3 tables and group them into one assignment number.
+8. You can run auto-matching directly from the APP.
+9. You can view detail of an assignment, which shows items involved and indications on how they are matched under certain rule.
+10. You can process an assignment by giving a reason code. Follow-ups can be determined from reason code.
+
+* Test Cases
+The test environment is ER9/500, with a local established frontend server(https://wxdev.qianmarv.xyz/#Shell-home) for Fiori UIs.
+ 
+** Enter Method ID
+A method ID must be given either manually or automatically through variants or URL parameter. Once the method ID is confirmed, the leading unit and mandatory fields are determined and shown as filters. 
+
+*** DONE Initial Access Manual Assignment APP
++ *When* access the tile "Manual Assignment" without a default variant.
++ The page *should* only show "Method ID" as a mandatory parameter,
++ *and* the 3 tables are in gray,
++ *and* all buttons/dropdown-boxes except "Go" are inactive.
+
+*** TODO Manually Choose Method "SF001" from Dropdown Box
++ *When* choose a method "SF001" from the dropdown box,
++ The page *should* show Company and Fiscal Year Period as mandatory parameters,
++ *and* the fiscal year period is auto-filled with current period.
+
+
++ *When* input a company "C1003" into the company Company field and hit "Go",
++ The 3 tables *should* be in active and loading with data,
++ *and* default columns are determined for each of the 3 tables,
++ *and* buttons/dropdown-boxes should be active
++ *and* partner unit dropdown-boxes should have all available partner units, plus a "All" option.
+
+Default columns in the upper 2 tables: 
+
+Account Doc Number, Line Item, Processing Status, Comm Status, Transaction Amount, Trading Partner.
+
+Default columns in the bottom table:
+
+Group Reference Number(grouped), Account Doc Number, Line Item, Account Number, TC Amount, LC Amount, GC Amount, Trading Partner, Process Status, Rule ID.   
+ 
+*** TODO Access Manual Assignment APP with a Default Variant
+*Since variant cannot be support utill the Fiori is deployed into UYT, cases bellow are ignored.*
+
+Assume the variant create&save feature is implemented.
+
++ *When* access the tile "Manual Assignment" with a default variant,
++ *and* the variant is saved with method id "SF001", Company is empty, Fiscal Year Period is current.
++ The page *should* show Company as a mandatory parameter with empty value,
++ *and* Fiscal Year Period with current period,
++ *and* 3 tables are empty and in gray,
++ *and* all buttons/dropdown-boxes except "Go" are inactive.
+
+Click "Go" will do the same as the previous test case.
+
++ *When* access the tile "Manual Assignment" with a default variant,
++ *and* the variant is saved with method id "SF001", Company "C1003", Fiscal Year Period is current.
++ The page *should* show Company as a mandatory parameter with "C1003",
++ *and* Fiscal Year Period with current period,
++ *and* "Go" button is automatically clicked to display the content bellow.
+
+** Unassigned Items of Leading Unit
+The upper-left table shows all unassigned items of the leading unit. Unassigned items have processing status between '00' and '19', and they are not assigned with a group reference number.
+
+*** TODO Click Document Number to Navigate to Journal Entry APP
++ *When* click the document number link,
++ it *should* navigate to the Journal Entry APP for accounting documents.
+
+
++ *When* navigate back,
++ it *should* still hold the same state as before.
+
+*** TODO Set Filter and Sorter on Each Column
++ *When* set filters in each column,
++ the data *should* filtered correctly.
+
+
++ *When* set sorters in each column,
++ the data *should* be sorted correctly.
+
+*** TODO Save Layout Variant
+*Since variant cannot be support utill the Fiori is deployed into UYT, cases bellow are ignored.*
+
++ *When* saving a layout variant,
++ it *should* list all available columns from ACDOCM,
++ *and* allow to set filters and sorts,
++ *and* allow to save under personal folder as a method specific default layout.
+
+*** TODO Load Default Layout
+*Since variant cannot be support utill the Fiori is deployed into UYT, cases bellow are ignored.*
+
++ *When* there is a default layout defined for a certain user under a certain method,
++ it *should* load the layout variant automatically when accessing the APP.
+
+*** TODO Selected Amount/Quantity
++ *When* choose lines in the table by checking the check-boxes,
++ *and* the value has the same unit,
++ it *should* calculate the correct summary value of the first displayed amount/quantity column of the selected lines.
++ *and* the value is displayed on the footer of the upper-left table.
+
+** Unassigned Items of Partner Units
+The upper-right table shows all unassigned items of partner units that have transactions with the leading unit. The table allows switch among the partner units, and can also display items from all the partner units includes empty partner unit.
+
+*** All test cases of the leading unit table are also valid to this table
+
+*** TODO Switch among Partner Units
++ *When* choose a partner unit ID in the dropdown-box,
++ it *should* show the short description of the partner unit right beside,
++ *and* the right table gets refreshed and shows items with leading unit equal to the partner unit, and partner unit equal to the leading unit or empty.
+
+
++ *When* choose "All",
++ it *should* show "all partner units" right beside,
++ *and* the right table gets refreshed and shows items with leading unit equal to all the partner units, and partner unit equal to the leading unit or empty.
+
+
++ *When* choose the same option as before,
++ it *should* not get refreshed.
+  
+
+** Assigned Items
+The bottom table shows all assigned items which have processing status between '20' and '30'. By default, it shows items grouped by Group Reference Number. 
+
+Following default columns are set in case there is no default variant:
+
+Group Reference Number, Account Doc Number, Account Line Item Number, Account Number, Company Code, (Partner Unit)Trading Partner, Processing Status, Communication Status, Matching Rule ID, TC Amount, LC Amount, GC Amount.
+
+*** TODO Set Filter, Sorter, and Group on Each Column
++ *When* set filters in each column,
++ the data *should* filtered correctly.
+
+
++ *When* set sorters in each column,
++ the data *should* be sorted correctly.
+
+
++ *When* set group in columns,
++ the data *should* be grouped correctly
++ *and* amounts/quantity fields are summarized.
+
+*** TODO Save Layout Variant
+*Since variant cannot be support utill the Fiori is deployed into UYT, cases bellow are ignored.*
+
++ *When* saving a layout variant,
++ it *should* list all available columns from ACDOCM,
++ *and* allow to set filters, sorts and groups on multiple columns,
++ *and* allow to save under personal folder as a method specific default layout.
+
+*** TODO Load Default Layout
+*Since variant cannot be support utill the Fiori is deployed into UYT, cases bellow are ignored.*
+
++ *When* there is a default layout defined for a certain user under a certain method,
++ it *should* load the layout variant automatically when accessing the APP.
+
+*** TODO Out-of-box Filters
++ *When* choose a out-of-box filter form the dropdown-box,
++ it *should* filter correctly according to the filter definitions.
+
+
+1. Show Unmatched Items: Items with processing status between '20' and '29',
+2. Show Matched Items: Items with processing status equal to '30',
+3. Show Records without Variance: Items that are summarized(TSL) to 0 under a group reference number,
+4. Show Records with Variance: Items that are summarized(TSL) not to 0 under a group reference number,
+5. Show Exceptional Matches: Items that are grouped by rules which are defined as "Exceptional Match",
+6. Show Suggested Matches: Items that are grouped by rules which are defined as "Suggested Matches",
+7. Show Manual Assignment: Items that are grouped manually.
+8. All: All items with processing status between '20' and '30'.
+
+** Manual Assign Items
+You can choose items from the upper-left and/or the upper-right table, and click the button "Assign" to do manual assignments.
+
+*** Manual Assign Items from Left and Right Tables
++ *When* choose at lease one item from each of the left and right tables, and click the button "Assign",
++ it *should* create a new group reference number to group the items,
++ *and* remove the lines from the 2 tables,
++ *and* put the lines under a new group reference number on the top of the bottom table,
++ *and* the processing status is set to '20'.
+
+*** Manual Assign Items from Left or Right Only
++ *When* choose items form either the left or the right table, and click the button "Assign",
++ it *should* create a new group reference number to group the items,
++ *and* remove the lines from the corresponding table,
++ *and* put the lines under a new group reference number on the top of the bottom table,
++ *and* the processing status is set to '20'.
+
+*** Add Items to an Existing Group Reference Number
++ *When* choose items form either the left or the right table or both, together with an existing group reference number with processing status less than '25', and click the button "Assign",
++ it *should* remove the lines from the upper tables,
++ *and* put the lines under the existing group reference number on the top of the bottom table.
+
+
+*** Manual Assign Items in Status New(00)
++ *When* choose items in status "New(00)" from either left or the right table or both,
++ it *should* report an error message that says "Items with status New(00) cannot be manually assigned, please run auto-matching first to roll-in".
+
+** Auto Assignment
+You can trigger an auto assignment run by hitting the button "Auto Matching". It will schedule a background job which is immediately run in the backend with the given parameters. The UI will keep on polling the status of the background job, and once it is finished either successfully or in error, the polling is stopped. 
+
+During the matching job run, the concurrency is controlled on leading unit level. That is if a leading unit is involved in one matching run, then another matching run cannot include it anymore.
+
+*** TODO Auto Assign Runs Successfully
++ *When* click button "Auto Matching",
++ the page *should* be blocked until the job is successfully scheduled,
++ the label of the  button "Auto Matching" should be changed to "Matching is running",
++ *and* buttons "Auto Matching" and "Assign" are disabled,
++ *and* the page is polling for the latest status
+
+
++ *When* the background job is finished successfully,
++ the buttons "Auto Matching" and "Assign" *should* be enabled again.
+
+*** TODO "Auto Matching" and "Assign" Buttons are Disabled when Accessing
++ *When* access the APP and show data of a leading unit,
++ *and* there is a background job running for the leading unit,
++ the buttons "Auto Matching" and "Assign" *should* be disabled,
++ *and* the label of "Auto Matching" should be changed to "Matching is running",
++ *and* the polling is running.
+
+*** TODO "Auto Matching" and "Assign" Buttons are Disabled when Hitting
++ *When* you are in the APP and viewing the data of one leading unit,
++ *and* there is a background job running of the leading unit after you have accessed the APP,
++ *and* the buttons "Auto Matching" and "Assign" are still enabled,
++ *and* you hit either "Auto Matching" or "Assign",
++ it *should* disable the 2 buttons,
++ *and* popup a warning dialog to tell that there is already a job running for this entity,
++ *and* the polling is running until the job is finished.
+
+*** TODO "Auto Matching" Run into Errors
++ *When* the matching job runs into errors, 
++ the APP *should* popup a dialog to show the error messages after the polling.
+
+*** TODO The Lock is not Removed due to Un-excepted Errors
++ *When* the matching job runs into un-excepted errors after accessing the APP,
++ *and* the lock is not removed,
++ *and* the 2 buttons are still enabled,
++ *and* the user click one of them,
++ it *should* report an message to tell the user that "The unit is locked by who, but the corresponding job is already terminated, you can unlock the unit by TCode ICAAM.".
+
+
++ *When* the matching job runs into un-excepted errors before accessing the APP,
++ *and* the lock is not removed,
++ *and* the 2 buttons are disabled,
++ it *should* report an message to tell the user that "The unit is locked by who, but the corresponding job is already terminated, you can unlock the unit by TCode ICAAM.".

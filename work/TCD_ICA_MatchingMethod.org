@@ -1,0 +1,154 @@
+#+PAGEID: 2033857616
+#+VERSION: 2
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2033857616][TCD Matching Method]]
+
+* General Information
+** Stakeholders and Roles
+| Role                  | Name                  |
+|-----------------------+-----------------------|
+| Author(s)             | Vincent Zhang         |
+| Architect             | Vincent Zhang         |
+| Product Owner         | Ying Shi              |
+| Information Developer |                       |
+| Quality Responsible   | Cen Yao               |
+| Developers            | William Wu, Jin Huang |
+
+** References
+|                     |                  |         | <30>                           |
+| Document Title      | Date             | Link    | Comments                       |
+|---------------------+------------------+---------+--------------------------------|
+| SDD Matching Method | <2018-11-13 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/FINCONSCLD/SDD-ICA+Matching+Engine#SDD-ICAMatchingEngine-3.1TODO%5B#A%5DUI-210MatchingMethod:Marvin:Jin][sapwiki]] | Software design documentation for manual assignment |
+
+* Business Background
+Matching Method can be excuted to run a match between 2 logic data slices. It is defined with one or two Data Sources, and multiple matching rules. Matching Rules are sequential, they can futher slice the data and run matching according to the matching expressions.   
+
+* Features
+1. User can fuzzy search Matching Methods with terms in ID and Descriptions.
+2. User can define Matching Methods under customer namespaces (not begin with 'S').
+3. A method can be assigned with one or two data sources depends on the settings of the data sources.
+4. A method can have more than one Matching Rules, and the order represents the execution order.
+5. A rule must be flag as either an Exactly Match or a Suggested Match or an Exceptional Match.
+6. A rule can be assinged with a default reason code.
+7. A rule must have 2 data slices, and each slice can be maintained a description.
+8. Each data slice of a rule can be further sliced using filters, filters support graphic and sql scripts.
+9. A rule can have multiple matching expressions. Each expression is composed by a field from data slice 1 and a field from data slice2 connectted with a comparator.
+
+* Test Cases
+The test environment is ER9/500, with a local established frontend server(https://wxdev.qianmarv.xyz/#Shell-home) for Fiori UIs.
+ 
+** Search Methods
+Methods can be fuzzy filterred by a given search term. The search is based on fields: Method ID, Description, and Comment. Methods can also be exactly filterred by fields: Method ID, Is Master Data, Source System, Created By, Created At, Changed By, and Changed At. 
+
+*** DONE Fuzzy Search
++ *When* enter a search term and click "Go",
++ it *should* list methods whose Method ID, Description, and Comment contain the search term,
++ *and* by default, following columns are displayed: Method ID, Is Master Data, Description, Comments, Changed At, Changed By.
+
+
+*** DONE Exact Search
++ *When* enter a term in field "Created By" and click "Go",
++ it *should* list methods with "Created By" equals to the term entered. 
+
+
++ *When* enter a date term in field "Created At" and click "Go",
++ it *should* list methods with "Created At" equals to the term entered. 
+
+
++ *When* click the link "Adapt Filters",
++ it *should* list possible filter fields: Is Master Data, Source System, Created By, Created At, Changed By, and Changed At,
++ *and* all filters works after they are chosen.
+
+*** TODO Layout Customization and Saving Variants
+~This can be tested only after move the UYT~
+
++ *When* click the button "View Settings",
++ it *should* list all available fields,
++ *and* can be displayed in the search list,
++ *and* can be saved under a user ID as a default variant.
+
+
++ *When* next time the user enter the APP,
++ it *should* list the fields according to the default variant.
+
+*** DONE Navigate to Object Page
++ *When* click one line in the search list,
++ it *should* navigate you to the object page in display mode.
+
+** Maintain Method
+A method can be displayed, changed, created/copied. 
+
+*** DONE Create a New Method with One Data Source
++ *When* click "Create Method",
++ it *should* navigate to the object page with Matching Method ID empty and editable.
+
+
++ *When* choose a Data Source "Finance Journal Entries",
++ it *should* display the short description left beside,
++ *and* the "Add filter" should list available fields of the data source,
++ *and* following fields should not be appeared in the list: DOCNR, DOCLN, GRREF, PSTAT, CSTAT, TIMESTAMP, MANDT, RCLNT, <Leading Unit>, <Partner Unit>
+
+
++ *When* click "Save",
++ it *should* save the method successfully.
+
+*** DONE Create a New Method with an Existing Name
++ *When* create a method with existing ID,
++ it *should* popup an error nicely to inform the user the ID already existgs.
+
+*** DONE Create a New Method with Two Data Sources
++ *When* create a method with a data source that doesn't have partner unit,
++ it *should* ask for the second data source that has the same field role definition and mandatory filtering field definition,
++ *and* in the rule page, the first data source is for data slice 1, and the second data source is for data slice 2.
+
+*** DONE Add a Rule
++ *When* add a new rule,
++ following fields are mandatory: Matching Rule ID, Rule Description, and Match Type,
++ *and* filters can be add to each slice,
++ *and* multiple matching expressions can be added,
++ *and* the rule can be saved seperately.
+
+*** DONE Add a Role with Errors
++ *When* add a new rule without "Rule Description" or "Rule ID",
++ it *should* report errors on the fields and forbid saving.                                                                                                                        
+*** DONE Copy Method
++ *When* copy an existing method to a new method by hitting the "Copy" button,
++ it *should* navigate the <New Method> page with all the data from the source method, only leaving the method id empty,
++ *and* after giving a unqiue method ID, you can still do some adjustments, like change description, add/remove/change rules,
++ *and* finally you can successfully save it.
+
+*** DONE Change Method
++ *When* open an existing method and switch to edit mode,
++ it *should* allow to change description, comments, Attributes, Filters.
+
+
++ *When* open an existing method and switch to edit mode,
++ it *should* allow change the sequence of the rules.
+
++ *When* open an existing method and switch to edit mode,
+
+** DONE Search Help
+3 fields are chosen for testing search helps. They are RACCT, RLDNR, and KUNNR. In the Data Sources, table ICA_DS_FS are maintained as following:
+| DS_NAME               | FIELD_NAME | SEARCH_HELP    |
+|-----------------------+------------+----------------|
+| FI_JOURNAL_ENTRIES_01 | RACCT      | ICA_SH_ACCOUNT |
+| FI_JOURNAL_ENTRIES_01 | RLDNR      | FINS_LEDGER    |
+| FI_JOURNAL_ENTRIES_01 | KUNNR      | DEBID          |
+
+Some boundaries/limitations of the selected search help must be met:
+1. The search helps are simple search helps, composiste search helps are not supported. In case a composiste search help is given, then the UI doesn't show it.
+2. The export field name of the search help must be the same with the field in data source.
+3. Search help exit only supports the step "SEARCH".
+4. Filter default values are not supported.
+5. Favirote items are not supported. 
+
+
++ *When* defining filters for methods and rules,
++ *and* the chosen field are maintained search help in table ICA_DS_FS,
++ it *should* have search help for the fields in the Fiori UI,
++ *and* the search help should have the similar feelings like what it looks in ABAP GUI,
++ *and* the filtering works as expected,
++ *and* when an item is clicked, the value is returned to the field.
+
+** 

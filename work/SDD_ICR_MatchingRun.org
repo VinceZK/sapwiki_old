@@ -1,0 +1,297 @@
+#+PAGEID: 2030008139
+#+VERSION: 2
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2030008139][SDD-ICA Matching Run]]
+* General Information
+** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         |               |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+** References
+|                             |                  |             | <30>                           |
+| Document Title              | Date             | Link        | Comments                       |
+|-----------------------------+------------------+-------------+--------------------------------|
+| HANA SQL Functions          | <2018-07-31 Tue> | [[https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.00/en-US/20a61f29751910149f99f0300dd95cd9.html][online help]] | HANA SQL and function manual   |
+| HANA Script                 | <2018-08-01 Wed> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]] | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
+| HANA SQL Reference          | <2018-09-13 Thu> | [[https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.00/en-US/209eaa85751910149a30f95c936075be.html][online help]] | HANA SQL Reference             |
+| How to allow DDL execution  | <2018-08-03 Fri> | [[https://support.wdf.sap.corp/sap/support/message/1880472106][sapwiki]]     | Enable DDL execution           |
+
+* Context
+Matching is executed all on HANA layer to achieve maximum performance benefits. Even thought, as the matching is running on massive data, it may still take some time to execute. Thus, asynchronous run framework should be provided to support directly run from Fiori Apps. Besides, concurrency controls are also necessary to avoid mutual impacts when running at the same time for same units. 
+  
+* Algorithm Realization
+Class "CL_ICA_MATCHING" contains all the logic. The main entry point is the method "RUN" with 2 importing parameters: 1) method level filtering, and 2) cut-off timestamp. The program flow can be described in the following diagram:
+
+#+CAPTION: Algorithm Flow
+[[../image/ICR_AlgorithmFlow.png]]  
+
+** get_method_level_data
+The method gets data to be matched from the underlying data source and ACDOCM, and stores it in a temporary table "#<DataSources>" on DLEVEL(data level) "00". 3 data slices will be extracted separately.  
+1. Slice 1: Unassigned data in ACDOCM since last run. After last matching run, there could be still items that are not assigned with group reference numbers. Then, this run should also include those items.
+2. Slice 2: New data since last run from the data source. After last matching run, there would be new postings in the original table. The data slice will get those new items after last run till the current cut-off time.
+3. Slice 3: Data of Units that are not matched before. Before, some units are not included in all matching run, and you want to include them in this run. 
+
+The pseudo SQL statement is given bellow:
+#+BEGIN_SRC sql
+--Slice 1:
+select SLICE, RULE_ID, '00' as DLEVEL, METHOD_ID, DOCNR, DOCLN, FISCYEARPER, AWREF, 
+BLDAT, A.RCOMP,RASSC, RACCT, TSL, RTCUR, KUNNR, LIFNR, RLDNR, RBUKRS, GJAHR, REF_BELNR, 
+REF_DOCLN, GRREF, PSTAT, CSTAT, TIMESTAMP 
+from ACDOCM as A 
+where METHOD_ID = 'SF001' 
+  and DS_NAME = 'FI_JOURNAL_ENTRIES' 
+  and GRREF = '0' 
+  and (FISCYEARPER <='2018010' and timestamp <= 20181130043608 and RCLNT = 500) 
+union all
+-- Slice 2:  
+select 0 as SLICE, '' as RULE_ID, '00' as DLEVEL, METHOD_ID, DOCNR, DOCLN, FISCYEARPER, AWREF, 
+BLDAT, A.RCOMP, RASSC, RACCT, TSL, RTCUR, KUNNR, LIFNR, RLDNR, RBUKRS, GJAHR, REF_BELNR, 
+REF_DOCLN, GRREF, PSTAT, CSTAT, TIMESTAMP 
+  from ZFINJEM as A 
+  join #MATCHED_UNITS as B 
+    on A.RCOMP = B.RCOMP and A.TIMESTAMP > B.RTIMESTAMP  
+ where (FISCYEARPER <='2018010' and timestamp <= 20191030043608 and RCLNT = 500) 
+union all
+-- Slice 3:  
+select 0 as SLICE, '' as RULE_ID, '00' as DLEVEL, METHOD_ID, DOCNR, DOCLN, FISCYEARPER, AWREF, 
+BLDAT, A.RCOMP, RASSC, RACCT, TSL, RTCUR, KUNNR, LIFNR, RLDNR, RBUKRS, GJAHR, REF_BELNR, 
+REF_DOCLN, GRREF, PSTAT, CSTAT, TIMESTAMP 
+  from ZFINJEM as A 
+ where (FISCYEARPER <='2018010' and timestamp <= 20191030043608 and RCLNT = 500) 
+   and RCOMP not in (select RCOMP from #MATCHED_UNITS );         
+#+END_SRC
+
+** get_rule_level_data
+The method reads data from the temporary table "#DataSourceName" with DLEVEL="00" according to the filters set on the rule level data slice. It stores the data back to "#DataSourceName" on DLEVEL "01". Since only fields that are used for matching are projected, and aggregations may also be required, the rule level data in "#DataSourceName" is only a portion of the method level on both rows and columns. 
+
+The pseudo SQL statement is given bellow:
+#+BEGIN_SRC sql
+select 1 as SLICE, 1001 as RULE_ID, '01' as DLEVEL, RCOMP, RASSC, AWREF 
+  from #FI_JOURNAL_ENTRIES as DETAIL_LINES 
+ where ( DETAIL_LINES.AWREF != '' ) 
+   and ( DETAIL_LINES.RACCT BETWEEN '0001001002' AND '0001009001' ) 
+   and DETAIL_LINES.GRREF = '000000000000' 
+ group by RCOMP, RASSC, AWREF;           
+#+END_SRC 
+
+Since each rule has 2 data slices, then this method is called twice for each rule. 
+
+** run_rule_level_match
+The rule level data slice 1 and 2 will be joined on the matching fields and the data is saved into a dedicate temporary table named "#<MethodID><RuleID>". 
+
+The pseudo SQL statement is given bellow:
+#+BEGIN_SRC sql
+select ROW_NUMBER() OVER() as GRREF, DS1.RCOMP as DS1_RCOMP, DS2.RCOMP as DS2_RCOMP, 
+       DS1.RASSC as DS1_RASSC, DS2.RASSC as DS2_RASSC, DS1.AWREF as DS1_AWREF, 
+       DS2.AWREF as DS2_AWREF 
+  from #FI_JOURNAL_ENTRIES as DS1 
+  join #FI_JOURNAL_ENTRIES as DS2 
+    on DS1.RASSC = DS2.RCOMP and DS1.AWREF = DS2.AWREF 
+ where DS1.SLICE = 1 and DS1.DLEVEL = '01' and DS2.SLICE = 2 and DS2.DLEVEL = '01';         
+#+END_SRC 
+** assign_rule_level_data
+The assigned lines need to be updated to the rule level data in table "#<DataSourceName>". 
+
+The pseudo SQL statements are given bellow:
+#+BEGIN_SRC sql
+UPDATE #FI_JOURNAL_ENTRIES SET GRREF = MATCHED_LINES.GRREF FROM #SF0011001 AS MATCHED_LINES 
+ WHERE SLICE = 1 AND DLEVEL = '01' 
+   AND RCOMP = MATCHED_LINES.DS1_RCOMP 
+   AND AWREF = MATCHED_LINES.DS1_AWREF;                                                                                                                                                              
+UPDATE #FI_JOURNAL_ENTRIES SET GRREF = MATCHED_LINES.GRREF FROM #SF0011001 AS MATCHED_LINES 
+ WHERE SLICE = 2 AND DLEVEL = '01' 
+   AND RCOMP = MATCHED_LINES.DS2_RCOMP 
+   AND AWREF = MATCHED_LINES.DS2_AWREF;    
+#+END_SRC 
+
+** assign_method_level_data
+The assigned rule level data should be updated to method level data. After that, the rule level data will be deleted to save memory space.
+
+The pseudo SQL statements are given bellow:
+#+BEGIN_SRC sql
+UPDATE #FI_JOURNAL_ENTRIES AS DETAIL_LINES 
+   SET SLICE = MATCHED_LINES.SLICE, RULE_ID = MATCHED_LINES.RULE_ID, 
+       GRREF = MATCHED_LINES.GRREF, PSTAT = 30 
+  FROM (SELECT SLICE, RULE_ID, GRREF, RCOMP, RASSC, AWREF 
+          FROM #FI_JOURNAL_ENTRIES 
+         WHERE SLICE = 1 AND DLEVEL = '01' AND GRREF <> '' AND RULE_ID = 1001) AS MATCHED_LINES 
+ WHERE DLEVEL = '00' AND  ( DETAIL_LINES.AWREF != '' ) 
+   AND ( DETAIL_LINES.RACCT BETWEEN '0001001002' AND '0001009001' ) 
+   AND DETAIL_LINES.GRREF = '000000000000' 
+   AND DETAIL_LINES.RCOMP = MATCHED_LINES.RCOMP 
+   AND DETAIL_LINES.RASSC = MATCHED_LINES.RASSC 
+   AND DETAIL_LINES.AWREF = MATCHED_LINES.
+
+UPDATE #FI_JOURNAL_ENTRIES AS DETAIL_LINES 
+   SET SLICE = MATCHED_LINES.SLICE, RULE_ID = MATCHED_LINES.RULE_ID, 
+       GRREF = MATCHED_LINES.GRREF, PSTAT = 30 
+  FROM (SELECT SLICE, RULE_ID, GRREF, RCOMP, RASSC, AWREF 
+          FROM #FI_JOURNAL_ENTRIES 
+         WHERE SLICE = 2 AND DLEVEL = '01' AND GRREF <> '' AND RULE_ID = 1001) AS MATCHED_LINES 
+  WHERE DLEVEL = '00' AND  ( DETAIL_LINES.AWREF != '' ) 
+    AND ( DETAIL_LINES.RACCT BETWEEN '0002001002' AND '0002009001' ) 
+    AND DETAIL_LINES.GRREF = '000000000000' 
+    AND DETAIL_LINES.RCOMP = MATCHED_LINES.RCOMP 
+    AND DETAIL_LINES.RASSC = MATCHED_LINES.RASSC 
+    AND DETAIL_LINES.AWREF = MATCHED_LINES.AWREF
+
+delete from #FI_JOURNAL_ENTRIES where DLEVEL = '01';
+delete from #FI_JOURNAL_ENTRIES where DLEVEL = '01';  
+#+END_SRC 
+
+** post_internal
+The method level data will be finally inserted/updated into table ACDOCM. Since the new document numbers and group reference numbers are get from ABAP number range intervals. Before actual upserting, the mocked document numbers and group reference numbers are replaced to real numbers.
+
+The pseudo SQL statements are given bellow:
+#+BEGIN_SRC sql
+upsert ACDOCM (RCLNT, DS_NAME, RULE_ID, SLICE, METHOD_ID, DOCNR, DOCLN, FISCYEARPER, AWREF, 
+BLDAT, RCOMP, RASSC, RACCT, TSL, RTCUR, KUNNR, LIFNR, RLDNR, RBUKRS, GJAHR, REF_BELNR, 
+REF_DOCLN, GRREF, PSTAT, CSTAT, TIMESTAMP) 
+select 500 as RCLNT, 'FI_JOURNAL_ENTRIES' as DS_NAME, RULE_ID, SLICE, 'SF001' as METHOD_ID, 
+case DOCNR when 0000000000 then DENSE_RANK() over (order by RCOMP) + 0 else DOCNR end as DOCNR, 
+case DOCLN when 0 then ROW_NUMBER() over (partition by RCOMP order by RULE_ID) 
+           else DOCLN end as DOCLN, 
+FISCYEARPER, AWREF, BLDAT, RCOMP, RASSC, RACCT, TSL, RTCUR, KUNNR, LIFNR, 
+RLDNR, RBUKRS, GJAHR, REF_BELNR, REF_DOCLN, 
+case RULE_ID when '' then 000000000000 
+             else 1 - DENSE_RANK() over (order by RULE_ID, GRREF DESC) end as GRREF, 
+case PSTAT when '00' then '01' else PSTAT end as PSTAT, 
+CSTAT, TIMESTAMP from #FI_JOURNAL_ENTRIES where DLEVEL = '00';       
+#+END_SRC 
+
+* Asynchronous Run Framework
+When 2 users run matching with the same scope or the scopes overlap near the same time, then the engine should forbid the latter one to avoid data inconsistency during matching running. The lock granularity is on a pair of a leading unit and one of its partner unit. 
+
+For example, the scope is defined as in fiscal year period "2018010", and leading units are "C1001, C1002, C1003". Then following lock entries will be stored in table "ICA_ASYNC_STATUS". The lock IDs don't include the fiscal year period, because fiscal year period is defined with comparator "<=", which means all the data before the period will be included. Only if the fiscal year period is defined with comparator "=", does it include in the lock ID.
+
+| Lock ID     | Job Name     | Job Count | Initiator |           Time |
+|-------------+--------------+-----------+-----------+----------------|
+| SF001/C1001 | ICA_MATCHING |    000001 | ZHANGVIN  | 20181030000000 |
+| SF001/C1002 | ICA_MATCHING |    000001 | ZHANGVIN  | 20181030000000 |
+| SF001/C1003 | ICA_MATCHING |    000001 | ZHANGVIN  | 20181030000000 |
+
+If any other user who wants to run matching in a scope that includes any unit(s) in "C1001, C1002, C1003", then this run will be prohibited. 
+
+Once current run is finished either successfully or with some expected errors, the locks will be removed. Unless unexpected errors(system dump, abap dump, and so on) happen, then the lock entries have to be cleared in a manual way. By which a lock manual deletion APP will be introduce with Tcode "ICAAM".
+
+During the matching run, the frontend web applications poll status from the table. If there are related entries in the table, then the corresponding job status can be retrieved by the job name and job count. 
+
+The main lock and unlock logics are implemented in ABAP Class "CL_ICA_METHOD_RUNTIME".
+
+* Matching Run Reports
+The ABAP report "ICA_MATCHING_RUN" acts as the main interface to initiated a matching run by all possible consumable applications. In most cases, it will be run as a background job. 
+
+It requires a method id and a filter string. Only the mandatory filter fields and leading unit fields can be used in the filter string. By default, the filter string is automatically determined according to the mandatory filter fields which are mandatory required. The leading unit fields are optional, if not given, it means running all units. All other fields are not allowed in the filter string. 
+
+Here are some good and bad examples of the filter string of method "SF001". In which "FISCYEARPER" is defined as mandatory filtering field with comparator "<=". and "RCOMP" is defined as the leading unit field.
+
+Good ones:
+1. FISCYEARPER <='2018011'
+2. fiscyearper <= 2018010 and RCOMP between 'C1001' and 'C1999'
+3. RCOMP in ('C1001','C1002','C1003') and fiscyearper <= 2018010
+4. rcomp in ('C1001', 'C1002', 'C1003') or rcomp between 'C2001' and 'C2999' and rcomp != 'C2333' and fiscyearper <= 2018010
+
+Bad ones:
+1. FISCYEARPER = '2018011', "the comparator must be '<='
+2. RCOMP in ('C1001','C1002','C1003'), "the mandatory filter field is missing
+3. fiscyearper <= 2018010 and RLDNR = '0L',  "Illegal field 'RLDNR'
+4. fiscyearper <= 2018010 and RCOMP between 'C1001',   "syntax error, missing 'and' after between
+
+In the "Advance Option" section, the following options are given:
+1. "Cut-off Time": By default it is when the report is running. You can give a specific timestamp to let the matching run data only before that time.
+2. "Debug": If checked, then the report will stop at the predefined break-points, where you can see some intermediate results in the HANA local temporary tables. It is used to do some error tracing and issue fixing.
+3. "Show Statistics": If checked, after matching run, a statistic report will be shown to tell how many new items are roll-in, and how many new items are assigned. 
+
+* Performance Testing
+Performance testing uses the method "SF001", which is based on the Data Source "FI_JOURNAL_ENTRIES". The Data Source is assigned with the CDS view "Z_FinJournalEntries" and be set with "RCOMP" and "RASSC" as the leading unit and partner unit. 
+
+CDS view is based on table "ZMACDOCA", which is a copy of table "ACDOCA". It has 23 fields with 11 mandatory fields.  
+
+** Method Settings
+There are 2 rules in method "SF001", the rule configurations are like bellow:
+
+*** Rule 1
+Filtering on slice 1:
+| Filter Field | Select Option |        Low |       High |
+|--------------+---------------+------------+------------|
+| AWREF        | NE            |            |            |
+| RACCT        | BT            | 0001001002 | 0001009001 |
+
+Filtering on slice 2:
+| Filter Field | Select Option |        Low |       High |
+|--------------+---------------+------------+------------|
+| AWREF        | NE            |            |            |
+| RACCT        | BT            | 0002001002 | 0002009001 |
+
+Matching Expression:
+| Left Field | Comparator | Right Field |
+|------------+------------+-------------|
+| AWREF      | Equal      | AWREF       |
+
+*** Rule 2
+Filtering on slice 1:
+| Filter Field | Select Option |        Low |       High |
+|--------------+---------------+------------+------------|
+| RACCT        | BT            | 0001001002 | 0001009001 |
+
+Filtering on slice 2:
+| Filter Field | Select Option |        Low |       High |
+|--------------+---------------+------------+------------|
+| RACCT        | BT            | 0002001002 | 0002009001 |
+
+Matching Expression:
+| Left Field | Comparator   | Right Field |
+|------------+--------------+-------------|
+| BLDAT      | Equal        | BLDAT       |
+| RTCUR      | Equal        | RTCUR       |
+| TSL        | OppoToler(8) | TSL         |
+
+** Test Data Generation
+ABAP report "ZICA_PERF_DATA" is used to generate the performance testing data. It generates data for company codes from "C100"~"C120", which all have inter-transactions with each other. It is supposed that on each side, each company code has a random number(1 to 10) of transaction items. For example, C100 has 3 lines for a transaction, while the partner C101 has 4 lines corresponding to the transaction. Since we total have 21 company codes, thus there would be 420 transactions if each pair has 2 transactions. If we regard each 420 transactions as a package, then each package will have 4200 lines by average.   
+
+#+CAPTION: Test Data Example
+[[../image/ICR_TestDataExample.png]]  
+
+Data can be magnified by assign the number of packages. For example, 10 packages will generated 42,000 lines. 
+
+** Performance Results
+
+*** Time Cost
+| Num of lines | Cost (ms) |
+|--------------+-----------|
+|            0 |       600 |
+|         4300 |       953 |
+|         8832 |      1325 |
+|        13347 |      1737 |
+|        17365 |      2064 |
+|        26127 |      2534 |
+|        30382 |      2621 |
+|        35264 |      2887 |
+|        39035 |      3079 |
+|        43690 |      3288 |
+|        47780 |      3475 |
+|        52625 |      3178 |
+|        57136 |      3594 |
+|        61632 |      3511 |
+|        65967 |      4128 |
+|        88386 |      5443 |
+|       105234 |      6551 |
+
+#+CAPTION: Performance Test Result
+[[../image/ICR_PerfResult.png]]  
+
+Base on the line above, a performance estimation formula can be get as:
+
+*y=0.0507 * Num of lines + 928*
+
+So, 1 million lines will possibly cost in 51 seconds.                                                                                                                                                                                                                                                                                                                                    
+     
+
+                                                                                                                                                                                                                                                               

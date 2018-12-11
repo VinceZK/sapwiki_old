@@ -1,0 +1,36 @@
+#+PAGEID:
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-ICA Automatic Adjustments
+
+** References
+| <25>                      |                  |             | <35>                                |
+| Document Title            | Date             | Link        | Comments                            |
+|---------------------------+------------------+-------------+-------------------------------------|
+| SAP S/4HANA: Real-Time InterCompany Postings for Project-Based Services | <2018-12-05 Wed> | [[https://sapinsider.wispubs.com/Assets/Blogs/2018/February/SAP-S-4HANA-Real-Time-Intercompany-Postings-for-Project-Based-Services][external]]    | SAP S/4HANA: Real-Time InterCompany Postings for Project-Based Services |
+| Define appl log Objects   | <2018-12-06 Thu> | [[https://help.sap.com/saphelp_nw70/helpdata/en/d6/5d7f38f52f923ae10000009b38f8cf/frameset.htm][online help]] | Define application log objects      |
+| Appl Log - Adoption       | <2018-12-06 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/core/Log+-+Adoption][sapwiki]]     | How to integrate the Application Log Viewer app into another application |
+
+** Concept
+Based on the matched result, the system can do adjustments on the source automatically. This is to form a closed loop to make best usage of the matched results. 
+
+** Design
+The automation is all about the implementations of some automatic logics. To harmonize with the Matching Engine and Reason Code processing, the implementations should apply some protocols, which is in a form of inheriting a super ABAP Class.   
+
+The super class provides some utility methods like read the matched results, error handling, exposed interfaces, and so on. 
+
+*** The Super Class
+ABAP Class "CL_ICA_AUTO_ADJUSTMENT" is the super class. User should inherit the Class and create its own Class to implement the adjustment logic. There are mainly 2 methods need to be redefined: "GET" and "POST". 
+The "GET" method is used to read the matched result from ACDOCM with the given GRREF, and do the data conversion to the output structure. The output structure is defined in the Reason Code, and is an ABAP DDIC structure. In the super Class' implementation, the "GET" method reads data directly to an internal table type to ACDOCM in case no output structure is given. But if an output structure is given, it just does a move-corresponding cascading from ACDOCM to the output structure. It is supposed in a customer's implementation, richer conversion logic can be applied, and the output structure can also be a deep structure. 
+
+The "POST" method gets the outputs from "GET", and posts the data into the source tables. We use accounting posting as an example(which is also implemented in Class "CL_ICA_FIN_JOURNAL_POST"), the output data is used to feed the BAPI "BAPI_ACC_DOCUMENT_POST". The BAPI returns are saved into application log(object "FIN_ICA", sub-object "AA"). According to the BAPI returns, if it contains no error message, then either update the processing status, or unassign the assignment and run a re-matching again. Otherwise, just stop further processing. User can view the returns from the UI420 by checking the application logs.   
+
+During batch processing, different reason codes may be configured with different Auto-Adjustment(AA) classes. Thus a factory method "GET_INSTANCE" is given to ask for an AA instance according to a given reason code. The factory method makes sure the same AA class only creates one instance in the session. 
+
+You can use the given methods: CREATE_APPL_LOG, ADD_MESSAGE_TO_LOG, and SAVE_APPL_LOG to store the logs during posting. It is also much convenient to use SAVE_BAPIRET2_TO_APP_LOG if the return is the standard BAPIRET2. 
+
+*** Financial Journal Posting
+ABAP Class "CL_ICA_FIN_JOURNAL_POST" is a sub-class of "CL_ICA_AUTO_ADJUSTMENT". It does financial journal postings according to the matching result. 
+
+**** Customization

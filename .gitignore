@@ -7,7 +7,9 @@ sapjira.elc
 sapwiki-test.elc
 sapwiki.elc
 work/#*
+work/.#*
 work/*~
 work/.*
 image/#*
 image/.*
+image/.#*

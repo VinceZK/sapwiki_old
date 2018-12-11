@@ -1,0 +1,74 @@
+#+PAGEID: 2037811540
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: SDD-ICA Workflow
+* General Information
+** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         |               |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+** References
+|                           |                  |         | <30>                           |
+| Document Title            | Date             | Link    | Comments                       |
+|---------------------------+------------------+---------+--------------------------------|
+| Responsibility Management | <2018-08-22 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Responsibility+Management][sapwiki]] | For S/4HANA Cloud Applications, there is a need to determine uniformly and centrally the person or entity who could be held as responsible for completing a particular task or activity. |
+| Flexible Workflow-Runtime | <2018-09-13 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1828068524#S/4FlexWorkflow-Runtime-S/4ResponsibilityManagement][sapwiki]] | The flexible business workflow runtime is based on an already implemented feature in the Business Workflow runtime, the enablement of building node hooks, which dynamically decide over the next step. |
+
+* Context
+The following 2 scenarios are given for the most simplest cases but cover the main technique paths. The are based on Company and Trading Partner. In case other organization dimensions like profit center and cost center need workflow, then additional workflow scenarios should be developed. There is no chance to have a generic workflow scenario that fulfill all possible financial organization dimensions.  
+
+The first case is the accountant in the seller company find that a payment is missing at the buyer's side. Then she submits a workflow to let the accountant of the buyer company to verify, if it is missing, then click "approve", the system can automatically post the payment in the buyer's system. 
+
+The second case is from the buyer side, the accountant found a payment may be missing. Then he triggered a workflow to ask the seller side to check if corresponding billing document is sent out. If the answer is confirmed, then the assignment status is set to Confirmable. Afterward, the buyer side accountant clicks the "confirm" to post the payment in his own system. 
+
+In both cases, if the workflow is rejected, then the initiator can see the reason and decide what to do next. He/she can either edit and submit again, or do some adjustments on his/her own, or just leave a memo. 
+
+#+CAPTION: UI-110: Matching Rule
+[[../image/ICR_WorkFlow.png]]  
+
+* Detail Design
+Workflow is triggered from "UI-420 Assignment Detail" or "UI-430 Manual Assignment", when the user click "Submit" button on group reference number(s) which are given with reason codes that requires workflow. 
+
+ICA Workflow supports both S/4HANA Flexible Workflow and traditional SAP Workflow. Since Flexible Workflow now supports both Cloud and OP, we generally recommend our users to utilize Flexible Workflow. However, if traditional Workflow is still necessary, we don't limit the use of it.
+
+For Cloud users, we deliver 2 workflow scenarios that allow users to freely compose activities as they needed. For OP users, besides using the delivered workflow scenarios, they are allowed to define their own workflow scenarios. The only requirements is to apply to some simple patterns for the ICA cases. 
+
+Based on current Flexible Workflow technology(traditional Workflow technology as well), following general design are given as bellow:
+1. A Reason Code is assigned with a Workflow scenario ID.
+2. The assigned workflow scenario must be configured to be triggered by a dedicate ABAP Class event.
+3. Besides the triggering event, the ABAP Class also provides the workflow context and necessary methods.
+4. 2 pre-defined activities are given, which are "verify assignment" and "post adjustments".
+5. Define triggering conditions based on fields "Company" and "Accounts"(maybe AccountGroup is better).
+6. Define Team & Responsibility Category.
+7. Integrate the Team & Responsibility Category with the Workflow scenario.
+8. Fiori tiles are defined for Workflow Inbox&Outbox as well as the Team and Responsibility maintenance. 
+
+** TODO Define 2 Flexible Workflow Scenarios      :William:
+Refer WS028000046 from accounting team. One scenario post journal entries directly, the other only changes the assignment status to "25".
+
+And maybe a Consumer CDS view is need for inbox object verification.
+
+** TODO Assignment Object Classes                                       :William:Jin:
+Develop an ABAP Class "CL_ICA_ASSIGNMENT_VERIFICATION". The Class has the ICA Workflow triggering event, as well as the leading object and some useful methods, like "post", "set_proc_status", and so on.
+
+Refer ABAP Class "CL_FDC_ACCDOC_VER".
+
+Callback class may needed for notification pushing. Refer CL_FDC_ACCDOC_VER_FLEX_RUN_APP.
+
+** TODO Team & Responsibility Category           :William:
+Following requirements must be met:
+1. Get responsible contacts according to attributes like company, trading partner from an accounting journal entry.
+2. Contacts can be further differenbtiated with difference roles(or functions), like manager, operator, and so on.
+3. Contacts can be assigned with different contact methods, like email, copilot, and so on.
+4. Responsibility rules can be easily maintained by end-users. And they can also be delivered as standard content.
+5. Existing APIs are also given for the responsible contacts determination.
+
+** TODO Fiori Tiles and IAM                    
+Fiori tiles should be created for workflow management, workflow inbox and outbox, and responsibility management. 
