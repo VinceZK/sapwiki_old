@@ -11,16 +11,121 @@ The only meaningful work should be done is to connect JSON with SQL in some *dom
 * First Glance
 
 ** Define Your Entity
+Entity "person" is defined with 4 attributes and 4 roles. 
+#+CAPTION: Entity: person
+[[../image/EntityPerson.png]]  
+
+A person can be an employee, thus it has the role "employee". Role "employee" has a relation "r_employee".
+#+CAPTION: Role: employee
+[[../image/RoleEmployee.png]]  
+
+A relation corresponds to a DB table which represents a collection of attributes. 
+#+CAPTION: Relation: r_employee
+[[../image/RelationEmployee.png]]  
+
+Entities can have relationships with each others. Each relationship is performed by certain roles. For example, relationship "marriage" is performed by 2 roles: husband and wife. Once the 2 roles are respectively assigned to 2 people, they can then potentially have the marriage relationship.  
+#+CAPTION: Relation: r_employee
+[[../image/RelationshipMarriage.png]]  
 
 ** Browse and Maintain Your Entity Instances
+Once you have the data modelling done, you can immediately create a person instance. 
+#+CAPTION: A person instance
+[[../image/PersonInstance.png]]  
+
+And you can view the JSON format. The JSON is not just an simple format, but also the API. Refer Message-based Design for detail.
+#+CAPTION: JSON format of a person instance
+[[../image/JSONPersonInstance.png]]  
+
+You can also search instances of different entity types based on all their available attributes from relations and relationships. 
+#+CAPTION: Instance Search and List
+[[../image/PersonInstance.png]]  
 
 ** Develope Your UI 
+You can use any UI technologies. Since this project uses Angular, then the Angular examples are given.
+
+JSON-On-Relations won't reduce the effort of your UI development, but try to eliminate the integeration effort between UI and the backend service. For simple use cases, all you need is to create an Angular Service file. And in the service file you have 4 methods: searchEntities, getEntityInstance, createEntityInstance, and ChangechangeEntityInstance. They are simple REST-ful services that supports all kind of your entity types CRUD operations.
+
+~A deletion on an entity instance is to set the deletion flag, rather than the physically deletion. So it can also be regarded as a change operation.~
+
+#+BEGIN_SRC js
+import { Injectable } from '@angular/core';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {Observable, of} from 'rxjs';
+import {Entity} from './entity';
+import {catchError} from 'rxjs/operators';
+
+const httpOptions = {
+  headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+};
+
+@Injectable({
+  providedIn: 'root'
+})
+export class EntityService {
+  private entityUrl = 'http://localhost:3001/api/entity';
+  private queryUrl = 'http://localhost:3001/api/query';
+
+  constructor(private http: HttpClient) {
+  }
+
+  searchEntities(queryObject: QueryObject): Observable<any> {
+    return this.http.post<any>(this.queryUrl, queryObject, httpOptions).pipe(
+      catchError(this.handleError<any>('searchEntities')));
+  }
+
+  getEntityInstance(instanceGUID: string): Observable<Entity> {
+    return this.http.get<Entity>(this.entityUrl + `/instance/${instanceGUID}`).pipe(
+      catchError(this.handleError<any>('getEntityInstance')));
+  }
+
+  createEntityInstance(instance: Entity): Observable<any> {
+    return this.http.post<any>(this.entityUrl, instance, httpOptions).pipe(
+      catchError(this.handleError<any>('createEntityInstance')));
+  }
+
+  changeEntityInstance(instance: Entity): Observable<any> {
+    return this.http.put<any>(this.entityUrl, instance, httpOptions).pipe(
+      catchError(this.handleError<any>('changeEntityInstance')));
+  }
+
+  private handleError<T> (operation = 'operation', result?: T) {
+    return (error: any): Observable<T> => {
+      // TODO: send the error to remote logging infrastructure
+      console.error(error); // log to console instead
+      // Let the app keep running by returning an empty result.
+      return of(result as T);
+    };
+  }
+}
+#+END_SRC:
 
 ** Expose Your Entity through API
+So it is quite the same for the backend service exposure. Use NodeJS and Express as an example, what your need is to expose the following services:
+#+BEGIN_SRC js
+const express = require('express');
+const router = express.Router();
+const entity = require('./controller/entity_ctrl.js');
+const query = require('./controller/query_ctrl.js');
+
+// Entity Service
+router.get('/api/entity/instance/:instanceGUID', entity.getEntityInstance);
+router.put('/api/entity', entity.changeInstance);
+router.post('/api/entity', entity.createInstance);
+
+// Query Service
+router.post('/api/query', query.run);
+#+END_SRC
+
+* Concepts Behind
+An entity is a "thing" which can be distinctly identified. A specific person, company, or event is an example of an entity. A relationship is an association among entities. For instance, "marriage" is a relationship between two "person" entities.
+
+#+CAPTION: Data Model Logic View
+[[../image/DataModeling.png]]  
 
 * Eliminate Pipeline Coding
 
 * Message-based Design
+1. Eliminate number of calls
 http://docs.servicestack.net/advantages-of-message-based-web-services 
 
 * Compare with Similar Concepts (OData & JsonAPI)

@@ -1,0 +1,6 @@
+* Why We Need a New Intercompany Reconciliation Solution in S/4
+Starting from S/4 Cloud 1908 and OP 1909, a new intercompany reconciliation solution was introduced, which is named Intercompany Matching & Reconciliation. It provides both transactional level matching, and aggregated level reconciliation.
+
+** What is Intercompany Reconciliation
+
+** Intercompany Reconciliation in SAP ERP
