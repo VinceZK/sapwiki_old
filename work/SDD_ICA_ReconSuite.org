@@ -1,0 +1,36 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: ICA Reconciliation Suite
+
+** References
+| <25>                      |                  |         | <30>                           |
+| Document Title            | Date             | Link    | Comments                       |
+|---------------------------+------------------+---------+--------------------------------|
+| S/4HANA Development Environment | <2017-11-10 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1821163325][sapwiki]] | This Wiki should answer all your questions related to the S/4 development landscapes and the delivery architecture. Feedback to improve the content is highly appreciated. |
+
+** Context
+Reconciliation suite contains multiple reconciliation cases. And these reconciliation cases must share some characteristics, for example, the same leading unit and partner unit, the same mandatory filter fields, and so on. The purpose is to show the overall status and result for reconcliation cases that may share some business relationships.
+
+Following critiera must be met if reconciliation cases are grouped in a recon suite.
+
+1. Share the same leading unit and partner unit definition;
+2. Share the same mandatory filtering fields;
+3. Share the same fiscal year variant;
+
+** Key Figures
+
+*** Number of Leading Units Reconciled and Not Reconciled
+It is represented as a stacked column chart. The vertical axis is the Number of Units, and the horizontal axis is the reconciliation cases involved. Click each segment will naviagte to UI-710.
+
+
+*** Number of Transactions by Reason Codes 
+It is represented as a pie chart. The reason codes are across all the reconciliation cases. Click a pie will drill-through to another pie chart which display number of transactions for a specific reason code, and divided by reconciliation cases. Again, click a pie of the small pie chart will navigate to UI-710.
+
+There is also a specific filter for reason codes. For example, in general cases, there could no sense to show reason codes for exactly matched items; Or maybe only show those manuall assigned items.
+
+*** Top Difference by Units
+It is represented as a bar chart. The differences are aggregated across reconciliation cases. Click one bar will drill-through to a pie chart which display differences group by reconciliation cases. Again, click a pie of the pie chart will navigate to UI-710.
+
+There are 2 specific filters: choose one of the reconciliation cases, or choose all of them; choose a currency code. If one reconciliation case is choosen, click a bar will directly navigate to UI-710. The list of currency codes is ready from ICADOCM by select the distinct value of the involved items.

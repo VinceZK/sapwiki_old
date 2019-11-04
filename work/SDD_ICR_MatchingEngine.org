@@ -1,8 +1,8 @@
 #+PAGEID: 2001837112
-#+VERSION: 29
+#+VERSION: 50
 #+STARTUP: align
 #+OPTIONS: toc:1
-#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2001837112][SDD-ICA Matching Engine]]
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2001837112][SDD-ICA Matching and Reconciliation]]
 * General Information
 ** Stakeholders and Roles
 | Role                  | Name          |
@@ -15,27 +15,34 @@
 | Developers            |               |
 
 ** References
-|                              |                  |             | <30>                           |
-| Document Title               | Date             | Link        | Comments                       |
-|------------------------------+------------------+-------------+--------------------------------|
-| InterCompany Reconciliation  | <2018-07-30 Mon> | [[https://help.sap.com/viewer/651d8af3ea974ad1a4d74449122c620e/1709%2520002/en-US/6b5a7c525ae17154e10000000a44176d.html][online help]] | This document describe much about currency translation in EC-CS. It is the main document that portrays you how currency translation is done in consolidation. |
-| Clearing of Open Items       | <2018-07-31 Tue> | [[https://erproof.com/fi/free-training/sap-clearing-of-open-items/][erproof]]     | This tutorial is part of our SAP FI course and it talks about SAP Clearing and Open Items in Financial Accounting. |
-| HANA SQL Functions           | <2018-07-31 Tue> | [[https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.00/en-US/20a61f29751910149f99f0300dd95cd9.html][online help]] | HANA SQL and function manual   |
-| HANA Script                  | <2018-08-01 Wed> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]] | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
-| HANA SQL Reference           | <2018-09-13 Thu> | [[https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.00/en-US/209eaa85751910149a30f95c936075be.html][online help]] | HANA SQL Reference             |
-| Blue Sky Adoption            | <2018-08-02 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/LMCROSS/Adoption+-+Background+Information][sapwiki]]     | Check if current design with HANA Native SQL violates with Blue Sky |
-| How to allow DDL execution   | <2018-08-03 Fri> | [[https://support.wdf.sap.corp/sap/support/message/1880472106][sapwiki]]     | Enable DDL execution           |
-| Transactional Patterns       | <2018-08-09 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Transactional+Patterns][sapwiki]]     | Transactional Fiori Applications (archetype 1) aim at simplifying tasks that view, create, update or delete business or master data. |
-| Responsibility Management    | <2018-08-22 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Responsibility+Management][sapwiki]]     | For S/4HANA Cloud Applications, there is a need to determine uniformly and centrally the person or entity who could be held as responsible for completing a particular task or activity. |
-| Flexible Workflow-Runtime    | <2018-09-13 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1828068524#S/4FlexWorkflow-Runtime-S/4ResponsibilityManagement][sapwiki]]     | The flexible business workflow runtime is based on an already implemented feature in the Business Workflow runtime, the enablement of building node hooks, which dynamically decide over the next step. |
-| Fiori Controls               | <2018-08-30 Thu> | [[https://sapui5.hana.ondemand.com/#/controls][sapui5]]      | Check Fiori UI Controls and their usibilities |
-| Analtyical Table Control     | <2018-08-30 Thu> | [[https://experience.sap.com/fiori-design-web/analytical-table-alv/#resources][sapui5]]      | Analytical Table Control is suitable to our use cases |
-| Which Table Technology?      | <2018-09-07 Fri> | [[https://sapui5.hana.ondemand.com/#/topic/148892ff9aea4a18b912829791e38f3e][sapui5]]      | The libraries provided by SAPUI5 contain various different table controls that are suitable for different use cases. The table below outlines which table controls are available, and what features are supported by each one. |
-| Reversal Basics on DB        | <2018-10-19 Fri> | [[https://launchpad.support.sap.com/#/notes/2573628][sapnote]]     | This KBA outlines how reversal types are updated in S/4HANA environment. |
-| HSL, TSL, WSL posting logic  | <2018-11-08 Thu> | [[https://wiki.scn.sap.com/wiki/display/ERPFI/Explanation+of+how+the+logic+of+the+GL+update+currency+amount+%2528BSEG-PSWBT%2529+works+in+General+Ledger+reporting][scnwiki]]     | The purpose of this article is to explain in detail (using examples) how the update of the General Ledger Currency Value (BSEG-PSWSL) and Amount (BSEG-PSWBT) takes place and how this then in turn updates the General Ledger transactions figures either in the GLT0 or FAGLFLEXT tables. |
-| Email Template               | <2018-11-14 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Email+Template][sapwiki]]     | This module provides functionality to define predelivered email templates with a workbench UI. |
-| Notes Reusable Component     | <2018-11-23 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Fiori+Reuse+UI+for+Notes][sapwiki]]     | The idea was to provide a possibility to create text-based notes like the SAPscript longtext objects with an own persistency. For UI integration, a Fiori reuse component should be provided with the option to create, update and delete those notes. |
+| <25>                      |                  |             | <30>                           |
+| Document Title            | Date             | Link        | Comments                       |
+|---------------------------+------------------+-------------+--------------------------------|
+| InterCompany Reconciliation | <2018-07-30 Mon> | [[https://help.sap.com/viewer/651d8af3ea974ad1a4d74449122c620e/1709%2520002/en-US/6b5a7c525ae17154e10000000a44176d.html][online help]] | This document describe much about currency translation in EC-CS. It is the main document that portrays you how currency translation is done in consolidation. |
+| Clearing of Open Items    | <2018-07-31 Tue> | [[https://erproof.com/fi/free-training/sap-clearing-of-open-items/][erproof]]     | This tutorial is part of our SAP FI course and it talks about SAP Clearing and Open Items in Financial Accounting. |
+| HANA SQL Functions        | <2018-07-31 Tue> | [[https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.00/en-US/20a61f29751910149f99f0300dd95cd9.html][online help]] | HANA SQL and function manual   |
+| HANA Script               | <2018-08-01 Wed> | [[http://help.sap.com/saphelp_hanaplatform/helpdata/en/92/11209e54ab48959c83a7ac3b4ef877/content.htm?frameset=/en/60/088457716e46889c78662700737118/frameset.htm&current_toc=/en/ed/4f384562ce4861b48e22a8be3171e5/plain.htm&node_id=3][online help]] | Online help of HANA SQL scripts. You can find all your want about how to write in HANA SQL scripts. |
+| HANA SQL Reference        | <2018-09-13 Thu> | [[https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.00/en-US/209eaa85751910149a30f95c936075be.html][online help]] | HANA SQL Reference             |
+| Blue Sky Adoption         | <2018-08-02 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/LMCROSS/Adoption+-+Background+Information][sapwiki]]     | Check if current design with HANA Native SQL violates with Blue Sky |
+| How to allow DDL execution | <2018-08-03 Fri> | [[https://support.wdf.sap.corp/sap/support/message/1880472106][sapwiki]]     | Enable DDL execution           |
+| Transactional Patterns    | <2018-08-09 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Transactional+Patterns][sapwiki]]     | Transactional Fiori Applications (archetype 1) aim at simplifying tasks that view, create, update or delete business or master data. |
+| Responsibility Management | <2018-08-22 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Responsibility+Management][sapwiki]]     | For S/4HANA Cloud Applications, there is a need to determine uniformly and centrally the person or entity who could be held as responsible for completing a particular task or activity. |
+| Flexible Workflow-Runtime | <2018-09-13 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1828068524#S/4FlexWorkflow-Runtime-S/4ResponsibilityManagement][sapwiki]]     | The flexible business workflow runtime is based on an already implemented feature in the Business Workflow runtime, the enablement of building node hooks, which dynamically decide over the next step. |
+| Fiori Controls            | <2018-08-30 Thu> | [[https://sapui5.hana.ondemand.com/#/controls][sapui5]]      | Check Fiori UI Controls and their usibilities |
+| Analtyical Table Control  | <2018-08-30 Thu> | [[https://experience.sap.com/fiori-design-web/analytical-table-alv/#resources][sapui5]]      | Analytical Table Control is suitable to our use cases |
+| Which Table Technology?   | <2018-09-07 Fri> | [[https://sapui5.hana.ondemand.com/#/topic/148892ff9aea4a18b912829791e38f3e][sapui5]]      | The libraries provided by SAPUI5 contain various different table controls that are suitable for different use cases. The table below outlines which table controls are available, and what features are supported by each one. |
+| Reversal Basics on DB     | <2018-10-19 Fri> | [[https://launchpad.support.sap.com/#/notes/2573628][sapnote]]     | This KBA outlines how reversal types are updated in S/4HANA environment. |
+| HSL, TSL, WSL posting logic | <2018-11-08 Thu> | [[https://wiki.scn.sap.com/wiki/display/ERPFI/Explanation+of+how+the+logic+of+the+GL+update+currency+amount+%2528BSEG-PSWBT%2529+works+in+General+Ledger+reporting][scnwiki]]     | The purpose of this article is to explain in detail (using examples) how the update of the General Ledger Currency Value (BSEG-PSWSL) and Amount (BSEG-PSWBT) takes place and how this then in turn updates the General Ledger transactions figures either in the GLT0 or FAGLFLEXT tables. |
+| Email Template            | <2018-11-14 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Email+Template][sapwiki]]     | This module provides functionality to define predelivered email templates with a workbench UI. |
+| Notes Reusable Component  | <2018-11-23 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Fiori+Reuse+UI+for+Notes][sapwiki]]     | The idea was to provide a possibility to create text-based notes like the SAPscript longtext objects with an own persistency. For UI integration, a Fiori reuse component should be provided with the option to create, update and delete those notes. |
 | ICR: Technical documentation | <2018-12-05 Wed> | [[https://launchpad.support.sap.com/#/notes/1164059][sapnote]]     | You are using the Intercompany Reconciliation functionality. You are missing some technical details or background information. |
+| Date Function             | <2018-12-18 Tue> | [[https://blogs.sap.com/2018/09/27/date-function-for-dynamic-date-filtering-in-fiori-apps/][scnwiki]]     | By using Data Function, it is possible to filter date dynamically in Fiori Smart Business Apps. It is important especially for Smart Business KPI tiles as they don't   have value prompt screens associated with them. The purpose of this blog is to explain how Date Functions work and how they can be created. |
+| Support of Individual Transaction | <2019-02-26 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Support+of+Individual+Transactions][sapwiki]]     | SSCUI for non SM30/SM34 transactions |
+| Application Log FMs       | <2019-03-15 Fri> | [[https://help.sap.com/saphelp_SCM700_ehp01/helpdata/en/4e/23b1720771417fe10000000a15822b/frameset.htm][online help]] | Application log function modules |
+| Application Log Reuse Lib | <2019-03-15 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/core/Log+-+Leveraging+the+Reuse+Library][sapwiki]]     | For reusing technical artifacts of the Application Log Viewer in other applications, |
+| DDIC Search Help Adaption | <2019-05-17 Fri> | [[https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/DDIC+Search+Help+Adaption#DDICSearchHelpAdaption-OverallListofDDICSearchHelps][sapwiki]]     | DDIC search helps exposing DPP relevant data shall be protected. |
+| Difference btw TSL and WSL | <2019-06-12 Wed> | [[https://wiki.scn.sap.com/wiki/display/ERPFI/Explanation+of+how+the+logic+of+the+GL+update+currency+amount+%2528BSEG-PSWBT%2529+works+in+General+Ledger+reporting][scnwiki]]     | Explanation of how the logic of the GL update currency amount (BSEG-PSWBT) works in General Ledger reporting |
+| Hotfix Collection Process | <2019-07-02 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/S4CDPublic/Hotfix+Collection+%2528HFC%2529+Process][sapwiki]]     | Hotfix Collection (HFC) Process |
 
 * Context
 Matching Engine is used to match data between 2(and more) data sources according to the predefined matching rules. As an analogy, it is like you comparing 2 spreadsheets using "vlookup". But Matching Engine can run on massive data and provide more powerful matching expressions in the HANA database. 
@@ -49,15 +56,15 @@ Besides, Matching Engine also provides user-friendly runtime. User can run match
 2. CDS views are used to project different business aspects from accounting's "ACDOC*", logistic's "MATDOC", and all other possible tables. User can choose fields, do filters, union 2 different sources, and do some simple calculations in the CDS views.
 3. Data Source thus can be defined on a CDS view by adding business semantics, like which fields are the leading unit or partner unit, which fields are mandatory parameters for context filtering, field labels, and so on.
 4. A Matching Method can be assigned with on one or two Data Sources. And Matching Rules are defined under the method. During execution, data from the 2 sides are matched according to the definitions of Matching Rules. When rules are executed orderly, the matched items are filtered out, only the non-matched items are passed down to the follow-up rules.
-5. The Matching happens all in HANA. Data is read from the underlying CDS view into a HANA temporary table. The matching calculation is then conducted and the result is updated to the HANA temporary table. After all the matching rules are finished, the final result is posted to ACDOCM to be persisted. Along the whole processing, there is no processing data communication between the ABAP and HANA layer, thus we ensure the best performance.
+5. The Matching happens all in HANA. Data is read from the underlying CDS view into a HANA temporary table. The matching calculation is then conducted and the result is updated to the HANA temporary table. After all the matching rules are finished, the final result is posted to ICADOCM to be persisted. Along the whole processing, there is no processing data communication between the ABAP and HANA layer, thus we ensure the best performance.
 6. Besides, asynchronous execution and concurrency controls are also introduced in the Matching Execution mode. Each matching run is scheduled as a background job either immediately run or recurrently run. This permits the maximum usability on processing massive data. On the frontend, end-users can easily check the latest status based on different data scopes. And if the data scopes conflict by concurrency processing, proper messages will be shown directly to the end-users. In general, the matching can be executed by the business users without helps from technique guys.
 7. Not all the items can be matched based on the defined matching rules. The un-matched items are displayed in the Manual Assignment APP for manual intervene. Besides, even those matched items need further processing by human intervene. The Manual Assignment APP not only give clearly displaying of the matched and un-matched items, but also provides all possible means to facilitate the users to do follow-ups.
 8. Those follow-ups may need communication supports. For example, sending an email to the person responsible. According to the communication result, reasons and solutions can be provide. Thus a reason code is assigned to the items to describe the un-matched reason and what's the follow-up activities.
 9. Follow-up activities are defined on reason codes. It could be a workflow process, or an correction in the source, or an automatic adjustment posting, or a note, or even an external processing. If corrections are made in the source, then a close circle can be seen. The Matching Engine not only tells the differences between 2 sides, but also suggests corrections to the 2 sides. Thus it helps to improve the data quality still in the one single source of the truth.
-10. Basic Match Result Reports are necessary for analysis and audit purposes. These reports are mainly based on ACDOCM, and provides different view aspect of the matched result. From the reports, one can also navigate to the Manual Assignment APP to do follow-ups.
-11. It is very usual that some data may not exist in the HANA instance. Thus the external data needs to be imported. The Matching Data Upload provides the possibility to allow user to upload data and save it into ACDOCM. Of course, one can use other upload tools(like financial journal entries upload), but it may require additional master data preparations, thus it may be inconvenient if only for the purpose of matching.
-12. ACDOCM is such a table that has all fields from ACDOCA, and can be extended with any number of fields. This ensures it can persist all possible data for matching. No matter where the data is from, there is a place for it.
-13. Financial Reconciliation is an application based on the Matching Engine. It reports data from both the source CDS view and ACDOCM in a customizable way. It can also allow users to set some timeline to promise an smooth financial closing flow. 
+10. Basic Match Result Reports are necessary for analysis and audit purposes. These reports are mainly based on ICADOCM, and provides different view aspect of the matched result. From the reports, one can also navigate to the Manual Assignment APP to do follow-ups.
+11. It is very usual that some data may not exist in the HANA instance. Thus the external data needs to be imported. The Matching Data Upload provides the possibility to allow user to upload data and save it into ICADOCM. Of course, one can use other upload tools(like financial journal entries upload), but it may require additional master data preparations, thus it may be inconvenient if only for the purpose of matching.
+12. ICADOCM is such a table that has all fields from ACDOCA, and can be extended with any number of fields. This ensures it can persist all possible data for matching. No matter where the data is from, there is a place for it.
+13. Financial Reconciliation is an application based on the Matching Engine. It reports data from both the source CDS view and ICADOCM in a customizable way. It can also allow users to set some timeline to promise an smooth financial closing flow. 
 
 * Design Time
 Matching Engine tries to be flexible and adapt as much use cases as possible. Not only in finance, but also in other areas that need to match between 2 data sources. Even in finance, there could be a lot of scenarios, for example, matching among different unit dimensions like company, profit center, cost center, and so on. Thus we need provide a customizable design time to fulfill such flexibility. 
@@ -68,33 +75,33 @@ Matching Engine tries to be flexible and adapt as much use cases as possible. No
 3. Reason Code
 4. Reconciliation Case
 
-** TODO [#A] UI-210 Matching Method                    :Marvin:Jin:
+** DONE [#A] UI-210 Matching Method                             :Marvin:Jin:
 Matching Method groups Matching Rules in a defined execution order. Matching Method is an executable, which can be run immediately or scheduled as recurrence jobs. UI-210 is the Matching Method maintenance UI which also acts as the running trigger point. There should be UI-200 for the Matching Method searching and listing. 
 
 #+CAPTION: UI-210: Matching Method
 [[../image/ICR_MatchingMethod.png]]  
 
 1. Matching Method is client-dependent. A maximum 5 characters long ID must be given to a Matching Method.
-2. You can add one or two Data Sources into a method, however, these Data Sources must fulfill following protocals. If the first data source has leading unit and partner unit with different fields, then only *one* data soruce is allowed. If the first data source has leading unit and partner unit with the same field(or null), then *two* data soruces must be assigned. Besides, the two data sources must share the same field role and mandatory filtering fields definitions. 
+2. You can add one or two Data Sources into a method, however, these Data Sources must fulfill following protocols. If the first data source has leading unit and partner unit with different fields, then only *one* data soruce is allowed. If the first data source has leading unit and partner unit with the same field(or null), then *two* data soruces must be assigned. Besides, the two data sources must share the same field role and mandatory filtering fields definitions. 
 3. You can define additional filters for the assigned the data source if you do not want all the data from the data source need to be matched.
 4. The "View Data" link will help the user to see what the data source looks like. It opens a separate APP UI-320 to display a list of data with filtering set in the method. The feature can be sought from the framework team to check if they have already  provided which is quite similar to SE16 in ABAP. 
 5. You can create rules from the Matching Method. The order of the rule has significant impact on the matching result. As once the lines are matched by applying one rule, these lines will be filtered out, and only the left lines are passing through the next rules. "Up" and "Down" buttons can be used to adjust the position of one rule.
 6. Rules can be copied and deleted directly in the rule list. The deletion only takes effect once it is saved. While copy action takes effective immediately. You can then navigation to UI-110 to do the changes.
 7. Once all the settings are done, you can run the method directly by hitting the run button, in the drop-down list choose run immediately. The dialog box UI-211 will popup to allow the user input run parameters. If mandatory filters are set in the data sources, then they requires some value. User can only filter data on the leading unit. All other fields are not allowed to be filterred on method level during run.
 8. When parameters are given and the run button is hit in UI-211, a background job will be scheduled with immediately run and the tool bar area will display "Matching is running"(dialog UI-211 is closed). Once the background job finished, the header will display "Matching is finished @ 20180805 09:00:00".
-9. The "Matching Result" button will navigate to UI-450, which shows the result in ACDOCM under this method. For details refer section UI-450 Matching Entries.
+9. The "Matching Result" button will navigate to UI-440, which shows the new matching documents genreated. For details refer section UI-440 Matching Documents.
 10. You can schedule a method as periodic jobs. Click "Run->Schedule" will navigate you to the Application Job page (SAPJ). There you can define recurrence pattern. If a method is scheduled as a job, then only saved and with default value filters take effect. Add-hoc parameters will be discarded.  
 
-** TODO [#A] UI-110 Matching Rule                      :Marvin:Jin: 
+** DONE [#A] UI-110 Matching Rule                               :Marvin:Jin:
 Matching Rule should be intuitive, and can be composed by business users. UI-110 is the Matching Rule maintenance UI, which is invoked from UI-210 Matching Method. 
 
 #+CAPTION: UI-110: Matching Rule
 [[../image/ICR_MatchingRule.png]]  
 
 1. Matching Rule is an sub-object of Matching Method. A maximum 4 characters long ID must be given to a Matching Rule. It is externally assigned not generated by number range intervals for the reason of transportation. 
-2. A rule can be defined as "Exactly Match", "Suggested Match", "Exceptional Match" or "Group Only". With the first one meaning the lines are matched without doubt and no further actions are needed. The second one still has some doubts and need manual intervene. The third one is matched in excepted exceptional cases. For example, amount is doubled on one side due to double postings.
-3. If a rule is defined as "Group Only", then matching expression is unnecessary. The rule only groups the items from 2 data slices with defined filters, and give them an assignment number. The "Aggregation" check box is changed to "No Group". If "No Group" is checked, then data will not read from the slice. You must at least have one data slice as a data source for grouping. 
-4. The difference between a suggested match rule and a exceptional match rule from technical perspective may only result to the filtering and displaying. Exceptional matched items may be displayed in marked colors.
+2. A rule can be defined as "EM: Matched Exactly", "SA: Auto-Assigned", "GM: Grouped as Matched", "GM: Grouped as Assigned", or "Auto-Assigned as Exception". With "EM" and "GM" meaning the lines are matched without doubt and no further actions are needed. The others still have some doubts and need manual intervene.
+3. If a rule is defined as "GA" or "GM", then matching expression is unnecessary. The rule only groups the items from one of the 2 data slices with defined filters, and give them an assignment number. The "Aggregation" check box is changed to "Group on this slice". If it is checked, then data will only read from this slice.
+4. In case one wants to just group items from both slice1 and slice2, then he can define a rule with no matching expression line. 
 5. Default Reason Code is only valid to suggested and exceptional match rules. In case data is matched based on a suggested rule with doubts, then post activities are necessary for further confirmations. Reason Code is used as the identifier for those post activities which could be comments, workflow, adjustments, and so on.
 6. A Matching Rule is fixed with 2 data slices. If the method has one data source, then both slices are fixed with the same data source. If the method has two dats sources, then the first slice is assigned with the first data source, while the second is assigned with the second. User can not change the data sources, however, they can adjust the description of the slices which by default i the description of the data sources. 
 7. If the graphic filters cannot fulfil the requirements, then user can switch to "SQL Editor" to input filter logic in SQL syntax. Once "Switch to SQL Editor" is clicked, UI-312 will replace the area. The end user may not know the technical field names of the Data Source, so a drop-down list should be given to allow user choose from the available field list. The mandatory fields are always gray.
@@ -120,12 +127,11 @@ Reason code is assigned to a suggested or manual match to explain why it is matc
 7. If a workflow scenario is given, then it will triger a workflow instance when assigning the Reason Code. Workflows which are listening to a dedicate event will be trigerred.  
 8. An ABAP class is assigned so that the system can do automatic postings. A super class should be given so that it can be inherited to adapt user's own posting logic.
 9. A output structure is an ABAP DDIC structure, which is used as the target output structure for the to-be adjusted data.
-10. The above 2 options together determine the available target processing statuses when manual assigning the reason code to group reference numbers. If "enable workflow" is checked, the only '20' is available. And once the workflow was ended with 'approval', the status will be changed to '25'. The user need a final comfirmation to set the status to '30'. If workflow is not enabled, but a Suggested Posting Class is given, the the available statuses are '25' and '30'. If '30' is chossen, then the posting class will be invoked directly during the assignment. If neither enable workflow, nor suggested posting class is given, then the available statuses are '20' and '30'. In auto assignment cases, the processing statuses are determined by the rule types. All suggested rules or exceptional rules give the status '20'. 
-11. If "Temporal Resolving" is checked, the corresponding assignment(GRREF) will be unassigned in the next run or next period run. For details, see section "Special Cases".
-12. You can add related links to a reason code, then once it is assigned to a group reference number, the links are shown so that user can navigate to the target. The "Target URL" can be either an absolute URL, or a relative URL. It is also possible to assign a Fiori target URL.
-13. URL parameters can be defined with placeholders like this: "company=$rcomp$", while "$rcomp$" will be replaced to the actual column value during runtime. Since in UI-420, there could be multiple lines, then the value of the first line of data slice1 will be taken into account. 
+10. If "Temporal Resolving" is checked, the corresponding assignment(GRREF) will be unassigned in the next run or next period run. For details, see section "Special Cases".
+11. You can add related links to a reason code, then once it is assigned to a group reference number, the links are shown so that user can navigate to the target. The "Target URL" can be either an absolute URL, or a relative URL. It is also possible to assign a Fiori target URL.
+12. URL parameters can be defined with placeholders like this: "company=$rcomp$", while "$rcomp$" will be replaced to the actual column value during runtime. Since in UI-420, there could be multiple lines, then the value of the first line of data slice1 will be taken into account.
 
-** TODO [#B] UI-310 Data Source
+** DONE [#B] UI-310 Data Source
 Data Source maps to an ABAP CDS view, and attach business semantics to it. UI-310 is for Data Source maintenance. There should be UI-300 for Data Source searching and listing. 
 
 #+CAPTION: UI-310: Data Source
@@ -135,12 +141,12 @@ Data Source maps to an ABAP CDS view, and attach business semantics to it. UI-31
 2. You can assign a CDS view to it. It is recommended you don't do any aggregation on the CDS view so that Matching Engine can match lines at the very detail data granularity.
 3. "Add Fields Semantic" allows you to assign each field business semantics like: search help (or CDS view) and navigation target to facilitate the data entering in the UI and navigation between objects. The button invokes UI-311 in which you can assign each field business semantics. For the 2 columns "Key" and "Update", refer details in section "Special Cases".
 4. You choose fields as the leading unit and partner unit. The fields are derived from the CDS view assigned and should also be existed in the data structure "ICA_S_DIM". If the field has compound field like controlling area for profit center, you should also assign the compounding fields.
-5. You must also give Leading Unit a master data entity CDS view. With which the program can check whether a given Unit is leagle or not. Or use it to disperse units from a give filter string, like "rcomp between 'C1001' and 'C1999'". Since partner unit shares the same master data with leading unit, so only one master data entity view is enough. 
+5. You must also give Leading Unit a master data entity CDS view. With which the program can check whether a given Unit is legle or not. Or use it to disperse units from a give filter string, like "rcomp between 'C1001' and 'C1999'". Since partner unit shares the same master data with leading unit, so only one master data entity view is enough. 
 6. Leading Unit and Partner Unit can be the same, or even not assigned. For details, refer UI-210 Matching Method.
 7. Fiscal year variant must be given if the CDS view contains one of the 3 fields: RYEAR, POPER, and FISCYEARPER.
 8. You can optionally define mandatory single value filtering fields, and assign default value or placeholders to them. This is necessary as for example, most of the financial data is fiscal period based. Then fiscal year and period should be given as mandatory filtering fields. You can assign a comparator to a field other than "equal". For example, fiscal period has the comparator "<=", which is useful to automatically count in new postings from prior periods.
 9. The mandatory filter fields must also exists data structure "ICA_S_MFF". They acts like context fields which is used to filter and group data.
-10. All the matching result is saved in ACDOCM, which means that all the CDS views that need to be registered as Data Sources need to be guaranteed that their fields are in ACDOCM. There are also some other protocols which are listed in the section "Default CDS View as Data Source". The when you save a Data Source, it will first do a check on those protocols. Only error-free Data Source can be saved.
+10. All the matching result is saved in ICADOCM, which means that all the CDS views that need to be registered as Data Sources need to be guaranteed that their fields are in ICADOCM. There are also some other protocols which are listed in the section "Default CDS View as Data Source". The when you save a Data Source, it will first do a check on those protocols. Only error-free Data Source can be saved.
 
 How to define a Data Source should be considered from 3 dimensions. First, the account assignments like company, profit center, segment, business area, and so on. These fields can be assigned with leading unit and leading parter unit roles. Second, the matching use cases, which stands you run matching for what purpose. There are many excising cases like AP and AR matching between 2 companies, bank statement matching, open items matching, and so on. Third, where the data is stored, this is a technical dimension usually stands for a DB table or view that the data can be read from. Following coordinated system describes the 3 dimensions.
 
@@ -148,7 +154,7 @@ How to define a Data Source should be considered from 3 dimensions. First, the a
 [[../image/ICR_3DofDataSource.png]]   
 
 *** TODO [#A] Default CDS View as Data Source                     :Vincent:
-We will deliver a CDS view based on ACDOCA for the default Data Source. The CDS view union ACDOCA and ACDOCM. For the data in ACDOCM, only the external upload data is given(PSTAT = '00'). For data that rollup from ACDOCA, it is not given(PSTAT = '10').  
+We will deliver a CDS view based on ACDOCA as the default Data Source. There is no need to union ICADOCM since the Matching Engine by default reads data from ICADOCM with processing status less than "20(Assigned)". For exaternal entities, they can be uploaded to ICADOCM directly with processing status "01(Roll-In)".
 #+CAPTION: The Default CDS view on ACDOCA.
 #+BEGIN_SRC sql
 create view P_FinJournalEntriesForMatching
@@ -172,33 +178,12 @@ as select from ACDOCA
     TIMESTAMP,
     ...
 } where RLDNR = '0L'
-union all
-select from ACDOCM {
-    RCLNT,
-    METHOD_ID,
-    DOCNR,
-    DOCLN,
-    PERIV,
-    RYEAR,
-    POPER,
-    RCOMP,
-    RASSC,
-    RACCT,
-    TSL,
-    RTCUR,
-    GRREF,
-    PSTAT,
-    CSTAT,
-    TIMESTAMP,
-    ...
-   } where PSTAT = '00'
-       and DELFLG != 'X'
 #+END_SRC
 
-During matching, the data reading takes 2 steps. First, it reads data from ACDOCM for the unmatched lines and stores them into a temporary table.
-#+CAPTION: Data in ACDOCM from last matching run
+During matching, the data reading takes 2 steps. First, it reads data from ICADOCM for the unmatched lines and stores them into a temporary table.
+#+CAPTION: Data in ICADOCM from last matching run
 #+BEGIN_SRC sql
-select * from ACDOCM
+select * from ICADOCM
         where GRREF = ''
           and MMETHOD = 'run_method'
           and RYEAR = '2018'
@@ -217,24 +202,22 @@ select * from P_OpenItemsInGLAccounts
           and RCOMP in ('C1001', 'C1002', ...).
 #+END_SRC
 
-Till now, all unmatched items are in the temporary tables. The matching engine can then only do the matching for those unmatched items. After matching, the result is posted to persistence table(ACDOCM). The posting API checks if MMETHOD is initial or not. If it is initial, then inserts the new documents, otherwise updates the group reference number and processing status on existing lines.
+Till now, all unmatched items are in the temporary tables. The matching engine can then only do the matching for those unmatched items. After matching, the result is posted to persistence table(ICADOCM). The posting API checks if MMETHOD is initial or not. If it is initial, then inserts the new documents, otherwise updates the group reference number and processing status on existing lines.
 
-Fields in Data Source CDS view are protocoled. Some fields are mandatory or conditional required, while others are optional. Bellow table list the detail of each field:
+Fields in Data Source CDS view are protocoled. Some fields are mandatory or conditional required, while others are optional. Below table list the detail of each field:
 
 |            | <25>                      | <50>                                               |
 | Field Name | Label                     | Usage                                              |
 |------------+---------------------------+----------------------------------------------------|
 | RCLNT      | SAP Client                | Mandatory                                          |
-| DOCNR      | Document Number           | Mandatory and set to empty for non-ACDOCM source tables |
-| DOCLN      | Line Item Number          | Mandatory and set to 0 for non-ACDOCM source       |
-| PERIV      | Fiscal Year Variant       | Mandatory if $CurrentFiscalYear$ or $CurrentFiscalPeriod$ is shown |
-| RYEAR      | Fiscal Year               | Mandatory if it is set as Mandatory Single Value Filter |
-| POPER      | Fiscal Period             | Mandatory if it is set as Mandatory Single Value Filter |
+| DOCNR      | Document Number           | Mandatory and set to empty for non-ICADOCM source tables |
+| DOCLN      | Line Item Number          | Mandatory and set to 0 for non-ICADOCM source      |
 | RCOMP      | Company                   | Mandatory if leading unit is set to RCOMP          |
 | RASSC      | Trading Partner           | Mandatory if partner unit is set to RASSC          |
-| GRREF      | Group Reference Number    | Mandatory and set to empty for non-ACDOCM source tables |
+| GRREF      | Group Reference Number    | Mandatory and set to empty for non-ICADOCM source tables |
 | PSTAT      | Processing Status         | Mandatory and set to '00'                          |
 | CSTAT      | Communication Status      | Mandatory and set to empty                         |
+| DUE_DATE   | Due date after communication | Mandatory and set to '00000000'                    |
 | TIMESTAMP  | Timestamp                 | Mandatory for data cut-off                         |
 
 *** [#C] UI-320 Data Viewer
@@ -247,20 +230,30 @@ The Data Viewer can be realized using the Smart-Table Control, however, how to d
 #+CAPTION: UI-320: Data Viewer
 [[../image/ICR_DataViewer.png]]   
 
-** TODO [#A] UI-610 Reconciliation Case
-Based on a Matching Method, Reconciliation Case gives an aggregated view on the matched data and its status. It defines display groups and tolerance, based on which the reconciliation reports can give users an overview on the reconciliation statuses and total amount differences for the target data. 
-Unlike the Matching Method which does matching on detail line-by-line level data, Reconciliation Case is on aggregated level data. They are 2 separate concepts that holds different configurations. Details are explained bellow with the UI mock-up.  
+** DONE [#A] UI-610 Reconciliation Case                         :Marvin:Jin:
+
+Based on a Matching Method, Reconciliation Case gives an aggregated view on the matched data and its status. It defines display groups and tolerance, based on which the reconciliation reports can give user an overview on the reconciliation statuses and total amount differences for the target data. 
+
+Unlike the Matching Method which does matching on detail line-by-line level data, Reconciliation Case is on aggregated data. They are 2 separate concepts that holds different configurations. Details are explained bellow with the UI mock-up.  
 
 #+CAPTION: UI-610: Reconciliation Case
 [[../image/ICR_ReconciliationCase.png]]  
 
 1. A Reconciliation Case has a unique ID of 5 characters.
-2. A Matching Method must be given to a reconciliation case, based on which the Data Sources can be derived. Meanwhile, the data is read from ACDOCM after matching only based on this assigned method. A matching method can only be assigned to one recon case. If we allow a method can be shared among 2 recon cases, then they will impact each other on data level.
-3. You choose an amount field along with the currency field as the leading amount which is used to decide whether amounts on 2 sides are reconciled. There could be more than one amount fields derived from the data sources. But we only accept one amount as the reconciliation balance amount.
-4. You can define a tolerance percentage, in case there are differences on aggregated level, the percentage gives a tolerance degree to accept the difference. Be aware, the tolerance calculation is based on different leading currency codes.
-5. Display Groups can be defined to sub-group amounts on both sides. For example, open items can be divided into AR and AP open items. While AR items on one side have the counterpart items of AP items on the other side. As such, a Display Group is a pair of filters on the 2 sides.
-6. Only one display group is set as the leading group. The leading display group is used to calculate reconciliation status, check whether the difference is within the tolerance percentage.
-7. Due Dates can be set on certain Date fields for certain unmatched items. In reports, the items that exceed the due date will be in marked color.
+2. A Matching Method must be given to a reconciliation case, based on which the Data Sources can be derived. Meanwhile, the data is read from ICADOCM after matching only based on this assigned method. A matching method can only be assigned to one recon case. So it is recommanded to have the same name with the assigned matching method.
+3. If the assigned method has MFFs like FISCYEARPER, RYEAR, or POPER, then the checkbox "same fical year variant" will shown. User check it if he makes sure all involved units share the same fiscal year variant. And the FSV must be also same with the setting in the corresponding data source.
+4. If you want to display the reconciliation status(UI-700) in an org hierarchy, then you can assign a hiearchy ID. Besides, with a org hiearchy, it also allows filter in hierarchy nodes.
+5. Display Groups can be defined to sub-group amounts on both sides. For example, invoice items can be divided into AR and AP items. While AR items on one side have the counterpart items of AP items on the other side. As such, a Display Group is a pair of filters on the 2 sides.
+6. Within each Display Group, tolerance can be defined on each amount field. Tolerance can be "In Amount" or "in Percentage". And one amount field must be selected as the leading amount field, which is used to calculate the overall the reconciliation status(UI-700). 
+7. One display group must be set as the leading display group. The leading display group is used to calculate reconciliation status, check whether the difference of the leading amount fields is within the tolerance.
+8. 2 Display Groups can be paired together to form a netting view between 2 units. For example, 1000 is paired with 1020. A Display Group can only be belong to one pair.
+
+*** Integerate with Single Selection
+Single Selection means selected object IDs based on one single key field. For example, FS Item Single Selection returns a list of FS Item IDs based on its attributes filtering. Single Selection uses global field names, and only if the GFNs are equal, can the Single Selection be assigned to the field. 
+
+When defining display group filters, one can choose the option "SS: Use Single Selection". If chosen, only the lower value is displayed and with search help on Single Selections that have the same GFN. If a wrong Single Selection is input(different GFNs), error will be shown to forbid saving. 
+
+In the backend, the select option "SS" is specially processed by calling a provided API which returns an ABAP range table. The range table may be merged with other range tables and then finally converted to a SQL where string. There could be the Single Selection doesn't exist, then proper exception should be raised when running UI-700 and UI-710.
 
 ** Transactional Pattern
 The above 3 entities need to be considered the transactional patterns. This is due to the fact that most of the Fiori APPs are stateless, thus the ACID criteria and concurrency need to considered by the application developers. Refer the wiki-page [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Transactional+Patterns][Transactional Patterns]] for detail.
@@ -291,7 +284,7 @@ Thus both Cloud and OP transportation requirements are covered without introduci
 Wagner, Frank <f.wagner@sap.com> .      
 
 * Matching Result Persistence            :Vincent:
-The matching result by default is posted to table *ACDOCM*, which has a similar data structure like ACDOCA. However, ACDOCM should have a different primary keys definition so that matching result can be saved under a Matching Method. There are also  additional fields that are specific for matching. For example, GRREF is used to flag which lines are matched together. Bellow gives detail descriptions on the specific fields.
+The matching result by default is posted to table *ICADOCM*, which has a similar data structure like ACDOCA. However, ICADOCM should have a different primary keys definition so that matching result can be saved under a Matching Method. There are also  additional fields that are specific for matching. For example, GRREF is used to flag which lines are matched together. Bellow gives detail descriptions on the specific fields.
 
 | Field      | Key | Description                           |
 |------------+-----+---------------------------------------|
@@ -305,6 +298,7 @@ The matching result by default is posted to table *ACDOCM*, which has a similar 
 | SLICE      |     | Data Slice (1 or 2)                   |
 | PSTAT      |     | Processing Status                     |
 | CSTAT      |     | Communication Status                  |
+| DUE_DATE   |     | Due Date after Communication          |
 | DELFLG     |     | Deletion Flag                         |
 | RACCT      |     | Account Number                        |
 | REF_RLDNR  |     | Reference to Original Ledger          |
@@ -340,18 +334,17 @@ The matching result by default is posted to table *ACDOCM*, which has a similar 
 
 ** Processing Status
 Processing status is to state an item that is processed by the Matching Engine. Following status code are given:
-| Status | Text                      |
-|--------+---------------------------|
-|     00 | New                       |
-|     01 | Roll-in                   |
-|     05 | Unassigned                |
-|     10 | Contacted before Assigned |
-|     20 | Assigned                  |
-|     22 | Contacted after Assinged  |
-|     25 | Confirmable               |
-|     30 | Matched                   |
+| Status | Text         |
+|--------+--------------|
+|     00 | New          |
+|     01 | Roll-in      |
+|     05 | Unassigned   |
+|     10 | Communicated |
+|     20 | Assigned     |
+|     25 | Confirmable  |
+|     30 | Matched      |
 
-All the lines that are not copied from the underlying Data Sources are stated with "00". Once they are copied to ACDOCM, they are stated with 3 possible statues: "01", "20" and "30". With "30", the items are processed by exactly match rules, "20" is by suggested match and exceptional match rules, and "01" for unmatched items. The "01" items need to be further processed in UI-430 Manual Assignment APP. If communications are made for the items, then they are stated in "10" status. 
+All the lines that are not copied from the underlying Data Sources are stated with "00". Once they are copied to ICADOCM, they are stated with 3 possible statues: "01", "20" and "30". With "30", the items are processed by exactly match rules, "20" is by suggested match and exceptional match rules, and "01" for unmatched items. The "01" items need to be further processed in UI-430 Manual Assignment APP. If communications are made for the items, then they are stated in "10" status. 
 
 For the "20" items, which needs further confirmation by assigning reason codes, which can be confirmed either directly or through workflow approval. The approved items are in "25" status, which then can be confirmed to "30" by the initiator. Assigned items can be unassigned, which their status, like "20", "25", "30" will be changed to "05".
 
@@ -361,15 +354,15 @@ All above processing statues cannot be changed by customers.
 Communication status is used to mark items that need communication with some contact person. Following status codes are pre-given:
 | Status | Text              |
 |--------+-------------------|
-|     10 | Mail Sent         |
-|     20 | Talked on Phone   |
-|     30 | Talked on Copilot |
-|     40 | Created Note      |
-|     50 | Ticket System     |
+|        | Not Communicated  |
+|     10 | Note Created      |
+|     20 | Mail Sent         |
+|     21 | Notification Sent |
+|     30 | Talked on Phone   |
+|     40 | Talked on Copilot |
+|     50 | Ticket Created    |
 
 Communication status is usually stated on those unmatched items. With different status code, different memo will be displayed. For example, if "30 Talked on Copilot" is stated, then by clicking the item on the UI, the conversion log of Copilot can be shown. 
-
-Communication statuses can be defined by customers if possible.  
 
 ** DONE [#A] Matching Document Head Table                          :Vincent:
 Besides, there should be a head table named *ICA_DOCH* to record header level informations especially the matching run timestamp. Which acts as a cut-off time between the data already has matching run and the data without matching run. 
@@ -426,35 +419,83 @@ Each group reference number(GRREF) is also stored in table *ICA_ASSIGN*. Along w
 
 1. Reason Code can be only assigned to a group reference number, not a matching journal entry. Which also means a reason code can only be assigned to items with processing status equal to "20 Assigned". This is because reason code is defined not only for the reasons literally, but also for the follow-ups. Not assigned items are firstly considered as with unknown reasons, then, after communication or investigation, reasons are clear. The user either know how to deal with those items, or understand that currently they can only be marked as to-be-solved. By either case, a reason code can be then assigned to indicate how to follow-up. And usually, more than one items are grouped together to share the same follow-ups. For memo some literal reasons before assigned, one can use the note feature in communication box. 
 2. In case workflow is needed based on the reason code definition, then the workflow instance ID and status will be recorded.
-3. A group reference number can be unassigned in any cases if user wants. The "UNASSIGNED" flag in this table is checked. And all items in ACDOCM are erased in the field GRREF, and their PSTAT is changed to "5 Unassign". However, the relationships between the GRREF and its items are preserved in table *ICA_ASSIGN_ITEM*.
+3. A group reference number can be unassigned in any cases if user wants. The "UNASSIGNED" flag in this table is checked. And all items in ICADOCM are erased in the field GRREF, and their PSTAT is changed to "5 Unassign". However, the relationships between the GRREF and its items are preserved in table *ICA_ASSIGN_ITEM*.
 4. There is another table *ICA_ASSIGN_CMNT*, which is used to allow record some comments on a group reference number.  
  
 ** DONE [#A] Posting Method                                        :Vincent:
-A default posting method is given for inserting data into ACDOCM. Matching lines are grouped by document numbers. And the grouping rule is by MMETHOD, RYEAR, POPER, and UNIT. While the UNIT could be BUKRS, RCOMP, RCNTR, PRCTR, SEGMENT, RFAREA, and RBUSA. Thus a document can be regarded as one matching run for a given unit using a given method in a fiscal year period. 
+A default posting method is given for inserting data into ICADOCM. Matching lines are grouped by document numbers. And the grouping rule is by MMETHOD, RYEAR, POPER, and UNIT. While the UNIT could be BUKRS, RCOMP, RCNTR, PRCTR, SEGMENT, RFAREA, and RBUSA. Thus a document can be regarded as one matching run for a given unit using a given method in a fiscal year period. 
 
 ~Document cannot be grouped by the combination of Unit and partner Unit. For the matching should also deal with lines with wrong or missing partner unit assignments.~
 
 Refer the implementation of class "CL_RTC_POSTING_METHOD".
 
-** TODO [#B] UI-500 Upload Matching Data
-For units that are not in S/4HANA Accounting, they can upload their matching data directly to ACDOCM. There are lots of existing upload Fiori implementations, the best reference is the Fiori APP "Import Financial Plan Data". The project is [[https://projectportal.int.sap.hana.ondemand.com/projects/fin.co.plandata.upload][fin.co.plandata.upload]]. 
+** DONE [#B] UI-500 Upload Matching Data
+For units that are not in S/4HANA Accounting, they can upload their matching data directly to ICADOCM. There are lots of existing upload Fiori implementations, the best reference is the Fiori APP "Import Financial Plan Data". The project is [[https://projectportal.int.sap.hana.ondemand.com/projects/fin.co.plandata.upload][fin.co.plandata.upload]]. 
 
 #+CAPTION: UI-500: Upload Matching Data
 [[../image/ICR_UploadMatchingData.png]]
 
 1. To upload data, you need first to choose a Matching Method. The download templates are derived from the method. Each Data Source of the method generates a dedicate download template.
-2. The data is uploaded to a specific method and cannot be shared among other methods unless you checked "Globally Shared with other Methods". In this case, the data is uploaded to ACDOCM with MMETHOD field empty. During the matching, the slice of data will be copied to the running method's space.
+2. The data is uploaded to a specific method and cannot be shared among other methods unless you checked "Globally Shared with other Methods". In this case, the data is uploaded to ICADOCM with MMETHOD field empty. During the matching, the slice of data will be copied to the running method's space.
 3. Once the CSV file is browsed, the data is displayed in the staging area. Click "Check Matching Data" will trigger data validation checks. The validation log will be displayed in a separate log dialog. Customers are allowed to define their own validation logic, thus a BADI need to be embedded.
-4. Click "Import Source File" will also do a data validation check. And if the validation is passed, posting is triggered. In case error happens during posting, the error log is also displayed in a separate dialog. As well as the successful log with the matching document numbers are listed. 
-5. The newly uploaded data has PSTAT equal to '00', initial GRREF, and initial MATCH_RULE. The data is firstly displayed in the staging area once a csv file is browsed. After hitting the button "Import Source File", the data is then posted to ACDOCM, and ICA_DOCH as well.
-6. In case mis-uploading, one can first delete the data based on document numbers. This can be achieved in UI-440. 
+4. Click "Import Source File" will also do a data validation check. And if the validation is passed, posting is triggered. In case error happens during posting, the error log is also displayed in a separate dialog. As well as the successful log with the matching document numbers are listed.
+5. The newly uploaded data has PSTAT equal to '00', initial GRREF, and initial MATCH_RULE. The data is firstly displayed in the staging area once a csv file is browsed. After hitting the button "Import Source File", the data is then posted to ICADOCM, and ICA_DOCH as well.
+6. In case mis-uploading, one can first delete the data based on document numbers. This can be achieved in UI-440.
+7. If you want the uploaded data to be shared among mulitple methods, then you need to play some tricks on the Data Source CDS view. First, choose one method as the leading method, to which you upload the data. In the CDS view, you union the data of the leading method and set the field METHOD_ID to empty. Refer the example bellow:
+#+CAPTION: The Default CDS view on ACDOCA.
+#+BEGIN_SRC sql
+create view P_FinJournalEntriesForMatching
+as select from ICADOCM {
+    RCLNT,
+    '' as METHOD_ID,  --Make the method ID empty
+    DOCNR,
+    DOCLN,
+    PERIV,
+    RYEAR,
+    POPER,
+    RCOMP,
+    RASSC,
+    RACCT,
+    TSL,
+    RTCUR,
+    GRREF,
+    PSTAT,
+    CSTAT,
+    TIMESTAMP,
+    ...
+   } where PSTAT = '01'
+       and DELFLG != 'X'
+       and METHOD_ID = 'SF001' --The Leading Method
+union all
+select from ACDOCA
+{
+    RCLNT,
+    '' as METHOD_ID,
+    '' as DOCNR,
+    0  as DOCLN,
+    PERIV,
+    RYEAR,
+    POPER,
+    RCOMP,
+    RASSC,
+    RACCT,
+    TSL,
+    RTCUR,
+    '' as GRREF,
+    '00' as PSTAT,
+    '' as CSTAT,
+    TIMESTAMP,
+    ...
+} where RLDNR = '0L'
+#+END_SRC
+
 
 * Matching Result Reporting
 The given matching result reports should cover the generic use cases from the high level to the most detail level to view the matching result.   
 ** TODO [#B] UI-400 Overall Matching Result by Unit 
 This is the highest level report on the leading units and Matching Methods level. Bearing in mind, for different account assignments, like company, profit center, cost center, and so on, they are defined in separate Fiori tiles with separate presentation. This is because their search helps and column presentations are different, and cannot be simply merged together. However, the underlying Fiori APP is shared. This can be achieved by providing different URL parameters when defining Fiori tiles.
 
-The search is based on table ACDOCM. Result is calculated by checking the PSTAT and get the counts. Last Run timestamp is joined with ICA_DOCH for the latest one.  
+The search is based on table ICADOCM. Result is calculated by checking the PSTAT and get the counts. Last Run timestamp is joined with ICA_DOCH for the latest one.  
 
 #+CAPTION: UI-400: Overall Matching Result of Company
 [[../image/ICR_OverallMatchingResult.png]]
@@ -470,7 +511,7 @@ The search is based on table ACDOCM. Result is calculated by checking the PSTAT 
 ** TODO [#B] UI-410 Matching Result by Method
 This is the second level report on Matching Method, which is used for statistic purpose on Matching Rules. You can get how many transactions and how much of the amounts are matched under certain matching rules.  
 
-When a Matching Method is chosen, the leading unit and partner unit can be derived. So that the search help can also be determined in the UI filtering. The search is based on table ACDOCM for all *matched* lines and group by GRREF. Those not matched lines are not displayed in the list, but they are counted in the list of "Unmatched Transactions". 
+When a Matching Method is chosen, the leading unit and partner unit can be derived. So that the search help can also be determined in the UI filtering. The search is based on table ICADOCM for all *matched* lines and group by GRREF. Those not matched lines are not displayed in the list, but they are counted in the list of "Unmatched Transactions". 
 
 #+CAPTION: UI-410: Overall Matching Result by Method
 [[../image/ICR_MatchingResultByMethod.png]]
@@ -488,7 +529,7 @@ When a Matching Method is chosen, the leading unit and partner unit can be deriv
 11. The "Unmatched Transactions" will be shown if there are unmatched items(including new) are detected with the involved leading unit and partner unit pairs. It is a drop-down list button, and click the item will navigate you to UI-430. 
 12. The list can be download to spreadsheets.
 
-** TODO [#A] UI-420 Matching Result Detail
+** DONE [#A] UI-420 Matching Result Detail               :William:Jin:
 The detail page only shows information of a single match, that's also known as what a group reference number points to. It also acts as a communication media with suggested post activities, like providing comments, suggested postings, and so on. 
 
 #+CAPTION: UI-420: Matching Result Detail
@@ -500,10 +541,11 @@ The detail page only shows information of a single match, that's also known as w
 4. Other columns are derived from the underlying data sources and in plain color. Some known unnecessary columns should be hidden on purpose, they are RCLNT, METHOD_ID, DOCNR, DOCLN, PERIV, RYEAR, POPER, RCOMP, RASSC, GRREF, PSTAT, CSTAT, and TIMESTAMP. However, the leading currency amount field should be always displayed right after the matching columns if it is not involved. The Variance is calculated based on the leading currency amount only.
 5. If REF_BELNR is shown, then the Orginal accounting document number will be displayed as a link, which allows the user navigate to the accounting journal entries APP.
 6. A reason code can be given (or derived from the rule) to the assignment to explain why the items can be assigned together, and what is still missing for a complete matching? Here assignment doesn't mean you must have items on both sides. If there are only items on one side exist, and no item on the other side, this is still an assignment in the sense that they can be handled together for the same un-matching reason.
-7. According to the settings on the reason code, follow-ups should be made differently. For example, a simple reason code only requires you provide some comments, and then you can confirm it as matched. Besides, you can also attach some external files to support the matching decision. The reason code can also be configured with some related links to assist you make decision during matching confirmation as well as its long text explanation. 
-8. If workflow is required, then it will trigger a workflow when submitting. The workflow status is displayed in the "Workflow Status" field. User can click to navigate to the workflow item for details. When a group reference number is submitted to a workflow, then, you can not unassigned it.
-9. If a suggested posting method is given to the reason code, then after getting approval, the processing status is set to "25 Confirmable", and the initiator needs a final confirmation to realize the posting in the system. Any failure will popup to the initiator directly. However, the suggested posting method can also be implemented to only give a suggest posting list(CSV format), which the user can download and posting to the system manually as a reference. 
-10. If posting method is successfully executed, the group reference number is unassigned, thus the corresponding items are cleared with the group reference number, and the status is set to "05 Unassigned". You have to re-run a matching to make them grouped under a new group reference number.
+7. According to the settings on the reason code, follow-ups can be differently. For example, a simple reason code only requires you provide some comments, and then you can submit it to "30 Matched". Besides, you can also attach some external files to support the matching decision. The reason code can also be configured with some related links to assist you make decision during matching confirmation as well as its long text explanation. 
+8. If workflow is required, then it will trigger a workflow when submitting. Besides the current processing status "20", and the target processing status "25", the workflow status is also displayed in the "Workflow Status" field. User can click to navigate to the workflow item for details. When a group reference number is submitted to a workflow, then, you can not unassigned it.
+9. If an auto-adjustment class is given to the reason code without workflow, then the processing status will direct to "30" after the adjustments sucessfully finished. 
+10. Most of the adjustments require a re-matching. Thus the original group reference number is unassigned, and a re-matching is advocated.
+11. During auto-adjustment and re-matching, messages will be propgated and saved into application log (FIN_ICA AA). One can get all of them by the assignment number as an external reference. User will see the "Posting Log" link if the assignment has application logs generated. If there is an error message, then "Reprocess Button" will be shown.
 
 *** Table Design
 Group reference number represents a match case. It may need to be assigned a reason code or go through workflows. Thus a dedicate table *ICA_MATCH* should be given to record those information. Only if a group reference number is submitted or confirmed with a reason code, should it be inserted into this table.
@@ -523,7 +565,7 @@ Group reference number represents a match case. It may need to be assigned a rea
 | CHANGED_BY  |     | Last Changer                             |
 | CHANGE_TIME |     | Last Change Timestamp                    |
 
-A group reference number can be unassigned in case there are adjustments for the items it groups. Once it is unassigned, the filed "UNASSIGNED" is marked true. Meanwhile, the corresponding items in ACDOCM are cleared with the group reference number and the processing status is set to "00". In this way, the group reference number is obsolete, however, there still exist the cases that the former grouped items should be known. Thus another table needs to be introduced *ICA_MATCH_ITEM* to record the former grouped items.
+A group reference number can be unassigned in case there are adjustments for the items it groups. Once it is unassigned, the filed "UNASSIGNED" is marked true. Meanwhile, the corresponding items in ICADOCM are cleared with the group reference number and the processing status is set to "00". In this way, the group reference number is obsolete, however, there still exist the cases that the former grouped items should be known. Thus another table needs to be introduced *ICA_MATCH_ITEM* to record the former grouped items.
 | Field     | Key | Description            |
 |-----------+-----+------------------------|
 | RCLNT     | X   | Client                 |
@@ -545,12 +587,12 @@ Comments are stored in a dedicate table *ICA_MATCH_CMNT*.
 *** Workflow
 Flexible Workflow will be leveraged to support both Cloud and OP. The risk of Flexible Workflow is that it requires the releasing of some consumption CDS views, which should be taken care for the extensibility and hardening topics. 
 
-** TODO [#A] UI-430 Manual Assignment                         :William:Jin:
-In case all the Matching Rules are applied, there are still items left unmatched. The unmatched items are listed in the Manual Assignment APP. The data is read from ACDOCM and the underlying Data Sources.
+** DONE [#A] UI-430 Manage Assignment                           :William:Jin:
+In case all the Matching Rules are applied, there are still items left unmatched. The unmatched items are listed in the Manual Assignment APP. The data is read from ICADOCM and the underlying Data Sources.
 
-ACDOCM structure is supposed to have all possible fields. The manual assignment APP should allow user to personalize the layout according to different needs. Although it is technically possible to adapt a fully dynamic approach, which all the fields of the 3 tables can be dynamically determined from the meta data of the Data Sources. But it takes too much effort, thus not economic. 
+ICADOCM structure is supposed to have all possible fields. The manual assignment APP should allow user to personalize the layout according to different needs. Although it is technically possible to adapt a fully dynamic approach, which all the fields of the 3 tables can be dynamically determined from the meta data of the Data Sources. But it takes too much effort, thus not economic. 
 
-Be aware that ACDOCM can be extended for new fields, how to dynamically adapt the new fields on UI level should be considered. 
+Be aware that ICADOCM can be extended for new fields, how to dynamically adapt the new fields on UI level should be considered. 
 
 #+CAPTION: UI-430: Manual Assignment 
 [[../image/ICR_ManualAssignment.png]]
@@ -559,21 +601,26 @@ One of the important value of Matching Engine is to automate the mapping as much
 
 1. The APP accepts 3 single parameters: "Recon Case/Matching Method", "Leading Unit", and "Fiscal Year Period". The first parameter can be either reconciliation case or matching method, this can be determined by a URL parameter. As a reconciliation case is mandatory to be assigned a matching method, the followup logics are quite same. "Leading Unit" is determined once a recon case or matching method is chosen. The "Fiscal Year Period" is determined from the Data Source parameters.
 2. In case Recon Case is used, additional 2 parameters are shown. The Display Group is read from the recon case configuration, and it is a single mandatory filtering with leading display group as the default. The second parameter Leading Currency is single optional, and if it is not given, it means all currency codes.
-3. The upper left table lists all unassigned items of the leading unit. The upper right table lists all unassigned items of one of its partner unit which can be switched to others from a drop-down list. Here, "unassigned items" means their the processing status are less than "20 Assigned". 
-4. As reciprocal, the partner unit's trading partner should be the leading unit. However, mistakes always happens, for example, missing trading partner or wrong trading partner. In that cases, the right table always lists all unmatched items for the partner unit no matter its value of trading partner is the leading unit or not.
-5. You can use the column filter to narrow the selection. If possible, by default, the filter of trading partner column should be set to include the leading unit and "Null" value for the right table.
-6. You can communicate with the assigned contact by choosing certain items from any of 3 tables. There are following communication methods possible: Email, Copilot, Note, Phone and Ticket System. User can define communication status based on a communication method. Use Email as an example, you first choose items and select "send email". A email sending dialog pops up with pre-defined recipients, subject, and template-generated contents. You can also assign a due date after which time the items should be in marked color to pay special attention to. Once the email is sent, the communication status is set to "10 Email Sent", and the processing status is set to "10 Contacted before Assigned" for unassigned items, or "22 Contacted after Assigned" for assigned items. You can afterward click the link "Email Sent" to view the content of the sent email.
-7. If there are new postings after last run, they are flagged with "00 New" in the processing status. The new postings are detected from the underlying Data Sources with the last timestamp in ICR_DOCH. You can not manual assign "00 New" items. This is because if it is allowed, then manual assignment needs to generate matching documents in table ICA_DOCH, which must alter the reconciliation cut-off time to make consistency. But you cannot guarantee that all the items before the timestamp are copied to ACDOCM, which introduces data inconsistency. You must run a matching again(by adjusting the cut-off time) to include the new items.
+3. The upper-left table lists all unassigned items of the leading unit. The upper right table lists all unassigned items of one of its partner unit which can be switched to others from a drop-down list. Here, "unassigned items" means their the processing status are less than "20 Assigned". 
+4. As reciprocal, the upper-right table lists all the items with the partner unit's trading partner equal to the value of leading unit. If for the partner unit, some of its lines have trading partner field empty, those lines can only be shown in the upper-left table when the partner unit is displayed as leading unit. User than can assign them together to a reason code for missing trading partner.
+5. The bottom table lists all the assignments that relates to the leading unit chosen. Which means either the leading unit value is appeared in the leading unit field, or in the partner unit field. 
+6. You can communicate with the assigned contact by choosing certain items from any of 3 tables. There are following communication methods possible: Note, Email, Copilot, Phone and Ticket System. Refer the SDD Communication for detail.
+7. If there are new postings after last run, they are flagged with "00 New" in the processing status. The new postings are detected from the underlying Data Sources with the last timestamp in ICR_DOCH. You can not manual assign "00 New" items. This is because if it is allowed, then manual assignment needs to generate matching documents in table ICA_DOCH, which must alter the reconciliation cut-off time to make consistency. But you cannot guarantee that all the items before the timestamp are copied to ICADOCM, which introduces data inconsistency. You must run a matching again(by adjusting the cut-off time) to include the new items.
 8. The foot area only shows in reconciliation cases. The "Selected Amount" shows the total amount value of the selected items. However, if amount of different currency codes are selected, you will get an error instead of the total amount. 
 9. The "Setting" button allows user to set preference of the layout for each table. Layout settings includes available columns, sort, group-by, and column positions. Layout can be saved personally or globally.
-10. After the user checks items from the left panel or both left and right panel, he can hit the "Assign" button. It will then popup the dialog 431, in which user can assign a reason code. According to the reason code, the available target processing statuses can be determined and comments can also be added. For details on how the reason code decides the target processing statuses, please refer "UI-120 Reason Code".
-11. The lines will then moved from the above 2 tables to the bottom-right table with a new group reference number inserted in the bottom-left table. The "Assign" button also works if the user choose items and an existing group reference number in the bottom-left table, which means adding new items to an existing assignment whose processing status is from "20" to "24". 
-12. The assigned items will be listed in the bottom-right table with processing status set to larger than or equal to "20 Assigned". With "20 Assigned", you can not confirm it directly, but have to submit to a workflow or other confirmation process. Only after the status is changed to "25 Confirmable", then you can confirm it and the processing status will be set to "30 Matched". The "Submit" button navigates you to UI-420, where you can assign a reason code to determine follow-ups. If a manual assignment has variance equal to 0, by default, the processing status will be set to "25 Confirmable".
-13. The dropdown box switches out-of-box filters which are very useful to distinguish different set of assigned items. For example, "Show Records without Variance" only list those assignments with balance equal to 0. Other possible filters are "Show Records with Variance", "Show Exceptional Matches", "Show Suggested Matches", "Show Matched Items", "Show Manual Assignments", "Show Unmatched Items", "All". By default, "Show Unmatched Items" is chosen which list items with processing status between "20 Assigned" and "25 Confirmable". The out-of-box filter works on both the bottom-left and bottom-right tables.
-14. The bottom-right table show all group assignment numbers under all possible filters combination. The bottom-right table shows items of the group reference numbers which are checked in the left table.  
-15. The user can hit the "Auto Assign" button to trigger a directly run of the Matching Method. This is useful if there are new postings after last runs. The matched result will be listed in the bottom tables immediately after the run. In case in a reconciliation case, a dialog popup asks for set a new frozen time. 
-16. Concurrency control must be introduced so that when there is a matching run in backend, you cannot do any manual assignments. The 3 buttons: "Assign", "Auto Matching", and "Unassign" are disabled during a matching running. Once the running is finished, the 3 tables get refreshed, and the 3 buttons are enabled again. 
-17. "Unassign" allows the user to unassign items that are already matched together. The group reference number is cleared on these items, and the processing status is set to "00 Not Process". Then you can re-run the matching to get a new group reference number. This is useful when adjustment postings are made and you want to include them into existing matches(mainly those suggested matches). However, if a workflow is already triggered on the group reference number, then you cannot un-assign it.
+10. After the user checks items from the left panel or both left and right panel, he can hit the "Assign" button. It will then popup the dialog 431, in which user can assign a reason code. According to the reason code, the next processing status can be determined. For details on how the reason code decides the target processing statuses, please refer "UI-120 Reason Code".
+11. The items will then moved from the above 2 tables to the bottom-right table with a new group reference number inserted in the bottom-left table. The "Assign" button also works if the user choose items and an existing group reference number with processing status equal to "20", which means adding new items to an existing assignment. 
+12. The assigned items will be listed in the bottom tables with processing status set to equal or larger than "20 Assigned". With "20 Assigned" as the beginning, you can submit them to make them finally to "30 Matched".
+13. There is a middle status "25 Confirmable", which is used in certain workflow cases. For example, if the workflow initiator need approval for his top manager, then the top manager's approval only set the status to "25", not "30". This is because the top manager may not have the system authorization to do some adjustments on the data source. The initiator should do the final confirmation step which may post some adjustment documents.
+14. All the "Suggested Assigned" rules will set the status to "20 Assigned". Further submitting are required by the user manually. After reviewing the assignments, the user can decide either to follow the activities of the default assigned reason codes, or to assign new reason codes.
+15. Followup activities are decided based on the settings of the reason code assigned. There could be a required comment, auto-adjustments on source, or a workflow to be triggered. The next status could be either "25" or "30", which is automatically decided by the system. For example, if a reason code asks for a comment, then when a comment is given, the status will be changed from "20" to "30"; If a reason code asks for an auto-adjustment, then the submitting will first do the adjustment posting, then change the status to "30". Any error during the posting will make the status stay on "20"; If a reason code requires a workflow, then the submitting will trigger a workflow instance. The status remains on "20", until the approval makes the status either to "25" or "30".
+16. In case manual assignment, the dialog "UI-431" will pop up to ask for a reason code. When submitting, then system tries to determine the next status directly. The determination rule is the same as described above. The comment box is always there, and only if the reason code asks for a comment, or you can submit directly without providing any comments. However, if the manual assignment includes items into an existing GRREF, "UI-431" will not pop up, and no submitting is conducted.
+17. The submitting can be in batch. If multiple assignments are selected, the system determines how to go to the next status one by one. In case any of the assignments are forbidden for further processing(for example: in workflow approval, locked by others, already in "30"), then the batch is prohibited. If any of the assignments need comments and the comments are not provided yet, the batch processing will automatically give a general comment "Processed by <whom> in a batch!". 
+18. The dropdown box switches out-of-box filters which are very useful to distinguish different set of assigned items. For example, "Show Records without Variance" only list those assignments with balance equal to 0. Other possible filters are "Show Records with Variance", "Show Exceptional Matches", "Show Suggested Matches", "Show Matched Items" , "Show Manual Assignments", "Show Unmatched Items", "All". By default, "Show Unmatched Items" is chosen which list items with processing status between "20 Assigned" and "25 Confirmable". The out-of-box filter works on both the bottom-left and bottom-right tables.
+19. The bottom-right table show all group assignment numbers under all possible filters combination. The bottom-right table shows items of the group reference numbers which are checked in the left table.  
+20. The user can hit the "Auto Assign" button to trigger a directly run of the Matching Method. This is useful if there are new postings after last runs. The matched result will be listed in the bottom tables immediately after the run. In case in a reconciliation case, a dialog popup asks for set a new frozen time. 
+21. Concurrency control must be introduced so that when there is a matching run in backend, you cannot do any manual assignments. The 3 buttons: "Assign", "Auto Matching", and "Unassign" are disabled during a matching running. Once the running is finished, the 3 tables get refreshed, and the 3 buttons are enabled again. 
+22. "Unassign" allows the user to unassign items that are already matched together. The group reference number is cleared on these items, and the processing status is set to "00 Not Process". Then you can re-run the matching to get a new group reference number. This is useful when adjustment postings are made and you want to include them into existing matches(mainly those suggested matches). However, if a workflow is already triggered on the group reference number, then you cannot un-assign it.
 
 *** Contact Person and Responsibility
 
@@ -585,7 +632,7 @@ Checking whether the Unified Responsibility Management can be leveraged.
 4. Responsibility rules can be easily maintained by end-users. And they can also be delivered as standard content.
 5. Existing APIs are also given for the responsible contacts determination.  
                  
-** TODO [#B] UI-440 Matching Document List
+** DONE [#B] UI-440 Matching Document List                            :Heli:
 The report lists document numbers, from which you can select to delete or restore documents. This APP is useful in the use case of uploading matching data. If in any cases, you mis-upload a batch of matching data, you can use this APP to delete it and make a re-upload. The APP can also be used for auditing purpose, as each document corresponding to a matching run, one can check how many times a certain unit runs matching and what's the last one.
 
 #+CAPTION: UI-440: Matching Document List 
@@ -595,20 +642,38 @@ The report lists document numbers, from which you can select to delete or restor
 2. Document Number supports multiple search. If leaving empty, it means all.
 3. Leading Unit is also an optional and multiple filtering.
 4. If "Show Deleted" is checked, it also list those already deleted documents.
-5. The button "Delete" only takes effects on those documents that are not marked as deleted. There will be confirmation dialog popup when deleting documents. To be aware, the deletion is not physical deletion from database, it only set a deletion flag on the lines of the document. 
-6. The button "Restore" only takes effects on the already deleted documents. 
+5. The button "Delete" only takes effects on those documents that are not marked as deleted. There will be a confirmation dialog popup when deleting documents. To be aware, the deletion is not physical deletion from database, it only sets a deletion flag on the lines of the document.
+6. If the to-be-deleted items are already involved in assignments, then a warning should popup to tell the user that all related assignments will be unassigned.
+7. The button "Restore" only takes effects on the already deleted documents. And set back the deletion flag to initial again.
 
-** TODO [#B] UI-450 Matching Entries
-The report is used to display items in ACDOCM for drill-through purpose. User can also use it download contents from ACDOCM to spreadsheets. Dynamically adapt extensions from ACDOCM should be considered for this report.
+** DONE [#B] UI-450 Matching Entries                                  :Heli:
+The report is used to display items in ICADOCM(as well as data source) for drill-through purpose. User can also use it to download items to spreadsheets. Dynamically adapt fields from the underlyingdata source CDS views should be considered for this report. Thus, this report cannot be developed using smart template, free-style is appreicated. 
 
 #+CAPTION: UI-450: Matching Entries 
 [[../image/ICR_MatchingEntries.png]]
 
-1. "Matching Method" is a single mandatory filter to limit the data.
-2. All other filters are optional and support multiple values. The available filters need to be carefully decided rather than supporting all the fields in ACDOCM.
-3. By default, the list is grouped by leading unit, partner unit, and group reference number. The available columns are all columns in ACDOCM. We may also consider the ACDOCM extensions.
-4. If reference document number is given, then it can navigate to financial journal 
+This report app has 2 modes differentiated by a URL parameter. If "RMode=MatchingMethod", then show the matching method mode; if "RMode=ReconCase", then show the recon case mode. The 2 modes are described seperately.
 
+*** Matching Method Mode
+1. "Matching Method" a single mandatory field which is used to determine others, like: leading unit field and partner unit field, mandatory filtering fields, and the columns of the list below.
+2. "Document Number" and "Group Reference Number" are 3 fixed parameters. Which means for all the methods, these 3 parameters are always shown as default filtering parameters.
+3. Those items which is newly added after last matching run will also be shown. Those already "Roll-in" items are save in ICADOCM, those new added lines are read from the Data Source CDS view(s).
+4. When a Matching Method is chosen, fields from the underlying Data Source CDS view(s) are collected. If the method has 2 Data Sources, the fields are the union collection.
+5. Some fields are mandatory filters, they are Leading Unit fields and Mandatory Filtering Fields. And they must be shown when the method is chosen. The MFF fields are single value parameters only, and the operator is read from the Data Source settings. For example, if FISCYEARPER has the operator "<=", then the report's default operator is "<=". All other fields can be used as optional filters and can be chosen by the user.
+6. User can download the listed content to an excel sheet.
+7. The report should also support URL parameters so that it can be opened by other application for drill-through purposes.
+
+*** Reconciliation Mode
+1. "Reconciliation Case" is a single mandatory field which is used to determine others, like: leading unit field and partner unit field, mandatory filtering fields, and the columns of the list below.
+2. "Display Group" and "Side" are 2 fixed parameters. The drop-down values of the display group is determined by the recon case chosen. By default, the leading display group is chosen.
+3. All other UI level features are exactly the same as the matching method mode.
+
+*** Data Access Logic
+The 2 modes have different data access logics. Since SADL cannot fulfill dynamic structure and union data sources, global temporary table(GTT) is introduced. Data is first read from ICADOCM and Data Source CDS view(s), and stored temporary in GTT. SADL then access GTT for the data displayed in the Analytic List Table. 
+
+In matching method mode, the data is read without display group filtering. When filtering and grouping requests comes from the Analytic List Table, it pushes down to the source views. 
+
+In reconciliation case mode, the data is filtered by the display group settings. There are 3 filtering modes: 1) Leading Unit side, 2) Partner Unit side, 3) Both sides. Since a Display Group has 2 filters set on each side, the report should now exactly which filter(s) should be applied on a unit. The report cannot, however, runs filtering like this: Leading Unit filter on leading units, Partner Unit filter on partner units. 
 * Reconciliation Report
 The given reconciliation reports are specific to certain cases, and aren't generic. The main reason is that different reconciliation cases have different processing logic and displaying modes. 
 
@@ -624,18 +689,22 @@ This is not only a report, but also an entry point to start a reconciliation pro
 
 1. Whether reconciliation case is a single selection. Once a reconciliation case is chosen, then the unit role can be determined. If there is mandatory filtering fields like "FISCYEARPER", then it will also be shown.
 2. Fiscal year period should be always there, as reconciliation cases are mainly designed for financial applications.
-3. The view can be plain list or hierarchy. Hierarchy view is only supported if there is hierarchy data maintained in backend. For company, only involved in consolidation use cases, hierarchy are more meaningful.
-4. If displayed in hierarchy view, the status and result aggregation on higher nodes will take additional design and development effort.
-5. The Recon Status column gives overall reconciliation status. There are 3 status: "Initial", "In Process", and "Reconciled". "Initial" means for this period and this company, there is no matching run. "In Process" means the matching program is running or waiting for manual approval. "Reconciled" means all amounts are reconciled or within the tolerance, or event force to be reconciled by providing some notes.
-6. Corresponding to the reconciliation status, the next column Matching Result gives the status from matching perspective. There could be still some items are not matched, or matched within tolerance, or even there is no matching result at all.
-7. The Period Status is manually set by hitting the button "Open Period" or "Close Period". It is also possible that when a matching job is firstly run for a period, the job opens the period automatically and record the cut-off timestamp for the period. 
-8. The Cut-off time comes from the latest matching run. If you freeze the cut-off time to a certain timestamp, then the next run will read data not based on current time, but based on the frozen time. This means the frozen time must be after the last run time, and before the current time.
-9. The dialog UI-701 popups when the user hits the "Close Period" button. You must freeze the cut-off time when closing a period. The default cut-off time is current, and you can move it back, but it cannot be before the last run time. If "Run Matching Immediately" is checked, when the dialog is confirmed, a background job for matching is raised and run immediately. The list view will polling the latest status during the job is running.
-10. You can also schedule the matching job in a future time. In this way, the frozen cut-off time can also be set in a future time. The button "Schedule Matching Job" will navigate you to the standard SAPJ job scheduling UI. When the job is running, it checks the frozen timestamp, and if it is still in future, then the job is terminated.
-11. You can of course schedule the matching job recurrently. The recurrence job also applies rule of frozen time. So it is recommended that the recurrence job should be run before time is frozen.
-12. If after the last run, there is new postings detected in the corresponding data source, then warning is given in the column "New Posting". To achieve better search and list performance, the warning should be got asynchronously after the list is shown.
-13. Click each line will navigate you to the report UI-710 Reconciliation Balance. 
+3. The view can be plain list or hierarchy. Hierarchy view is only supported if there is hierarchy category added in the reconciliation case.
+4. The companies are read from the leading unit master data view, which is set on the data source. Once matching for certain companies are run, they will be also inserted to table "ICA_DOCH". So the list is actually a left join from leading unit master data view to the table "ICA_DOCH". 
+5. The hierarchy data is read from the HRRP tables according the the hierarchy category in the reconciliation case. When displayed in hierarchy view, the statuses should be aggregated.
+6. Matching Status gives the status from matching perspective. There are totally 4 statues: 1) "Not Assigned" with not assigned number of entries in the parentheses. It means there are entries with PSTAT less than 20; 2) "All Matched" means all the entries are within PSTAT equal to 30; 3) "Initial" means there hasn't matching run; 4) "All Assigned" means all entries are above or equal to 20, but not all are in 30.  
+7. When a matching ran for certain units in a certain period, the balance status is dynamically calculated on each pair of leading unit and partner unit. It will be displayed in a percentage bar. The percentages are calculated based on the number of partner units which are categorized to 3 colors. If the balance is zero, it is colored green; If the balance is not zero but within the tolerance, it is colored yellow; Otherwise, red. The categorizing rule is described in the table bellow. 
+8. The Cut-off Time is read from table "ICA_DOCH" for the latest one. If after the last run, there are new postings detected in the corresponding data source, then warning is given in the column "New Posting". To achieve better search and list performance, the warning should be got asynchronously after the list is shown.
+11. You can also schedule the matching job in a future time. In this way, the frozen cut-off time can also be set at a future time. The button "Schedule Matching Job" will navigate you to the standard SAPJ job scheduling UI. When the job is running, it checks the frozen timestamp, and if it is still in future, then the job is terminated.
+12. You can also schedule the matching job recurrently. The recurrence job also applies rule of frozen time. So it is recommended that the recurrence job should be run before time is frozen.
+14. Click each line will navigate you to the report UI-710 Reconciliation Balance. 
 
+| Balance Comparison of Leading DP | Balance Status |
+|----------------------------------+----------------|
+| Not in Tolerance                 | Red            |
+| In Tolerance                     | Yellow         |
+| Balance to Zero                  | Green          |
+  
 ** UI-710 Reconciliation Balance
 This report gives the balances and differences for a single reconciliation case and further grouped by leading unit, partner unit, display group, and currency code. It is a breakdown of UI-700.
 
@@ -643,16 +712,117 @@ This report gives the balances and differences for a single reconciliation case 
 [[../image/ICR_ReconBalance.png]]  
 
 1. A reconciliation case must be first selected, so that leading unit can be determined.
-2. The items are read from ACDOCM, and grouped by leading unit, partner unit, and currency code. Items can be viewed in 4 modes: "List View", "List View in Display Groups", "Hierarchy View", and "Hierarchy View in Display Groups".
-3. If display groups are involved, then the items need to be further grouped by display groups which is not simply a SQL group-by, but needs to read from the display group filter definitions. Bearing in mind, overlaps might be existing between 2 display groups. So when in display groups, it is meaningless to aggregate the amounts to higher level nodes.
-4. "Company Balance" and "Partner Balance" gives the aggregated amounts for the 2 sides and in different currency codes. The "Difference" column shows the absolute value of Company Balance minus Partner Balance.
-5. "Tolerance(%)" is read from the reconciliation case definition. if Difference/Company Balance <= Tolerance(%), then the "Status" column shows "Reconciled", otherwise "In Process". There could be cases that the Company Balance is 0, then the above formula doesn't work. If meanwhile, the Partner Balance is not 0, then it is not reconciled. If both are 0, it is either in "Initial" status, or there is no data on both sides. 
-6. In case balance of both sides are 0, then there must be a way to differentiate whether it hasn't run matching, or there is no data on both sides. Because this will result 2 different status display. The first case should show "Initial Status", the second case should show "Reconciled". As the matching engine doesn't differentiate no data in ACDOCM because matching hasn't run or there is no data in the data source, then only from reconciliation case level we can tell.
-7. "Cut-off Time" and "New Posting" are the same as already described in UI-700. While "New Posting" here shows warning in more detail granularity, that is by currency codes and display groups.
-8. Although the reconciliation status are determined by the lead amount field(usually the transaction currency amount), but this report still allows you to switch to other currency amount fields. However, their reconciliation status are not counted, only to display as references. If, for example, switch to company code currency, the columns "Currency", "Company Balance", "Partner Balance", and "Difference" are replaced.
-9. The download feature may require different processing when in different view modes and different currency amount fields.
-10. Hitting each line will navigate you to UI-430 Manual Assignment.
+2. The items are read from ICADOCM, and grouped by leading unit, partner unit, display group and currency code. See bellow pseudo sqls on the data reading logic.
+3. The list should be implemented using Analtyic Talbe so that grouping is supported.
+4. By default, the amount is calculated by the leading display group. User can decide to display other display group balance by selecting them from the dropdown list.
+5. "Leading Unit Amount" and "Partner Unit Amount" gives the aggregated amounts for the 2 sides. The "Difference" column shows the absolute value of Leading Unit Amount minus Partner Unit Amount.If the difference is with in the tolerance defined in the reconciliation case, then the value is in normal color, otherwise, in red color.
+6. You can choose other amount fields from the dropdown list. The available amount fields are determined from the Data Source CDS view, for all the amount type fields.
+7. Two view modes are provided. "Standard View" is a plain list that allow user to sort and group on its own willings. While "Netting View" shows the netting amount between 2 partners. It requires a netting pair is defined between 2 display groups. For example, "AR->AP" and "AP->AR" are netting paired. Then the netting view will group by the netting pair and partner pair to from a netting view. 
+8. You can download the result to a spreadsheet, so that further complex processing can be made. 
+9. Hitting each line will navigate you to UI-430 Manual Assignment. The navigation will carry parameters leading unit, partner unit, fiscal year period, display group, and currency. UI-430 populates the parameters automatically.
 
+#+CAPTION: Data Accessing Logic in SQL
+#+BEGIN_SRC sql
+drop table #MATCHED_UNITS;
+create local temporary table #MATCHED_UNITS 
+( RTIMESTAMP DECIMAL (000015, 000000) null, RCOMP NVARCHAR (000006) null  );
+insert into #MATCHED_UNITS 
+select max(RTIMESTAMP) as RTIMESTAMP, RCOMP 
+from ICA_DOCH 
+where method_id = 'SF001' 
+  and RYEAR = '2018' 
+  and RCLNT = '500' 
+group by RCOMP;
+
+select PUNIT, LUNIT, DISP_GROUP, CURRENCY, 
+       sum(LBalance) as MATCHED_LBALANCE, sum(PBalance) as MATCHED_PBALANCE, 
+       (abs(MATCHED_LBALANCE) - abs(MATCHED_PBALANCE)) as MATCHED_DIFF,
+       sum(LBalanceN) as NEW_LBALANCE, sum(PBalanceN) as NEW_PBALANCE,
+       (MATCHED_LBALANCE + NEW_PBALANCE) as WITH_NEW_LBALANCE,
+       (MATCHED_PBALANCE + NEW_PBALANCE) as WITH_NEW_PBALANCE,
+       (abs(WITH_NEW_LBALANCE) - abs(WITH_NEW_PBALANCE)) as NEW_DIFF,
+(--Matched + New 
+(--Already matched data in ICADOCM
+ select LUNIT, PUNIT, DISP_GROUP, CURRENCY, sum(LBalance), sum(PBalance), 
+        0 as LBalanceN, 0 as PBalanceN
+   from
+((select LUNIT, PUNIT, '1000' as DISP_GROUP, CURRENCY, 
+        sum(TSL) as LBalance, 0 as PBalance
+   from ICADOCM
+  where LUNIT in <'filters in report'>
+    and RYEAR = '2018'
+    and POPER <= '008'
+    and <'filters on display group leading unit side'>
+  group by LUNIT, PUNIT, CURRENCY) as lunit_side
+union all
+(select PUNIT as LUNIT, LUNIT as PUNIT, '1000' as DISP_GROUP, CURRENCY, 
+        0 as LBalance, sum(TSL) as PBalance
+   from ICADOCM
+  where LUNIT in <'filters in report'>
+    and RYEAR = '2018'
+    and POPER <= '008'
+    and <'filters on display group partner unit side'>
+  group by LUNIT, PUNIT, CURRENCY) as punit_side
+) group by LUNIT, PUNIT, DISP_GROUP, CURRENCY
+) as matched
+union all
+(--New data in Data Source(ACDOCA)
+ select LUNIT, PUNIT, DISP_GROUP, CURRENCY, 0 as LBalance, 0 as PBalance,
+        sum(LBalanceN), sum(PBalanceN)
+  from
+((select LUNIT, PUNIT, '1000' as DISP_GROUP, CURRENCY, 
+        sum(TSL) as LBalanceN, 0 as PBalanceN
+  from DS_ACDOCA as A
+  join ICA_DOCH as B
+    on A.LUNIT = B.LUNIT
+   and A.RYEAR = B.RYEAR
+   and A.POPER = B.POPER
+ where LUNIT in <'filters in report'>
+   and <'filters on display group leading unit side'>
+   and <'method level filters'>
+   and TIMESTAMP > <'last match run time'>
+ group by LUNIT, PUNIT, CURRENCY) as lunit_side
+union all
+(select PUNIT as LUNIT, LUNIT as PUNIT, '1000' as DISP_GROUP, CURRENCY, 
+        0 as LBalanceN, sum(TSL) as PBalanceN
+   from DS_ACDOCA
+  where LUNIT in <'filters in report'>
+    and <'filters on display group partner unit side'>
+    and <'method level filters'>
+    and TIMESTAMP > <'last match run time'>
+  group by LUNIT, PUNIT, CURRENCY) as punit_side
+) group by LUNIT, PUNIT, DISP_GROUP, CURRENCY 
+) as newposted)
+#+END_SRC
+
+*** Non-Interunit Cases
+In case a reconciliation case is on a matching method with 2 data sources, then:
+1. The status overview report is unnecessary.
+2. Netting View should be disabled. 
+3. Column Partner Unit should be hidden by default.
+4. If the Data Source behind has no leading unit definition, then even Leading Unit column should be hidden.
+5. Balance columns' label should be displayed like "Balance of Data Source 1", with tool-tips of the description of the Data Source.
+
+then the label of the balance column groups are changed to "Data Source 1" and "Data Source 2". The description of the 2 data sources can be hover-displayed. 
+
+*** Fiscal Year Period Special Processing
+In case a reconciliation case has Fiscal Year Period defined as mandatory filters, then there are some special processing. Here "Fiscal Year Period" means the underlying Data Source has "RYEAR", "POPER", and "FISCYEARPER" defined as mandatory filtering fields. Below table gives the usual MFF settings on the 3 fields:
+
+| No. | MFF Setting       | Balance Column Groups |
+|-----+-------------------+-----------------------|
+|   1 | FISCYEARPER <=    | YTD + Period          |
+|   2 | RYEAR =, POPER <= | YTD + Period          |
+|   3 | Others            | YTD                   |
+
+In general, following special logic are given:
+
+1. "YTD" here stands for the normal display, which means the data is read by applying the MFF settings. It has 2 balance column groups: "Up to Last Matching" and "Up to Now". In case fiscal year period is involved, then the labels are changed to "Up to Last Matching(YTD)" and "Up to Now(YTD)".
+2. "Period" means the total amount in a given period. The balance group labels are changed to "Up to Last Matching(Period)" and "Up to Now(Period)".
+3. For option 1, depends on whether all involved units share the same FYV, following logic applies:
+   + *FYV is different*: period '000' should be filtered out(in CDS view). Since there is no carry-forward result from the prior years, there will be performance penalty when calculating YTD. To mitigate the performance risk, a simple carry-forward report will be given which can sum up all the amounts of prior years and store the result in the 000 period of this year.
+   + *FYV is the same*: period '000' should be involved(in CDS view). The user needs to clearly set the flag "Same FYV" in the Recon Case definition, and he should make sure the involved units do share the same FSV and do year-end closing and carry-forward. The system checks the flag to determine whether the data is read from 000 period of current year or just from the beginning to calculate YTD. The data in period 000 must also be copied to ICADOCM. A matching rule is defined at the first place to copy period 000 data and group some under an single assignment
+4. For option 2, from reconciliation point of view, it is same with option 1 if "Same FYV" is checked. However, since it only reads items within a year, items from different years cannot be assigned in Matching Engine. This option is mainly used in consolidation scenario, as year-end closing and carry-forward is permitted. 
+5. All other cases only display 2 balance column groups: "Up to Last Matching" and "Up to Now". There is no special logic needed. 
 * Algorithm and Deduction                :Vincent:
 Following algorithm and deduction steps describes detail on how data is read from the source, then run matching, and finally the matched result is persisted.
 ** Test Data Preparation
@@ -913,10 +1083,10 @@ WHERE DLEVEL = '00'
   AND DETAIL_LINES.AWREF = MATCHED_LINES.AWREF                                         
 #+END_SRC
 
-** Post Method Level Data into ACDOCM
-Read method level data from the temporary table, and post them into ACDOCM so that the matched result can be persisted. A specific posting method will do the check and mapping, and finally insert the data from the temporary table into ACDOCM. The posing method also do the grouping by the leading unit for a document number, and derive some default values like Matching Method ID, creation date, created by, and so on. See bellow table for some default derivation.
+** Post Method Level Data into ICADOCM
+Read method level data from the temporary table, and post them into ICADOCM so that the matched result can be persisted. A specific posting method will do the check and mapping, and finally insert the data from the temporary table into ICADOCM. The posing method also do the grouping by the leading unit for a document number, and derive some default values like Matching Method ID, creation date, created by, and so on. See bellow table for some default derivation.
 
-#+CAPTION: Key Field Value Derivation in ACDOCM
+#+CAPTION: Key Field Value Derivation in ICADOCM
 | Field Name | Derived Value                       |
 |------------+-------------------------------------|
 | RCLNT      | Running Client                      |
@@ -928,13 +1098,13 @@ Read method level data from the temporary table, and post them into ACDOCM so th
 ** Special Cases
 
 *** Value in Some Fields Could be Changed after Last Matching Run
-Some fields can be updated in the source table after the matching. Thus it may cause data inconsistency between ACDOCM and the source tables. Matching reports like UI-430 reads data directly from ACDOCM for those already roll-in items. There could be for some fields have different values compared with the Data Source. It is tolreancable to accept such kind of inconsistency for a while from reporting point of view. But it is unacceptable for the matching algorithm. Because those fields may used in the matching rules, thus will affect the matching results.
+Some fields can be updated in the source table after the matching. Thus it may cause data inconsistency between ICADOCM and the source tables. Matching reports like UI-430 reads data directly from ICADOCM for those already roll-in items. There could be for some fields have different values compared with the Data Source. It is tolreancable to accept such kind of inconsistency for a while from reporting point of view. But it is unacceptable for the matching algorithm. Because those fields may used in the matching rules, thus will affect the matching results.
 
 The "Copy Updated Values" mechanism is introduced for each matching run before the actual matching algorithm run. In the Data Source configuration (ref UI-310), we allow some fields to be checked  with "update". Meanwhile, the key fields which are used to identify each line in the source table should also be flagged(Key Field column). 
 
 The method "COPY_UPDATED_VALUE" will be executed first for each data source. Persudo SQLs are like following:
 #+BEGIN_SRC sql
-update ACDOCM as A set AUGBL = B.AUGBL from DATASOURCE_VIEW as B
+update ICADOCM as A set AUGBL = B.AUGBL from DATASOURCE_VIEW as B
  where A.PSTAT < '25'
    and A.METHOD_ID = 'SF001'
    and A.BELNR = A.BELNR
@@ -943,6 +1113,13 @@ update ACDOCM as A set AUGBL = B.AUGBL from DATASOURCE_VIEW as B
    and A.RCOMP in ('C1001', 'C1002', 'C1003')
 #+END_SRC
 To avoid performance issue, the filter "A.PSTAT < '25'" is added to only update items with processing status less than '25'. Those under confirmation and already matched lines are considered that those updates are not necessary. 
+
+*** Critial Mutable Fields 
+Fields like clearing status and reversal flag should better to be updated real-timely. Thus we need listen to the events of clearing and reversing.  
+
+Tarbet, Jerrold <jerrold.tarbet@sap.com> is responsible for clearing. He also suggest to refer the Class CL_FINS_CLS_POST. 
+
+Reichardt, Torsten <torsten.reichardt@sap.com> is responsible for reversing.
 
 *** Temporal Assignments Need to be Re-Assigned in Next Periods
 The Buyer has cleared its account payables and the payment is sent to the Seller, however, the Seller hasn't received the payment in current period. Then the Seller create a temporal clearance using Cash-in-transition account. When the payment is received, the temporal clearance is reversed, and the real clearance payment is posted. 
@@ -1039,4 +1216,35 @@ Matching Rule: Group Reversed and Reversing Items.
 - #2 Reversed and Reversing Items on Buyer Side (XREVERSING = 'X' or XREVERSED = 'X')
 
 This rule dosen't have any matching expression. If user want to see which item is reversed by which item, he must make sure fields like "AWREF", "AWITEM", "AWREF_REV", and "AWITEM_REF" are populated. For details refer SAP Note: 2573628.
+
+* Fiori Test Server
+A linux VID is requested for Fiori App deoploy and testing. The server's IP address is "10.76.103.33". It can be requested from the website: https://desktopcloud.wdf.global.corp.sap/. 
+
+Use ica / ica123 to login the SSH and SFTP. 
+
+Use following command to manage the Fiori service:
+#+BEGIN_SRC shell
+$ sudo pm2 start app => to start
+$ pm2 stop app => to stop
+$ pm2 status => to monitor
+#+END_SRC
+
+To access the Fiori APP, you must maintain the IP and Host mapping in your "c:/Windows/System32/drivers/etc/hosts" file. 
+#+BEGIN_SRC shell
+10.76.103.33	wxdev.qianmarv.xyz 
+#+END_SRC
+
+Open https://wxdev.qianmarv.
+
+Performance Test Server for Consolidation: https://wiki.wdf.sap.corp/wiki/display/FIN/Test+system+KOP+%28Tyson%29+with+customer+data
+
+* Reuse Account Group, SET, Hierarchy Node, or Selection
+Account Group represents a group of GL accounts. Currently, following technologies can be used: 1) SET(Tcode: GS01/02/03), Hierarchy Node(Accounting Global Hierarchy), and Selection(Single Selection in VE) 
+SET is conventional and is used by lot of existing customers, thus there is value to support to reuse SET. Hierarchy Node means the nodes in an account hierarchy, which is maintained in Fiori App "Manage Global Accounting Hierarchies". As for new customer, Financial Statement Version is more recommanded to maintain in Global Accounting Hierarchies, thus it is also good to support. Selection is mainly used in consolidation area, which also supports filtering by attributes. So it is a nice to have feature if comparing with the other 2.
+
+** Hierarchy Nodes
+UHDT_VRSN to get UUID by HIER_HID, UHDT_NODE to get the NODE information. 
+                                                                                                                                                               
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 

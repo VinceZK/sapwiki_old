@@ -1,0 +1,60 @@
+#+PAGEID: f2050487403
+#+VERSION: 2
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2050487403][TCD Matching Run]]
+
+* General Information
+** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Ying Shi      |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+** References
+|                  |                  |         | <30>                           |
+| Document Title   | Date             | Link    | Comments                       |
+|------------------+------------------+---------+--------------------------------|
+| SDD Matching Run | <2019-01-07 Mon> | [[https://wiki.wdf.sap.corp/wiki/display/FINCONSCLD/SDD-ICA+Matching+Engine#SDD-ICAMatchingEngine-5.4TODO%5B#A%5DUI-430ManualAssignment:William:Jin][sapwiki]] | Software design documentation for Matching Run |
+
+* Business Background
+The matching run matches data for data source(s) based on the method definition.  
+
+* Features
+
+* Test Cases
+The test environment is ER9/500, with a self-established frontend server(https://ica.darkhouse.com.cn) for Fiori UIs.
+ 
+** Method Level Selection
+With method "SY006", company E1 and E3 are involved. Journal entries are posted in 2018/011 for both companies. 
+
+*** DONE Method Level Filter 
++ *When* there is method level filter defined, 
++ Only filtered data *should* be involved in the matching run.
++ *and* UI-430 *should* only display the involved data.
+
+** Exact Match Rule
+define rules, doc. could be matched with the defined rules with status 30, the next run will not rerun these doc. rule 1010.
+
+** Suggested Match Rule
+define rules, doc. could be matched with the defined rules with status 20, the next run will not rerun these doc. rule 1020.
+
+** Group-Only Rule
+
+*** reversed doc. 
+with unassigned status will be auto grouped with status 30. rule 1050.
+
+*** Reversed Document in Next Period.
+orginal documents are displayed in previous month,  reversed doc. in next month either is group with orginal document if it is displayed in next month, or displayed with any possible status with the orginal doc. not displayed in next month
+
+*** Clearing Status
+status first displayed as open, then cleared. Will not be displayed in next month after the first run of next month matching job
+
+status first displayed as open in current month, displayed as cleared in current and next month once it is cleared in next month. Doc. should be carry forward from current month to next month if in current month the status is <20 or >20 but with reason code as "temp assignment"
+
+** Value is updated in a changeable field
+fields selected as "sync. change" in data source, the changed info, could be sync. correctly when the next auto run 

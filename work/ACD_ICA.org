@@ -1,5 +1,5 @@
 #+PAGEID: 1991879673
-#+VERSION: 6
+#+VERSION: 7
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1991879673][ACD of InterCompany Accounting]]
@@ -319,3 +319,4 @@ Documentation of [[https://help.sap.com/viewer/53d48a2a603e41e9b0b1e825ded17742/
 | ERM Integration Scenarios | <2018-04-19 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1901570587][sapwiki]]     | References of ERM Integration Scenarios |
 | How to Integrate S4Hana Cloud and On-premise System Using SAP Cloud Platform Integration | <2018-06-13 Wed> | [[https://blogs.sap.com/2018/06/12/how-to-integrate-s4hana-cloud-and-on-premise-system-using-sap-cloud-platform-integration-part1/][scn]]         | This blog explains each step in detail on how to integrate S4Hana cloud and on premise systems using SAP Cloud Platform Integration |
 | Communication Arrangement | <2018-07-03 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Communication+Arrangement][sapwiki]]     | A Communication Arrangement describes a communication scenario with a remote system during Configuration Time. |
+s

@@ -1,0 +1,171 @@
+#+PAGEID: 2129394048
+#+VERSION: 4
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2129394048][SDD-ICA API]]
+* General Information
+** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         |               |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+** References
+|                                   |                  |         | <30>                           |
+| Document Title                    | Date             | Link    | Comments                       |
+|-----------------------------------+------------------+---------+--------------------------------|
+| Integration Development Guideline | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Integration+Development+Guideline][sapwiki]] | To develop an integration for S/4HANA Cloud you have to follow the process description below which helps you to provide all needed artifacts required. We distinguish three type of integrations |
+| Communication Scenario            | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Communication+Scenario][sapwiki]] | A communication scenario bundles inbound and/or outbound communication design time artifacts (e.g. Service Interfaces, Proxies) that shall be configurable in one step to enable communication from or to an external communication system in a cloud system. |
+| Communication Scenario Roles      | <2019-09-02 Mon> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Communication+Scenario+Roles][sapwiki]] | Communication scenario roles have to be provided as PFCG single roles. For communication scenarios that contain inbound services, there is exactly one communication scenario role. |
+| Communication Arrangement         | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Communication+Arrangement][sapwiki]] | A Communication Arrangement describes a communication scenario with a remote system during Configuration Time. |
+| Define Communication Scenario     | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Integration+Communication+Scenarios][sapwiki]] | Step-by-step guide on define communication scenarios and inbount/outbound services |
+| Maintain Scope Item Assignment    | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Procedure+-+Maintain+Scope+Item+Assignment][sapwiki]] | Step-by-step guide on how to maintain scope item assignment |
+| SAP Cash Application Integration  | <2019-07-12 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1850918459][sapwiki]] | Reference to Cash ML case      |
+| Intelligent Accruals              | <2019-07-12 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2022468942][sapwiki]] | Reference to Accruals ML case  |
+| AIF Adoption Guideline            | <2019-07-16 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/AIF+Adoption+Guideline][sapwiki]] | All communication scenarios within S4 HANA Cloud have to be AIF enabled. An adoption guide for the configuration of a  monitoring scenario can be found here: |
+| AIF Fiori Monitoring              | <2019-09-19 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1976349867][sapwiki]] | Fiori App to monitor the message |
+| ESR Development&Delivery Process  | <2019-07-16 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/ESRCC/Development+and+Delivery+Process][sapwiki]] | The ESR Content Coordination team (DL ESR CC) is committed to implement overall technical governance and processes for the ESR Content delivery. |
+| Custom Fields Adoption Guideline  | <2019-07-17 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Custom+Fields+Adoption+Guideline][sapwiki]] | Custom Fields Adoption Guideline |
+
+* Context
+This document provides details on how to implement APIs and E2E processes in intercompany accounting. 
+
+* Detail Design
+
+** Matching Item Inbound API
+[[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2126029154][Finance - Intercompany Matching Item Integration (SAP_COM_0377)]]
+This API enables a remote system to post matching items to the S/4HANA instance. Thus, external data can also be matched and reconciled together with the data in S/4HANA. The remote system calls the asynchronous SOAP inbound interface "MatchingItemBulkCreationRequest_In". Authentication is performed using user name/password or X.509 certifcate.
+
+*** Naming Rules
+1. All core data type should use global field names.
+2. Core data type copied from namespace "http://sap.com/xi/SAPGlobal/GDT" should be placed in folder "Global Data Types".
+3. Core data type created in "http://sap.com/xi/FIN-ICA" should be placed in folder "Local Data Types".
+4. All aggregated data type should be placed in folder "Data Types".
+
+Besides, following names are given for the specific repository object types:
+| Repository Object Type | Name                             | Comment              |
+|------------------------+----------------------------------+----------------------|
+| Fault Message Types    | StandardMessageFault             | Use the standard one |
+| Message Types          | MatchingItemBulkCreateRequest    |                      |
+| Service Interfaces     | MatchingItemBulkCreateRequest_In |                      |
+
+*** Testing
+1. Enter SPROXY, add namespace: "http://sap.com/xi/FIN-ICA" as favorite. Find the service provider "MatchingItemBulkCreateRequest_In".
+2. Enter /AIF/CUST, go to the node "Define Namespace", find "/FINMR" exists.
+3. Go to the node "Define Interfaces", find "MIIN" exists.
+4. Check the proxy class: CL_FINICA_MATCHING_ITEM_BULK_C.
+5. Enter SOAMANAGER, or access https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/appl_soap_management?sap-client=500&sap-language=EN. In "Service Administration", click link "Web Service Configuration". Search object name "MatchingItemBulkCreateRequest_In".
+6. Click the icon "Open Binding WSDL Generation".
+
+WSDL: http://ldcier9.wdf.sap.corp:50000/sap/bc/srt/wsdl/flv_10002A111AD1/bndg_url/sap/bc/srt/xip/sap/matchingitembulkcreaterequest_/500/matchingitemcreate/matchingitemcreate?sap-client=500
+** Machine Learning E2E Scenario
+[[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2126830865][Intelligent Intercompany Matching Integration(SAP_COM_0553)]]
+Machine learning will be used to recommend potential matches on the unmatched items after rule-based matching. 3 APIs will be involved:
+1. Outbound API: Send historic matched data in ICADOCM to the machine learning service.
+2. Outbound API: Send unmatched data in ICADOCM to the machine learning service.
+3. Inbound API: Receive the predicted result from the machine learning service.
+
+*** Naming Rules
+Follow the same naming rules as the Matching Item Inbound API.
+
+| Repository Object Type | Name                        | Comment              |
+|------------------------+-----------------------------+----------------------|
+| Fault Message Types    | StandardMessageFault        | Use the standard one |
+| Message Types          | MatchingItemQuery           |                      |
+|                        | MatchingPredictionResult    |                      |
+| Service Interfaces     | MatchingItemQuery_Out       |                      |
+|                        | MatchingPredictionResult_In |                      |
+
+*** Outbound API: Send Training Data
+Training data is historic matched items either by matching rules, or by manual assignment. If possible, attachements on matching items should also be regarded as training data. 
+
+The ML service likes the data in CSV format, thus we need to convert the data into CSV and then feed the outbound API. The outbound API should support MIME not only for the CSV, but also for the attachments belong to the items.
+
+An ABAP report will be developed to allow user freely select data and send to the ML service. To facilitate Cloud users, the ABAP report will also be encapsulated in an application job category(SAPJ). Not all the columns are projected from ICADOCM, only the fields defined in the corresponding Data Source are projected. The first 2 lines of the CDS are headers in the technique field names and descriptions. Starting from the third line is the actual data. CSV should be packaglized into forexample, 10K line each.  
+
+*** Outbound API: Send Inference Data
+Inference data are those unassigned matching items, which need to be sent to the ML service to get the prediction result. 
+*** Inbound API: Receive Predicted Result
+Predicted result is pushed back to ME by the ML service. 
+
+** References in FIN
+*** Posting Journal API
+There is an existing communication senario [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1617462332][Finance - Posting Integration (SAP_COM_0002)]] allows posting. The corresponding artifacts are:
+1. SPROXY: namespace: http://sap.com/xi/SAPSCORE/SFIN, service provider: JournalEntryBulkCreationRequest_In
+2. /AIF/CUST: namespace:/FINAC, interface: JRNLENTRIN
+3. Proxy class->method: CL_FINS_ESR_JE_CREATION_REQ->JOURNAL_ENTRY_BULK_CREATION_RE
+4. SOAMANAGER: publish service (Web Service Configuration)
+5. SoapUI to simulate the request(download SoapUI https://www.jianshu.com/p/078076c64045)
+6. SRT_LOG: check soap framework logs
+7. /AIF/ERR: check AIF logs
+
+WSDL of ER9: http://ldcier9.wdf.sap.corp:50000/sap/bc/srt/wsdl/flv_10002A111AD1/bndg_url/sap/bc/srt/xip/sap/journalentrybulkcreationreques/500/journalentrybulkcreationrequest_/journalentrybulkcreationrequest_in?sap-client=500
+
+**** Test Sample Data 
+| Attribute    | Seller     | Buyer      |
+|--------------+------------+------------|
+| Company Code | E3         | E1         |
+| Customer     | C00001     |            |
+| Vendor       |            | V00003     |
+| FI Doc       | 100000000  | 1900000000 |
+|              | 5100000000 | 5100000000 |
+| Fiscal Year  | 2018       | 2018       |
+| Tcode        | FBL5N      | FBL1N      |
+
+**** Tables Involved in AR posting
+|                  |                       | <40>                                     |
+| Tables           | Program Name          | Comments                                 |
+|------------------+-----------------------+------------------------------------------|
+| BKPF             | SAPLF005              |                                          |
+| BSEG             | SAPLF005              | BSEG is still used in case document is posted from FB01,FB50,FB60,FB70 |
+| FAGL_SPLINFO     | SAPLFAGL_SPL_SERVICES |                                          |
+| FAGL_SPLINFO_VAL | SAPLFAGL_SPL_SERVICES |                                          |
+| ACDOCA           | SAPLFINS_ACDOC_UPDATE |                                          |
+
+*** SAP Platform Integration
+Refer the internal incident: https://support.wdf.sap.corp/sap/support/message/1880294150
+
+The CPI instance for testing:
+
+Tenant Managment(Adding user and role): https://account.hana.ondemand.com
+
+Account: VLAB 
+Cloud Integration VLAB - v0619 
+
+Web UI URL (Access via web browser):
+https://v0619-tmn.avt.eu1.hana.ondemand.com/itspaces 
+
+Management URL (Access via Eclipse plugin):
+https://v0619-tmn.avt.eu1.hana.ondemand.com 
+
+Runtime URL (Webservice url to be configured in backend systems):
+https://v0619-iflmap.avtsbhf.eu1.hana.ondemand.com
+
+*** Cloud Connector
+https://dlmscc.wdf.sap.corp:8443/
+
+How to gain access:
+1. Join the DLM https://profiles.wdf.sap.corp/groups/5886fab45f99b7393a0000cb/users?page=1
+2. Wait for 2 hours
+3. Re-open the above link, and logon with your i<number> and global password.
+
+Also check the DLM wiki-page: https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1994118292#DLMServiceofferingsforSAPCloudPlatform(SCP)
+
+*** Machine Learning in Cash and Accrual
+
+|                              |                                | <40>                                     |
+| Job Catalog                  | ABAP Report                    | Description                              |
+|------------------------------+--------------------------------+------------------------------------------|
+| SAP_FIN_GL_ML_ACCR_TRAINING  | FIS_ACE_ML_TRAINING            | Train Accruals Prediction Model on Historical Data |
+| SAP_FIN_GL_ML_ACCR_INFERENCE | FIS_ACE_ML_INFERENCE           | Infer Accruals from the Prediction Model |
+| SAP_FIN_ML_TRAINING_JT       | ML_CASH_APP_DATA_POST_TRAINING | Cash Application Training Job            |
+| SAP_FIN_ML_OPEN_INV_JT       | ML_CASH_APP_DATA_POST_OPENITEM | Cash Application Open Invoice Job        |
+
+Kham's util Class: cl_cai_http_comm.
+
+                                                                                                                                                                                                                                                                                                                                                             
+                       

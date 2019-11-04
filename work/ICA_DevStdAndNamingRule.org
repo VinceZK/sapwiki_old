@@ -105,10 +105,10 @@ All local classes have the prefix *LCL_*.
 | Local Test Double | LTD_   |
 
 *** Message Class
-| Message Class | Description                         |
-|---------------+-------------------------------------|
-| ICA01         | For design time objects maintenance |
-| ICA02         | For run time                        |
+| Message Class | Description                       |
+|---------------+-----------------------------------|
+| ICA01         | ICA Reconcilation Case Messages   |
+| ICA02         | ICA Matching Engine Message Class |
 
 *** Number Range Object
 Start with prefix *ICA*.
@@ -228,7 +228,8 @@ e.g. LTC_ICA_UI_SERVICES this is an ABAP unit test local class for the original 
 For more detail guideline of ABAP unit test, you can refer to the wiki page: https://wiki.wdf.sap.corp/wiki/display/TWB/ABAP+Unit+Tests
 
 *** Fiori 
-
+Go throught this page and its children page to be familar with QUnit. 
+http://veui5infra.dhcp.wdf.sap.corp:8080/demokit/#/topic/09d145cd86ee4f8e9d08715f1b364c51.html
 ** Code Review 
 Please refer this [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Code+Review+Process][wiki]] for the code review process. 
 

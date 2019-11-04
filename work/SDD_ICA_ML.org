@@ -1,0 +1,107 @@
+#+PAGEID: 2092411375
+#+VERSION: 6
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2092411375][SDD-ICA Machine Learning]]
+
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Ying Shi      |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+*** References
+| <25>                      |      |      | <30>                           |
+| Document Title            | Date | Link | Comments                       |
+|---------------------------+------+------+--------------------------------|
+
+** Concept
+Machine Learning(ML in short) will be integrated to Matching Engine(ME in short) as a supplement method for those items that rule-based matching hasn't figured out.
+
+There are following cases ML can help in intercompany matching scenario:
+1. Items that are not hit by existing rules, but actually matching rules are possible on them. This is mainly due to some matching patterns are not figured out by the rule creator. But ML can help to figure them out during daily operations. In this way, ML completes the matching rules.
+2. Items that are impossible matched by matching rules, but somehow, there exist patterns to match them. This is mainly on some text fields with natural language descriptions.
+
+** Overall Architecture
+ME is on S/4HANA Cloud and OP, while ML is on Leonardo Cloud. The business license model is not covered in this document. Technical integration is detail described below.
+    
+#+CAPTION: Overall Architecture btw ME and ML
+[[../image/ICA_MachineLearningEnablement.png]]
+
+1. ME has matching methods which are defined by users freely. In each matching method, matching rules can be defined and executed sequentially. Matching method reads data from the source CDS views, runs rule-based matches, and finally persists the result in table ICADOCM.
+2. Matched result in ICADOCM contains all the source data information together with assignment numbers, which are surrogate keys that are used to group items that matched with each other.
+3. Each time, a matching run copies the data from the source CDS view to ICADOCM in delta mode. This is to ensure the data is consistent btw ICADOCM and the source CDS view at a certain time point.
+4. A data extractor should be developed to extract the data for ML training. It reads data from ICADOCM, rather than the source CDS view. As ICADOCM provides more information than the source views. And filters can be freely set to only extract useful matched items.
+5. The data extracted will be saved in a historic data table on Leonardo side. The training processor can then read data from the table and runs training and forms the trained model. It is strongly required that the training processor can support lifetime training. Which means, the learning is cumulative based on the living data, and the trained model is continuously reinforced based on the latest data.
+6. The trained model should have a 1 on 1 relationship between the matching method. Since each matching method deals with different data set and different rules.
+7. An AI matching agent should be newly developed in the ME. It checks with those unmatched items after last matching run, and sends them to the ML predictor. Thus, the ML side should provide a published API to accept the unmatched items.
+8. When the prediction processor gets those data, it applied them to the trained model. The prediction process may take some time, but it should better to be within 10 minutes. Once the suggested matching result is produced, it sends back to the ME. Thus, the ME side should provide a published API to accept the predicted matches.
+9. When the AI matching agent receives those predicted matches, it updates the result to the ICADOCMand ICA_ML_EXP. In table ICADOCM, assignment numbers are updated according to the predicted matches. And the new assigned items are set with the rule ID '9999' and reason code 'X99', which are both prereserved for ML matching only. The processing status is set to '20(Assigned)'.
+10. In table ICA_ML_EXP, it stores explanations on why the ML matches those items. For example, some values are very close, or the 2 text descriptions in different languages are quite close after translated to English. In UI-420, these reasons should be well presented when hover the reason code 'S99'.
+
+** Detail Design
+
+*** TODO Data Extractor                                      :LeonardoTeam:
+Leonardo team will develop an extractor which is used to extract data from ICADOCM and send it to the Leonardo Cloud server's storage. Leonardo team will decide on what kind of data format(CSV, SOAP, or RESTful) and how it is transported to and stored on the Leonardo server. All follow-up activities regarding on the training process will be handled by the Leonardo Cloud maintenance team.
+
+Where the Data Extractor resides needs to be decided. It could be an ABAP report that propgates CSV files, or a published API that is called by Leonardo side, or leverage SAP Data Hub.  
+
+*** TODO AI Matching Agent                                         :S4Team:
+AI Matching Agent will be developed by S/4 ICA team. It is mainly a communication channel which provides 2 published APIs: 1) Outbound channel: send unmatched items to the ML predictor service, 2) Inbound Channel: receive predicted matches from the ML predicator. Thus it also requires the Leonardo team to provide the corresponding Inbound and Outbound interfaces to be connected with. 
+
+*** Explanation
+The assignment by ML predicator is assigned with a preserved Reason Code "X99". When X99 is assigned, there is a popover link "Check Explanation" shown below. By clicking it will popover a dialog to display the detail explanation. In below example, it shows that items from the seller side and buyer side have close description after translation to the same language.
+
+#+CAPTION: Matching Result by Machine Learning
+[[../image/ICA_MatchingResult4ML.png]]
+
+*** Data Representation in ICADOCM
+Here gives an example slice of data in ICADOCM:
+| Company | Partner |  Account |     Date | Amount | Currency | Description           |
+|---------+---------+----------+----------+--------+----------+-----------------------|
+| C1001   | C1002   | 10010001 | 20190401 |   1000 | CNY      | Sell Computer Model A |
+| C1001   | C1003   | 10010001 | 20190402 |   2000 | CNY      | Sell Computer Model B |
+| C1002   | C1001   | 20010000 | 20190402 |   -500 | CNY      | Buy Computer Model A  |
+| C1002   | C1001   | 20009999 | 20190403 |   -500 | CNY      | Buy Computer Model A  |
+| C1003   | C1001   | 20010001 | 20190404 |  -2000 | CNY      | Buy Computer Model B  |
+| C1002   | C1003   | 10010001 | 20190405 |    100 | CNY      | Service provided      |
+| C1003   | C1002   | 20010002 | 20190405 |   -100 | CNY      | Service received      |
+
+The training processor should logically separate the data into slices of group of Seller and Buyer . In above example, the data can be split as following slices of group:
+
++ Seller is C1001, Buyer is C1002
+| Company | Partner |  Account |     Date | Amount | Currency | Description           |
+|---------+---------+----------+----------+--------+----------+-----------------------|
+| C1001   | C1002   | 10010001 | 20190401 |   1000 | CNY      | Sell Computer Model A |
+
+| Company | Partner |  Account |     Date | Amount | Currency | Description          |
+|---------+---------+----------+----------+--------+----------+----------------------|
+| C1002   | C1001   | 20010000 | 20190402 |   -500 | CNY      | Buy Computer Model A |
+| C1002   | C1001   | 20009999 | 20190403 |   -500 | CNY      | Buy Computer Model A |
+
++ Seller is C1001, Buyer is C1003
+| Company | Partner |  Account |     Date | Amount | Currency | Description           |
+|---------+---------+----------+----------+--------+----------+-----------------------|
+| C1001   | C1003   | 10010001 | 20190402 |   2000 | CNY      | Sell Computer Model B |
+
+| Company | Partner |  Account |     Date | Amount | Currency | Description          |
+|---------+---------+----------+----------+--------+----------+----------------------|
+| C1003   | C1001   | 20010001 | 20190404 |  -2000 | CNY      | Buy Computer Model B |
+
++ Seller is C1002, Buyer is C1003
+| Company | Partner |  Account |     Date | Amount | Currency | Description      |
+|---------+---------+----------+----------+--------+----------+------------------|
+| C1002   | C1003   | 10010001 | 20190405 |    100 | CNY      | Service provided |
+
+| Company | Partner |  Account |     Date | Amount | Currency | Description      |
+|---------+---------+----------+----------+--------+----------+------------------|
+| C1003   | C1002   | 20010002 | 20190405 |   -100 | CNY      | Service received |
+
+The matching and comparison should only happen within each group. Cross group matching is not allowed.  
+
+** TODO Contact Bernd Junginger for detials.

@@ -1,0 +1,138 @@
+#+PAGEID: 2139724168
+#+VERSION: 7
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2139724168][ACD of ICA and ML]]
+* Revision Log 
+[[https://wiki.wdf.sap.corp/wiki/pages/viewpreviousversions.action?pageId=2139724168][Wikipage History]]
+
+* Stakeholders and Roles
+| Role                               | Name                         |
+|------------------------------------+------------------------------|
+| Development Management             |                              |
+| Lead Architect                     |                              |
+| Program Architect                  |                              |
+| Product Team Architect             |                              |
+| Architect (Implementation Team)    | Vincent Zhang, Atreya Biswas |
+| Product Owner                      | Ying Shi, Kham Sian Mung     |
+| Solution Management Representative |                              |
+| Program Quality Manager            |                              |
+| IMS Representative                 |                              |
+| User Interface Representative      |                              |
+
+* Abstract
+This architecture concept document describes how integration is built between S/4HANA and DI on machine learning cases. It uses Intercompany Matching as the business case, and tries to generalize it to other similar business cases.  
+ 
+* Background and Context
+Intercompany transactions should be matched and reconciled before period closes. Current situation is that there are tons of intercompany transactions which are posted in different companies at different time by different person. It is heavy workload for accountants to do matching and reconciliation. Fixed pattern matching rules can help a lot. For example, if the amount, currency code, and purchase order agree, then these items should be grouped together. However, in practice, even this information cannot be provided correctly. Maybe the currency code is wrongly given, purchase order number is missing, and so on. Key information sometimes resides on text-like fields, attachments, locations, and so on. 
+
+** Number of customers expected with release now in development
+
+** Underlying platform/application server 
+S/4HANA and Digital Intelligent
+
+** Product type
+Financial application with integration to machine learning service.  
+
+** Delivery
+Both On-Premise and Cloud.
+
+** Main use cases/functional scope
+1. Group intercompany invoices together if they belong to the same business transaction.
+2. Infer the reason code for certain discrepencies. 
+
+** List all required SAP products/product versions to support the main use cases
+S/4HANA Cloud 2002 and DI?
+
+** Relevant product line architecture guideline
+- [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Architecture][S4H Architecture Guideline]]
+- [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Integration+Development+Guideline][S4H Integration Development Guide]]
+
+** Deviations from product line architecture and product experience requirements
+| <10>       | <40>                                     | <20>                 |
+| Rule ID    | Deviation                                | Approval Status      |
+|------------+------------------------------------------+----------------------|
+| C-CSI-2    | Cross System integration shall be based on OData/REST or SOAP WS technology. However, SOAP is not supported by DI, only pure RESTful API is supported. |                      |
+| OC-CSI-16  | Data Integration shall be based on CDS-based View Extraction. However, CDS-based view cannot support the business requirements, we choose to use an ABAP report to push data. Detail reasons are given below. | Use CDS View for a fixed model, keep the pushing approach still avaliable as a fallback |
+
+Why we choose ABAP report to push data rather than the CDS pulling:
+1.	Data Source supports flexible customization. Fields, leading units, mandatory filtering fields can be different among customers and different scenarios. 
+2.	ICR doesn't support GFN. Since the matching logic are executed in HANA and inserted directly to the table ICADOCM which shares the same technique field names with ACDOCA. 
+3.	CDS cannot support multiple matching dimensions. We have cases like inter-company matching, inter-profit center matching and so on.
+4.	Since the data volume is large, we need specific packaging logic based on the user inputs. 
+5.	In future, we need also send attachment along with line items.
+6.	When sending data for inference, we need first lock the scope. 
+
+
+* Architecture Definition          
+
+** Architecture Context and Overview 
+#+CAPTION: ICR Machine Learning Enablement
+[[../image/ICA_MachineLearningEnablement.png]]
+1. ME has matching methods which are defined by users. In each matching method, matching rules can be defined and executed sequentially. Matching method reads data from the source CDS views, runs rule-based matches, and finally persists the result in table ICADOCM.
+2. Matched result in ICADOCM contains all the source data information together with assignment numbers, which are surrogate keys that are used to group items that are matched together.
+3. A CDS view is built upon ICADOCM for extracting data for ML training. The CDS view has a *fixed* structure for AR/AP use case only.
+4. The training pipeline in DI side has a operator named "CDS Extractor", which is used to connect with the CDS view to pull the data for training. 
+5. An ABAP extractor should be developed to extract the data for ML inference. It reads data from table ICADOCM, package them as CSV payloads, and push them to the inference pipeline.
+6. Ideally, the trained model should have a 1 on 1 relationship between the matching method. Since each matching method deals with different data set with different rules. However, in the initial release, we only support one trained model in DI side. Which means, no matter how many matching methods you defined in S/4 side, you can only have one ML model points to one of your method. 
+7. The inference is triggered by AI matching agent, which calls the ABAP Extractor to push the inference data to the inference pipeline. After all data is pushed successfully, an additional call is made to trigger the starting of inference pipeline.
+8. The inference process may take some time(1~10 minutes). When it is finished, it sends back the result to the AI Matching Agent.
+9. When the AI matching agent receives the result, it parses the result and generate assignments(update ICADOCM). Meanwhile, it also stores the orignal inference result to table ICA_ML_EXP for later review.
+10. Since CDS Extractor may have some issues, as well as OP customers may require a flexible model to add their own fields. We then need a fallback plan, which is to push the training data through the same ABAP extractor as for inference data.  
+
+** Integration between S/4HANA and DI       :Atreya:
+
+
+** Security
+
+** Deployment and Operations
+*** Deployed Component Structure and Deployment Options
+ICMR belongs to S4CORE. The machine learning service is provision on request in the DI Cloud platform. 
+
+*** System Landscape
+#+CAPTION: Communication Setup Landscape
+[[../image/SAP_COM_0553.png]]
+
+*** Operation Concept
+
+*** Lifecycle Management for Machine Learning(LM4ML)
+The LM4ML project targets to provide ML lifecycle management features, which should cover most of the operational activities, like manage ML pipelines, trigger training and inference, and so on. Following requirements are proposed by ICMR:
+1. Each ML scenario should support multiple pipelines which maps to sub-scenarios. For example, the intercompany ML scenario can have sub-scenarios like: intercompany AR/AP, intercompany investment, intra-company GR/IR, and so on. Each sub-scenario can be defined by users themselves, thus the corresponding pipeline should be created accordingly.
+2. Each pipeline should support multiple versions, and only one version is active.
+3. Unified APIs for sending training data, sending inference data, triggering training, triggering inference, and checking ML model training status. Thus to eliminate additional communication scenarios for application development team.
+4. Unified callback mechanism to receive the inference result. When the inference is finished, the result should be sent back to application side immediately.
+5. A central monitoring place which can be used to check the pipeline statuses, check communication messages or errors, error handling, and re-process data sending/retrieving. 
+  
+** Testing
+~Think about the test approach, especially if you enter new technology areas where the existing test tools cannot be used or where the existing test tools need to be enhanced.~
+
+** Architecture Risks
+~Explain your view on architecture-related risks and give hints about potential upcoming problems. Risks can arise for example from changes in the scope, from work-around necessary, from dependencies on other components, or from immature technologies/concepts. Fill in the table for each risk.~	
+
+
+** Planned Design Documents
+
+1. [[https://wiki.wdf.sap.corp/wiki/display/FINCONSCLD/SDD-ICA+Machine+Learning][ICA Machine Learning]]
+2. [[https://wiki.wdf.sap.corp/wiki/display/FINCONSCLD/SDD-ICA+API][ICA API]]
+
+* Glossary
+
+** References
+| <25>                      |                  |             | <30>                           |
+| Document Title            | Date             | Link        | Comments                       |
+|---------------------------+------------------+-------------+--------------------------------|
+| SAP_COM_0553              | <2019-08-23 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2126830865][sapwiki]]     | Intelligent Intercompany Matching Integration(SAP_COM_0553) |
+| SAP_COM_0532              | <2019-09-25 Wed> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2107191545][sapwiki]]     | SAP Data Hub - ABAP CDS Pipeline Integration (SAP_COM_0532) |
+| Integration Development Guideline | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Integration+Development+Guideline][sapwiki]]     | To develop an integration for S/4HANA Cloud you have to follow the process description below which helps you to provide all needed artifacts required. We distinguish three type of integrations |
+| AIF Adoption Guideline    | <2018-06-07 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/AIF+Adoption+Guideline][sapwiki]]     | All communication scenarios within S4 HANA Cloud have to be AIF enabled. An adoption guide for the configuration of a  monitoring scenario can be found here: |
+| AIF Cookbook              | <2018-06-07 Thu> | [[https://www.sap.com/documents/2015/07/7081b5b2-567c-0010-82c7-eda71af511fa.html][sap.com]]     | The SAP Application Interface Framework provides interface developers with the possibility to create interfaces in a structured way. The cookbook provides information about the different customizing activities needed to set up interfaces in the SAP Application Interface Framework |
+| Communication Scenario    | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Communication+Scenario][sapwiki]]     | A communication scenario bundles inbound and/or outbound communication design time artifacts (e.g. Service Interfaces, Proxies) that shall be configurable in one step to enable communication from or to an external communication system in a cloud system. |
+| Communication Arrangement | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Communication+Arrangement][sapwiki]]     | A Communication Arrangement describes a communication scenario with a remote system during Configuration Time. |
+| Maintain Scope Item Assignment | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Procedure+-+Maintain+Scope+Item+Assignment][sapwiki]]     | Step-by-step guide on how to maintain scope item assignment |
+| ESR Development&Delivery Process | <2019-07-16 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/ESRCC/Development+and+Delivery+Process][sapwiki]]     | The ESR Content Coordination team (DL ESR CC) is committed to implement overall technical governance and processes for the ESR Content delivery. |
+| Custom Fields Adoption Guideline | <2019-07-17 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Custom+Fields+Adoption+Guideline][sapwiki]]     | Custom Fields Adoption Guideline |
+| SAP Cash Application Integration | <2019-07-12 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1850918459][sapwiki]]     | Reference to Cash ML case      |
+| Define Communication Scenario | <2019-07-10 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Integration+Communication+Scenarios][sapwiki]]     | Step-by-step guide on define communication scenarios and inbount/outbound services |
+| SCP Identity Authentication | <2018-07-16 Mon> | [[https://help.sap.com/viewer/6d6d63354d1242d185ab4830fc04feb1/Cloud/en-US/27882717f44b445fa287936c6f43dc1f.html][online help]] | SAP Cloud Platform Identity Authentication service is a cloud solution for identity lifecycle management for SAP Cloud Platform applications, and optionally for on-premise applications. It provides services for authentication, single sign-on, and on-premise integration as well as self-services such as registration or password reset for employees, customer partners, and consumers. For administrators, Identity Authentication provides features for user lifecycle management and application configurations. |
+| User Management in S/4    | <2018-07-17 Tue> | [[https://blogs.sap.com/2017/07/26/user-management-overview-in-sap-s4hana-cloud/][scn blog]]    | Identity and authentication management can be a little confusing for new customers who are getting started with SAP S/4HANA Cloud deployments or currently deploying S/4HANA Cloud. |
+| Intelligent Accruals      | <2019-07-12 Fri> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2022468942][sapwiki]]     | Reference to Accruals ML case  |

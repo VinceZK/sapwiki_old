@@ -1,0 +1,402 @@
+#+PAGEID: 2093193819
+#+VERSION: 9
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2093193819][SDD-ICA IMG]]
+
+* Intercompany Matching and Reconciliation
+
+** Maintain Data Sources
+
+| Attribute             | Value              | Comments                       |
+|-----------------------+--------------------+--------------------------------|
+| ASAP Roadmap ID       | 105                | Define Functions and Processes |
+| Mandatory/Optional    | Mandatory activity |                                |
+| Critical/Non-Critical | Critical           |                                |
+| Customizing Object    | VC_ICA_DS          | View Cluster(SM34)             |
+| Tcode                 | ICADS              |                                |
+
+*** Use
+In this Customizing activity, you maintain the data sources for the subsequent matching method definition.
+
+Data Source is used to define the source data to be matched by the Matching Engine. It has CDS view(s) attached along with some business semantics, like which fields are taken as the leading unit and partner unit roles. 
+
+*** Standard Settings
+SAP delivers the data sources for comparing journal entry data from the universal journal (table ACDOCA) for entity pairs such as company and trading partner company. The names of pre-delivered data sources start with "S" and cannot be changed or deleted.
+
+*** Activities
+You can define your own data sources either by copying from an existing one or creating from scratch. Follow the procedure below to create a new data source:
+
+1. Enter the data source name and, optionally, a short and a long description.
+2. Assign a main CDS view to the data source. If possible, avoid aggregations in the CDS view so that the data can be matched at a finer granularity.
+3. Optionally, select organizational units in Leading Unit Field and Partner Unit Field. These fields must exist in the DDIC structures ICA_S_DIM and ICA_S_DIM_P as well as in the assigned CDS view. If a superordinate field exists, such as controlling area as the superordinate field for profit center, you should also specify the superordinate field. 
+   s
+   Note: The Leading Unit Field and Partner Unit Field can have the same unit field. This is used in intra-unit matching scenarios, for example, a company wants to match its own G/L postings with bank statements. Later, when defining a matching method, you also need to specify two data sources (one for G/L postings and one for bank statements) with the same leading and partner unit definitions. This is different with inter-unit matching scenarios, where two different fields are selected as leading and partner unit fields and only one data source is specified in the matching method.
+4. If the main CDS view contains one or more of the three fields: RYEAR (Fiscal Year), POPER (Fiscal Period), and FISCYEARPER (Fiscal Year Period), you need to specify a Fiscal Year Variant to derives the posting period.
+5. If the leading unit field is specified, you need to assign a Unit Entity CDS View to check the validity of the unit values or for data filtering purposes. The partner unit field, if specified, shares the same CDS view. The Unit Entity CDS View must follow the protocol about mandatory or conditional required fields. Please refer to the CDS view "ICA_Company".
+6. On the Field Semantics page, assign business semantics such as field label and search help (or a CDS view) to each field. Select the critical fields that determine the matching results as Key Field, and the fields that can be updated continuously as Mutable Field. For mutable fields, each matching run can update the values from the data source before actual matching takes place.
+7. Optionally, on the Mandatory Filter Fields page, you can define fields as mandatory filtering fields (also known as context fields). For example, if you want accounts receivable and accounts payable to be matched across periods and years, then you should define FISCYEARPER (Fiscal Year Period) with the comparator "Less than or equal to (<=)". However, in a financial consolidation scenario, you may only need to match items across periods within one year, then you can define RYEAR (Fiscal Year) with comparator "Equal to =" and POPER (Fiscal Period) with comparator "Less than or equal to (<=)".
+
+   You can also specify default values for the fields. The following placeholders are supported for the default values: $CurrentFiscalPeriod$, $CurrentFiscalYear$, and $CurrentFiscalYearPeriod$.
+
+   Note: Using the "Less than or equal to (<=)" comparator for the Fiscal Year Period field and "Equal to (=)" for the Fiscal Year field can automatically count in new postings for prior periods of the current fiscal year.
+8. Optionally, on the Navigation Settings page, you can define navigation targets for some fields. For example, you define a target URL navigating to G/L journal entries for field "REF_BELNR" (Accounting Document Number) to allow the drill-through to original accounting journal entries. 
+
+   Note the navigation targets defined here will display in the Manage Assignments app and Matching Journal Entries app to facilitate direct navigations to the relevant UIs.
+9. Save your changes. The system checks consistency of your definitions. Only the verified data sources can be saved. The check mainly verifies if all the fields contained in your assigned CDS views exist in the database table ICADOCM and the following protocols are fulfilled:
+ |            | <25>                      | <50>                                               |
+ | Field Name | Label                     | Usage                                              |
+ |------------+---------------------------+----------------------------------------------------|
+ | RCLNT      | SAP Client                | Mandatory                                          |
+ | DOCNR      | Document Number           | Mandatory and set to empty for non-ICADOCM source tables |
+ | DOCLN      | Line Item Number          | Mandatory and set to 0 for non-ICADOCM source      |
+ | RCOMP      | Company                   | Mandatory if leading unit is set to RCOMP          |
+ | RASSC      | Trading Partner           | Mandatory if partner unit is set to RASSC          |
+ | GRREF      | Group Reference Number    | Mandatory and set to empty for non-ICADOCM source tables |
+ | PSTAT      | Processing Status         | Mandatory and set to '00'                          |
+ | CSTAT      | Communication Status      | Mandatory and set to empty                         |
+ | DUE_DATE   | Due date after communication | Mandatory and set to '00000000'                    |
+ | TIMESTAMP  | Timestamp                 | Mandatory for data cut-off                         |
+
+** Maintain Matching Method
+| Attribute             | Value              | Comments                            |
+|-----------------------+--------------------+-------------------------------------|
+| ASAP Roadmap ID       | 251                | Transport Customizing for Processes |
+| Mandatory/Optional    | Mandatory activity |                                     |
+| Critical/Non-Critical | Critical           |                                     |
+| Customizing Object    | ICAM               | Individual Transactional Object     |
+| Tcode                 | ICATRM             |                                     |
+
+*** Use
+In this Customizing activity, you can include your matching methods (not checked wit Master-data-like) into a customization transport request. You need to maintain your matching method in the Fiori app "Define Matching Methods", which is in the business category "SAP_FIN_BC_ICA_RECON_CFG". 
+
+*** Standard Settings
+The matching method predefined by SAP start with "S" in their IDs and cannot be changed or deleted.
+
+*** Activities
+You have maintained the matching methods in the Define Matching Methods app on the SAP Fiori launchpad. This app is contained in the business catalog "SAP_FIN_BC_ICA_RECON_CFG".
+
+Note while working in the Fiori app, you can press F1 or click the question mark displayed in the app header to display the help documentation for the relevant screen fields.
+
+1. Enter a matching method ID and choose Execute to add the method into a customizing request.
+2. Repeat step 1 for all the matching methods you want to transport.
+
+** Maintain Reconciliation Case
+| Attribute             | Value              | Comments                            |
+|-----------------------+--------------------+-------------------------------------|
+| ASAP Roadmap ID       | 251                | Transport Customizing for Processes |
+| Mandatory/Optional    | Mandatory activity |                                     |
+| Critical/Non-Critical | Critical           |                                     |
+| Customizing Object    | ICAC               | Individual Transactional Object     |
+| Tcode                 | ICATRC             |                                     |
+
+*** Use
+In this Customizing activity, you can include your reconciliation cases (not checked wit Master-data-like) into a customization transport request. You need to maintain your reconciliation cases in the Fiori app "Define Reconciliation Cases", which is in the business category "SAP_FIN_BC_ICA_RECON_CFG". 
+
+*** Standard Settings
+The reconciliation cases predefined by SAP start with "S" in their IDs and cannot be changed or deleted.
+
+*** Activities
+You have maintained the reconciliation cases in the Define Reconciliation Cases app on the SAP Fiori launchpad. This app is contained in the business catalog "SAP_FIN_BC_ICA_RECON_CFG".
+
+Note while working in the Fiori app, you can press F1 or click the question mark displayed in the app header to display the help documentation for the relevant screen fields.
+
+The reconciliation cases predefined by SAP start with "S" in their IDs and cannot be changed or deleted.
+
+1. Enter a reconciliation case ID and choose Execute to add it into a customizing request.
+2. Repeat step 1 for all the reconciliation cases you want to transport.
+
+** Reasons and Solutions
+*** Maintain Reason Codes
+
+| Attribute             | Value              | Comments                       |
+|-----------------------+--------------------+--------------------------------|
+| ASAP Roadmap ID       | 105                | Define Functions and Processes |
+| Mandatory/Optional    | Mandatory activity |                                |
+| Critical/Non-Critical | Critical           |                                |
+| Customizing Object    | VC_ICA_RC          | View Cluster(SM34)             |
+| Tcode                 | ICARC              |                                |
+
+**** Use
+In this Customizing activity, you maintain reason codes that explain why certain items are matched or any post-processing activities are required. Reason code can be assigned to a matching assignment either automatically by a matching rule, or manually. 
+
+**** Standard Settings
+The reason code predefined by SAP start with "S" in their IDs and cannot be changed or deleted.
+
+**** Activities
+You can define your own reason codes either by copying from an existing one or creating from scratch. Follow the procedure below to create a new reason code:
+
+1. Enter the reason code ID and short description and, optionally, a long description.
+2. Check "No Follow-Ups" if the reason code is for those perfectly matched items without any further actions required.
+3. Check "Comment Required" if a comment is mandatory when assigning the reason code to a matching assignment number.
+4. Check "Temporary Resolving" if you want to unassign the assignment in the next matching run.
+5. Check "Rematch in Next Period" if you think the final resolving will happen in the next period.
+6. Specify a Workflow Scenario ID if relevant. Later, when the reason code is assigned, the relevant workflow instance is triggered. By default, SAP delivers the scenario "WS78500087" for GL posting approval. You can use it directly.
+7. By default, the workflow instance is triggered on the leading unit's side unless you check the "Trigger on partner side".
+8. Specify an Adjustment Class, which is an ABAP class for the system to perform automatic posting adjustments. The assigned ABAP class should inherit the super class "CL_ICA_AUTO_ADJUSTMENT".
+9. If you specify both a workflow scenario ID and an Adjustment Class, then, the Adjustment Class is called by the workflow instance triggered, when user click the "Approve" button. 
+10. Specify an Output Structure, which is an ABAP DDIC structure used as the target output structure for the adjustments to be posted.
+11. On the Assigned Methods page, you can assign the reason code to a range of matching methods. In this way, only the assigned methods can use the reason code.
+12. On the Related Links page, you can assign related links to a reason code, so that once the reason code is assigned to a group reference number, the links are shown for users to navigate to the target. The Target URL can either be an absolute URL or a relative URL, or even a Fiori app URL.
+
+*** Flexible Workflow
+
+**** Activate the Standard Delivered WorkFlow(Doc Only) 
+The SAP standard deliverred workflow needs to be activated before using. You are required to execute following 3 steps:
+1. Scenario Activation: Make sure scenario "WS78500087" exists and the active checkbox is checked.
+2. Scenario Definition (for Task Gateway Service): Make sure scenario "ICAWS0" exists. If not, create it by refering the settings in the client 000.  
+3. Maintain Task Names and Decision Options: Make sure workflow ID "WS78500087" exists. If not, create it by refering the settings in the client 000.
+
+**** Workflow Scenario Activatio
+Refer IMG Activity: SWF_FLEX_SCEN_ACT: Scenario Activation.
+
+**** Task Gateway Service Scenario Definition
+Refer IMG Activity: /IWPGW/TGW_SCENARIO: Scenario Definition.
+
+**** Maintain Task Names and Decision Options
+Refer IMG Activity: /IWWRK/WF_STEP: Maintain Task Names and Decision Options.
+
+*** Manage Intercompany Responsibilities(Doc Only)
+Add a reference to IMG: Responsiblity Mangement.
+**** Use
+Intercompany Mathcing & Reconciliation leverages _Responsiblity Management_ to define teams and functions under the team category "ICAM". 
+
+**** Standart Settings
+By Default, SAP delivers below 3 team functions:
+1. ICAM_COMM: ICA Communication
+2. ICAM_SP: Post Variance Adjustment
+3. ICAM_SV: Check Variance Adjustment Posting
+
+They are assigned to the team profile: ICAMP, which is then assigned to the team category "ICAM". The pre-delivered workflow scenario "WS78500087" uses the team category "ICAM" for recipients determination. The communication in Fiori App "Manage Assignment" use team category "ICAM" and function "ICAM_COMM" to determine the recipients. 
+
+**** Activities
+You can add your own team functions and team profiles. If you assign it to team category "ICAM", then they can be used in the standard workflow scenario "WS78500087". 
+
+** Variance Adjustment Posting
+
+*** Define GL Posting Document Template
+| Attribute             | Value             | Comments                       |
+|-----------------------+-------------------+--------------------------------|
+| ASAP Roadmap ID       | 105               | Define Functions and Processes |
+| Mandatory/Optional    | Optional activity |                                |
+| Critical/Non-Critical | Uncritical        |                                |
+| Customizing Object    | VC_ICA_DOCTP      | View Cluster(SM34)             |
+| Tcode                 | ICADT             |                                |
+
+**** Use
+In this Customizing activity, you define GL posting document templates. This sort of document templates is used to adjust the difference between a seller's account receivable amount and the buyer's account payable amount.
+
+**** Standard Settings
+The document templates predefined by SAP start with "S" in their IDs and cannot be changed or deleted.
+
+**** Activities
+You can define your own document templates either by copying from an existing one or creating from scratch. Follow the procedure below to create a new document template:
+
+1. Choose New Entries and select a matching method ID for which you want to define the document template.
+2. Enter a document template ID and description.
+3. Under Document Header, specify an accounting document type.
+4. Select the First Day of the Period or Last Day of the Period option as the posting date rule.
+5. If you want to post reversal documents simultaneously in the next period, then check "Reverse in Next Period" and assign a reversal reason.
+6. Choose a posting side, which can be the leading unit side, partner unit side, lower transaction amount side, or higher transaction amount side. Based on your choice, the system decides which company code to be used for the posting at runtime.
+7. Under Document Items, specify a debit posting key and a credit posting key. If the variance is a positive number, then it uses the debit posting key, otherwise, uses the credit posting key.
+8. Specify a G/L account for the target adjustment line, which is used to record the variance. Together with a G/L Account for the offsetting line.
+
+   Note: The chart-of-accounts is derived from the original line. Thus you should make sure the accounts are valid in the potential chart-of-accounts.
+
+*** Maintain Document Template Assignments
+| Attribute             | Value             | Comments                       |
+|-----------------------+-------------------+--------------------------------|
+| ASAP Roadmap ID       | 105               | Define Functions and Processes |
+| Mandatory/Optional    | Optional activity |                                |
+| Critical/Non-Critical | Uncritical        |                                |
+| Customizing Object    | V_ICA_DOCTP_COMP  | Maintenance View(SM30)         |
+| Tcode                 | ICAADT            |                                |
+
+**** Use
+In this Customizing activity, you assign document templates to combinations of company, trading partner, and reason code.
+
+**** Activities
+1. First choose a matching method ID under which you want to do the document template assignments.
+2. You can only enter the combinations in following patterns:
+| Company | Trading Partner | Reason Code | Doc Template ID |
+|---------+-----------------+-------------+-----------------|
+|         |                 |             | TEMPLATE01      |
+| C1001   |                 |             | TEMPLATE02      |
+| C1001   | C1002           |             | TEMPLATE03      |
+| C1001   | C1002           | S01         | TEMPLATE04      |
+
+The logic follows the maximum hitting policy. For example, if an assignment consists of the tuple "C1001, C1002, S01", then "TEMPLATE04" will be returned. If an assignment consists of the tuple "C1001, C1002, S02", then "TEMPLATE03" will be returned. 
+
+However, you cannot enter a combination without the company value, such as the following::
+| Company | Trading Partner | Reason Code | Doc Template ID |
+|---------+-----------------+-------------+-----------------|
+|         | C1002           | S01         | TEMPLATE05      |
+
+** Define Assignment Filters
+| Attribute             | Value             | Comments                       |
+|-----------------------+-------------------+--------------------------------|
+| ASAP Roadmap ID       | 105               | Define Functions and Processes |
+| Mandatory/Optional    | Optional activity |                                |
+| Critical/Non-Critical | Uncritical        |                                |
+| Customizing Object    | VC_ICA_FLTRC      | View Cluster(SM34)             |
+| Tcode                 | ICAFC             |                                |
+
+*** Use
+In this Customizing activity, you maintain assignment filters which will be shown in the Fiori App "Manage Assignment". You define filters to facilitate you filter in assignments that you most concern. 
+
+*** Standard Settings
+The assignment filter predefined by SAP start with "S" in their IDs and cannot be changed or deleted.
+
+*** Activities
+Follow the procedures below to create a new assignment filter:
+
+1. Select a matching method ID for which you want to define the filters.
+2. Choose New Entries and enter a Filter ID and short description.
+3. Select the filter you just created and double click the Definition node.
+4. Choose New Entries and enter a number such as 10 or 20 in the Row ID column.
+5. Choose a dimension field from its value help list. The available dimension fields are "DIFFERENCE" (Amount Difference), "PSTAT" (Processing Status), "RCODE" (Reason Code), "RULE_ID" (Matching Rule), "CREATE_DATE"(Assignment Creation Date), and "COMM_DUE_DATE"(Communication Due Date). In addition, you can also combine the Attribute Field for each dimension field to define the filters.
+6. You can add multiple filter rows. The logic is different dimensions are concatenated using "AND", while the same dimension uses the "OR".
+
+Sepecial dimensions:
+1. *DIFFERENCE*: When you choose dimension "DIFFERENCE", you must specify an amount field in Attribute Field, a Low Value, and optionally, a High Value. For example, you can enter "TSL", which stands for the amount in transaction currency, in Attribute Field, "10" in the Low Value column, and "1000" in High Value. When filtering, the system sums the TSL amounts for each assignment and shows only the assignments that have the aggregated value between 10 and 1000. The amounts are usually counterbalanced because of the positive and negative signs indicating debits or credits, hence the dimension name "DIFFERENCE". In addition, make sure the amount field (such as "TSL") you specified in Attribute Field for "DIFFERENCE" exists in the data source CDS views that are assigned to the matching method.
+2. *CREATE_DATE*: You choose this dimension to filter by the creation date of assignments. It has 3 attributes: "FROM_LAST_X_DAYS", "FROM_LAST_X_WEEKS", and "FROM_LAST_X_MONTHS". By choosing one of them and assigning a number in the Low Value, it means choosing assignments that are created x days/weeks/months before. Note: WEEK = 7 days, and MONTH = 30 days.
+3. *COMM_DUE_DATE*: You choose this dimension to filter assignments that are due or not due by today. You don't need to give values in Low or High Value. 
+
+
+** Assign Email Templates to Methods
+| Attribute             | Value             | Comments                       |
+|-----------------------+-------------------+--------------------------------|
+| ASAP Roadmap ID       | 105               | Define Functions and Processes |
+| Mandatory/Optional    | Optional activity |                                |
+| Critical/Non-Critical | Uncritical        |                                |
+| Customizing Object    | V_ICA_EMAIL_TMPL  | View Cluster(SM30)             |
+| Tcode                 | ICAEA             |                                |
+
+*** Use
+In this Customizing activity, you assign email templates to certain methods. After assigned, you can choose the email template in the Fiori app "Manage Assignment" when communicating using emails.
+
+OP: Email templates are standard development objects and can be created in SE80. You can also use the Fiori App "Email Templates" which is in the Business Catalog: SAP_CORE_BC_OM.
+Cloud: Email templates can be maintained in Fiori App "Email Templates" which is in the Business Catalog: SAP_CORE_BC_OM.
+
+*** Standard Settings
+The standard email template "ICA_INTERCOMPANY" is used for intercompany discrepancies, which is by default assigned to matching method "SF001".
+
+*** Activities
+Follow the procedures below to create a new email template assignment:
+
+1. Create a new entry, input a matching method and email template.
+2. Check "Enabled" to enable the assignment and save.
+
+** Enable Real-time Synchronization of Clearing and Reversing Status
+| Attribute             | Value             | Comments                       |
+|-----------------------+-------------------+--------------------------------|
+| ASAP Roadmap ID       | 105               | Define Functions and Processes |
+| Mandatory/Optional    | Optional activity |                                |
+| Critical/Non-Critical | Uncritical        |                                |
+| Customizing Object    | V_ICA_METHOD_AS   | View Cluster(SM30)             |
+| Tcode                 | ICAAS             | Additional Settings            |
+
+*** Use
+In this Customizing activity, you enable real-time synchronized of clearing and reversing status for certain matching methods.
+
+When you run matching for financial journal entries(AR or AP especially), the journal entries are copied from ACDOCA to ICADOCM. That is to say the clearing and reversing status are snapshoted at the time of the mathcing run. If at a later point, journal entries are cleared or reversed, then those status should be synchronized to ICADOCM. 
+
+*** Standard Settings
+The standard matching method "SF001" and "SF002" are both enabled for the synchronization of the clearing and reversing status.
+
+*** Activities
+Follow the procedures below to create a new email template assignment:
+
+1. Create a new entry, input a matching method.
+2. Check "Enabled" checkbox for clearing and reversing or either one of them.
+
+
+** Define Number Range Intervals
+*** for Matching Document Number
+| Attribute             | Value             | Comments                                 |
+|-----------------------+-------------------+------------------------------------------|
+| ASAP Roadmap ID       | 250               | Define Number Range and Basic Structures |
+| Mandatory/Optional    | Optional activity |                                          |
+| Critical/Non-Critical | Uncritical        |                                          |
+| Customizing Object    | SNUM              | Individual Transactional Object          |
+| Tcode                 | ICAN1             |                                          |
+
+**** Use
+In this Customizing activity you check the generated number range for the matching document number.
+
+**** Standard Settings
+When created, each matching method has a default number range interval "00" generated, which ranges from "1000000000" and "9999999999". You must not modify it.
+
+The system always uses "00" as the default number range interval. Usually, you don't need to create other ones. This number range is expected to be enough for the product lifecycle, because a data archiving program is usually executed before the number range is used up, after that, you can recycle the numbers.
+
+**** Activities
+Specify a matching method and check if number range interval "00" is created. If not, manually create it.
+
+*** for Assignment Number
+| Attribute             | Value             | Comments                                 |
+|-----------------------+-------------------+------------------------------------------|
+| ASAP Roadmap ID       | 250               | Define Number Range and Basic Structures |
+| Mandatory/Optional    | Optional activity |                                          |
+| Critical/Non-Critical | Uncritical        |                                          |
+| Customizing Object    | SNUM              | Individual Transactional Object          |
+| Tcode                 | ICAN2             |                                          |
+**** Use
+In this Customizing activity you check or create the number range interval for the assignment number.
+
+**** Standard Settings
+By default, the number range interval "00" has been generated, which ranges from "100000000000" and "999999999999".
+
+The system always uses "00" as the default number range interval. Usually, you don't need to create other ones. This number range is expected to be enough for the product lifecycle, because a data archiving program is usually executed before the number range is used up, after that, you can recycle the numbers.
+
+
+* SSC UI
+
+** WebGUI
+SM34: /CFG/WEBGUI_DETAILS
+
+*** Maintain Data Sources
+140A7A7C25174BA29BF0F27F07DB8EEB	ICA_DS	VC_ICA_DS
+
+Maintain /CFG/BADI_WHTLST entry as "Content & Transport"
+
+*** Maintain Reason Code
+1E78F414D6C3439CA835CB96906D19F7	ICA_RC	VC_ICA_RC
+
+Maintain /CFG/BADI_WHTLST entry as "Content & Transport"
+
+*** Define Filters for Assignment List
+4E05D385AF1A47DD984DE17B705F69C4	ICAFC	VC_ICA_FLTRC
+
+Maintain /FTI/SCOPE_IDENT since content is not delivered.
+
+Maintain /CFG/BADI_WHTLST entry as "Content & Transport".
+
+*** Assign Document Templates to Companies
+92033914AEAE458B9918DAEF17D003FF	ICAADT	V_ICA_DOCTP_COMP
+
+Maintain /CFG/BADI_WHTLST entry as "Content & Transport".
+
+Maintain /FTI/SCOPE_IDENT since content is not delivered.
+
+*** Define G/L Posting Document Templates
+AEDC380412FC43D887E4539E37D61F6F	ICADT	VC_ICA_DOCTP
+
+Maintain /CFG/BADI_WHTLST entry as "Content & Transport".
+
+Maintain /FTI/SCOPE_IDENT since content is not delivered.
+
+** Configuration Item
+SM34: /CFG/VC_SSC
+0894EF4577A91EE9A2FF77640D3801A9: Intercompany Matching and Reconciliation, Closing Operation(4116), 500406
+0894EF4577A91ED99CD94E8CA4894F4A: Intercompany Matching and Reconciliation, Corporate Close(4530), 500400
+
+** Misc
+Check https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1867412039 to make sure BPC_EXPERT has the permission to execute SSCUI Tcodes.
+                                                
+Execute tcode /FTI/CAT_DET to get propsal
+
+* Content Compatibility Check
+
+https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Lifecycle+Incompatible+Patterns
+
+Report /SMB98/JF05  (see Report [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1859336506][/SMB98/JF05 - Incompatible Patterns]])

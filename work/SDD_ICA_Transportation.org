@@ -1,0 +1,120 @@
+#+PAGEID: 2076358566
+#+VERSION: 4
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2076358566][SDD-ICA Transportation]]
+
+* General Information
+** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         |               |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+** References
+| <30>                           |                  |         | <30>                           |
+| Document Title                 | Date             | Link    | Comments                       |
+|--------------------------------+------------------+---------+--------------------------------|
+| Configuration Architecture Guidelines | <2019-02-27 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Configuration+Architecture+Guidelines+for+Application+Development][sapwiki]] | This documentation is for application and tool architects to check whether their application or tool is using patterns that cause problems in cloud lifecycle management. |
+| Self Service Configuration UIs | <2019-02-27 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Self+Service+Configuration+UIs][sapwiki]] | This guideline is focusing on WebGUI SSC-UIs. Most of this guideline is also relevant for SSC-UIs in FIORI (apart from restrictions related to the new API). |
+| Namespace restriction in SSC UI | <2019-02-27 Wed> | [[https://launchpad.support.sap.com/#/notes/0002326112][sapnote]] | Creation of entry is outside of customer namespace. |
+
+* Context
+Transportation here means configuration management in both OP and Cloud landscapes. Since our main objects like Matching Method and Reconciliation Case are Fiori Apps, which by default don't support recording changes into a transport request, nor will record in the content framework. Meanwhile, there are also objects like Data Source and Reason Code which are SM34 objects that support SSCUI by default. Their dependency relationships are like this: Reconciliation Case depends on Matching Method, and Matching Method depends on Data Source and Reason Code. 
+
+How to make sure the configuration consistency during transportation in both OP and Cloud landscapes is the target that this document wants to achieve.
+ 
+* Detail Design
+Matching Method supports both configuration data and master data mode. The differences are listed as bellow:
+| Configuration Mode                   | Master Data Mode      |
+|--------------------------------------+-----------------------|
+| Can be transported to other systems  | Cannot be transported |
+| Can be delivered as standard content | Cannot be delivered   |
+| Support Q2P                          | Doesn't support Q2P   |
+The other 3 objects: Reconciliation Case, Data Source, and Reason Code are configuration only. Thus means, *a Reconciliation Case can only be assigned with a configuration matching method.* 
+
+Once a Matching Method is created, it cannot be switched between the 2 modes. To avoid a configuration method overwrite a master-data method during transportation, different namespaces are given.
+| <20>                 |                                                                    |
+| Namespace            | Method Category                                                    |
+|----------------------+--------------------------------------------------------------------|
+| S, Q, R, X, P, Y, 5, 6, 7, 8, 9, 0 | SAP standard delivery, configuration only, Customers cannot change |
+| M*                   | Customer created, master data only                                 |
+| Others               | Customer created, configuration data only                          |
+
+#+CAPTION: Transportation 
+[[../image/ICR_Transportation.png]]
+
+** Content Initial Delivery
+4 IMG activities will be created for Reconciliation Case, Matching Method, Data Source and Reason Code separately. Recon Case and Matching Method are fake IMG nodes which are used only for content initial delivery. Although, the 2 IMG nodes are also appeared in OP to show some documentation and attached with the packaging report(ICA_TRANSPORT).
+
+Since Data Source and Reason Code follow standard SM34 and SSCUI features, the content delivery is by default supported. 
+
+** SSCUI
+Only Data Source and Reason Code support SSCUI. Recon Case and Matching Method won't, instead, they use download and upload feature to support configuration transportation from Q to P. There are following reasons:
+1. It is hardly to anticipate and define valid matching methods and recon cases for all the customers. Because each customer has its own matching and reconciliation rules' definitions, which are quite linked to their own data and process context.
+2. The standard delivered Matching Methods and Recon Cases are more referred as examples for customer to copy to use. Usually, a customer can define quite a lot of Matching Methods and Recon Cases.
+3. As such, there is no need to support Q2P by the content framework, because customers are unkindly to change the standard delivered Matching Methods and Recon Cases. Usually, copy-and-change is a more preferable and piratical approach.
+4. However, they do need to transport their own (copied)methods and cases from Q to P. And transportation in Cloud is only supported by 2 options: 1) Q2P by content framework, or 2) ATO, which both require heavy adoption efforts in case the objects are maintained in Fiori.
+5. And who(or which role) will do the transportation is also argued. Matching Method and Recon Case are configured more by the business end users, so does the transportation. The business user should first do the configuration in Q, and then do the transport by himself. However, both Q2P and ATO is managed by a third professional user. 
+6. Thus, download/upload is introduced as a quick solution to give the possibility for Cloud users to do the transportation from Q to P.
+
+*** Data Source SSCUI
+Some features of Data Source SSCUI must be blocked:
+1. Create a new method is not allowed, only copy from an existing one is allowed.
+2. "Main CDS View" and "Unit Entity CDS View" should be in gray.
+3. All the sub-nodes are in display only mode.
+#+CAPTION: Data Source SSCUI
+[[../image/ICR_SSCUI_DS.png]]
+
+** Packaging Report
+Report 'ICA_TRANSPORT' is used only in OP landscape. User can use it to include methods into a transport request. Along with the method, the related objects like Data Source, Reason Code, and Reconciliation Case can also be enclosed. 
+
+#+CAPTION: Packaging Report
+[[../image/ICR_TransportReport.png]]
+
+This packaging report cannot be used by the Cloud user. Because once you run it to include your method into a TR, as well as the content variant files, you cannot avoid afterward changes which happens isolated in the Fiori Apps. Then, when the TR is released, it transports the latest configurations, however, the variant files are not get updated. 
+
+** Download and Upload
+Matching Method and Recon Case support download&upload their configurations to and from CSV files. During import, consistency checks will be made to check if Data Source or other related configuration is missing. 
+#+CAPTION: Download and Upload
+[[../image/ICR_DownloadUpload.png]]
+
+The upload doesn't run normal checks as creating a new method in Fiori UI. Because these checks were already done when they are created. However, following specific checks will be made during upload:
+1. Namespace checks. If the upload contains SAP namespace methods, the whole upload will be interrupted. 
+2. If it is configuration method, it cannot be replaced, error will be raised and the upload is terminated.
+3. If it is a master-data method, it will be replaced with a confirmation dialog.
+4. If Data Source doesn't exist, the method will be saved, but error message will be reported.
+5. If Reason Code doesn't exist, the method will be saved, but error message will be reported.
+6. If Single Selection used in recon case doesn't exist, the recon case will be saved with error message reported. 
+
+** Fiori UI Check
+In the Fiori UI, a check should be made to check whether the client is allowed for changing configurations. The check is conducted by calling the function module "TR_OBJECT_CHECK" which checks the client settings as well as the specific object. If the return is negative, then the Fiori APP doesn't allow create or change configuration-like methods. However, master-data-like methods are anyway allowed to maintain. 
+
+#+BEGIN_SRC abap
+  data ls_ko200 type ko200.
+  ls_ko200-pgmid = 'R3TR'.
+  ls_ko200-object = 'TDAT'.
+  ls_ko200-obj_name = 'ICAM'.
+  ls_ko200-objfunc = 'K'.
+
+  call function 'TR_OBJECT_CHECK'
+    exporting
+      wi_ko200                = ls_ko200
+      iv_no_standard_editor   = ' '
+      iv_no_show_option       = ' '
+    exceptions
+      cancel_edit_other_error = 1
+      show_only_other_error   = 2
+      others                  = 3.
+
+  if sy-subrc <> 0.
+    message id sy-msgid type 'E' number sy-msgno
+           with sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+  endif.
+#+END_SRC
+
+

@@ -1,0 +1,60 @@
+#+PAGEID: 
+#+VERSION: 1
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: TCD Reconciliation Result
+
+* General Information
+** Stakeholders and Roles
+| Role                  | Name                   |
+|-----------------------+------------------------|
+| Author(s)             | Vincent Zhang          |
+| Architect             | Vincent Zhang          |
+| Product Owner         | Ying Shi               |
+| Information Developer |                        |
+| Quality Responsible   | Cen Yao                |
+| Developers            | Marvin Qian, Jin Huang |
+
+** References
+|                           |                  |         | <30>                           |
+| Document Title            | Date             | Link    | Comments                       |
+|---------------------------+------------------+---------+--------------------------------|
+| SDD Reconciliation Result | <2019-02-13 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/FINCONSCLD/SDD-ICA+Matching+Engine#SDD-ICAMatchingEngine-6ReconciliationReport][sapwiki]] | Software design documentation for manual assignment |
+
+* Business Background
+The reconciliaton result gives an aggregated view based on the data in ICADOCM. The reporting logic is based on the customizable object "Reconciliation Case". The App gives user an overview of reconciliation case by units. 
+
+* Features
+1. Each reconciliation case shows different filters and list columns based on leading units and mandatory filter fields.
+2. It supports list view and hierarchy view.
+3. New postings can be detected.
+
+* Test Cases
+The test environment is ER9/500, with a local established frontend server(https://ica.darkhouse.com.cn/?sap-language=EN&sap-client=500#ReconciliationStatusOverview-display) for Fiori UIs.
+ 
+** Enter Reconciliation Case
+A recon case must be given either manually or automatically through variants or URL paramters. Once the recon case is confirmed, the leading unit and mandatory fields are determined and shown as filters. 
+
+*** DONE Initial Access Reconciliation Result APP
++ *When* access the tile "Reconciliation Result" without a default variant.
++ The page *should* only show "Reconciliation Case" as a mandatory parameter,
++ *and* the table bellow is empty,
++ *and* all buttons/dropdown-boxes except "Go" are inactive.
+
+*** DONE Manually Choose a Reconciliation Case from Dropdown Box
++ *When* choose a recon case from the dropdown box,
++ The page *should* show leading unit and mandatory filtering fields as filters,
++ *and* the mandatory filtering fields should be mandatory,
++ *and* the leading unit field(s) is optional.
+ 
+ 
+*** TODO Access Reconciliation Result APP with a Default Variant
+*Since variant cannot be support utill the Fiori is deployed into UYT, cases bellow are ignored.*
+
+Assume the variant create&save feature is implemented.
+
++ *When* access the tile "Reconciliation Result" with a default variant,
++ *and* the variant is saved with method id "SF001", Company or Hierarchy node has values, Fiscal Year Period is current.
++ The page *should* show Company or Hierarchy node with values,
++ *and* Fiscal Year Period with current period,
++ *and* the list is already shown without having to click the "Go" button.

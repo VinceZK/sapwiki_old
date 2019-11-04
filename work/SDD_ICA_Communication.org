@@ -1,0 +1,148 @@
+#+PAGEID: 2051286198
+#+VERSION: 6
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2051286198][SDD-ICA Communication]]
+* General Information
+** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         |               |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+** References
+|                           |                  |         | <30>                           |
+| Document Title            | Date             | Link    | Comments                       |
+|---------------------------+------------------+---------+--------------------------------|
+| Responsibility Management | <2018-08-22 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Responsibility+Management][sapwiki]] | For S/4HANA Cloud Applications, there is a need to determine uniformly and centrally the person or entity who could be held as responsible for completing a particular task or activity. |
+| Triggering Notification   | <2019-01-08 Tue> | [[https://blogs.sap.com/2017/09/18/triggering-notification-to-sap-fiori/][scnblog]] | This document explains how to enable the Notification Center, explains some general principles, and shows how to configure Workflow Notifications to appear in the Notification Center |
+| Local ART Material        | <2019-01-08 Tue> | [[https://jam4.sapjam.com/groups/qz3MX6AO0btRsFcVm3OrA1/documents/TFXoVepVfx7G0XIiRMK1h0/slide_viewer][sapjam]]  | Fiori 2.0 Notification by Qian Fu, Yujia Wang |
+| Email Templates           | <2019-07-09 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/core/Email+Templates][sapwiki]] | This module provides functionality to define predelivered email templates with a workbench UI. |
+
+* Context
+Communication is needed when there are concerns on items which need other parties' involvement or confirmation. User can, of course, communicate through external ways, like email, telephone, lync, or a ticket. However, if those communication methods can be integrated into the matching engine, it will bring following benefits.  
+
+1. *Traceability*: Once communication is made, it is recorded along with the matching items. User can trace the communication history on a specific matching item. Meanwhile, due date can be set on every communication activity. 
+2. *Recipients Determination*: The responsible parties can be automatically determined according to the business context. For example, once a matching item is selected, the recipients can be determined based on the trading partner.
+3. *Template Support*: Communication templates can be predefined so that it can improve the communication efficiency. For example, predefined email templates are there to pick when some usual inconsistencies are found. 
+
+* Detail Design
+A communication activity is triggered from "UI-430 Manual Assignment". The user chooses some matching items from the 3 tables, and click "Communication" button to select a communication method. Based on different communication method chosen, different follow-up dialog will pop up. 
+
+There will be 5 default communication methods delivered as standard. Whether to allow customers to define their own communication methods needs further investigation after the first release. As there are still uncertainties like how to connect to an external ticket system and call-back; whether email and notes are already enough, etc. Nevertheless, the default communication methods are for out-of-box usages.
+
+1. Personal Notes: Create some literal notes with a due date for personal tracking;
+2. Send Notification: Send a Fiori Notification with due date to the recipients; 
+3. Email: Sending an email with a due date to the recipients;
+4. Telephone: Open a dialog with default note: "Called to <whom> at <time>", as well as a due date;
+5. Ticket: Open a dialog with a link to the ticket system. When the ticket is created, user should manually copy the ticket link to the content field and close the dialog.
+ 
+
+** DONE Table Design                                                   :Vincent:
+Multiple communication activities can be attached to one matching journal item. Thus the communication record table "ICA_COMM_REC" is given as bellow.
+| Field       | Key | Description              |
+|-------------+-----+--------------------------|
+| RCLNT       | X   | Client                   |
+| METHOD_ID   | X   | Matching Method          |
+| DOCNR       | X   | Document Number          |
+| DOCLN       | X   | Line Item Number         |
+| RECNO       | X   | Record Number            |
+| COMM_METHOD |     | Communication Method     |
+| RECIPIENTS  |     | Communication Recipients |
+| CONTENT     |     | Communication Content    |
+| CREATEDBY   |     | Created By               |
+| CREATEDAT   |     | Created At               |
+
+Based on different communication method used, the CONTENT field can be used to store different stuff. If it is a note, then the note information is literally stored in the CONTENT. If it is an email, then a reference is stored in CONTENT. While a reference can be an object key or a HTTP link. 
+
+Communication methods are defined in system table "ICA_COMM_METHOD" along with its text table "ICA_COMM_METHODT". In the initial releases, customers are not allowed to define their own communication methods. If they do have the requirements, then corresponding customization tables will be given in future.
+
+| Field         | Key | Description           |
+|---------------+-----+-----------------------|
+| COMM_METHOD   | X   | Communication Method  |
+| COMM_CHANNEL  |     | Communication Channel |
+| TARGET_STATUS |     | Communication Status  |
+| ENABLED       |     | Enabled               |
+| CALL_POINT    |     | Call Point URL        |
+
+Communication channel can be note(01), notification(02), email(03) and External System(04). If it is note and notification, then the content is directly saved in the CONTENT field. If it is email, then the email reference key is saved. For others, we regarded as external systems, and usually, a http link is saved. 
+
+A TARGET_STATUS will be updated to the field "CSTAT" in ACDOCM once the corresponding communication activity is conducted. Available target statuses are maintained in the data domain "ICA_CSTAT".
+
+Only the enabled communication methods are available in UI-430. And if the channel is External System, a CALL_POINT url must be given.  
+
+** TODO UI                                                      :William:
+Communication is embedded in UI-430 with popup dialogs to allow user do communication activities. Each communication activity is attached to a matching journal item. The simplest activity is to leave a note. 
+
+*** Add Personal Note
+#+CAPTION: Add Note
+[[../image/ICR_CommunicationNote.png]]
+
+1. Communication status can be displayed in the 3 tables on UI-430. The upper 2 and the bottom-right.
+2. The column displays the last communication activity status. For example: "Note Created", or "Email Sent".
+3. When the mouse hover to the status text, a popup hover is open nearby to show the history of communication activities attached to the matching item.
+4. If there is no communication activity happened on the matching item, the column displays empty.
+5. When you select items from either tables, you can create a communication activity. A dialog pops up according to different channels chosen.
+6. In case "Add Note" is chosen, you need to provide a due date and some literal content. The due date should be a date in future. After confirmation, an activity entry is inserted into table "ICA_COMM_REC", and the CSTAT and DUE_DATE in ACDOCM will be updated to the target status and the given date.
+7. When displaying in UI-430, if the current date surpasses the due date recorded, then the item is displayed in a warning color.
+8. You can confirm the over due items by choosing them and hit the button "Set Done".
+
+*** Send Notification
+#+CAPTION: Send Notification
+[[../image/ICR_CommunicationNotification.png]]
+
+1. In case "Sent Notification" is chosen, you need "@" the recipients to whom a notification will be shown in the Fiori Launchpad. Of course, the recipients can be auto-determined according to the team and responsibility settings. Maximum 10 recipients are allowed.
+2. As the recipients, they will receive notifications like following:
+
+#+CAPTION: Fiori  Notification
+[[../image/ICR_FioriNotification.png]]
+
+The recipients can also confirm the TODO activity by hitting the button "Set Done" in the notification banner.
+
+*** TODO Send Email
+#+CAPTION: Send Email
+[[../image/ICR_CommunicationEmail.png]]
+
+1. The email channel support templates, which can be pre-delivered or defined by customers themselves. Each template includes an email subject and content, with placeholders be replaced by the data from the choosing matching items.  
+2. The recipients' emails can also be auto-determined based on the contact database and the partner information. The email address is store in business partner.
+
+*** Telephone
+It is good to have direct integration with a telephone system. However, the standard deliverly is a note channel communication. That is to say, the user call the contact, and then record some personal notes, like "Called somebody at when". 
+
+*** Ticket System
+Same as the telephone channel.
+
+
+** API                                                                 :Jin:
+1. The personal notes creations API insert note to "ICA_COMM_REC", meanwhile, update the CSTAT and DUE_DATE in ACDOCM.
+2. Send notification API. Refer "CL_FCLM_BAM_UI5)UTIL=>CREATE_NOTIFICATION". Also contact Fu Qian if necessary.
+
+*** Email Template
+Email Template is a workbench object that is defined on a CDS view. SAP can predeliver in mulitple languages. Customers can also create their own email templates with the Fiori app: "Email Template" in the biz role: SAP_BR_ADMINISTRATOR. Detail of the app can be found in the [[https://wiki.wdf.sap.corp/wiki/display/core/Email+Template+Fiori+App][sapwiki]]. 
+
+Here gives one example of the pre-delivered email template.  The "Doc.No." will link to the Accounting's "Display Journal Entries" app. The "Manage Assignments" link will navigate with the partner's perspective. 
+
+#+CAPTION: Email Template
+[[../image/ICR_EmailTemplate.png]]
+
+The placehoders will be replaced  with the value in a pre-delivered CDS view, which has following fields:
+| Field               | Comments                             |
+|---------------------+--------------------------------------|
+| Company             | RCOMP in ICADOCM                     |
+| TradingPartner      | RASSC in ICADOCM                     |
+| AssignmentNumber    | GRREF in ICA_ASSIGN                  |
+| MatchingMethodID    | METHOD_ID in ICA_ASSIGN              |
+| MatchingMethodDescr | Short description of matching method |
+| MatchingRuleID      | RULE_ID in ICA_ASSIGN                |
+| MatchingRuleDescr   | Short description of matching rule   |
+| ReasonCode          | RCODE in ICA_ASSIGN                  |
+| ReasonCodeDescr     | Short description of reason code     |
+| FiscalYear          | RYEAR in ICA_ASSIGN                  |
+| FiscalPeriod        | POPER in ICA_ASSIGN                  |
+| FiscalYearPeriod    | FISCYEARPER in ICA_ASSIGN            |
+
+

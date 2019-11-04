@@ -20,6 +20,7 @@
 |---------------------------+------------------+---------+--------------------------------|
 | Responsibility Management | <2018-08-22 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Responsibility+Management][sapwiki]] | For S/4HANA Cloud Applications, there is a need to determine uniformly and centrally the person or entity who could be held as responsible for completing a particular task or activity. |
 | Flexible Workflow-Runtime | <2018-09-13 Thu> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1828068524#S/4FlexWorkflow-Runtime-S/4ResponsibilityManagement][sapwiki]] | The flexible business workflow runtime is based on an already implemented feature in the Business Workflow runtime, the enablement of building node hooks, which dynamically decide over the next step. |
+| Flexible Workflow-Content | <2019-04-30 Tue> | [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1829157266][sapwiki]] | For one scenario many process definitions (modeled in the Manage Workflows Fiori App) can be defined. Those workflow definitions can have 0..n start conditions. |
 
 * Context
 The following 2 scenarios are given for the most simplest cases but cover the main technique paths. The are based on Company and Trading Partner. In case other organization dimensions like profit center and cost center need workflow, then additional workflow scenarios should be developed. There is no chance to have a generic workflow scenario that fulfill all possible financial organization dimensions.  

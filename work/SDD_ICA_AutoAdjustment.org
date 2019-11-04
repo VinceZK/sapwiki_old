@@ -32,5 +32,3 @@ You can use the given methods: CREATE_APPL_LOG, ADD_MESSAGE_TO_LOG, and SAVE_APP
 
 *** Financial Journal Posting
 ABAP Class "CL_ICA_FIN_JOURNAL_POST" is a sub-class of "CL_ICA_AUTO_ADJUSTMENT". It does financial journal postings according to the matching result. 
-
-**** Customization

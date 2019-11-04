@@ -1,0 +1,24 @@
+* Clear Items are Out of Balance
+Since cleared items are not counted in the balance, we can mark the amounts to 0.
+* Sorting by Reason Codes
+* Daily and Month-End View 
+* Snapshot of period data
+* Deliver an Entry View
+Entry view is more important. 
+* Time-dependant of Trading Partner
+Either use RASSC in ACDOCA, or join ACDOCA with customer and vendor's master data. 
+* Central Place to maintain everything
+* Improve Data Source Maintenance View
+Replace screen logic to proper events, 
+View and Change separately.
+* Attachments 
+* Look only at open items
+* Bring the longest text from DTEL as well as search help
+* Mutable Field -> Update from Original Doc
+Also add DTEL documentation
+* Search help for nav para
+
+* MTE -> STE
+
+* Learner Survey
+

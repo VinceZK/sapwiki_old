@@ -1,134 +1,182 @@
 #+PAGEID: 2033857616
-#+VERSION: 2
+#+VERSION: 5
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2033857616][TCD Matching Method]]
 
 * General Information
 ** Stakeholders and Roles
-| Role                  | Name                  |
-|-----------------------+-----------------------|
-| Author(s)             | Vincent Zhang         |
-| Architect             | Vincent Zhang         |
-| Product Owner         | Ying Shi              |
-| Information Developer |                       |
-| Quality Responsible   | Cen Yao               |
-| Developers            | William Wu, Jin Huang |
+| Role                  | Name                   |
+|-----------------------+------------------------|
+| Author(s)             | Vincent Zhang          |
+| Architect             | Vincent Zhang          |
+| Product Owner         | Ying Shi               |
+| Information Developer | Grace Zou              |
+| Quality Responsible   | Yao Cen                |
+| Developers            | Marvin Qian, Jin Huang |
 
 ** References
 |                     |                  |         | <30>                           |
 | Document Title      | Date             | Link    | Comments                       |
 |---------------------+------------------+---------+--------------------------------|
-| SDD Matching Method | <2018-11-13 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/FINCONSCLD/SDD-ICA+Matching+Engine#SDD-ICAMatchingEngine-3.1TODO%5B#A%5DUI-210MatchingMethod:Marvin:Jin][sapwiki]] | Software design documentation for manual assignment |
+| SDD Matching Method | <2018-11-13 Tue> | [[https://wiki.wdf.sap.corp/wiki/display/FINCONSCLD/SDD-ICA+Matching+Engine#SDD-ICAMatchingEngine-3.1TODO%5B#A%5DUI-210MatchingMethod:Marvin:Jin][sapwiki]] | Software design documentation for Matching Method |
 
 * Business Background
-Matching Method can be excuted to run a match between 2 logic data slices. It is defined with one or two Data Sources, and multiple matching rules. Matching Rules are sequential, they can futher slice the data and run matching according to the matching expressions.   
+Matching Method is defined in the Fiori App "Define Matching Methods". It can be defined either as configuration data or as master data. It is based on 1 or 2 Data Sources to allow user to compose matching rules. After finishing the definition, a matching method can be executed.    
 
 * Features
-1. User can fuzzy search Matching Methods with terms in ID and Descriptions.
-2. User can define Matching Methods under customer namespaces (not begin with 'S').
-3. A method can be assigned with one or two data sources depends on the settings of the data sources.
-4. A method can have more than one Matching Rules, and the order represents the execution order.
-5. A rule must be flag as either an Exactly Match or a Suggested Match or an Exceptional Match.
-6. A rule can be assinged with a default reason code.
-7. A rule must have 2 data slices, and each slice can be maintained a description.
-8. Each data slice of a rule can be further sliced using filters, filters support graphic and sql scripts.
-9. A rule can have multiple matching expressions. Each expression is composed by a field from data slice 1 and a field from data slice2 connectted with a comparator.
+1. CRUD on matching methods.
+2. Copy existing matching method to new.
+3. Mass download and upload on master-data-like matching methods.
+4. Transport configuration-data-like matching methods.
+5. Execute a matching method and display the status and result.
 
 * Test Cases
-The test environment is ER9/500, with a local established frontend server(https://wxdev.qianmarv.xyz/#Shell-home) for Fiori UIs.
+The following tests are using the Fiori App "Define Matching Methods" in business catalog: SAP_FIN_BC_ICA_ME_CONFIG. 
  
-** Search Methods
-Methods can be fuzzy filterred by a given search term. The search is based on fields: Method ID, Description, and Comment. Methods can also be exactly filterred by fields: Method ID, Is Master Data, Source System, Created By, Created At, Changed By, and Changed At. 
+** DONE Search&List Methods
+Enter the Fiori App, the first page should be the Search&List page. 
 
 *** DONE Fuzzy Search
-+ *When* enter a search term and click "Go",
-+ it *should* list methods whose Method ID, Description, and Comment contain the search term,
-+ *and* by default, following columns are displayed: Method ID, Is Master Data, Description, Comments, Changed At, Changed By.
 
+**** DONE It should search on fields: Method ID, Description, and Comment.
+The search is done by database SQL. The Upper case and lower case is not differentiated. 
 
 *** DONE Exact Search
-+ *When* enter a term in field "Created By" and click "Go",
-+ it *should* list methods with "Created By" equals to the term entered. 
 
+**** DONE It should allow search on explicate chosen fields.
+Available fields are: Matching Method ID, Behaves like master data, Source System, Created On, Changed On, Created By, Changed By. 
 
-+ *When* enter a date term in field "Created At" and click "Go",
-+ it *should* list methods with "Created At" equals to the term entered. 
+**** DONE It should allow combination search.
+Different fields are combined with "and".
 
+*** DONE Layout Customization and Saving Variants
 
-+ *When* click the link "Adapt Filters",
-+ it *should* list possible filter fields: Is Master Data, Source System, Created By, Created At, Changed By, and Changed At,
-+ *and* all filters works after they are chosen.
+**** DONE It should allow to customize the filter bar.
+User can freely add available fields to the filter bar. And it also allow to set default values on the filter fields. 
 
-*** TODO Layout Customization and Saving Variants
-~This can be tested only after move the UYT~
-
-+ *When* click the button "View Settings",
-+ it *should* list all available fields,
-+ *and* can be displayed in the search list,
-+ *and* can be saved under a user ID as a default variant.
-
-
-+ *When* next time the user enter the APP,
-+ it *should* list the fields according to the default variant.
+**** DONE It should allow to customize the table columns shown.
+User can add available fields, change their positions and width, and save the customizations to its own name. 
 
 *** DONE Navigate to Object Page
-+ *When* click one line in the search list,
-+ it *should* navigate you to the object page in display mode.
 
-** Maintain Method
-A method can be displayed, changed, created/copied. 
-
-*** DONE Create a New Method with One Data Source
-+ *When* click "Create Method",
-+ it *should* navigate to the object page with Matching Method ID empty and editable.
+**** DONE It should navigate to the correct method detail page in display mode.
+And when navigating back, the list before should not be reloaded. 
 
 
-+ *When* choose a Data Source "Finance Journal Entries",
-+ it *should* display the short description left beside,
-+ *and* the "Add filter" should list available fields of the data source,
-+ *and* following fields should not be appeared in the list: DOCNR, DOCLN, GRREF, PSTAT, CSTAT, TIMESTAMP, MANDT, RCLNT, <Leading Unit>, <Partner Unit>
+** DONE Maintain Method
+From the "Search&List" page, you can:
+1. Click "Add" button to create a new method;
+2. Click a listed item to navigate to an existing method;
+3. Mass Import&Export methods.  
 
+*** DONE Create a Method with One Data Source
+Error should popup immediately when enter an existing method ID. 
 
-+ *When* click "Save",
-+ it *should* save the method successfully.
+You cannot create a method in SAP namespaces(like "S"). This can be tested in CCF/CC2. However, in ER9, as it is a SAP environment, there is no such naming rule check. 
 
-*** DONE Create a New Method with an Existing Name
-+ *When* create a method with existing ID,
-+ it *should* popup an error nicely to inform the user the ID already existgs.
+In OP environment, if the client role is Production(P), then "Behaves like master data" is checked and gray. Otherwise, it should be enabled and unchecked by default. In Cloud environment, it should be always checked and gray as we only allow create master data in Cloud.  
+
+Data Sources whose leading unit field and partner unit field are different can only be assigned individually in a method. This is because this kind of data sources can be logically regarded as 2 data sources. Please use the standard delivered data source "SF_JOURNAL_ENTRIES_01" for testing. Once it is assigned to a data source, you cannot assign the second one.
+
+In the fields dropdown list, you should see all the characteristic fields from the underlying CDS view of the data source. When you add the same field, it should be grouped together. Under the hood, it uses "or" to concatenate the same fields. It uses "and" to concatenate different fields.    
 
 *** DONE Create a New Method with Two Data Sources
-+ *When* create a method with a data source that doesn't have partner unit,
-+ it *should* ask for the second data source that has the same field role definition and mandatory filtering field definition,
-+ *and* in the rule page, the first data source is for data slice 1, and the second data source is for data slice 2.
+Data Sources whose leading unit field and partner unit field are the same should be as a pair assigned in a method. Besides the leading unit and partner unit fields, the pair must also share the fiscal year variant, and Unit Entity CDS View. 
 
-*** DONE Add a Rule
-+ *When* add a new rule,
-+ following fields are mandatory: Matching Rule ID, Rule Description, and Match Type,
-+ *and* filters can be add to each slice,
-+ *and* multiple matching expressions can be added,
-+ *and* the rule can be saved seperately.
+Data Sources: FI_JOURNAL_ENTRIES_06 and FI_JOURNAL_ENTRIES_07 are a pair which is on company dimension. 
 
-*** DONE Add a Role with Errors
-+ *When* add a new rule without "Rule Description" or "Rule ID",
-+ it *should* report errors on the fields and forbid saving.                                                                                                                        
+Data Sources: FI_JOURNAL_ENTRIES_08 and FI_JOURNAL_ENTRIES_09 are a pair which has no leading unit. 
+
+*** DONE Add a Matching Rule in One Data Source Method
+You must first save the method before adding a new rule. 
+
+You can choose 5 matching types: EM(Exact Match), SA(Auto-Assign), GM(Group as Matched), GA(Group as Assigned), and XA(Auto-Assign as Exception).
+
+**** DONE Create EM Rule 
+1. Only reason code with "No Follow-Ups" checked should be assigned.
+2. You maintain filters on the 2 data slices. Optionally, you can type descriptions to each slice.
+3. You decide whether "Aggregate" can be checked or not.
+4. All characteristic fields should be shown in the dropdown list.
+5. If the characteristic is boolean, then only "equal to" is available, and the value is fixed to "Yes" or "No".
+6. If the characteristic is date type, then 2 additional options "x days before" and "x months before" is shown.
+7. For other normal characteristic fields, there are 8 options.
+8. You can directly click the "+" to add the same field.
+9. You can create multiple matching expressions. The expression fields are all the fields except leading unit field, leading unit superordinate field, partner unit field, partner unit superordinate field, and all the mandatory filter fields.
+10. You can assign function to the selected expression field, and the available functions are data type dependent. The same is for the Comparator.
+
+**** DONE Create SA Rule
+Same as EM type rule, except there is no restriction on reason code attributes.
+
+**** DONE Create GM Rule
+1. Only reason code with "No Follow-Ups" checked should be assigned.
+2. You can only set filter on one of the data slice.
+3. Matching expression is not allowed.
+
+**** DONE Create GA Rule
+Same as GM type rule, except there is no restriction on reason code attributes.
+
+**** DONE Create XA Rule
+Same as SA type rule.
+
+*** TODO Add a Matching Rule in Two Data Sources Method
+
 *** DONE Copy Method
-+ *When* copy an existing method to a new method by hitting the "Copy" button,
-+ it *should* navigate the <New Method> page with all the data from the source method, only leaving the method id empty,
-+ *and* after giving a unqiue method ID, you can still do some adjustments, like change description, add/remove/change rules,
-+ *and* finally you can successfully save it.
+In the method detail page, you can copy it under a different name. It will navigate to the method creation mode, with all the value copied except the method ID. 
 
 *** DONE Change Method
-+ *When* open an existing method and switch to edit mode,
-+ it *should* allow to change description, comments, Attributes, Filters.
+You can not switch data source once a method is saved. 
+
+You can re-order matching rules. You must choose a rule to enlighten the "up" and "down" icon button.  
+
+You can inactive a rule by checking the inactive check box for each rule. 
+
+You can delete a rule by selecting it and clicking the "delete" icon button. 
+
+All above changes effected only after clicking the "save" button. 
+
+**** DONE Change Rule
+A rule is changed separately. You must first save the method then you can change a rule. 
+
+**** DONE It should block you saving a method if the same method is changed concurrently. 
 
 
-+ *When* open an existing method and switch to edit mode,
-+ it *should* allow change the sequence of the rules.
+** TODO Run Matching
+In the method detail page, you can click button "Run Matching" to run directly. A dialog pops up to show mandatory filter fields and the leading unit selection. The default value should be given if configured in the data source. 
 
-+ *When* open an existing method and switch to edit mode,
+Click the "Run Matching" in the dialog will trigger a background job with name "ICA_METHOD_ASYNC_RUN" running immediately. The Fiori App is pulling the latest status by sending requests in an incremental frequency. Like 1s, 2s, 4s, ... and the maximum frequency is 20s. 
 
-** DONE Search Help
+*** DONE It should show "Active and Running" state if the job is running. 
+
+*** TODO It should show "Finished" state if the job finished successfully. 
+And a link "Last Matching Result" will be shown to allow navigation to the "Manage Matching Document".
+
+*** DONE It should return error if a concurrency job with scope intersections is running. 
+
+*** DONE It should show "Canceled" state if the job is canceled. 
+And the locks should be also released in ICAAM. 
+
+** TODO Export & Import
+You can only export and import master-data-like matching methods. You can choose the to-be-exported methods by leveraging the search function. Only the listed methods are considered to export. The exported methods will be downloaded to a ZIP file. Although in the zip package, there are xml files to map to each table, user is not recommended to modify the xml files. 
+
+When you import methods, you click the import button and give the zip file. If the zip file is not the right one, it reports an error.  
+
+*** DONE It should return warning if a master-data-like method already exists.
+If a master-data-like method already exists in the target system, a warning will be shown to the user to ask for the confirmation to overwrite it.
+
+*** TODO It should return error if a configuration-like method already exists.
+ However, if the method existing is configuration-like, then error message will be shown. It is not allowed to overwrite a configuration-like method.
+
+*** TODO It should return error if a data source doesn't exist. 
+If one of the data sources of the importing methods doesn't exist in the target system, then error message will be shown. 
+
+*** TODO It should return error if a reason code doesn't exist or not belong to the method.
+If one of the reason code of the importing methods doesn't exist and it should be belong to the method, then error will be shown. 
+
+** DONE Transport Method
+Use TCode "ICATRM" to add a configuration-like method into a customization TR. 
+
+** DONE Search Helps
 3 fields are chosen for testing search helps. They are RACCT, RLDNR, and KUNNR. In the Data Sources, table ICA_DS_FS are maintained as following:
 | DS_NAME               | FIELD_NAME | SEARCH_HELP    |
 |-----------------------+------------+----------------|
@@ -137,18 +185,9 @@ A method can be displayed, changed, created/copied.
 | FI_JOURNAL_ENTRIES_01 | KUNNR      | DEBID          |
 
 Some boundaries/limitations of the selected search help must be met:
-1. The search helps are simple search helps, composiste search helps are not supported. In case a composiste search help is given, then the UI doesn't show it.
+1. The search helps are simple search helps, composite search helps are not supported. In case a composite search help is given, then the UI doesn't show it.
 2. The export field name of the search help must be the same with the field in data source.
 3. Search help exit only supports the step "SEARCH".
 4. Filter default values are not supported.
-5. Favirote items are not supported. 
+5. Favorite items are not supported. 
 
-
-+ *When* defining filters for methods and rules,
-+ *and* the chosen field are maintained search help in table ICA_DS_FS,
-+ it *should* have search help for the fields in the Fiori UI,
-+ *and* the search help should have the similar feelings like what it looks in ABAP GUI,
-+ *and* the filtering works as expected,
-+ *and* when an item is clicked, the value is returned to the field.
-
-** 

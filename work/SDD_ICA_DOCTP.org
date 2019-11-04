@@ -1,0 +1,134 @@
+#+PAGEID: 2091650226
+#+VERSION: 6
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2091650226][SDD-ICA Document Template]]
+
+** General Information
+*** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         | Ying Shi      |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+*** References
+| <25>                      |      |      | <30>                           |
+| Document Title            | Date | Link | Comments                       |
+|---------------------------+------+------+--------------------------------|
+
+** Concept
+Document Template is used in reason codes with AA Class. When a reason code is submitted and triggered, the assigned AA Class posts the adjustment documents based on the document template. Thus, a document template converts one assignment to a to-be-posting FI document. And it also allows business users to customize to their own requirement to some extend. 
+
+** Case and Example 
+As the FI document posting is quite variety. Thus it is hard and unnecessary to design a generic document template concept. Based on the real use cases, we will increasingly define different document template concepts for IC adjustments. So following design is only for the case of difference auto-adjustments. The difference here means the variance between the Seller's receivable posting and the Buyer's payable posting under a single assignment.
+
+Here gives one example: 
+|       GRREF | Company | Trad. Partner | Account | TSL | RTCUR | Segment  |
+|-------------+---------+---------------+---------+-----+-------+----------|
+| 10000000000 | C1000   | C1002         | 1200000 | 100 | USD   | Software |
+|             | C1002   | C1001         | 2100000 | -99 | USD   | Software |
+Under the assignment: 10000000000, there are 2 items. One is from the seller company C1000 for account receivable "100 USD", the other is from the buyer company C1002 for account payable "-99 USD". There are 1 USD variance between them, and the variance should be accounted by posting an adjustment document.
+
+The adjustment posting looks like below:
+| Doc Number | Company | Trad. Partner | Account | TSL | RTCUR | Segment  |
+|------------+---------+---------------+---------+-----+-------+----------|
+|  200003405 | C1000   | C1002         | 1299999 |  -1 | USD   | Software |
+|            | C1000   | C1002         | 5900000 |   1 | USD   | Software |
+The variance "-1 USD" is posted to the seller company's side. Account 1299999 is used for "IC Account Receivable Adjustments", and account 5900000 is a offset expense account.     
+
+Once the adjustment document is posted, the original assignment "10000000000" is unassigned, and a new assignment "10000000001" is created by the Matching Engine.
+|       GRREF | Company | Trad. Partner | Account | TSL | RTCUR | Segment  |
+|-------------+---------+---------------+---------+-----+-------+----------|
+| 10000000001 | C1000   | C1002         | 1200000 | 100 | USD   | Software |
+|             | C1000   | C1002         | 1299999 |  -1 | USD   | Software |
+|             | C1002   | C1001         | 2100000 | -99 | USD   | Software |
+
+** Adjustment Posting Logic
+The above logic that is used to derive the adjustment document is described below:
+1. Read lines belong to an assignment.
+2. Calculate the variance on TSL, just sum on the column TSL and group by RTCUR. If more than 2 variances are calculated due to different currency codes in RTCUR, then raise exception, "Adjustment document cannot be derived due to ...".
+3. Get the assigned document template, and determine the following:
+   + Which side: Seller's side or the Buyer's, thus the company code, ledger, current posting period are derived from the first line of one side.
+   + Document type of the adjustment document.
+   + Post date according to the post date rule.
+   + Target and offset posting keys and GL accounts.
+   + If "Posting Reversal in Next Period" is checked, then also post the reversal document in next period with a reason for reversal. 
+4. There could be other account assignment fields (like "Segment" in the above example) need to be entered in the adjustment document. Either copied from original items, or be fixed in the document template. In the first case, however, there could be 2 different values, for example, "Software" and "Hardware" in 2 different AR lines. Then the program just pick one value randomly(maybe always the value of the first line). Because there is no logic(or unnecessary complexity) to do any splitting on the variance. 
+5. Compose the document and post. Unassign the original assignment and run a re-matching if possible. Any error happened in posting will generate application logs to "FIN_ICA".
+
+Some additional requirements:
+1. At least 3 currency amounts should be filled: TSL, HSL, and KSL.
+2. The Chart-of-Accounts is derived from the original line. When maintaining target account and offset account in document template, there is no CoA required. It's runtime matching and check. 
+** Table Design
+Document Template head: ICA_DOCTP_H
+| Field          | Key | Description                                |
+|----------------+-----+--------------------------------------------|
+| RCLNT          | X   | Client                                     |
+| METHOD_ID      | X   | Matching Method ID                         |
+| TEMPLATE_ID    | X   | Posting template ID                        |
+| BLART          |     | Document Type                              |
+| BUDAT_RULE     |     | Rule to Determine the Posting Date         |
+| STGRD          |     | Reason for Reversal                        |
+| POST_SIDE      |     | Posting Side: Leading Unit or Partner Unit |
+| TARGET_PKY     |     | Posting Key for the Target Account         |
+| TARGET_ACCOUNT |     | Target GL Account for Adjustment Posting   |
+| OFFSET_PKY     |     | Posting Key for the Offset                 |
+| OFFSET_ACCOUNT |     | Offset Account for IC Adjustment           |
+
+1. BLART determines which document type is used for the adjustment posting.
+2. BUDAT_RULE determines the posting date according to the original posting period, which is read from the first line item. Currently, 2 values: FIRST_DAY and LAST_DAY.
+3. STGRD is the reason for reversal. If it is given, a reversal document will be posted simultaneously. 
+4. POST_SIDE determines post on the seller's side or the buyer's. Which actually determines the target company code. There are correctly 4 rules: 1) Leading Unit Side, 2) Partner Unit Side, 3) Lower Transaction Amount Side, 4) Higher Transaction Amount Side. 
+5. TARGET_PKY and OFFSET_PKY determine Debit and Credit side for the variance. The 2 must have opposite debit and credit settings.
+6. TARGET_ACCOUNT and OFFSET_ACCOUNT determine the GL account number used for the adjustment posting. 
+
+Additional Characteristics Determination: ICA_DOCTP_ACD.
+| Field        | Key | Description         |
+|--------------+-----+---------------------|
+| RCLNT        | X   | Client              |
+| METHOD_ID    | X   | Matching Method ID  |
+| TEMPLATE_ID  | X   | Posting template ID |
+| FIELD_NAME   | X   | Field Name          |
+| TARGET_VALUE |     | Value               |
+
+If there are additional characteristics need to be determined for the adjustment document, these fields must be entered here. If not, the system will leave those fields empty. These fields are from the Data Source CDS view(s) that belongs to the matching method. If a field is added with the target value empty, then the system tries to read the value from the first original line. 
+
+Assign a Document Template to a Company: ICA_DOCTP_COMP_A
+| Field       | Key | Description         |
+|-------------+-----+---------------------|
+| RCLNT       | X   | Client              |
+| METHOD_ID   | X   | Matching Method ID  |
+| RCOMP       | X   | Company             |
+| RASSC       | X   | Trading Partner     |
+| RCODE       | X   | Reason Code         |
+| TEMPLATE_ID |     | Posting template ID |
+
+A document template can be assigned to a combination of Company,  Trading Partner, and Reason Code. The system first check if there is an exact combination maintained, if not, then search RCOMP and RASSC, and then RCOMP, and finally check a general template is maintained with RCOMP, RASSC, and RCODE all empty. 
+
+*** Maintenance View
+2 maintenance views are needed. One is a cluster view (Tcode: ICADT) to combine ICA_DOCTP_H, ICA_DOCTP_HT, and ICA_DOCTP_ACD. The other(Tcode ICAADT) is an simple view on ICA_DOCTP_COMP_A. 
+
+** Document Splitting
+Document splitting is not possible in current cases. As it is unnecessary to split the difference according to the rules defined in accounting which is originally purposed for invoice sub-ledger to General Ledger. 
+
+An invoice posted in sub-ledger like below:
+| Posting Key | Account                | Segment | Amount |
+|-------------+------------------------+---------+--------|
+|          50 | Bank                   |         |    -95 |
+|          25 | Payables               |         |    100 |
+|          50 | Cash Discount Received |         |     -5 |
+
+Document splitting then creates the following document in the General Ledger:
+| Posting Key | Account                | Segment  | Amount |
+|-------------+------------------------+----------+--------|
+|          50 | Bank                   | Software |    -38 |
+|          50 | Bank                   | Hardware |    -57 |
+|          25 | Payables               | Software |     40 |
+|          25 | Payables               | Hardware |     60 |
+|          50 | Cash Discount Received | Software |     -2 |
+|          50 | Cash Discount Received | Hardware |     -3 |
+

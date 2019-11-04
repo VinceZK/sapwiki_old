@@ -1,0 +1,58 @@
+#+PAGEID: 2073042448
+#+VERSION: 2
+#+STARTUP: align
+#+OPTIONS: toc:1
+#+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2073042448][SDD-UCCS Data Release]]
+* General Information
+** Stakeholders and Roles
+| Role                  | Name          |
+|-----------------------+---------------|
+| Author(s)             | Vincent Zhang |
+| Architect             | Vincent Zhang |
+| Product Owner         |               |
+| Information Developer |               |
+| Quality Responsible   |               |
+| Developers            |               |
+
+** References
+|                |      |      | <30>                           |
+| Document Title | Date | Link | Comments                       |
+|----------------+------+------+--------------------------------|
+
+
+* Context
+Currently, the data release task in Consolidation Data Monitor can only be executed in dialog mode. It needs to also support background run. Thus, a new ABAP with standard selection screen should be given to encapsulate the function module "FC_DATA_SUBMIT_REQUEST". 
+  
+** Assumption
+1. The function module "FC_DATA_SUBMIT_REQUEST" should include all business functions for Data Release.
+2. Non-business functions like parallel run and concurrency control should also be written in "FC_DATA_SUBMIT_REQUEST" if possible.
+
+* Detail Design
+The ABAP report should have following single value parameters:
+| Parameter Name | Mandatory?     | Description           | FM Input Parameter |
+|----------------+----------------+-----------------------+--------------------|
+| P_DIMEN        | Yes            | Dimension             | I_DIMEN            |
+| P_RLDNR        | Yes            | Ledger                | I_RLDNR            |
+| P_ITCLG        | Yes            | Consolidation CoA     | I_ITCLG            |
+| P_RVERS        | Yes            | Consolidation Version | I_RVERS            |
+| P_RYEAR        | Yes            | Fiscal Year           | I_RYEAR            |
+| P_PERID        | Yes            | Fiscal Period         | I_PERID            |
+| P_CONGR        | No             | Consolidation Group   | I_CONGR            |
+| P_BUNIT        | No             | Consolidation Unit    | I_BUNIT            |
+| P_CUIND        | No             | Run for Unit or Group | IF_CUIND           |
+| P_TEST         | No             | Test Run              | IF_LORIG           |
+| P_ASYNC        | No(No-display) | Asynchronous Run?     | I_OK_CODE = 'IRUN' |
+
+1. The default value of parameters: P_DIMEN, P_RLDNR, P_ITCLG, and P_RVERS are reading from the user's global parameters.
+2. The default value of P_RYEAR and P_PERID are current fiscal year and period based on the fiscal year variant setting. Refer Class "CL_FINCS_FISCAL_YEAR_VARIANT" to get the fiscal year variant.
+3. Whether P_CONGR and P_UNIT are single parameters or select-options should be further discussed with Joachim.  
+4. P_ASYNC is a NO-DISPLAY parameter, which is used to indicate whether the report is invoked from the Data Monitor for an asynchronous run (P_ASYNC = 'X'), or scheduling by SAPJ Fiori App(P_ASYNC = ''). In the function module, the parameter I_OK_CODE is used to map with P_ASYNC. If P_ASYNC equals 'X', then I_OK_CODE should be set to 'IRUN', otherwise 'SRUN'.
+
+
+* Test
+Following check-points should be taken care:
+1. How the parallel execution behave in background mode?
+2. What happens if 2 tasks which have scope overlaps are invoked by 2 difference users?
+3. What if the job is terminated due to expected business errors? 
+4. What if the job fails due to technique errors?
+5. How the user is notified with both expected and unexpected errors?

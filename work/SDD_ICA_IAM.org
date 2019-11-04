@@ -1,5 +1,5 @@
 #+PAGEID: 2030859111
-#+VERSION: 2
+#+VERSION: 32
 #+STARTUP: align
 #+OPTIONS: toc:1
 #+TITLE: [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=2030859111][SDD-ICA IAM]]
@@ -15,6 +15,7 @@
 | Self Service Configuration UI | <2017-03-29 Wed> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Self+Service+Configuration+UIs][sapwiki]]     | This guideline is focussing on WebGUI SSC-UIs. Most of this guideline is also relevant for SSC-UIs in FIORI (apart from restrictions related to the new API).  Links in bold are important and should be read.  Each section includes checks that need to be done and identifies who should do these checks. |
 | Cloud Access Manager      | <2017-04-25 Tue> | [[https://rpc-cust002.dev.sapbydesign.com/sap/bc/webdynpro/a1sspc/cam_sup_central#][InternalAPP]] | Apply CC2/CCF User             |
 | OData Service             | <2018-11-05 Mon> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/OData+Services][sapwiki]]     | OData Service Guideline        |
+| Associate BP with Emmployee | <2019-02-14 Thu> | [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Associating+Business+Partner+and+Employee%20][sapwiki]]     | How to create an employee with SAP uiser ID and Business Partner ID for communication recepients |
 
 ** Fiori UI
 
@@ -22,149 +23,261 @@ Please refer [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Fiori+Developmen
 
 The following naming conventions are refer the guideline: [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Naming+Conventions+for+Development+Objects][S4HANA Naming Conventions for Development Objects]]. And there is the page to tell you how to request [[https://wiki.wdf.sap.corp/wiki/display/ERPFINDEV/Leaf+ABAP+Packages+for+FIN+AT1+Fiori+Apps][Leaf ABAP Packages]].
 
-*** Matching Method 
-https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecrule 
-| Artifacts                         | Name                                 |
-|-----------------------------------+--------------------------------------|
-| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_ICA_METHOD            |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_METHOD |
-| App name and ID in Project Portal | fin.ica.method                       |
-| POM Artifact ID                   | fin.ica.method                       |
-| Fiori ID                          |                                      |
-| BSP Application Name              | FIN_ICA_METHOD                       |
-| Service Builder Project           | ICA_METHOD                           |
-| Semantic Object                   | FinancialMatchingMethod              |
-
-*** Reconciliation Case
-https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecrule 
-| Artifacts                         | Name                                    |
-|-----------------------------------+-----------------------------------------|
-| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_ICA_RECONCASE            |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_RECONCASE |
-| App name and ID in Project Portal | fin.ica.reconcase                       |
-| POM Artifact ID                   | fin.ica.reconcase                       |
-| Fiori ID                          |                                         |
-| BSP Application Name              | FIN_ICA_RECONCASE                       |
-| Service Builder Project           | ICA_RECONCASE                           |
-| Semantic Object                   | ReconciliationCase                      |
-
-*** Manual Assignment
-https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecrule 
-| Artifacts                         | Name                                           |
-|-----------------------------------+------------------------------------------------|
-| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_ICA_MANUALASSIGNMENT            |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_MANUALASSIGNMENT |
-| App name and ID in Project Portal | fin.ica.manualassignment                       |
-| POM Artifact ID                   | fin.ica.manualassignment                       |
-| Fiori ID                          |                                                |
-| BSP Application Name              | FIN_ICA_MANUALASSIGNMENT                       |
-| Service Builder Project           | ICA_MANUALASSIGNMENT                           |
-| Semantic Object                   | MathcingManualAssignment                       |
-
-*** Reconciliation Status Overview
-https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecrule 
-| Artifacts                         | Name                                      |
-|-----------------------------------+-------------------------------------------|
-| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_ICA_RECONSTATUS            |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_RECONSTATUS |
-| App name and ID in Project Portal | fin.ica.reconstatus                       |
-| POM Artifact ID                   | fin.ica.reconstatus                       |
-| Fiori ID                          |                                           |
-| BSP Application Name              | FIN_ICA_RECONSTATUS                       |
-| Service Builder Project           | ICA_RECONSTATUS                           |
-| Semantic Object                   | ReconciliationStatus                      |
-
-*** Reconciliation Balance
-https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecrule 
+*** Define Matching Methods                                          :Marvin:
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.ica.method
 | Artifacts                         | Name                                       |
 |-----------------------------------+--------------------------------------------|
-| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_ICA_RECONBALANCE            |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_RECONBALANCE |
-| App name and ID in Project Portal | fin.ica.reconbalance                       |
-| POM Artifact ID                   | fin.ica.reconbalance                       |
-| Fiori ID                          |                                            |
-| BSP Application Name              | FIN_ICA_RECONBALANCE                       |
-| Service Builder Project           | ICA_RECONBALANCE                           |
-| Semantic Object                   | ReconciliationBalance                      |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_ICA_METHOD             |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_MATCH_METHOD |
+| App name and ID in Project Portal | fin.cons.ica.method                        |
+| POM Artifact ID                   | fin.cons.ica.method                        |
+| Fiori ID                          | F3862                                      |
+| BSP Application Name              | FIN_CS_ICAMTD                              |
+| Service Builder Project           | ICA_MATCH_METHOD                           |
+| Semantic Object                   | DataSetMatchingMethod                      |
+| Actions                           | maintain, display                          |
 
-*** Matching Journal Entries
-https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecrule 
-| Artifacts                         | Name                                         |
-|-----------------------------------+----------------------------------------------|
-| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_ICA_JOURNALENTRIES            |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_JOURNALENTRIES |
-| App name and ID in Project Portal | fin.ica.journalentries                       |
-| POM Artifact ID                   | fin.ica.journalentries                       |
-| Fiori ID                          |                                              |
-| BSP Application Name              | FIN_ICA_JOURNALENTRIES                       |
-| Service Builder Project           | ICA_JOURNALENTRIES                           |
-| Semantic Object                   | MatchingJournalEntries                       |
+*** Define Reconciliation Cases                                      :Marvin:
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.ica.reconcase
+| Artifacts                         | Name                                     |
+|-----------------------------------+------------------------------------------|
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_ICA_RECON_CASE       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_RECON_CASE |
+| App name and ID in Project Portal | fin.cons.ica.reconcase                   |
+| POM Artifact ID                   | fin.cons.ica.reconcase                   |
+| Fiori ID                          | F3863                                    |
+| BSP Application Name              | FIN_CS_ICARC                             |
+| Service Builder Project           | ICA_RECON_CASE                           |
+| Semantic Object                   | InterUnitReconciliationCase              |
+| Actions                           | maintain, display                        |
 
-*** Matching Documents
-https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecrule 
+*** Manage Assignments              :William:
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.ica.assignment
+| Artifacts                         | Name                                     |
+|-----------------------------------+------------------------------------------|
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_ICA_ASSIGNMENT       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_ASSIGNMENT |
+| App name and ID in Project Portal | fin.cons.ica.assignment                  |
+| POM Artifact ID                   | fin.cons.ica.assignment                  |
+| Fiori ID                          | F3870                                    |
+| BSP Application Name              | FIN_CS_ICAASM                            |
+| Service Builder Project           | ICA_ASSIGNMENT                           |
+| Semantic Object                   | DataSetMatchingAssignment                |
+| Actions                           | manage                                   |
+
+*** Check Reconciliation Result     :Marvin:
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.ica.reconreport
 | Artifacts                         | Name                                       |
 |-----------------------------------+--------------------------------------------|
-| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_ICA_MATCHINGDOCS            |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_MATCHINGDOCS |
-| App name and ID in Project Portal | fin.ica.matchingdocs                       |
-| POM Artifact ID                   | fin.ica.matchingdocs                       |
-| Fiori ID                          |                                            |
-| BSP Application Name              | FIN_ICA_MATCHINGDOCS                       |
-| Service Builder Project           | ICA_MATCHINGDOCS                           |
-| Semantic Object                   | MatchingDocuments                          |
-
-*** Upload Matching Data
-https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.vecrule 
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_ICA_RECON_REPORT       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_RECON_REPORT |
+| App name and ID in Project Portal | fin.cons.ica.reconreport                   |
+| POM Artifact ID                   | fin.cons.ica.reconreport                   |
+| Fiori ID                          | F3865                                      |
+| BSP Application Name              | FIN_CS_ICARR                               |
+| Service Builder Project           | ICA_RECON_REPORT                           |
+| Semantic Object                   | InterUnitReconciliationCase                |
+| Actions                           | checkResult, showBalance                   |
+    
+*** TODO Reconciliation Overview Page
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.ica.reconoverview
 | Artifacts                         | Name                                         |
 |-----------------------------------+----------------------------------------------|
-| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_ICA_JOURNALENTRIES            |
-| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_JOURNALENTRIES |
-| App name and ID in Project Portal | fin.ica.journalentries                       |
-| POM Artifact ID                   | fin.ica.journalentries                       |
-| Fiori ID                          |                                              |
-| BSP Application Name              | FIN_ICA_JOURNALENTRIES                       |
-| Service Builder Project           | ICA_JOURNALENTRIES                           |
-| Semantic Object                   | MatchingJournalEntries                       |
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_ICA_RECON_OVERVIEW       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_RECON_OVERVIEW |
+| App name and ID in Project Portal | fin.cons.ica.reconoverview                   |
+| POM Artifact ID                   | fin.cons.ica.reconoverview                   |
+| Fiori ID                          | F3864                                        |
+| BSP Application Name              | FIN_CS_ICARO                                 |
+| Service Builder Project           | ICA_RECON_OVERVIEW                           |
+| Semantic Object                   | InterUnitReconciliationCase                  |
+| Actions                           | showOverview                                 |
+
+*** Manage Matching Documents       :Heli:
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.ica.matchingdoc
+| Artifacts                         | Name                                       |
+|-----------------------------------+--------------------------------------------|
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_ICA_MATCHING_DOC       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_MATCHING_DOC |
+| App name and ID in Project Portal | fin.cons.ica.matchingdoc                   |
+| POM Artifact ID                   | fin.cons.ica.matchingdoc                   |
+| Fiori ID                          | F3868                                      |
+| BSP Application Name              | FIN_CS_ICAMD                               |
+| Service Builder Project           | ICA_MATCHING_DOC                           |
+| Semantic Object                   | DataSetMatchingDocument                    |
+| Actions                           | manage                                     |
+
+*** Display Matching Items          :Heli:
+https://projectportal.int.sap.hana.ondemand.com/projects/fin.cons.ica.matchingitem
+| Artifacts                         | Name                                        |
+|-----------------------------------+---------------------------------------------|
+| Package for Fiori App(UYT)        | UIFIN_CONS/FIN_CONS_ICA_MATCHING_ITEM       |
+| Package for OData(ER9)            | APPL_FIN_ODATA_CONS/ODATA_ICA_MATCHING_ITEM |
+| App name and ID in Project Portal | fin.cons.ica.matchingitem                   |
+| POM Artifact ID                   | fin.cons.ica.matchingitem                   |
+| Fiori ID                          | F3869                                       |
+| BSP Application Name              | FIN_CS_ICAMI                                |
+| Service Builder Project           | ICA_MATCHING_ITEM                           |
+| Semantic Object                   | DataSetMatchingDocumentItem                 |
+| Actions                           | display                                     |
 
 ** IAM
 Please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/UI+-+Related+Naming+Conventions%252C+Packages+and+Software+Components][wikipage]] for the naming conventions.
 
-P2 Area: FIN; P3 Area: ICA
+|                             |                              | <35>                                |
+| Artifacts Type              | Name                         | Description                         |
+|-----------------------------+------------------------------+-------------------------------------|
+| Technical Catalog(Frontend) | SAP_TC_FIN_ICA_COMMON        | Intercompany Matching and Reconciliation |
+| Technical Catalog(Backend)  | SAP_TC_FIN_ICA_BE_APPS       | Intercompany Backend Transactions   |
+| Business Catalog(OP)        | SAP_FIN_BC_ICA_ME_CONFIG     | Intercompany Matching Settings      |
+| Business Catalog(OP)        | SAP_FIN_BC_ICA_ME_RUN        | Intercompany Matching Operation     |
+| Business Catalog(OP)        | SAP_FIN_BC_ICA_RECON_CFG     | Intercompany Reconciliation Settings |
+| Business Catalog(OP)        | SAP_FIN_BC_ICA_RECON_RUN     | Intercompany Reconciliation Operation |
+| Business Catalog(Cloud)     | SAP_FIN_BC_ICA_ME_CONFIG_PC  | Intercompany Matching Settings      |
+| Business Catalog(Cloud)     | SAP_FIN_BC_ICA_ME_RUN_PC     | Intercompany Matching Operation     |
+| Business Catalog(Cloud)     | SAP_FIN_BC_ICA_RECON_CFG_PC  | Intercompany Reconciliation Settings |
+| Business Catalog(Cloud)     | SAP_FIN_BC_ICA_RECON_RUN_PC  | Intercompany Reconciliation Operation |
+| Business Catalog Role       | SAP_BCR_FIN_ICA_ME_CONFIG_PC | Intercompany Matching Settings      |
+| Business Catalog Role       | SAP_BCR_FIN_ICA_ME_RUN_PC    | Intercompany Matching Operation     |
+| Business Catalog Role       | SAP_BCR_FIN_ICA_RECON_CFG_PC | Intercompany Reconciliation Settings |
+| Business Catalog Role       | SAP_BCR_FIN_ICA_RECON_RUN_PC | Intercompany Reconciliation Operation |
+| Business Group(OP)          | SAP_FIN_BCG_ICA_ME_CONFIG    | Intercompany Matching Settings      |
+| Business Group(OP)          | SAP_FIN_BCG_ICA_ME_RUN       | Intercompany Matching Operation     |
+| Business Group(OP)          | SAP_FIN_BCG_ICA_RECON_CFG    | Intercompany Reconciliation Settings |
+| Business Group(OP)          | SAP_FIN_BCG_ICA_RECON_RUN    | Intercompany Reconciliation Operation |
+| Business Group(Cloud)       | SAP_FIN_BCG_ICA_ME_CONFIG_PC | Intercompany Matching Settings      |
+| Business Group(Cloud)       | SAP_FIN_BCG_ICA_ME_RUN_PC    | Intercompany Matching Operation     |
+| Business Group(Cloud)       | SAP_FIN_BCG_ICA_RECON_CFG_PC | Intercompany Reconciliation Settings |
+| Business Group(Cloud)       | SAP_FIN_BCG_ICA_RECON_RUN_PC | Intercompany Reconciliation Operation |
+| Businees Role               | SAP_BR_RECON_ACCOUNTANT      | Intercompany Reconciliation Accountant |
 
-|                              |                              | <30>                           |
-| Artifacts Type               | Name                         | Description                    |
-|------------------------------+------------------------------+--------------------------------|
-| Technical Catalog (Frontend) | SAP_TC_FIN_ICA_COMMON        | SAP: Financial - InterCompany Accounting |
-| Technical Catalog (Backend)  | SAP_TC_FIN_ICA_BE_APPS       | Backend application: Tcodes.   |
-| Business Catalog(OP)         | SAP_FIN_BC_ICA_ME_CONFIG     | Maintain Data Sources, and Reason Codes. And do the transportation. |
-| Business Catalog(OP)         | SAP_FIN_BC_ICA_ME_RUN        | Run Matching                   |
-| Business Catalog(OP)         | SAP_FIN_BC_ICA_RECON_CONFIG  | Reconciliation Configuration: Recon Case, Unit Hierarchy, Matching Method, Data Source, Reason Code, and so on. |
-| Business Catalog(OP)         | SAP_FIN_BC_ICA_RECON_RUN     | Run Reconciliation             |
-| Business Catalog(Cloud)      | SAP_FIN_BC_ICA_ME_CONFIG     | Maintain Data Sources, and Reason Codes. And do the transportation. |
-| Business Catalog(Cloud)      | SAP_FIN_BC_ICA_ME_RUN        | Run Matching                   |
-| Business Catalog(Cloud)      | SAP_FIN_BC_ICA_RECON_CONFIG  | Reconciliation Configuration: Recon Case, Unit Hierarchy, Matching Method, Data Source, Reason Code, and so on. |
-| Business Catalog(Cloud)      | SAP_FIN_BC_ICA_RECON_RUN     | Run Reconciliation             |
-| Business Catalog Role        | SAP_FIN_BCR_ICA_ME_CONFIG    | Maintain Data Sources, and Reason Codes. And do the transportation. |
-| Business Catalog Role        | SAP_FIN_BCR_ICA_ME_RUN       | Run Matching                   |
-| Business Catalog Role        | SAP_FIN_BCR_ICA_RECON_CONFIG | Reconciliation Configuration: Recon Case, Unit Hierarchy, Matching Method, Data Source, Reason Code, and so on. |
-| Business Catalog Role        | SAP_FIN_BCR_ICA_RECON_RUN    | Run Reconciliation             |
-| Business Group               | SAP_FIN_BCG_ICA_ME_CONFIG    | Maintain Data Sources, and Reason Codes. And do the transportation. |
-| Business Group               | SAP_FIN_BCG_ICA_ME_RUN       | Run Matching                   |
-| Business Group               | SAP_FIN_BCG_ICA_RECON_CONFIG | Reconciliation Configuration: Recon Case, Unit Hierarchy, Matching Method, Data Source, Reason Code, and so on. |
-| Business Group               | SAP_FIN_BCG_ICA_RECON_RUN    | Run Reconciliation             |
-| Business Role                | SAP_BR_MATCHING_SPECIALIST   | Matching Spiecialist who has all the authorization to configure and run matching engine. |
-| Businees Role                | SAP_BR_RECON_SPECIALIST      | Reconciliation Specilist who has all the authorization to do recon configurations and running recon cases. |
+*** SAP_TC_FIN_ICA_COMMON  
+This technical category includes following Fiori Apps in Matching&Reconciliation.
 
-*** Technical Catalogs  
+| Fiori App                 | Description                 |
+|---------------------------+-----------------------------|
+| fin.cons.ica.method       | Define Matching Method      |
+| fin.cons.ica.reconcase    | Define Reconciliation Case  |
+| fin.cons.ica.assignment   | Manage Assignments          |
+| fin.cons.ica.reconreport  | Check Reconciliation Result |
+| fin.cons.ica.matchingdoc  | Manage Matching Documents   |
+| fin.cons.ica.matchingitem | Display Matching Items      |
+
+Besides, we also reuse following components from other teams:
+| Tile                              | Technical Category   | Reference                     | Semantic Object           | Action                 |
+|-----------------------------------+----------------------+-------------------------------+---------------------------+------------------------|
+| My Inbox: IC                      | SAP_BASIS_TCR_T      | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Generic+UIs+-+My+Inbox][Generic UIs - My Inbox]]        | DataSetMatchingAssignment | displayInbox           |
+| Manage Workflows: IC              | SAP_BASIS_TCR_T      | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Generic+UIs+-+Workflow+Editor][Generic UIs - Workflow Editor]] | DataSetMatchingAssignment | manageWorkflow         |
+| Manage Teams and Responsibilities | SAP_CA_BC_RSM        |                               | TeamAsResponsible         | maintain               |
+| Application Job: Matching Run     | SAP_BASIS_TCR_T      | Ref ZTEST_TC_KEVIN            | DataSetMatchingMethod     | scheduleJob            |
+| Application Log: Auto Adjustment  | SAP_BASIS_TCR_T      | [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Generic+UIs+-+Application+Log][Generic UIs - Application Log]] | DataSetMatchingAssignment | showAALog              |
+| MasterDataHierarchy: Company      | SAP_TC_FIN_CO_COMMON |                               | MasterDataHierarchy       | manageFinanceHierarchy |
+
+*** SAP_TC_FIN_ICA_BE_APPS
+This technical category includes related backend Tcodes:
+| Tcodes | Semantic Object              | Action            | Description                     |
+|--------+------------------------------+-------------------+---------------------------------|
+| ICADS  | MatchingDataSource           | maintain          | Maintain Data Sources           |
+| ICARC  | MatchingAssignmentReasonCode | maintain          | Maintain Reason Codes           |
+| ICAFC  | DataSetMatchingMethod        | defineFilter      | Customizing Assignment Filters  |
+| ICARM  | DataSetMatchingMethod        | execute           | Run Matching                    |
+| ICAAM  | DataSetMatchingMethod        | manageConcurrency | Asynchronouse Managment         |
+| ICAFU  | DataSetMatchingDocumentItem  | upload            | Upload Matching Journal Entries |
+| ICATRM | DataSetMatchingMethod        | transport         | Transport Matching Method       |
+| ICATRC | InterUnitReconciliationCase  | transport         | Transport Reconciliation Case   |
+| ICADT  | GLDocumentTemplate           | maintain          | Maintain GL Document Template   |
+| ICAADT | GLDocumentTemplate           | assign            | Assign GL Document Template     |
+
+*** SAP_FIN_BC_ICA_ME_CONFIG(_PC)
+The business category includes following tiles:
+| Tiles                             | Source Technical Category | Remark  |
+|-----------------------------------+---------------------------+---------|
+| Define Matching Method            | SAP_TC_FIN_ICA_COMMON     |         |
+| Maintain Data Sources             | SAP_TC_FIN_ICA_BE_APPS    | OP-Only |
+| Maintain Reason Codes             | SAP_TC_FIN_ICA_BE_APPS    | OP-Only |
+| Transport Matching Method         | SAP_TC_FIN_ICA_BE_APPS    | OP-Only |
+| Customizing Assignment Filters    | SAP_TC_FIN_ICA_BE_APPS    | OP-Only |
+| Manage Workflows: IC              | SAP_TC_FIN_ICA_COMMON     |         |
+| Manage Teams and Responsibilities | SAP_TC_FIN_ICA_COMMON     |         |
+
+*** SAP_FIN_BC_ICA_ME_RUN(_PC)
+The business category includes following tiles:
+| Tiles                            | Source Technical Category | Remark               |
+|----------------------------------+---------------------------+----------------------|
+| Define Matching Method           | SAP_TC_FIN_ICA_COMMON     |                      |
+| Manage Assignments               | SAP_TC_FIN_ICA_COMMON     | RMode=MatchingMethod |
+| Manage Matching Documents        | SAP_TC_FIN_ICA_COMMON     |                      |
+| Display Matching Items           | SAP_TC_FIN_ICA_COMMON     | RMode=MatchingMethod |
+| Run Matching                     | SAP_TC_FIN_ICA_BE_APPS    | OP-Only              |
+| Upload Matching Journal Entries  | SAP_TC_FIN_ICA_BE_APPS    |                      |
+| Asynchronouse Managment          | SAP_TC_FIN_ICA_BE_APPS    |                      |
+| My Inbox: IC                     | SAP_TC_FIN_ICA_COMMON     |                      |
+| Application Job: Matching Run    | SAP_TC_FIN_ICA_COMMON     |                      |
+| Application Log: Auto Adjustment | SAP_TC_FIN_ICA_COMMON     |                      |
+
+*** SAP_FIN_BC_ICA_RECON_CFG(_PC)
+The business category includes following tiles:
+| Tiles                         | Source Technical Category | Remark  |
+|-------------------------------+---------------------------+---------|
+| Define Reconciliation Case    | SAP_TC_FIN_ICA_COMMON     |         |
+| MasterDataHierarchy: Company  | SAP_TC_FIN_ICA_COMMON     |         |
+| Transport Reconciliation Case | SAP_TC_FIN_ICA_BE_APPS    | OP-Only |
+
+*** SAP_FIN_BC_ICA_RECON_RUN(_PC)
+The business category includes following tiles:
+| Tiles                  | Source Technical Category | Remark                                                 |
+|------------------------+---------------------------+--------------------------------------------------------|
+| Reconciliation Status  | SAP_TC_FIN_ICA_COMMON     | InterUnitReconciliationCase-checkResult?RMode=overview |
+| Reconciliation Balance | SAP_TC_FIN_ICA_COMMON     | InterUnitReconciliationCase-showBalance?RMode=balance  |
+| Manage Assignments     | SAP_TC_FIN_ICA_COMMON     | RMode=ReconCase                                        |
+| Display Matching Items | SAP_TC_FIN_ICA_COMMON     | RMode=ReconCase                                        |
+
+*** SAP_FIN_BCG_ICA_ME_CONFIG(_PC)
+| Tiles                             | Business Category        | Remark  |
+|-----------------------------------+--------------------------+---------|
+| Maintain Data Sources             | SAP_FIN_BC_ICA_ME_CONFIG | OP-Only |
+| Define Matching Method            | SAP_FIN_BC_ICA_ME_CONFIG |         |
+| Maintain Reason Codes             | SAP_FIN_BC_ICA_ME_CONFIG | OP-Only |
+| Manage Workflows: IC              | SAP_TC_FIN_ICA_COMMON    |         |
+| Manage Teams and Responsibilities | SAP_TC_FIN_ICA_COMMON    |         |
+
+*** SAP_FIN_BCG_ICA_ME_RUN(_PC)
+| Tiles                           | Business Category     | Remark               |
+|---------------------------------+-----------------------+----------------------|
+| Define Matching Method          | SAP_FIN_BC_ICA_ME_RUN |                      |
+| Manage Assignments              | SAP_FIN_BC_ICA_ME_RUN | RMode=MatchingMethod |
+| Manage Matching Documents       | SAP_FIN_BC_ICA_ME_RUN |                      |
+| Display Matching Items          | SAP_FIN_BC_ICA_ME_RUN | RMode=MatchingMethod |
+| Run Matching                    | SAP_FIN_BC_ICA_ME_RUN | OP-Only              |
+| Upload Matching Journal Entries | SAP_FIN_BC_ICA_ME_RUN | OP-Only              |
+| My Inbox: IC                    | SAP_FIN_BC_ICA_ME_RUN |                      |
+
+*** SAP_FIN_BCG_ICA_RECON_CFG(_PC)
+| Tiles                        | Business Category        | Remark |
+|------------------------------+--------------------------+--------|
+| Define Reconciliation Case   | SAP_FIN_BC_ICA_RECON_CFG |        |
+| MasterDataHierarchy: Company | SAP_FIN_BC_ICA_RECON_CFG |        |
+
+*** SAP_FIN_BCG_ICA_RECON_RUN(_PC)
+The business category includes following tiles:
+| Tiles                  | Source Technical Category | Remark |
+|------------------------+---------------------------+--------|
+| Reconciliation Status  | SAP_FIN_BC_ICA_RECON_RUN  |        |
+| Reconciliation Balance | SAP_FIN_BC_ICA_RECON_RUN  |        |
+| Manage Assignments     | SAP_FIN_BC_ICA_RECON_RUN  |        |
+| Display Matching Items | SAP_FIN_BC_ICA_RECON_RUN  |        |
+
+*** Artifacts Specification
+**** Technical Catalogs  
 Technical catalog act as containers that group all delivered applications (Fiori, UI5, WebDynpro, WebGUI, ...) along application area and software components. They act as the repository of delivered content from which the tiles are picked to create catalogs which are then used in the Fiori Launchpad. Every application that is in the functional scope of the product shall be represented as a tile in a technical catalog. The following rules apply:
 
 + No separation between "transactional", "factsheet" and "analytical" catalogs is used.
 + A separation between frontend (Fiori, UI) catalogs shipped with the frontend software components and and backend catalogs (WebDynpro, WebGUI, ...) shipped with the backend software components is used.
 + If the semantically same app (i.e. the same intent), has different navigation targets in different delivers, only one tile, but different navigation targets have to be created in the technical catalog. When building the business catalogs, the right navigation target has to be chosen as reference.
 
-Use [[https://uyt902-er9500.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CONF&sap-client=902&sap-language=EN][Fiori LaunchPad Designer]](UYT902) to define frontend catalogs; Use [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500&WDCONFIGURATIONID=SUI_TM_MM_APP#][Backend App Descriptors]](ER9500) to define your backend catalogs. For more detail, please refer this [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Maintenance+of+Frontend+and+Backend+Catalogs][wiki-page]].
+Use [[https://uyt902-er9500.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CONF&sap-client=902&sap-language=EN][Fiori LaunchPad Designer]](UYT902) to define frontend catalogs; Use [[https://ldcier9.wdf.sap.corp:44300/sap/bc/webdynpro/sap/sui_tm_mm_app?sap-language=EN&sap-client=500&WDCONFIGURATIONID=SUI_TM_MM_APP#][Backend App Descriptors]](ER9500) to define your backend catalogs. For more detail, please refer this [[https://wiki.wdf.sap.corp/wiki/display/ApplServ/Technical+Catalogs][wiki-page]].
 
-*** Business Catalogs 
+**** Business Catalogs 
 Business catalogs are the central object for UI and authorization assignment to business users and for structuring and organizing the authorization maintenance. If a user is assigned to a business catalog, he/she gets access to all apps included in the catalog and therefore requires the corresponding authorizations.
 
 + *On-premise*, business catalogs are defined by customers by composing the relevant apps based on their specific requirements. Authorizations are determined via the Fiori-PFCG integration when entering the catalog into the PFCG role menu. SAP delivers business catalogs as templates which customers may copy to create their own content.
@@ -174,7 +287,7 @@ The visual part of a business catalog is represented as a Fiori catalog. Additio
 
 Use [[https://uyt902-er9500.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CONF&sap-client=902&sap-language=EN][Fiori LaunchPad Designer]](UYT902) to define your business catalogs for OP, and [[https://er6-100-adm.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CUST&sap-client=200&sap-language=EN][Fiori LaunchPad Designer]](ER6200) for the Cloud. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Considerations]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
 
-*** Business Catalog Roles
+**** Business Catalog Roles
 For S/4HANA cloud edition, SAP deliveres exactly one business catalog role for each business catalog. Business catalog roles are the basis for the authorizations of all business users. Business catalog roles have to be provided as PFCG single roles. In addition, business catalog roles have to be registered for the usage by customers. This registration is the basis for automatic generation of profiles in the target clients. A business catalog role must contain:
 + The reference to a single business catalog. This will result in the following references being added automtically, based on the target mappings in the business catalog.
 + The reference to a single business group.
@@ -182,9 +295,19 @@ For S/4HANA cloud edition, SAP deliveres exactly one business catalog role for e
 + Additional authorizations required beyond the authorization default values maintained for OData backend services.
 + *No profile name or generated profile*. A yellow status icon on the tab "Authorizations" indicates the correct status in the customizing client of the development system.
 
-Business Category Roles are created in PFCG in *ER6100*. For details refer https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Business+Catalog+Roles
+Business Category Roles are created in PFCG in *ER6100*. For details refer https://wiki.wdf.sap.corp/wiki/display/ApplServ/Business+Catalog+Roles
 
-*** Business Groups 
+**** Restriction
+In S/4HANA cloud editions, additional features for simplifying the definition of restricted authorization roles are available. These features are used when the key user defines Business Roles in the IAM UI. There, the key user can assign Business Catalogs to the business roles. By default the authorizations contained in the associated Business Catalog Roles delivered by SAP are assigned. They include all possibly relevant activities and typical wild card "*" restrictions for restrictable fields. With the business roles UI, the key user can optionally:
+
++ Restrict the activities: If the business catalog is assigned as "Read-Only", only those activities classified as read-only will be included in the resulting authorization roles.
++ Restrict the instances: If the business catalog is assigned with restrictions, only those restrictions will be included in the resulting authorization roles instead of the default wild card "*" restriction.
+
+This means it is required to classify all relevant activities and to define which fields can be restricted via the business roles UI.
+
+Refer this page https://wiki.wdf.sap.corp/wiki/display/ApplServ/Restrictions 
+
+**** Business Groups 
 Business groups are defined in the Fiori Launchpad Designer. The represent edition (on-premise/cloud) specific grouping of visible apps from one or more business catalogs from the same business area in the Fiori Launchpad. The represent the end user point of view and should have unique titles within the related business roles.
 
 The following rules apply for the title of business groups:
@@ -195,7 +318,7 @@ The following rules apply for the title of business groups:
 
 Use [[https://uyt902-er9500.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CONF&sap-client=902&sap-language=EN][Fiori LaunchPad Designer]](UYT902) to define your business groups for OP, and [[https://er6-100-adm.wdf.sap.corp/sap/bc/ui5_ui5/sap/arsrvc_upb_admn/main.html?scope=CUST&sap-client=200&sap-language=EN][Fiori LaunchPad Designer]](ER6200) for the Cloud. Please also read the [[https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-DesignConsiderations][Design Considerations]] and [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1738188519][how-to-guide]] when you define your business catalogs. 
 
-*** Business Roles
+**** Business Roles
 Business roles denote a role of a persona. For example "Administrator" or "Supply Chain Planner". They are an aggregation of the applications contained in one or more business catalogs under a common name. The title of business roles must comply with the content of the Fiori Role Portfolio. That list is currently still subject to changes and cleanup activities. Therefore you may see error reported for things that have already been aligned with the IAM team and are not yet reflected on the Wiki or programmatic checks.
 
 In the S/4HANA on-premise edition, business roles are technically represented by PFCG single roles which have the corresponding business catalogs assigned. The naming convention is "SAP_BR_<PERSONA>_<VARIANT>[_<COUNTRY>]". Because business roles are business driven their IDs must not include any area prefixes but shall reflect the description. For example "SAP_PLM_BOM_ENGINEER" is wrong while "SAP_BR_BOM_ENGINEER" is correct. _They exist in the frontend server and do not contain any authorizations._ They serve demo and trial use cases. Customers would typically create their own business roles are PFCG single or composite roles in the transaction PFCG. Assigning the required backend authorizations is a separate step performed by the customer in the transaction PFCG of the corresponding backend clients.
@@ -204,18 +327,18 @@ In the S/4HANA cloud editions, business roles are technically a new cloud specif
 
 Please refer this [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Fiori+Role+Portfolio][sapwiki]] on how to apply a business role in [[https://ifp.wdf.sap.corp/sap/bc/webdynpro/sps/wda_obt_ro_variant?object_type_id=OBT_IFP_6CAE8B26E4CB1ED5808C27D93BB8DD84?variant_id=6CAE8B26E4CB1ED6B1BA05D3A39EE0C0?user_settings=X#][OAM]](Object Attribute Manager).
 
-Refer this page https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Business+Roles on how to create business rules in *UYT902*.
+Refer this page https://wiki.wdf.sap.corp/wiki/display/ApplServ/Business+Roles on how to create business roles in *UYT902*.
 
-*** Business Rule Template
+**** Business Rule Template
 Business Rule Template is only for Cloud. Using Tcode SSIA8 in ER6001. Detail refer: https://wiki.wdf.sap.corp/wiki/display/SimplSuite/IAM+Development+Guideline#IAMDevelopmentGuideline-BusinessRoles
 
-*** Semantic Objects 
+**** Semantic Objects 
 Semantic objects are used for role-based navigation within the Fiori Launchpad. A semantic object is defined using the Semantic Object catalog following the naming rules of the virtual data model (VDM). In addition to the definition, a *registration* needs to be done centrally in U00. Use [[https://gtnc-w0211397f.dispatcher.int.sap.hana.ondemand.com/webapp/index.html][Global Technical Name Catalog]] to register your semantic object.
 
 For more information on semantic objects, please refer:https://wiki.wdf.sap.corp/wiki/display/fiorisuite/Semantic+Objects+for+Navigation
 
 For more information on Global Technical Name Catalog, please refer: https://wiki.wdf.sap.corp/wiki/display/SuiteCDS/VDM+Global+Term+Catalog+Application
-*** Fiori App 
+**** Fiori App 
 Before you register your Fiori app, you need first apply your business roles. 
 
 PO should maintain the Fiori Portfolio in OAM. In our case, we deliver in release op1709, which I suppose we should main OAM through this link: [[https://ifp.wdf.sap.corp/sap/bc/webdynpro/sps/wda_obt_variant?object_type_id=OBT_IFP_6CAE8B28C5DB1ED39A99A3948F2DC308?variant_id=6CAE8B26E4CB1ED6A9CAAF35ECB5B445?user_settings=X#][2017 / Q3 variant]]. All visible and editable columns should be fill. A short description of columns can be find [[https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1588149430][here]].
@@ -226,7 +349,61 @@ For more detail please refer [[https://wiki.wdf.sap.corp/wiki/display/fiorisuite
 
 ** Authorization Object
 
+*** F_ICA_MM: Matching Method
+It determines whether a user can create, change, display, delete or execute a matching method. With "execute", it means running the matching method and doing manual assignments and submits. There is no further differentiation on units, which means a user can either execute all the units or none.
+
+| Auth Field | Description        | Remarks                                                  |
+|------------+--------------------+----------------------------------------------------------|
+| FICA_MID   | Matching Method ID | Restriction field with value help                        |
+| ACTVT      | Activity           | Read-only(03,16), read-write(01,02), not relevant(06,21) |
+
+*** F_ICA_DS: Data Source
+It determines whether a user can create, change, display, delete or display line items of a data source. 
+
+Since a data source is assigned with a CDS view which exposes all the transactional data involved. In certain cases, the data may be sensitive, thus should be prohibited to be accessed by certain roles. Additionally, once a data source is assigned to a method, the data will roll-in to ACDOCM. To avoid unwanted access to sensitive data, only the user who has the permission of "display line items" can assign the data source to a newly created method.  
+
+*** F_ICA_RC: Reason Code
+It determines whether a user can create, change, display, or delete a reason code.
+
+This authorization object only works for the design time. At runtime, when a reason code is assigned to an assignment(GRREF), the F_ICA_MM with activity "execute" is checked. And the relationship between a reason code and a matching method is defined in reason code's configuration, rather than the authorization.
+
+*** F_ICA_MJ: Matching Journal(Document)
+It determines whether a user can display, delete, or post a matching document.
+
+
+| Auth Field | Description        | Remarks                              |
+|------------+--------------------+--------------------------------------|
+| FICA_MID   | Matching Method ID | Restriction field with value help    |
+| ACTVT      | Activity           | Read-only(03), read-write(02,06,10), |
+
+*** F_ICA_RCON: Reconciliation Case
+It determines whether a user can create, display, change, delete or execute a reconciliation case. 
+When assigning a matching method to a reconciliation case, it will check whether the author has the method display permission. If not, the assignment should be prohibited. 
+
+| Auth Field | Description   | Remarks                                               |
+|------------+---------------+-------------------------------------------------------|
+| FICA_RCON  | Recon Case ID | Restriction field with value help                     |
+| ACTVT      | Activity      | Read-only(03), read-write(01,02), not relevant(06,21) |
+
+*** F_ICA_RR: Reconciliation Report
+It determines whether a user can run reconciliation reports like UI-700 and UI-710. The granularity is to the combination of recon case and leading unit. The authorization should be checked before data selection. That is to say if a user doesn't have the permission, the report just doesn't give any result. 
+
+| Auth Field | Description   | Remarks                           |
+|------------+---------------+-----------------------------------|
+| FICA_RCON  | Recon Case ID | Restriction field with value help |
+| FICS_DP    | Display Group | Display group                     |
+| FICA_LUNIT | Leading Unit  | Restriction field                 |
+
+*** F_ICA_U1~U6: Org Units
+The 6 authorization objects(from F_ICA_U1 to F_ICA_U6) are used for checking whether a user has the permission to access the matching data of certain org units. 
 ** Background Job
+In ER9 500
+| Artifact          | Name                      |
+|-------------------+---------------------------|
+| Job Catalog Entry | SAP_FIN_ICA_MATCHING_RUN  |
+| Job Template      | ICA_MATCHING_RUN_TEMPLATE |
+
+
 SAPJ to define a Cloud Job.
 https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Job+Scheduling+and+Monitoring
 
@@ -235,9 +412,11 @@ Refer Group: SAP_SFIN_BCG_GL_PERIOD_ACT for the tile "Schedule General Ledger Jo
 /h4screen=GL.SCHEDULE.JOBS.DOCU&JobCatalogEntryName=SAP_FIN_BAL_SHEET_SUPPL,SAP_FIN_DOC_LIST_DISPLAY,SAP_FIN_EC_SALES_LIST,SAP_FIN_GL_ANNUAL_TAX_RETURN,SAP_FIN_GL_AUTO_CLR,SAP_FIN_GL_COMP_CODE_TRANS,SAP_FIN_GL_DISP_CHG_GLACC,SAP_FIN_GL_EC_SALELIST,SAP_FIN_GL_FOR_CURR_VAL,SAP_FIN_GL_FOR_FIN_STATEMENT,SAP_FIN_GL_INTEREST_SCALE,SAP_FIN_GL_IR_CLR_ACQ_TX,SAP_FIN_GL_REV_ACC_DEF,SAP_FIN_GL_RJET_POST_DUE,SAP_FIN_TAX_INFORMATION,SAP_FIN_TAX_PREPARE_TAX_REP,SAP_FIN_TAX_RFUMSV00,SAP_FIN_TRANSFER_POSTING,SAP_FIN_WITHHOLDING_TAX_REPORT,SAP_SFIN_BC_GL_PARKED_DOC,SAP_SFIN_BC_GL_PROV_DOU_RECV,SAPF080
 
 Refer job template "SAP_FIN_TAX_RFUMSV00", and job catalog entry "SAP_FIN_TAX_RFUMSV00"
+
+
 ** Workflow
 https://wiki.wdf.sap.corp/wiki/display/SimplSuite/Workflow
 
 Step-by-step guide on create Flex Workflow: https://wiki.wdf.sap.corp/wiki/pages/viewpage.action?pageId=1830627167
 ** Analytical List Page
-https://wiki.wdf.sap.corp/wiki/display/fioritech/Developer+Guide%3A+Analytical+List+Page
+https://wiki.wdf.sap.corp/wiki/display/fioritech/Developer+Guide%3A+Analytical+List+Page                           
